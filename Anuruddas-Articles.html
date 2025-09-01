@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anurudda's Articles | Sathyadarshana</title>
+  <style>
+    body {
+      margin: 0;
+      fo
+nt-family: 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #0f172a, #000);
+      color: #e0f2fe;
+      min-height: 100vh;
+    }
+    /* Top buttons */
+    .top-buttons {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 1000;
+    }
+    .top-buttons a {
+      background: rgba(15, 23, 42, 0.85);
+      color: #7dd3fc;
+      padding: 6px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    .top-buttons a:hover {
+      background: #0ea5e9;
+      color: white;
+    }
+    /* Language button */
+    #google_translate_element {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 5px;
+      border-radius: 8px;
+    }
+    h1 {
+      text-align: center;
+      margin-top: 80px;
+      font-size: 2.2em;
+      color: #38bdf8;
+    }
+    .article-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: rgba(30, 41, 59, 0.85);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    }
+    .article-container p {
+      line-height: 1.6;
+      font-size: 1rem;
+      color: #e0f2fe;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top buttons -->
+  <div class="top-buttons">
+    <a href="index.html">🏠 Home</a>
+    <a href="ai-buddhi.html">🤖 AI Buddhi</a>
+  </div>
+
+  <!-- Language switch -->
+  <div id="google_translate_element"></div>
+
+  <h1>Anurudda's Articles</h1>
+
+  <div class="article-container">
+    <p>
+      Welcome to Anurudda's Articles — a collection of deep spiritual thoughts, reflections, and teachings
+      from the heart. Each piece is written with the aim of guiding seekers towards truth and light.
+    </p>
+    <p>
+      📜 More articles will be added soon...
+    </p>
+  </div>
+
+  <!-- Google Translate Script -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'si,ta,en',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</body>
+</html>
+        
