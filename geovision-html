@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GeoVision | Sathyadarshana</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #0f172a, #000);
+      color: #e0f2fe;
+      text-align: center;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      background: rgba(2,6,23,0.8);
+      padding: 1rem;
+      box-shadow: 0 0 12px #38bdf8;
+      z-index: 99;
+    }
+    nav a {
+      color: #e0f2fe;
+      text-decoration: none;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      border-radius: 6px;
+      transition: 0.3s;
+      font-weight: 600;
+    }
+    nav a.active, nav a:hover {
+      background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+      color: #0f172a;
+      transform: scale(1.05);
+      font-weight: bold;
+    }
+    .container {
+      max-width: 800px;
+      margin: 1.5rem auto;
+      padding: 2rem 1.5rem 2.2rem 1.5rem;
+      background: rgba(30,41,59,0.85);
+      border-radius: 1rem;
+      box-shadow: 0 0 22px #38bdf855;
+      position: relative;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.4em;
+      color: #16f0a7;
+      letter-spacing: 0.03em;
+      text-shadow: 0 0 7px #16f0a799;
+    }
+    p {
+      color:#bae6fd;
+      font-size:1.08em;
+      margin-bottom:1.2em;
+    }
+    input[type="text"] {
+      width: 90%;
+      margin: 0.5rem auto 1rem auto;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-size: 1.08rem;
+      background: #1e293b;
+      color: #e0f2fe;
+      display: block;
+      transition: 0.18s;
+      box-shadow: 0 0 8px #16f0a733;
+    }
+    input[type="text"]:focus {
+      border: 2px solid #38bdf8;
+      background: #0f172a;
+      outline: none;
+    }
+    /* Modern select styling */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background: linear-gradient(90deg, #0ea5e9 0%, #16f0a7 100%);
+      color: #0f172a;
+      padding: 0.8rem 2.5rem 0.8rem 1rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-size: 1.08rem;
+      font-weight: 600;
+      box-shadow: 0 0 8px #16f0a733;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: box-shadow 0.2s, background 0.2s;
+      outline: none;
+      position: relative;
+      width: 90%;
+      display: block;
+    }
+    select:focus {
+      box-shadow: 0 0 0 2px #bae6fd, 0 0 12px #16f0a799;
+      background: linear-gradient(90deg, #38bdf8 0%, #16f0a7 100%);
+    }
+    select option {
+      color: #0f172a;
+      font-weight: 500;
+      background: #e0f2fe;
+    }
+    select {
+      background-image: url("data:image/svg+xml;charset=UTF-8,<svg width='16' height='10' viewBox='0 0 16 10' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M2 2L8 8L14 2' stroke='%230f172a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.2em;
+    }
+    button {
+      width: 92%;
+      margin: 0.5rem auto 0 auto;
+      padding: 0.9rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-size: 1.1rem;
+      background: linear-gradient(90deg, #16f0a7, #0ea5e9);
+      color: #0f172a;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 0 10px #16f0a788;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #0ea5e9, #16f0a7);
+      color: #fff;
+      transform: scale(1.05);
+    }
+    #map {
+      width: 90%;
+      height: 400px;
+      margin: 1.5rem auto;
+      border-radius: 1rem;
+      box-shadow: 0 0 15px rgba(56,189,248,0.3);
+    }
+    #lang-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 0 12px #0ea5e9;
+      z-index: 999;
+    }
+    .result-box {
+      margin-top: 1.5rem;
+      padding: 1.1rem 1rem;
+      background: rgba(22,78,99,0.94);
+      border-radius: 1rem;
+      box-shadow: 0 0 21px #38bdf855;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+      color:#fbc02d;
+      font-size:1.13em;
+      display:none;
+    }
+    @media (max-width: 600px) {
+      .container {padding:1.2rem 0.2rem 1.5rem 0.2rem;}
+      h1 {font-size:1.28rem;}
+      #map {height:230px;}
+      .result-box{font-size:1em;}
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="astrology-hub.html">Hub</a>
+    <a href="astrologer.html">Report Generator</a>
+    <a href="palmistry.html">Palmistry</a>
+    <a href="numerology.html">Numerology</a>
+    <a href="nadi-jyotishya.html">Nadi</a>
+    <a href="geovision.html" class="active">GeoVision</a>
+  </nav>
+
+  <div class="container">
+    <h1>GeoVision – Regional Insights</h1>
+    <p>Search a region for cultural, historical, and planetary analysis.</p>
+    <input type="text" id="region" placeholder="Ex: Anuradhapura">
+    <select id="focus">
+      <option value="">-- Select Focus --</option>
+      <option value="climate">History & Climate</option>
+      <option value="culture">Cultural Overview</option>
+      <option value="future">Future Planetary Impacts</option>
+    </select>
+    <button onclick="analyzeRegion()">Analyze</button>
+
+    <div id="map"></div>
+    <div id="result" class="result-box"></div>
+  </div>
+
+  <div id="google_translate_element" style="display:none;"></div>
+  <button id="lang-btn" title="Translate page">🌐</button>
+
+  <footer style="margin-top:2.2em;color:#16f0a7;font-weight:bold;letter-spacing:.01em;">
+    Sathyadarshana – Universal Wisdom for All. <span style="color:#fbc02d;">© 2025 Sathyadarshana × Ceed Rushi | GeoVision SaaS</span>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Disable copy & shortcuts
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && ['c','u','s'].includes(e.key.toLowerCase())) e.preventDefault();
+    });
+
+    const map = L.map('map').setView([7.8731, 80.7718], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    function analyzeRegion() {
+      const region = document.getElementById('region').value.trim();
+      const focus = document.getElementById('focus').value;
+      const resultBox = document.getElementById('result');
+      let summary = "";
+
+      if (!region || !focus) {
+        summary = "Please fill out region and select a focus!";
+        resultBox.style.color="#f87171";
+        resultBox.innerText = summary;
+        resultBox.style.display = "block";
+        return;
+      }
+
+      if (focus === "climate") {
+        summary = `🔎 Analyzing historical and climate patterns for <b>${region}</b>...`;
+      } else if (focus === "culture") {
+        summary = `🔎 Scanning cultural and historical insights for <b>${region}</b>...`;
+      } else if (focus === "future") {
+        summary = `🔮 Projecting planetary and environmental impacts for <b>${region}</b>...`;
+      }
+
+      resultBox.innerHTML = summary;
+      resultBox.style.color="#fbc02d";
+      resultBox.style.display = "block";
+
+      // Map fetch and marker
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(region)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.length > 0) {
+            const { lat, lon, display_name } = data[0];
+            map.setView([lat, lon], 10);
+            L.marker([lat, lon]).addTo(map).bindPopup(`${display_name}`).openPopup();
+          }
+        });
+    }
+
+    // Translate
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,si,ta',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+    document.getElementById('lang-btn').addEventListener('click', () => {
+      document.querySelector('.goog-te-gadget-simple').click();
+    });
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
