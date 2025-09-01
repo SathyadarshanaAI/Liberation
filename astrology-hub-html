@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sathyadarshana | Astrology Hub</title>
+  <meta name="description" content="Astrology Hub: KP, Vedic, Numerology, Palmistry, GeoVision & more. Explore all tools from a single dashboard.">
+  <link rel="icon" href="./assets/favicon.png" type="image/png">
+  <style>
+    :root {
+      --cardGlow: #38bdf8;
+      --text: #e0f2fe;
+      --muted: #bae6fd;
+      --brand: #7dd3fc;
+      --accent: #38bdf8;
+      --bg1: #1e293b;
+      --bg2: #0f172a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+      background: radial-gradient(circle at 20% 20%, var(--bg1), var(--bg2));
+      color: var(--text);
+      text-align: center;
+      min-height: 100vh;
+    }
+    a.toplink {
+      position: fixed;
+      left: 14px;
+      top: 14px;
+      background: #0b1220;
+      color: var(--brand);
+      padding: 7px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      z-index: 5;
+      opacity: 0.93;
+      transition: background .18s;
+    }
+    a.toplink:hover, a.toplink:focus {
+      background: #101b2e;
+      color: #fff;
+      outline: 2px solid #7dd3fc;
+    }
+    header { padding: 3.2rem 1rem 1.2rem; }
+    header h1 { margin: 0 0 .28rem; letter-spacing: .01em; font-weight: 700; }
+    header p { font-size: 1.08rem; color: var(--muted); margin: 0; }
+    main { padding: 1rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 2.3rem auto;
+      align-items: stretch;
+      padding: 1.45rem;
+    }
+    .card {
+      text-decoration: none;
+      color: var(--text);
+      background: rgba(2,6,23,.94);
+      border: 2px solid transparent;
+      border-radius: 14px;
+      padding: 2rem 1.2rem 1.2rem;
+      min-height: 155px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: border .18s, transform .18s, box-shadow .18s;
+      outline: none;
+    }
+    .card:hover, .card:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 22px 0 #38bdf833;
+      transform: translateY(-7px) scale(1.03);
+    }
+    .card span {
+      font-size: 2.18rem;
+      margin: .12em 0 .5rem;
+      display: block;
+      filter: drop-shadow(0 0 12px #38bdf855);
+    }
+    .card h2 {
+      font-size: 1.22rem;
+      color: var(--accent);
+      letter-spacing: .01em;
+      font-weight: 600;
+      margin: .1rem 0 .3rem;
+    }
+    .card div { color: var(--muted); font-size: 1.01rem; }
+    footer { padding: 2rem 0 .03rem; color: var(--muted); font-size: .95rem; }
+    @media (max-width:700px) {
+      header h1 { font-size: 1.32rem; }
+      .grid { gap: .95rem; padding: 1rem; }
+      .card { min-height: 120px; padding: 1rem; }
+      .card span { font-size: 1.6rem; }
+      .card h2 { font-size: 1.05rem; }
+    }
+  </style>
+</head>
+<body>
+  <a href="./index.html" class="toplink" aria-label="Go Home">← Home</a>
+
+  <header>
+    <h1>Astrology Hub</h1>
+    <p>All astrological tools at your fingertips</p>
+  </header>
+
+  <main>
+    <div class="grid" aria-label="Astrology Tools">
+      <!-- 1) Rishi KP (main) -> quamtem/kp-chart.html -->
+      <a href="./quamtem/kp-chart.html" class="card" aria-label="Rishi K.P astrology generator (Main)">
+        <span aria-hidden="true">🌟</span>
+        <h2>Rishi K.P astrology generator</h2>
+        <div>Modern KP Chart, Life Report &amp; AI guidance</div>
+      </a>
+
+      <!-- 2) Rishi KP (alt) -> astrology.html -->
+      <a href="./astrology.html" class="card" aria-label="Rishi K.P astrology generator (Alt)">
+        <span aria-hidden="true">🌟</span>
+        <h2>Rishi K.P astrology generator</h2>
+        <div>Modern KP Chart, AI assistant (Alt link)</div>
+      </a>
+
+      <!-- Legacy KP (Old) -->
+      <a href="./kp-chart.html" class="card" aria-label="KP Chart Pro (Old)">
+        <span aria-hidden="true">🗃️</span>
+        <h2>KP Chart Pro (Old)</h2>
+        <div>Classic KP Chart (Table &amp; Wheel)</div>
+      </a>
+
+      <!-- Other tools -->
+      <a href="./vedic-astrology.html" class="card" aria-label="Vedic Astrology">
+        <span aria-hidden="true">📜</span>
+        <h2>Vedic Astrology</h2>
+        <div>Traditional Janma Kundali</div>
+      </a>
+      <a href="./numerology.html" class="card" aria-label="Numerology">
+        <span aria-hidden="true">🔢</span>
+        <h2>Numerology</h2>
+        <div>Life Path &amp; Destiny Numbers</div>
+      </a>
+      <a href="./palmistry.html" class="card" aria-label="Palmistry">
+        <span aria-hidden="true">✋</span>
+        <h2>Palmistry</h2>
+        <div>Hand Analysis &amp; Signs</div>
+      </a>
+      <a href="./geo-vision.html" class="card" aria-label="Geo Vision">
+        <span aria-hidden="true">🌐</span>
+        <h2>Geo Vision</h2>
+        <div>Planetary Motion &amp; Maps</div>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 Sathyadarshana – Light of Truth • All Rights Reserved
+  </footer>
+</body>
+</html>
+
