@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Community Writers | Sathyadarshana</title>
+  <link rel="icon" href="./assets/favicon.png">
+  <style>
+    :root{
+      --bg1:#0f172a; --bg2:#000;
+      --text:#e0f2fe; --muted:#bae6fd; --accent:#38bdf8;
+      --card:rgba(30,41,59,.95);
+    }
+    *{box-sizing:border-box; margin:0; padding:0}
+    body{
+      font-family:'Segoe UI',system-ui,Arial;
+      background: radial-gradient(circle at 20% 20%, var(--bg1), var(--bg2));
+      color:var(--text); min-height:100vh;
+    }
+    /* Top buttons (Home + AI) */
+    .top-buttons{
+      position:fixed; top:12px; left:12px; z-index:1000; display:flex; gap:8px;
+    }
+    .btn{
+      background:rgba(15,23,42,.88);
+      color:#7dd3fc; padding:6px 12px; border-radius:8px;
+      text-decoration:none; font-size:14px; border:1px solid transparent; transition:.2s;
+    }
+    .btn:hover{ border-color:var(--accent); color:#fff }
+    /* Language button block */
+    #google_translate_element{
+      position:fixed; top:12px; right:12px; z-index:1000;
+      background:rgba(15,23,42,.88); padding:4px 8px; border-radius:8px; border:1px solid var(--accent);
+    }
+    header{ text-align:center; padding:72px 16px 16px }
+    header h1{ font-size:2.2rem; color:#7dd3fc; margin-bottom:.25rem }
+    header p{ color:var(--muted) }
+
+    .wrap{ max-width:1100px; margin:0 auto; padding:18px 14px 28px }
+    .grid{
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:16px; margin-top:14px;
+    }
+    .card{
+      background:var(--card); border:2px solid transparent; border-radius:16px;
+      padding:16px; box-shadow:0 0 14px rgba(56,189,248,.22);
+      transition:.2s;
+    }
+    .card:hover{ border-color:var(--accent); box-shadow:0 8px 22px rgba(56,189,248,.45) }
+    .card h3{ color:var(--accent); margin-bottom:6px; font-size:1.1rem }
+    .card p{ color:var(--text); opacity:.95; line-height:1.55 }
+    .meta{ color:var(--muted); font-size:.9rem; margin:.4rem 0 .6rem }
+
+    /* Submission form */
+    .form{
+      background:var(--card); border:2px solid transparent; border-radius:16px;
+      padding:16px; margin-top:20px; box-shadow:0 0 14px rgba(56,189,248,.22);
+    }
+    .form:hover{ border-color:var(--accent) }
+    .form label{ display:block; text-align:left; margin:8px 0 4px; color:var(--muted) }
+    .form input,.form textarea{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #334155;
+      background:#0b1324; color:var(--text); font-size:14px;
+    }
+    .submit-btn{
+      margin-top:10px; background:#0ea5e9; color:#fff; border:none;
+      padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600;
+    }
+    .submit-btn:hover{ filter:brightness(1.05) }
+    .note{ color:var(--muted); font-size:.95rem; text-align:center; margin-top:8px }
+  </style>
+</head>
+<body>
+
+  <!-- Home + AI Buddhi -->
+  <div class="top-buttons">
+    <a class="btn" href="./index.html">🏠 Home</a>
+    <a class="btn" href="./ai-buddhi.html">🤖 AI Buddhi</a>
+  </div>
+
+  <!-- Language Switch -->
+  <div id="google_translate_element"></div>
+
+  <header>
+    <h1>Community Writers</h1>
+    <p>Articles from our global spiritual community</p>
+  </header>
+
+  <main class="wrap">
+    <!-- Featured / Latest grid -->
+    <div class="grid">
+      <article class="card">
+        <h3>Silent Compassion</h3>
+        <div class="meta">by <strong>Maya</strong> • 2025-08-08</div>
+        <p>In the space between breaths, I learned to forgive the shape of my pain and bow to the light that held it…</p>
+      </article>
+
+      <article class="card">
+        <h3>Walking the Moonlit Path</h3>
+        <div class="meta">by <strong>Arun</strong> • 2025-08-05</div>
+        <p>The night does not hide the truth; it reveals the quiet places where truth sits unafraid…</p>
+      </article>
+
+      <article class="card">
+        <h3>Hands that Heal</h3>
+        <div class="meta">by <strong>Nisha</strong> • 2025-07-31</div>
+        <p>To touch without taking, to listen without judging: this is how the world remembers itself whole…</p>
+      </article>
+    </div>
+
+    <!-- Submission form -->
+    <section class="form">
+      <h2 style="text-align:center; color:#7dd3fc; margin-bottom:8px;">Submit Your Article</h2>
+      <p class="note">Share your insight. Be concise, kind, and honest. Submissions are reviewed before publishing.</p>
+      <form onsubmit="event.preventDefault(); alert('🙏 Thank you! Your article has been received for review.'); this.reset();">
+        <label for="name">Name (optional)</label>
+        <input id="name" placeholder="Your name"/>
+
+        <label for="title">Article Title</label>
+        <input id="title" placeholder="A clear, gentle title" required/>
+
+        <label for="content">Article (min 200 words)</label>
+        <textarea id="content" rows="6" placeholder="Write from the heart…" required></textarea>
+
+        <button class="submit-btn" type="submit">📨 Send for Review</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Google Translate -->
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'si,ta,en',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</body>
+</html>
