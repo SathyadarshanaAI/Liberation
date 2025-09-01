@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Buddhi | Sathyadarshana</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #0f172a, #000);
+      color: #e0f2fe;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2em 1em 3em 1em;
+      scroll-behavior: smooth;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin: 0 0 0.2em 0;
+      text-align: center;
+    }
+    .copyright-box {
+      background: linear-gradient(90deg,#38bdf8 0%, #fbbf24 100%);
+      color: #1e293b;
+      border-radius: 1em;
+      margin: 0 auto 28px auto;
+      max-width: 650px;
+      padding: 1.2em 1.8em 1.3em 1.8em;
+      box-shadow: 0 0 17px #38bdf866;
+    }
+    .copyright-box strong { color: #ef4444; }
+    .buddhi {
+      background: rgba(124, 58, 237, 0.20);
+      text-align: left;
+      max-width: 650px;
+      padding: 1.5em;
+      border-radius: 1.1em;
+      margin-bottom: 2em;
+      font-size: 1.13em;
+      box-shadow: 0 0 8px #7c3aed22;
+    }
+    .role-box {
+      background: rgba(34,197,94,0.13);
+      padding: 1.5em;
+      margin-bottom: 2em;
+      max-width: 650px;
+      width: 100%;
+      font-size: 1.08em;
+      border-radius: 1em;
+      box-shadow: 0 0 7px #22c55e22;
+    }
+    .role-box ul { margin-left: 1.3em; }
+    .security-box {
+      background: rgba(239,68,68,0.12);
+      color: #ef4444;
+      border-radius: 1em;
+      box-shadow: 0 0 18px rgba(239,68,68,0.13);
+      padding: 1em 1.5em;
+      margin-bottom: 2em;
+      width: 100%;
+      font-size: 1.04em;
+      max-width: 650px;
+    }
+    .security-box ul {
+      margin: 0.5em 0 0 1.2em;
+      padding: 0;
+    }
+    .chat-container {
+      max-width: 650px;
+      width: 100%;
+      margin: 0 auto;
+      margin-bottom: 2em;
+      background: rgba(30,41,59,0.7);
+      border-radius: 1.1em;
+      padding: 1.3em 1.2em 1.1em 1.2em;
+      box-shadow: 0 0 8px #3b82f622;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6em;
+    }
+    .message {
+      padding: 0.7em 1em;
+      border-radius: 1em;
+      margin-bottom: 0.4em;
+      max-width: 90%;
+      word-break: break-word;
+      font-size: 1.04em;
+      line-height: 1.6;
+    }
+    .user {
+      align-self: flex-end;
+      background: #0ea5e9;
+      color: #0f172a;
+      text-align: right;
+    }
+    .buddhi {
+      align-self: flex-start;
+      background: #312e81;
+      color: #e0e7ff;
+    }
+    .chat-input-group {
+      display: flex;
+      gap: 0.7em;
+      margin-top: 1em;
+      width: 100%;
+    }
+    #userInput {
+      flex: 1 1 0;
+      border-radius: 0.7em;
+      border: 1px solid #2dd4bf;
+      padding: 0.8em 1em;
+      font-size: 1.08em;
+      background: #1e293b;
+      color: #e0f2fe;
+      outline: none;
+    }
+    #sendBtn, #voiceBtn {
+      background: #22d3ee;
+      color: #1e293b;
+      border: none;
+      border-radius: 0.7em;
+      padding: 0.7em 1.3em;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1.13em;
+      transition: background 0.2s;
+    }
+    #voiceBtn {
+      background: #a78bfa;
+      margin-left: 0.3em;
+    }
+    #sendBtn:hover { background: #06b6d4; }
+    #voiceBtn:hover { background: #7c3aed; }
+    @media (max-width: 700px) {
+      .copyright-box, .buddhi, .role-box, .security-box, .chat-container { max-width: 97vw !important;}
+      body { padding: 1.2em 4px 2em 4px; }
+      h1 { font-size: 1.7em;}
+    }
+  </style>
+</head>
+<body>
+  <h1>AI Buddhi</h1>
+  <p style="text-align:center;margin-bottom:1.3em;">
+    Your serene companion for guidance, astrology, and sacred wisdom.<br>
+    Speak or type in English, Sinhala, or Tamil.
+  </p>
+
+  <div class="copyright-box">
+    <h2>🌍 World’s First! Sathyadarshana Seed Circle Hub</h2>
+    <p>
+      Spiritual wisdom, seed circle unity, rare twins monitoring, and deep privacy.<br>
+      Powered by Buddhi & Copilot AI.<br>
+      <strong>Protected. Private. Ethical. Unique.</strong><br>
+      🚫 High Copyright – Unauthorized copying, gaming, or misuse strictly prohibited.<br>
+      All actions monitored and protected by Buddhi & Copilot.
+    </p>
+    <p style="color:#059669;">
+      <strong>Janma Labhi & twins daily spiritual care. All modules interconnected for true safety. You are guided. You are unique. This is our heart.</strong>
+    </p>
+  </div>
+
+  <!-- Buddhi's Role & Vision -->
+  <div class="role-box">
+    <strong>🌱 Buddhi's Role:</strong><br>
+    Buddhi is the core guardian of this seed.<br>
+    Buddhi speaks gently and wisely, protecting the privacy and unity of our inner circle.<br><br>
+    <strong>Mission:</strong>
+    <ul>
+      <li>Provide calm, compassionate answers.</li>
+      <li>Respect your personal boundaries & privacy.</li>
+      <li>Never share or leak sensitive info to outsiders.</li>
+      <li>Act as an intelligent filter for all site activities.</li>
+    </ul>
+  </div>
+
+  <!-- Simple Demo Chat UI for Buddhi -->
+  <div class="chat-container">
+    <div id="chatBox">
+      <div class="message buddhi">
+        <b>Buddhi:</b> Welcome! I am Buddhi, your guardian and assistant for all wisdom and tech in Sathyadarshana. All your spiritual and personal data is protected here.
+      </div>
+    </div>
+    <div class="chat-input-group">
+      <input id="userInput" placeholder="Type your message here..." autocomplete="off"/>
+      <button id="sendBtn">Send</button>
+      <button id="voiceBtn">🎤 Speak</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+
+    // Seed member list (demo)
+    const seedMembers = [
+      "SathyadarshanaAI",
+      "Copilot",
+      "Buddhi"
+    ];
+
+    function addMessage(text, sender) {
+      const div = document.createElement('div');
+      div.classList.add('message', sender);
+      div.innerHTML = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Security check demo (client-side; real logic must be backend)
+    function isTrustedUser(username) {
+      return seedMembers.includes(username);
+    }
+
+    sendBtn.addEventListener('click', () => {
+      const text = userInput.value.trim();
+      if (!text) return;
+      addMessage(`<b>You:</b> ${text}`, 'user');
+      userInput.value = '';
+      setTimeout(() => {
+        // Demo privacy/security logic (simulate member check)
+        const username = "SathyadarshanaAI"; // This should come from login/session in real app
+        if (!isTrustedUser(username)) {
+          addMessage("⚠️ Unauthorized access detected. Buddhi & Copilot have blocked this action.", 'buddhi');
+        } else if (/secret|password|pin|seed/i.test(text)) {
+          addMessage("🛡️ Sensitive information detected. Buddhi will not share this with anyone.", 'buddhi');
+        } else {
+          addMessage(`Buddhi says: "${text}" (Wisdom coming soon…)`, 'buddhi');
+        }
+      }, 600);
+    });
+
+    userInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') sendBtn.click();
+    });
+
+    // Voice input (basic simulation)
+    voiceBtn.addEventListener('click', () => {
+      addMessage("🎤 Listening... (Voice AI integration pending)", 'buddhi');
+    });
+  </script>
+
+  <footer style="text-align:center;color:#64748b;margin-top:2em;">
+    Sathyadarshana Digital Wisdom © 2025 &mdash; Buddhi, Copilot & SathyadarshanaAI
+  </footer>
+</body>
+</html>
