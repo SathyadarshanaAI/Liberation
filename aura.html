@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Energy Scanner | AI Demo</title>
+  <meta name="description" content="Modern Aura Energy Scanner Demo – AI-ready, mobile-friendly, and beautiful.">
+  <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f9e7.png">
+  <style>
+    :root {
+      --bg: #000;
+      --accent: #16f0a7;
+      --accent2: #38bdf8;
+      --txt: #e0f2fe;
+      --warn: #f87171;
+      --brand: #0ff;
+      --overlay: rgba(0,0,0,0.97);
+    }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      background: var(--bg);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: var(--txt);
+      overflow: hidden;
+    }
+    video, canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      z-index: 1;
+      background: #000;
+      pointer-events: none;
+      transition: filter 0.4s;
+    }
+    #camera[aria-busy="true"] {
+      filter: blur(6px) brightness(0.7);
+    }
+    .glass {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: linear-gradient(160deg, #16f0a799 0 30%, #38bdf833 100%);
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.15;
+      transition: opacity .4s;
+    }
+    #controls {
+      position: fixed; bottom: 2.5vh; left: 0; width: 100vw;
+      display: flex; justify-content: center; gap: 15px;
+      z-index: 8;
+      pointer-events: none;
+      user-select: none;
+    }
+    #controls button {
+      pointer-events: auto;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      color: #001c27; font-weight: bold;
+      border: none; border-radius: 11px;
+      padding: 15px 26px; cursor: pointer;
+      font-size: 1.11rem;
+      box-shadow: 0 0 16px #16f0a7aa;
+      transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform .16s;
+      outline: none;
+      letter-spacing: .01em;
+      opacity: 0.95;
+      filter: drop-shadow(0 0 6px #16f0a7aa);
+    }
+    #controls button:active {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #fff;
+      transform: scale(0.97);
+      box-shadow: 0 0 26px #38bdf8cc;
+    }
+    #resultOverlay {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: var(--overlay);
+      display: none; flex-direction: column;
+      justify-content: center; align-items: center;
+      z-index: 20; text-align: center; padding: 1.6em 1em 1.2em 1em;
+      color: var(--brand);
+      animation: fadeIn .5s;
+      box-shadow: 0 0 80px 0 #16f0a7cc;
+    }
+    #resultImg {
+      max-width: 85vw; max-height: 45vh;
+      border: 3.5px solid var(--accent2);
+      box-shadow: 0 0 50px 8px var(--accent);
+      margin-bottom: 1.1em;
+      border-radius: 13px;
+      background: #041920;
+      animation: pulse 2.3s infinite alternate;
+      transition: box-shadow .25s;
+    }
+    @keyframes pulse {
+      from { box-shadow: 0 0 32px 3px var(--accent2)99; }
+      to { box-shadow: 0 0 75px 12px var(--accent)dd; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .aura-badge {
+      display: inline-block;
+      padding: 0.44em 1.3em;
+      border-radius: 22px;
+      font-weight: bold;
+      margin-bottom: .8em;
+      margin-top: .2em;
+      font-size: 1.12em;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      color: #0f172a;
+      letter-spacing: 0.02em;
+      box-shadow: 0 0 14px #16f0a7aa;
+      animation: pulse 2.5s infinite alternate;
+    }
+    #auraText {
+      font-size: 1.16em;
+      color: var(--txt);
+      margin-bottom: 1.2em;
+    }
+    .coming-soon {
+      margin: 1.2em 0 1.3em;
+      color: var(--warn);
+      font-size: 1.14em;
+      opacity: 0.97;
+      letter-spacing: .01em;
+      text-shadow: 0 0 7px #f87171b0;
+    }
+    #overlayCloseBtn {
+      margin-top: 0.7em;
+      background: linear-gradient(90deg,var(--accent),var(--accent2));
+      color: #001c27; border: none;
+      border-radius: 12px; padding: 14px 32px;
+      font-size: 1.09em; font-weight: bold;
+      box-shadow: 0 0 18px #38bdf8aa;
+      cursor: pointer;
+      transition: background .2s, color .2s, transform .11s;
+      letter-spacing: .01em;
+      opacity: 0.95;
+    }
+    #overlayCloseBtn:active { background: #38bdf8; color: #fff; transform: scale(.96);}
+    #errorMsg {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #01151aee;
+      color: #ffbaba;
+      border: 2px solid var(--warn);
+      border-radius: 17px;
+      padding: 1.4em 1.9em 1.3em 1.9em;
+      font-size: 1.13em;
+      z-index: 100;
+      box-shadow: 0 0 33px #f87171aa;
+      text-align: center;
+      display: none;
+      letter-spacing: .01em;
+      font-weight: 500;
+    }
+    .brand {
+      position: fixed;
+      top: 15px; left: 50vw; transform: translateX(-50%);
+      font-size: 1.3em;
+      font-weight: bold;
+      color: var(--brand);
+      text-shadow: 0 0 9px var(--accent2), 0 0 3px #fff4;
+      z-index: 10;
+      opacity: .88;
+      letter-spacing: .04em;
+      pointer-events: none;
+      user-select: none;
+    }
+    @media (max-width: 850px) {
+      #resultImg { max-width: 95vw; max-height: 33vh; }
+      #controls button { font-size: .98rem; padding: 11px 13px;}
+      .brand { font-size: 1.04em; }
+    }
+    @media (max-width: 550px) {
+      #resultImg { max-width: 99vw; max-height: 22vh; }
+      #controls button { font-size: .93rem; padding: 8px 8vw;}
+      .brand { font-size: .99em; }
+      #resultOverlay { padding: 1.1em .2em .85em .2em;}
+    }
+  </style>
+</head>
+<body>
+  <video id="camera" autoplay playsinline aria-busy="false"></video>
+  <canvas id="snapshot" style="display:none;"></canvas>
+  <div class="glass"></div>
+
+  <div class="brand">Aura Energy Scanner</div>
+
+  <div id="controls">
+    <button id="captureBtn">🔮 Scan Aura</button>
+  </div>
+
+  <div id="resultOverlay">
+    <img id="resultImg" class="aura-glow" alt="Aura Snapshot">
+    <div id="auraBadge" class="aura-badge"></div>
+    <div id="auraText"></div>
+    <div class="coming-soon">
+      ⚡️ Full AI aura interpretation is coming soon via Seed Engine Lab.<br>
+      <span style="font-size:0.95em;color:#bae6fd;opacity:0.8;">This is a demo with color analysis only.</span>
+    </div>
+    <button id="overlayCloseBtn" onclick="closeResult()">Close</button>
+  </div>
+  <div id="errorMsg"></div>
+
+  <script>
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('snapshot');
+    const captureBtn = document.getElementById('captureBtn');
+    const resultOverlay = document.getElementById('resultOverlay');
+    const resultImg = document.getElementById('resultImg');
+    const auraText = document.getElementById('auraText');
+    const auraBadge = document.getElementById('auraBadge');
+    const errorMsg = document.getElementById('errorMsg');
+    const brand = document.querySelector('.brand');
+    let stream;
+
+    const auraPresets = [
+      { color: "Red",    meaning: "Vitality & Root Chakra",    emoji: "🔴", badge: "linear-gradient(90deg,#ff7171,#ffb86b)", },
+      { color: "Orange", meaning: "Creativity & Sacral Chakra",emoji: "🟠", badge: "linear-gradient(90deg,#ffb86b,#ffd56b)", },
+      { color: "Yellow", meaning: "Energy & Solar Plexus",     emoji: "🟡", badge: "linear-gradient(90deg,#ffd56b,#fdfd96)", },
+      { color: "Green",  meaning: "Balance & Heart Chakra",    emoji: "🟢", badge: "linear-gradient(90deg,#8df7b6,#38bdf8)", },
+      { color: "Blue",   meaning: "Calm & Throat Chakra",      emoji: "🔵", badge: "linear-gradient(90deg,#38bdf8,#16f0a7)", },
+      { color: "Indigo", meaning: "Intuition & 3rd Eye",       emoji: "🟣", badge: "linear-gradient(90deg,#a880fc,#38bdf8)", },
+      { color: "Violet", meaning: "Spirituality & Crown",      emoji: "🟣", badge: "linear-gradient(90deg,#a880fc,#ffb6ff)", }
+    ];
+
+    function getAuraColor(r,g,b) {
+      // Simple mapping, can be improved for more accuracy
+      if (r > g && r > b && r > 90) {
+        if (g > 110) return auraPresets[1]; // Orange
+        if (r > 180 && g > 160 && b < 100) return auraPresets[2]; // Yellow
+        return auraPresets[0]; // Red
+      }
+      if (g > r && g > b && g > 90) return auraPresets[3]; // Green
+      if (b > r && b > g) {
+        if (b > 130 && r < 100) return auraPresets[4]; // Blue
+        if (b > 170 && r > 80) return auraPresets[5]; // Indigo
+      }
+      if (r > 120 && b > 130 && g < 90) return auraPresets[6]; // Violet
+      // fallback
+      return auraPresets[4];
+    }
+
+    async function startCamera() {
+      errorMsg.style.display = "none";
+      video.setAttribute('aria-busy','false');
+      try {
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        video.srcObject = stream;
+      } catch (err) {
+        video.setAttribute('aria-busy','true');
+        errorMsg.textContent = "⚠️ Camera Access Denied or Not Available.\nPlease allow camera access and reload the page.";
+        errorMsg.style.display = "block";
+        brand.textContent = "Camera Unavailable";
+        captureBtn.disabled = true;
+        captureBtn.style.opacity = 0.6;
+      }
+    }
+
+    function capturePhoto() {
+      if (!video.srcObject) {
+        errorMsg.textContent = "Camera not active. Please allow camera access and refresh.";
+        errorMsg.style.display = "block";
+        return;
+      }
+      video.setAttribute('aria-busy','true');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const pixels = imgData.data;
+
+      let red=0,green=0,blue=0,total=0;
+      for(let i=0;i<pixels.length;i+=4){
+        red+=pixels[i]; green+=pixels[i+1]; blue+=pixels[i+2]; total++;
+      }
+      red/=total; green/=total; blue/=total;
+      // Aura color detection
+      const aura = getAuraColor(red,green,blue);
+
+      resultImg.src = canvas.toDataURL('image/png');
+      auraBadge.textContent = `${aura.emoji} ${aura.color}`;
+      auraBadge.style.background = aura.badge;
+      auraText.innerHTML = `<strong>Dominant Aura:</strong> ${aura.meaning}`;
+      resultOverlay.style.display = "flex";
+      stopCamera();
+      setTimeout(()=>{video.setAttribute('aria-busy','false');},500)
+    }
+
+    function closeResult() {
+      resultOverlay.style.display = "none";
+      startCamera();
+    }
+
+    function stopCamera() {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+    }
+
+    captureBtn.onclick = capturePhoto;
+    startCamera();
+  </script>
+</body>
+</html>
