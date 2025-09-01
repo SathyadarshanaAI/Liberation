@@ -1,0 +1,148 @@
+<!-- 🩺 Doctor Buddhi - Medical Guidance Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Doctor Buddhi | Medical Guidance</title>
+  <link rel="icon" href="./assets/favicon.png">
+  <style>
+    :root{
+      --bg1:#0f172a; --bg2:#000;
+      --text:#e0f2fe; --muted:#bae6fd; --accent:#38bdf8;
+      --card:rgba(30,41,59,.95);
+    }
+    *{margin:0; padding:0; box-sizing:border-box;}
+    body{
+      font-family:'Segoe UI',sans-serif;
+      background: radial-gradient(circle at 20% 20%, var(--bg1), var(--bg2));
+      color:var(--text);
+      min-height:100vh;
+      scroll-behavior:smooth;
+    }
+    /* Top buttons */
+    .top-buttons{
+      position:fixed; top:12px; left:12px; z-index:1000; display:flex; gap:8px;
+    }
+    .btn{
+      background:rgba(15,23,42,.88);
+      color:#7dd3fc; padding:6px 12px; border-radius:8px;
+      text-decoration:none; font-size:14px; border:1px solid transparent; transition:.2s;
+    }
+    .btn:hover{ border-color:var(--accent); color:#fff }
+    /* Floating language */
+    #google_translate_element{
+      position:fixed; top:12px; right:12px; z-index:1000;
+      background:rgba(15,23,42,.88);
+      padding:4px 8px; border-radius:8px; border:1px solid var(--accent);
+    }
+    header{
+      text-align:center; padding:80px 16px 20px;
+    }
+    header h1{
+      font-size:2.2rem; color:#7dd3fc; margin-bottom:6px;
+      text-shadow:0 0 8px var(--accent);
+    }
+    header p{ color:var(--muted) }
+
+    .scroll-section{
+      max-width:950px; margin:20px auto; padding:16px;
+      background:var(--card); border-radius:16px;
+      box-shadow:0 0 14px rgba(56,189,248,.22);
+      text-align:center;
+    }
+    .section-image{
+      width:100%; max-width:300px; border-radius:12px; margin-bottom:10px;
+      box-shadow:0 0 14px rgba(56,189,248,.3);
+    }
+    .scroll-section h2{ color:var(--accent); margin-bottom:6px }
+    .scroll-section p{ line-height:1.55; color:var(--text) }
+
+    /* Form */
+    .contact-form{
+      text-align:left; margin-top:14px;
+    }
+    .contact-form label{
+      display:block; margin:8px 0 4px; color:var(--muted);
+    }
+    .contact-form input, .contact-form textarea{
+      width:100%; padding:10px 12px; border-radius:10px;
+      border:1px solid #334155; background:#0b1324; color:var(--text);
+    }
+    .neon-btn{
+      margin-top:12px; background:#0ea5e9; color:#fff;
+      padding:10px 14px; border:none; border-radius:10px;
+      font-weight:600; cursor:pointer;
+    }
+    .neon-btn:hover{ filter:brightness(1.05) }
+
+    footer{
+      text-align:center; padding:16px; margin-top:20px; font-size:.9rem;
+      color:var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top buttons -->
+  <div class="top-buttons">
+    <a class="btn" href="./index.html">🏠 Home</a>
+    <a class="btn" href="./ai-buddhi.html">🤖 AI Buddhi</a>
+  </div>
+
+  <!-- Language Switch -->
+  <div id="google_translate_element"></div>
+
+  <!-- Header -->
+  <header>
+    <h1>🩺 Doctor Buddhi</h1>
+    <p>Your compassionate guide for mind & body wellness</p>
+  </header>
+
+  <!-- About Section -->
+  <section class="scroll-section">
+    <img src="assets/doctor-buddhi.jpg" alt="Doctor Buddhi" class="section-image" />
+    <h2>About Doctor Buddhi</h2>
+    <p>
+      Doctor Buddhi provides free health guidance for those who cannot afford medical consultation.
+      This includes physical and mental health advice, awareness on common illnesses,
+      and spiritual healing methods with kindness and care.
+    </p>
+  </section>
+
+  <!-- Form Section -->
+  <section class="scroll-section">
+    <h2>Request Guidance</h2>
+    <form class="contact-form" onsubmit="event.preventDefault(); alert('🙏 Thank you! Your request has been received. We will respond shortly.'); this.reset();">
+      <label for="name">Your Name:</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="email">Your Email / Phone:</label>
+      <input type="text" id="email" name="email" required>
+
+      <label for="message">Describe Your Issue:</label>
+      <textarea id="message" name="message" rows="5" required></textarea>
+
+      <button type="submit" class="neon-btn">📩 Submit Request</button>
+    </form>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 Sathyadarshana | Doctor Buddhi Medical Guidance
+  </footer>
+
+  <!-- Google Translate -->
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'si,ta,en',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</body>
+</html>
