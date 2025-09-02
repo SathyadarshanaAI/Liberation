@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nadi Jyotishya | Sathyadarshana</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #0f172a, #000);
+      color: #e0f2fe;
+      text-align: center;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      background: rgba(2,6,23,0.8);
+      padding: 1rem;
+      box-shadow: 0 0 12px #38bdf8;
+    }
+    nav a {
+      color: #e0f2fe;
+      text-decoration: none;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+    nav a:hover {
+      background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+      color: #0f172a;
+      transform: scale(1.05);
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: rgba(30,41,59,0.8);
+      border-radius: 1rem;
+      box-shadow: 0 0 20px rgba(56,189,248,0.4);
+    }
+    input, button {
+      width: 90%;
+      margin: 0.5rem auto;
+      padding: 0.8rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      background: linear-gradient(90deg, #16f0a7, #0ea5e9);
+      color: #0f172a;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #0ea5e9, #16f0a7);
+      transform: scale(1.05);
+    }
+    .output-box {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(22,78,99,0.7);
+      border-radius: 1rem;
+      box-shadow: 0 0 15px rgba(56,189,248,0.3);
+    }
+    #lang-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 0 12px #0ea5e9;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="astrology-hub.html">Hub</a>
+    <a href="astrologer.html">Report Generator</a>
+    <a href="palmistry.html">Palmistry</a>
+    <a href="numerology.html">Numerology</a>
+    <a href="nadi-jyotishya.html">Nadi</a>
+    <a href="geovision.html">GeoVision</a>
+  </nav>
+
+  <div class="container">
+    <h1>Nadi Jyotishya Insights</h1>
+    <p>Enter your birth details to explore ancient Nadi records (AI assisted).</p>
+    <input type="date" id="dob">
+    <input type="time" id="tob">
+    <input type="text" id="place" placeholder="Birthplace">
+    <button onclick="generateNadi()">Search Nadi Records</button>
+
+    <div id="result" class="output-box" style="display:none;"></div>
+  </div>
+
+  <div id="google_translate_element" style="display:none;"></div>
+  <button id="lang-btn">🌐</button>
+
+  <script>
+    // Disable copy & shortcuts
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && ['c','u','s'].includes(e.key.toLowerCase())) e.preventDefault();
+    });
+
+    function generateNadi() {
+      const dob = document.getElementById('dob').value;
+      const tob = document.getElementById('tob').value;
+      const place = document.getElementById('place').value;
+
+      if (!dob || !tob || !place) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      document.getElementById('result').innerHTML =
+        `<h2>Nadi Report</h2>
+         <p>Records for ${dob}, ${tob} at ${place} are being scanned...</p>`;
+      document.getElementById('result').style.display = "block";
+    }
+
+    // Translate
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,si,ta',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+    document.getElementById('lang-btn').addEventListener('click', () => {
+      document.querySelector('.goog-te-gadget-simple').click();
+    });
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
