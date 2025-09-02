@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>KP Chart Generator – Neon All-in-One</title>
+  <title>KP Chart Generator – Neon Pencil Edition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
@@ -13,23 +13,34 @@
       --neon: #60a5fa;
       --neon2: #2df3c2;
       --neon3: #e6b2ff;
-      --serenity: #e2f0ffvar(--main-bg); color:var(--serenity); font-family:var(--font-main); margin:0; min-height:100vh; }
+      --serenity: #e2f0ff;
+      --font-main: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      --white: #fff;
+    }
+    body {
+      background: var(--main-bg);
+      color: var(--serenity);
+      font-family: var(--font-main);
+      margin: 0;
+      min-height: 100vh;
+    }
     a { color:var(--neon); text-decoration:underline; }
     .wrap {
-      max-width:480px; margin:36px auto; padding:0 0 32px 0 #12223a;
+      max-width:480px; margin:36px auto; padding:0 0 32px 0; background:var(--panel-bg);
+      border-radius:18px; box-shadow:0 0 32px 0 var(--panel-glow);
       position:relative;
       animation: neonBox 1.2s cubic-bezier(.9,.2,.5,1.7);
     }
     @keyframes neonBox {
-      0% { box-shadow:0 0 0 0 #1d2537,0 0 0 0 #2df3c2,0 0 0 0 #e6b2ff;}
-      100%{ box-shadow:0 0 32px 0 #12223a;}
+      0% { box-shadow:0 0 0 0 var(--panel-glow),0 0 0 0 var(--neon2),0 0 0 0 var(--neon3);}
+      100%{ box-shadow:0 0 32px 0 var(--panel-glow);}
     }
-    h2 { font-weight:700; margin:13px 0 4px; font-size:0.98rem; }
+    h2 { font-weight:700; margin:13px 0 4px; font-size:1.18rem; color:var(--white);}
     input, select, textarea {
       width:100%; padding:8px 11px; border-radius:7px;
       border:1.5px solid #222d3f; background:#0d1321; color:var(--serenity);
       font-size:1rem; margin-bottom:9px; outline:none;
-      box-shadow:0 0 0 0 #2df3c2;
+      box-shadow:0 0 0 0 var(--neon2);
       transition: box-shadow .28s;
     }
     input:focus, select:focus, textarea:focus {
@@ -57,7 +68,7 @@
     .row { display:flex; gap:10px; }
     .row > div { flex:1; }
     .status { font-size:14px; color:var(--neon2); margin-top:7px; min-height:20px;}
-    table { width:100%; border-collapse:collapse; margin-top:15px; background:rgba(12,18,34,0.96); border-radius:10px; box-shadow:0 0 8px #232283951; padding:7px 2px; font-size:0.97rem; }
+    table { width:100%; border-collapse:collapse; margin-top:15px; background:rgba(12,18,34,0.96); border-radius:10px; box-shadow:0 0 8px #23228395; padding:7px 2px; font-size:0.97rem; }
     th { color:var(--neon3); font-weight:600; background:rgba(17,25,40,0.98); }
     td { color:var(--serenity); }
     .chart-section { margin: 23px 0 0 0; }
@@ -82,7 +93,7 @@
 </head>
 <body>
   <div class="wrap">
-    <h2>KP Chart Generator <span style="font-size:0.98rem;color:var(--neon2);text-shadow:0 0 2px #fff;" >– Neon Edition</span></h2>
+    <h2>KP Chart Generator <span style="font-size:0.98rem;color:var(--neon2);text-shadow:0 0 2px #fff;" >– Neon Pencil Edition</span></h2>
     <div class="form-glow">
       <form id="kpForm" autocomplete="off">
         <label>Name</label>
@@ -131,9 +142,50 @@
       <textarea id="jsonPreview" rows="6" readonly placeholder="Preview will appear here"></textarea>
     </div>
   </div>
-  <!-- Street map logic in external JS file -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="street {
+  <script>
+    // --- Pencil/Sketchy Rasi Icons (SVG) ---
+    const RASI_ICONS = [
+      // Aries ♈
+      `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M3 16 Q2 8, 10 4 Q18 8, 17 16" stroke="#60a5fa" stroke-width="1.6" fill="none"/><circle cx="5" cy="16" r="1.3" fill="#60a5fa"/><circle cx="15" cy="16" r="1.3" fill="#60a5fa"/></svg>`,
+      // Taurus ♉
+      `<svg width="18" height="15" viewBox="0 0 20 20"><ellipse cx="10" cy="12" rx="6" ry="5" stroke="#2df3c2" stroke-width="1.6" fill="none"/><path d="M4 5 Q10 0.5, 16 5" stroke="#2df3c2" stroke-width="1.4" fill="none"/></svg>`,
+      // Gemini ♊
+      `<svg width="18" height="15" viewBox="0 0 20 20"><rect x="6.5" y="6" width="7" height="8" rx="2" stroke="#e6b2ff" stroke-width="1.5" fill="none"/><line x1="6.5" y1="6" x2="13.5" y2="6" stroke="#e6b2ff" stroke-width="1.3"/><line x1="6.5" y1="14" x2="13.5" y2="14" stroke="#e6b2ff" stroke-width="1.3"/></svg>`,
+      // Cancer ♋
+      `<svg width="18" height="15" viewBox="0 0 20 20"><circle cx="7" cy="13" r="2.5" stroke="#60a5fa" stroke-width="1.3" fill="none"/><circle cx="13" cy="7" r="2.5" stroke="#60a5fa" stroke-width="1.3" fill="none"/><path d="M5 15 Q10 10, 15 15" stroke="#60a5fa" stroke-width="1.3" fill="none"/></svg>`,
+      // Leo ♌
+      `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M5 14 Q8 4, 15 7 Q19 12, 12 17 Q7 18, 8 13" stroke="#2df3c2" stroke-width="1.6" fill="none"/></svg>`,
+      // Virgo ♍
+      `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M6 16 Q6 5, 10 8 Q14 5, 14 16" stroke="#e6b2ff" stroke-width="1.5" fill="none"/></svg>`,
+      // Libra ♎
+      `<svg width="18" height="15" viewBox="0 0 20 20"><rect x="5" y="14" width="10" height="2.5" fill="#60a5fa"/><path d="M5 14 Q10 6, 15 14" stroke="#60a5fa" stroke-width="1.3" fill="none"/></svg>`,
+      // Scorpio ♏
+      `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M6 16 V8 Q8 5,10 8 V16 M10 13 Q13 13,13 16 Q14 13,16 13" stroke="#2df3c2" stroke-width="1.3" fill="none"/></svg>`,
+      // Sagittarius ♐
+      `<svg width="18" height="15" viewBox="0 0 20 20"><line x1="6" y1="14" x2="16" y2="4" stroke="#e6b2ff" stroke-width="1.6"/><polyline points="13,4 16,4 16,7" stroke="#e6b2ff" stroke-width="1.4" fill="none"/></svg>`,
+      // Capricorn ♑
+      `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M6 16 Q6 8,10 12 Q14 8,14 16" stroke="#60a5fa" stroke-width="1.6" fill="none"/><circle cx="10" cy="12" r="1.3" stroke="#60a5fa" stroke-width="1.1" fill="none"/></svg>`,
+      // Aquarius ♒
+      `<svg width="18" height="15" viewBox="0 0 20 20"><polyline points="5,14 10,18 15,14" stroke="#2df3c2" stroke-width="1.6" fill="none"/><polyline points="5,8 10,12 15,8" stroke="#2df3c2" stroke-width="1.6" fill="none"/></svg>`,
+      // Pisces ♓
+      `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M6 8 Q8 14,6 16" stroke="#e6b2ff" stroke-width="1.5" fill="none"/><path d="M14 8 Q12 14,14 16" stroke="#e6b2ff" stroke-width="1.5" fill="none"/><line x1="6" y1="12" x2="14" y2="12" stroke="#e6b2ff" stroke-width="1.1"/></svg>`
+    ];
+
+    // Map
+    let map = L.map('map', {scrollWheelZoom:false, zoomControl:true}).setView([7.0, 80.0], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17, attribution: '© OpenStreetMap'
+    }).addTo(map);
+    let marker = null;
+    map.on('click', function(e) {
+      document.getElementById('lat').value = e.latlng.lat.toFixed(4);
+      document.getElementById('lon').value = e.latlng.lng.toFixed(4);
+      if(marker) marker.setLatLng(e.latlng);
+      else marker = L.marker(e.latlng).addTo(map);
+    });
+
+    document.getElementById('detectTzBtn').onclick = function() {
       try {
         let offset = -new Date().getTimezoneOffset();
         let sign = offset >= 0 ? '+' : '-';
@@ -147,12 +199,15 @@
       }
     };
 
-    // 3 with API call or JS library for real positions)
+    // KP Chart calculation helpers (demo only!)
     const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-    const NAKS = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','','Uttara Ashadha','Shravana','Dhanishta','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
+    const NAKS = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishta','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
     const DASHAS = [
       {lord:'Ketu', years:7}, {lord:'Venus', years:20}, {lord:'Sun', years:6}, {lord:'Moon', years:10},
-      {lord:'Mars', years:7}, {lord:'Rahu', years:18}, {lord:'Jupiter', years:16}, {lord:'Saturn', years:19}, {lord:'Mercury', yearslet idx=0;for(let i=0;i<27;i++){list.push(DASHAS[idx%9].lord);idx++;}return list;})();
+      {lord:'Mars', years:7}, {lord:'Rahu', years:18}, {lord:'Jupiter', years:16}, {lord:'Saturn', years:19}, {lord:'Mercury', years:17}
+    ];
+    // Nakshatra star lords order (Ketu, Venus, Sun, Moon, Mars, Rahu, Jupiter, Saturn, Mercury, repeating...)
+    const NAK_LORD = (()=>{let l=[],idx=0;for(let i=0;i<27;i++){l.push(DASHAS[idx%9].lord);idx++}return l;})();
     const mod = (a,b)=>((a%b)+b)%b;
     const DEG_PER_NAK = 360/27, DEG_PER_PADA = DEG_PER_NAK/4;
     function dms(deg){
@@ -161,99 +216,94 @@
       const mFloat=(deg-d)*60;
       const m=Math.floor(mFloat);
       const s=Math.round((mFloat-m)*60);
-      return `${Of(deg){return SIGNS[Math.floor(mod(deg,360)/30)]}
+      return `${d}°${String(m).padStart(2,'0')}'${String(s).padStart(2,'0')}"`;
+    }
+    function signOf(deg){return SIGNS[Math.floor(mod(deg,360)/30)]}
     function nakIndex(deg){return Math.floor(mod(deg,360)/DEG_PER_NAK)}
     function padaOf(deg){const within=mod(deg,DEG_PER_NAK);return Math.floor(within/DEG_PER_PADA)+1;}
     function starLordOf(deg){return NAK_LORD[nakIndex(deg)]}
     function subLordOf(deg){
-      const nIdx=nakIndex(deg);const startLord=NAK_LORD[nIdx];
-      const startIdx=DASHAS      const arc=DEG_PER_NAK;const subArcs=rotated.map(d=>arc*(d.years/120));
+      // Vimshottari sub-lord: divide nakshatra arc in dasha proportions
+      const nIdx=nakIndex(deg),startLord=NAK_LORD[nIdx];
+      const startIdx=DASHAS.findIndex(d=>d.lord===startLord);
+      let rotated=[];for(let i=0;i<9;i++)rotated.push(DASHAS[(startIdx+i)%9]);
+      const arc=DEG_PER_NAK,subArcs=rotated.map(d=>arc*(d.years/120));
       const within=mod(deg,DEG_PER_NAK);let acc=0;
-      for(let i=0;i<subArcs.length;i++){acc+=subArcs="M18 14 C 14 2, 6 2, 2 14" stroke="#60a5fa" stroke-width="2" fill="none"/><circle cx="2" cy="14" r="1.5" fill="#60a5fa"/><circle cx="18" cy="14" r="1.5" fill="#60a5fa"/>`,
-      `<circle cx="10" cy="13" r="5.5" stroke="#2df3c2" stroke-width="2" fill="none"/><path d="M4 6 Q10 0,16 6" stroke="#2df3c2" stroke-width="2" fill="none"/>`,
-      `<rect x="6.5" y="6" width="7" height="8" rx="2" stroke="#e6b2ff" stroke-width="2" fill="none"/><line x1="6.5" y1="6" x2="13.5" y2="6" stroke="#e6b2ff" stroke-width="2"/><line x1="6.5" y1="14" x2="13.5" y2="14" stroke="#e6b2ff" stroke-width="2"/>`,
-      `<circle cx="7" cy="13" r="2.5" stroke="#60a5fa" stroke-width="2" fill="none"/><circle cx="13" cy="7"5fa" stroke-width="2" fill="none"/><path d="M5 15 Q10 10,15 15" stroke="#60a5fa" stroke-width="2" fill="none"/>`,
-      `<path d="M5 14 Q8 4,15 7 Q19 12,12 17 Q7 18,8 13" stroke="#2df3c2" stroke-width="2" fill="none"/>`,
-      `<path d="M6 16 Q6 5,10 8 Q14 5,14 16" stroke="#e6b2e6b2ff" stroke-width="2" fill="none"/>`,
-      `<rect x="5" y="14" width="10" height="2.5" fill="#60a5fa"/><path d="M5 14 Q10 6,15 14" stroke="#60a5fa" stroke-width="2" fill="none"/>`,
-      `<path d="M6 16 V8 Q8 5,10 8 V16 M10 13 Q13 13,13 16 Q14 13,16 13" stroke="#2df3c2" stroke-width`,
-      `<line x1="6" y1="14" x2="16" y2="4" stroke="#e6b2ff" stroke-width="2"/><polyline points="13,4 16,4 16,7" stroke="#e6b2ff" stroke-width="2" fill="none"/>`,
-      `<path d="M6 16 Q6 8,10 12 Q14 8,14 16" stroke="#60a5fa" stroke-width="2" fill="none"/><circle cx="10" cy="12" r="1.3"" fill="none"/><polyline points="5,14 10,18 15,14" stroke="#2df3c2" stroke-width="2" fill="none"/>`,
-      `<path d="M6 8 Q8 14,6 16" stroke="#e6b2ff" stroke-width="2" fill="none"/><path d="M14 8 Q12 14,14 16" stroke="#e6b2ff" stroke-width="2" fill="none"/><line x1="6" y1="12" x2="14" y2="12" stroke="#e6b2ff" stroke-width="2"/>`
-    ];
+      for(let i=0;i<subArcs.length;i++){acc+=subArcs[i];if(within<acc)return rotated[i].lord;}
+      return rotated[8].lord;
+    }
 
-    // 5. Chart Table & Wheel
+    // Table & Wheel renderers
     function renderTable(planets){
       const tbody=document.getElementById('tbl'); tbody.innerHTML='';
       planets.forEach(p=>{
-        const zi=signOf(p.degree),zIndex=SIGNS.indexOf(zi),nIdx=nakIndex(p.degree),nak=NAKS[nIdx],pada=padaOf(p.degree),sLord=starLordOf(p.degree),sub=subLordOf(p          <td>${dms(p.degree)}</td>
-          <td><svg width="23" height="18" viewBox="0 0 20 20" style="vertical-align:middle;" class="rasi-ico">${RASI_ICONS[zIndex]}</svg> <span style="color:var(--white);font-weight:600;">${zi}</span></td>
+        const zi=signOf(p.degree),zIndex=SIGNS.indexOf(zi),nIdx=nakIndex(p.degree),nak=NAKS[nIdx],pada=padaOf(p.degree),sLord=starLordOf(p.degree),sub=subLordOf(p.degree);
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td><b style="color:var(--neon);">${p.name}</b></td>
+          <td>${dms(p.degree)}</td>
+          <td><span class="rasi-ico" style="vertical-align:middle;">${RASI_ICONS[zIndex]}</span> <span style="color:var(--white);font-weight:600;">${zi}</span></td>
           <td>${nak}</td>
           <td>${pada}</td>
           <td>${sLord}</td>
           <td><b style="color:var(--neon2);">${sub}</b></td>`;
-        tbody(tr);
+        tbody.appendChild(tr);
       });
     }
     function renderWheel(planets){
       const W=300,H=300,Cx=W/2,Cy=H/2,R=95;
       let sectors='',labels='',icons='',planDots='';
-      // Sectors
+      // Sectors (12)
       for(let i=0;i<12;i++){
         const a1=(i*30-90)*Math.PI/180, a2=((i+1)*30-90)*Math.PI/180;
-        const x1=Cx+R*Math.cos(a1), y1=Cy+R*Math.sin(a1), x2=Cx+R*Math.cos(a2),.sin(a2);
+        const x1=Cx+R*Math.cos(a1), y1=Cy+R*Math.sin(a1), x2=Cx+R*Math.cos(a2), y2=Cy+R*Math.sin(a2);
         sectors+=`<path d="M${Cx},${Cy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z" fill="none" stroke="#1a2c44" stroke-width="2"/>`;
       }
       // Rasi icons/labels
       for(let i=0;i<12;i++){
         const a=((i*30+15)-90)*Math.PI/180, x=Cx+(R-18)*Math.cos(a), y=Cy+(R-18)*Math.sin(a);
-        icons+=`<g transform="translate(${x-9},${y-8})"><svg width="18" height="15" viewBox="0 0 20 20" class="rasi-ico">${RASI_ICONS[i]}</svg></g>`;
-        labels+=`<text x="${x}" y="${y+15}" font-size="10" class="rasi-label" text-anchor="middle" >${SIGNS[i]}</text>`;
+        icons+=`<g transform="translate(${x-9},${y-8})">${RASI_ICONS[i]}</g>`;
+        labels+=`<text x="${x}" y="${y+15}" font-size="10" class="rasi-label" text-anchor="middle">${SIGNS[i]}</text>`;
       }
       // Planets
-      planets.forEach(p=>{
+      planets.forEach((p,pi)=>{
         const a=(p.degree-90)*Math.PI/180,r=R-25,x=Cx+r*Math.cos(a),y=Cy+r*Math.sin(a);
-        planDots+=`<circle cx="${x}" cy="${y}" r="7" fill="#181f2e" stroke="#60a5fa" stroke-width="2" filter="url(#glow)"/><text x="${x}" y="${y+3}" font-size=" glow filter
+        planDots+=`<circle cx="${x}" cy="${y}" r="7" fill="#181f2e" stroke="#60a5fa" stroke-width="2" filter="url(#glow)"/><text x="${x}" y="${y+3}" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" style="text-shadow:0 0 8px #2df3c2;">${p.name[0]}</text>`;
+      });
+      // SVG
       const svg=`<svg viewBox="0 0 ${W} ${H}" style="background:transparent;width:240px;height:240px;">
         <defs>
           <filter id="glow"><feGaussianBlur stdDeviation="4" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
         <circle cx="${Cx}" cy="${Cy}" r="${R+12}" fill="rgba(7,18,34,0.98)" filter="url(#glow)"/>
-       Dots}</g>
+        ${sectors}
+        ${icons}
+        ${labels}
+        <g>${planDots}</g>
       </svg>`;
       document.getElementById('wheel').innerHTML=svg;
     }
 
-    // 6. Form Handler (Replace with real API for actual planetary positions)
+    // Form handler (sample/demo data)
     document.getElementById('kpForm').onsubmit = async function(e){
       e.preventDefault();
-      // ---- Replace this sample block with API call or library for real chart ----
-      // Sample static demo planets
+      // Demo planets (replace this block with API/library for real positions!)
       const planets = [
-        { "name": "Sun", "degree": 123.456 },
-        { "name": "Moon", "degree": 200.123 },
-        { "name": " "degree": 305.432 },
+        { "name": "Sun",   "degree": 123.456 },
+        { "name": "Moon",  "degree": 200.123 },
+        { "name": "Mercury", "degree": 305.432 },
+        { "name": "Venus", "degree": 89.234 },
+        { "name": "Mars",  "degree": 44.876 },
+        { "name": "Jupiter", "degree": 278.222 },
+        { "name": "Saturn", "degree": 355.621 },
         { "name": "Rahu", "degree": 45.876 },
         { "name": "Ketu", "degree": 225.876 }
       ];
-      // --- Example API call block (commented) ---
-      // const dob = document.getElementById('dob').value;
-      // const tob = document.getElementById('tob').value;
-      // const lat = document.getElementById('lat').value;
-      // const lon = document.getElementById('lon').value;
-      // const tz = document.getElementById('timezone').value;
-      // const}&lon=${lon}&tz=${tz}`, {
-      //   headers: { 'Authorization': 'Basic '+btoa(apiKey+':') }
-      // });
-      // const data = await resp.json();
-      // const planets = data.planets.map(p => ({ name: p.name, degree: p.longitude }));
-      // --------------------------------------------------------------
       renderTable(planets);
       renderWheel(planets);
       document.getElementById('jsonPreview').value = JSON.stringify({planets}, null, 2);
       document.getElementById('status').textContent = '✓ Chart generated (demo data)';
     };
-
     // Initial preview (on page load)
     document.getElementById('kpForm').onsubmit(new Event('submit'));
   </script>
