@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8">
+  <title>Palmistry Camera Overlay – Lebetion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #131e2e 0%, #090d13 100%);
+      color: #e0f2fe;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .topbar {
+      width: 100vw;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      background: rgba(8,13,22,0.86);
+      box-shadow: 0 2px 18px #16f0a72b;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 0.8em 1.5em 0.8em 0.8em;
+      gap: 0.6em;
+      backdrop-filter: blur(4px);
+    }
+    .topbar button {
+      background: linear-gradient(90deg, #16f0a7, #38bdf8);
+      border: none;
+      border-radius: 9px;
+      color: #18181b;
+      font-weight: 600;
+      font-size: 1.09em;
+      padding: 0.58em 1.35em;
+      margin-left: 0.16em;
+      cursor: pointer;
+      box-shadow: 0 2px 12px #16f0a733;
+      transition: background .16s, color .16s, transform .11s;
+      outline: none;
+      letter-spacing: .01em;
+    }
+    .topbar button:hover {
+      background: linear-gradient(90deg, #38bdf8, #16f0a7);
+      color: #fff;
+      transform: scale(1.06);
+    }
+    .main-card {
+      background: rgba(18,27,41,0.96);
+      border-radius: 1.4em;
+      margin-top: 3.3em;
+      box-shadow: 0 0 24px #16f0a74a;
+      padding: 2.2em 1.2em 2.2em 1.2em;
+      width: 97vw;
+      max-width: 390px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 420px;
+      position: relative;
+      animation: fadeIn .7s;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+    .main-card h1 {
+      font-size: 1.23em;
+      letter-spacing: 0.04em;
+      margin-bottom: 1.5em;
+      color: #16f0a7;
+      text-shadow: 0 0 10px #16f0a755;
+      font-weight: 700;
+    }
+    .camera-area {
+      position: relative;
+      width: 250px;
+      height: 320px;
+      background: #182032;
+      border-radius: 17px;
+      box-shadow: 0 0 24px #16f0a74a;
+      overflow: hidden;
+      margin-bottom: 1.1em;
+      margin-top: 0.12em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #camera {
+      position: absolute;
+      left: 0; top: 0; width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 1;
+      background: #1a2233;
+      border-radius: 17px;
+    }
+    .overlay-img {
+      position: absolute;
+      left: 0; top: 0; width: 100%; height: 100%;
+      opacity: 0.42;
+      pointer-events: none;
+      user-select: none;
+      z-index: 2;
+      transition: opacity 0.22s;
+    }
+    .placeholder-text {
+      position: absolute;
+      left: 0; top: 54%; width: 100%;
+      transform: translateY(-50%);
+      color: #bae6fd;
+      text-align: center;
+      font-size: 1.03em;
+      opacity: 0.85;
+      z-index: 3;
+      pointer-events: none;
+      letter-spacing: .01em;
+      text-shadow: 0 2px 8px #0009;
+    }
+    .copyright-label {
+      background:linear-gradient(90deg,#f43f5e 30%,#f59e42 70%);
+      color:#fff;
+      font-weight:bold;
+      border-radius:8px;
+      padding:4px 17px 5px 17px;
+      font-size:1.03em;
+      margin:23px auto 0 auto;
+      box-shadow:0 2px 8px #0005;
+      letter-spacing:1px;
+      border:2px solid #fff3;
+      text-align:center;
+      display:inline-block;
+    }
+    .footer {
+      margin-top: 3.5em;
+      color: #16f0a7;
+      font-size: 1.01em;
+      text-align: center;
+      letter-spacing: .01em;
+      opacity: 0.93;
+      margin-bottom: 1.5em;
+    }
+    @media (max-width: 500px) {
+      .main-card {
+        padding: 1.1em 0.13em 1.7em 0.13em;
+        min-height: 330px;
+        margin-top: 2.1em;
+      }
+      .camera-area { width: 95vw; max-width: 98vw; height: 55vw; min-height: 168px;}
+      .main-card h1 { font-size: 1em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <button onclick="goHome()">🏠 Home</button>
+    <button onclick="translatePage()">🌐 Language</button>
+  </div>
+  <div class="main-card">
+    <h1>Palmistry Overlay (Camera)</h1>
+    <div class="camera-area">
+      <video id="camera" autoplay playsinline muted></video>
+      <img src="https://i.ibb.co/1K7K0gF/palm-overlay-demo.png" alt="Ghost Hand Overlay" class="overlay-img" />
+      <div class="placeholder-text">🖐️ අත overlay එකට සමානව තබන්න</div>
+    </div>
+    <div class="copyright-label">
+      🛡️ HIGH COPYRIGHT – Lebetion | Sathyadarshana 2025
+    </div>
+  </div>
+  <div class="footer">
+    Palmistry overlay UI – Camera<br>
+    <span style="color:#bae6fd;">Minimal, SaaS-ready, ultra-modern</span>
+  </div>
+  <script>
+    // Camera feed setup
+    const video = document.getElementById('camera');
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => {
+          video.srcObject = stream;
+        })
+        .catch(err => {
+          document.querySelector('.placeholder-text').innerText = '📷 කැමරාව සම්බන්ධ කළ නොහැක!';
+        });
+    } else {
+      document.querySelector('.placeholder-text').innerText = '📷 ඔබේ බ්‍රව්සරය කැමරාවට සහය නොදක්වයි!';
+    }
+
+    function goHome() {
+      window.location.href = '/'; // Change to your actual home page if needed
+    }
+    function translatePage() {
+      alert('Language/Translate feature coming soon!');
+      // Integrate Google Translate or similar here
+    }
+  </script>
+</body>
+</html>
