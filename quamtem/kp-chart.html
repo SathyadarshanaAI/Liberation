@@ -146,29 +146,17 @@
   <script>
     // --- Pencil/Sketchy Rasi Icons (SVG) ---
     const RASI_ICONS = [
-      // Aries ♈
       `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M3 16 Q2 8, 10 4 Q18 8, 17 16" stroke="#60a5fa" stroke-width="1.6" fill="none"/><circle cx="5" cy="16" r="1.3" fill="#60a5fa"/><circle cx="15" cy="16" r="1.3" fill="#60a5fa"/></svg>`,
-      // Taurus ♉
       `<svg width="18" height="15" viewBox="0 0 20 20"><ellipse cx="10" cy="12" rx="6" ry="5" stroke="#2df3c2" stroke-width="1.6" fill="none"/><path d="M4 5 Q10 0.5, 16 5" stroke="#2df3c2" stroke-width="1.4" fill="none"/></svg>`,
-      // Gemini ♊
       `<svg width="18" height="15" viewBox="0 0 20 20"><rect x="6.5" y="6" width="7" height="8" rx="2" stroke="#e6b2ff" stroke-width="1.5" fill="none"/><line x1="6.5" y1="6" x2="13.5" y2="6" stroke="#e6b2ff" stroke-width="1.3"/><line x1="6.5" y1="14" x2="13.5" y2="14" stroke="#e6b2ff" stroke-width="1.3"/></svg>`,
-      // Cancer ♋
       `<svg width="18" height="15" viewBox="0 0 20 20"><circle cx="7" cy="13" r="2.5" stroke="#60a5fa" stroke-width="1.3" fill="none"/><circle cx="13" cy="7" r="2.5" stroke="#60a5fa" stroke-width="1.3" fill="none"/><path d="M5 15 Q10 10, 15 15" stroke="#60a5fa" stroke-width="1.3" fill="none"/></svg>`,
-      // Leo ♌
       `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M5 14 Q8 4, 15 7 Q19 12, 12 17 Q7 18, 8 13" stroke="#2df3c2" stroke-width="1.6" fill="none"/></svg>`,
-      // Virgo ♍
       `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M6 16 Q6 5, 10 8 Q14 5, 14 16" stroke="#e6b2ff" stroke-width="1.5" fill="none"/></svg>`,
-      // Libra ♎
       `<svg width="18" height="15" viewBox="0 0 20 20"><rect x="5" y="14" width="10" height="2.5" fill="#60a5fa"/><path d="M5 14 Q10 6, 15 14" stroke="#60a5fa" stroke-width="1.3" fill="none"/></svg>`,
-      // Scorpio ♏
       `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M6 16 V8 Q8 5,10 8 V16 M10 13 Q13 13,13 16 Q14 13,16 13" stroke="#2df3c2" stroke-width="1.3" fill="none"/></svg>`,
-      // Sagittarius ♐
       `<svg width="18" height="15" viewBox="0 0 20 20"><line x1="6" y1="14" x2="16" y2="4" stroke="#e6b2ff" stroke-width="1.6"/><polyline points="13,4 16,4 16,7" stroke="#e6b2ff" stroke-width="1.4" fill="none"/></svg>`,
-      // Capricorn ♑
       `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M6 16 Q6 8,10 12 Q14 8,14 16" stroke="#60a5fa" stroke-width="1.6" fill="none"/><circle cx="10" cy="12" r="1.3" stroke="#60a5fa" stroke-width="1.1" fill="none"/></svg>`,
-      // Aquarius ♒
       `<svg width="18" height="15" viewBox="0 0 20 20"><polyline points="5,14 10,18 15,14" stroke="#2df3c2" stroke-width="1.6" fill="none"/><polyline points="5,8 10,12 15,8" stroke="#2df3c2" stroke-width="1.6" fill="none"/></svg>`,
-      // Pisces ♓
       `<svg width="18" height="15" viewBox="0 0 20 20"><path d="M6 8 Q8 14,6 16" stroke="#e6b2ff" stroke-width="1.5" fill="none"/><path d="M14 8 Q12 14,14 16" stroke="#e6b2ff" stroke-width="1.5" fill="none"/><line x1="6" y1="12" x2="14" y2="12" stroke="#e6b2ff" stroke-width="1.1"/></svg>`
     ];
 
@@ -206,7 +194,6 @@
       {lord:'Ketu', years:7}, {lord:'Venus', years:20}, {lord:'Sun', years:6}, {lord:'Moon', years:10},
       {lord:'Mars', years:7}, {lord:'Rahu', years:18}, {lord:'Jupiter', years:16}, {lord:'Saturn', years:19}, {lord:'Mercury', years:17}
     ];
-    // Nakshatra star lords order (Ketu, Venus, Sun, Moon, Mars, Rahu, Jupiter, Saturn, Mercury, repeating...)
     const NAK_LORD = (()=>{let l=[],idx=0;for(let i=0;i<27;i++){l.push(DASHAS[idx%9].lord);idx++}return l;})();
     const mod = (a,b)=>((a%b)+b)%b;
     const DEG_PER_NAK = 360/27, DEG_PER_PADA = DEG_PER_NAK/4;
@@ -223,7 +210,6 @@
     function padaOf(deg){const within=mod(deg,DEG_PER_NAK);return Math.floor(within/DEG_PER_PADA)+1;}
     function starLordOf(deg){return NAK_LORD[nakIndex(deg)]}
     function subLordOf(deg){
-      // Vimshottari sub-lord: divide nakshatra arc in dasha proportions
       const nIdx=nakIndex(deg),startLord=NAK_LORD[nIdx];
       const startIdx=DASHAS.findIndex(d=>d.lord===startLord);
       let rotated=[];for(let i=0;i<9;i++)rotated.push(DASHAS[(startIdx+i)%9]);
@@ -233,7 +219,6 @@
       return rotated[8].lord;
     }
 
-    // Table & Wheel renderers
     function renderTable(planets){
       const tbody=document.getElementById('tbl'); tbody.innerHTML='';
       planets.forEach(p=>{
@@ -246,31 +231,27 @@
           <td>${nak}</td>
           <td>${pada}</td>
           <td>${sLord}</td>
-          <td><b style="color:var(--neon2);">${sub}</b></td>`;
+          <td><b style="color:var(-කneon2);">${sub}</b></td>`;
         tbody.appendChild(tr);
       });
     }
     function renderWheel(planets){
       const W=300,H=300,Cx=W/2,Cy=H/2,R=95;
       let sectors='',labels='',icons='',planDots='';
-      // Sectors (12)
       for(let i=0;i<12;i++){
         const a1=(i*30-90)*Math.PI/180, a2=((i+1)*30-90)*Math.PI/180;
         const x1=Cx+R*Math.cos(a1), y1=Cy+R*Math.sin(a1), x2=Cx+R*Math.cos(a2), y2=Cy+R*Math.sin(a2);
         sectors+=`<path d="M${Cx},${Cy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z" fill="none" stroke="#1a2c44" stroke-width="2"/>`;
       }
-      // Rasi icons/labels
       for(let i=0;i<12;i++){
         const a=((i*30+15)-90)*Math.PI/180, x=Cx+(R-18)*Math.cos(a), y=Cy+(R-18)*Math.sin(a);
         icons+=`<g transform="translate(${x-9},${y-8})">${RASI_ICONS[i]}</g>`;
         labels+=`<text x="${x}" y="${y+15}" font-size="10" class="rasi-label" text-anchor="middle">${SIGNS[i]}</text>`;
       }
-      // Planets
       planets.forEach((p,pi)=>{
         const a=(p.degree-90)*Math.PI/180,r=R-25,x=Cx+r*Math.cos(a),y=Cy+r*Math.sin(a);
         planDots+=`<circle cx="${x}" cy="${y}" r="7" fill="#181f2e" stroke="#60a5fa" stroke-width="2" filter="url(#glow)"/><text x="${x}" y="${y+3}" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" style="text-shadow:0 0 8px #2df3c2;">${p.name[0]}</text>`;
       });
-      // SVG
       const svg=`<svg viewBox="0 0 ${W} ${H}" style="background:transparent;width:240px;height:240px;">
         <defs>
           <filter id="glow"><feGaussianBlur stdDeviation="4" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -284,10 +265,8 @@
       document.getElementById('wheel').innerHTML=svg;
     }
 
-    // Form handler (sample/demo data)
     document.getElementById('kpForm').onsubmit = async function(e){
       e.preventDefault();
-      // Demo planets (replace this block with API/library for real positions!)
       const planets = [
         { "name": "Sun",   "degree": 123.456 },
         { "name": "Moon",  "degree": 200.123 },
@@ -304,7 +283,6 @@
       document.getElementById('jsonPreview').value = JSON.stringify({planets}, null, 2);
       document.getElementById('status').textContent = '✓ Chart generated (demo data)';
     };
-    // Initial preview (on page load)
     document.getElementById('kpForm').onsubmit(new Event('submit'));
   </script>
 </body>
