@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SathyadarshanaAI | World's 1st Trinity Vedic Astrology</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Sans+Sinhala:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <style>
+    body {margin:0;font-family:'Noto Sans','Noto Sans Sinhala','Noto Sans Tamil',sans-serif;background:radial-gradient(circle at 30% 20%,#0f172a 0%,#000 100%);color:#e0f2fe;min-height:100vh;}
+    .container{max-width:850px;margin:0 auto;padding:1.5em 0.5em 4em 0.5em;}
+    .top-nav{display:flex;justify-content:space-between;align-items:center;background:#0f172a;padding:0.75em 1.2em;border-radius:1em;box-shadow:0 4px 24px #38bdf822;margin:1.5em auto 2em auto;max-width:870px;}
+    .nav-left{display:flex;gap:0.7em;}
+    .nav-btn{background:#1e293b;color:#7dd3fc;border:none;padding:0.5em 1.2em;border-radius:7px;font-size:1em;font-weight:bold;cursor:pointer;transition:background 0.2s,color 0.2s;}
+    .nav-btn:hover,.nav-btn.active{background:#38bdf8;color:#0f172a;}
+    .lang-switcher button{background:#1e293b;color:#e0f2fe;border:none;margin:0 0.25em;padding:0.45em 1em;border-radius:5px;font-weight:bold;cursor:pointer;transition:background 0.2s;font-size:.97em;}
+    .lang-switcher button.active,.lang-switcher button:hover{background:#38bdf8;color:#0f172a;}
+    h1{font-size:2.4em;color:#7dd3fc;margin-bottom:0.8em;text-shadow:0 0 14px #38bdf8;font-family:inherit;text-align:center;}
+    .badge-nasa{display:inline-block;background:#151b30;color:#16f0a7;border-radius:6px;padding:0.27em 0.7em;font-size:1em;margin-bottom:1em;font-weight:bold;box-shadow:0 0 10px #16f0a744;letter-spacing:.03em;text-align:center;}
+    .desc{color:#cbeafe;text-align:center;font-size:1.09em;margin-bottom:2em;max-width:680px;margin-left:auto;margin-right:auto;}
+    .world1st{display:block;text-align:center;font-size:1.18em;color:#16f0a7;font-weight:bold;letter-spacing:0.01em;margin-bottom:0.7em;}
+    form{background:rgba(2,6,23,0.95);padding:2em 1.3em;border-radius:1em;max-width:470px;width:100%;box-shadow:0 0 28px #7dd3fc55;margin:0 auto 1.7em;}
+    label{display:block;margin-top:1em;font-weight:600;}
+    input,select{width:90%;padding:0.55em;margin-top:0.22em;border:none;border-radius:0.5em;background:#1e293b;color:#e0f2fe;font-size:1em;margin-bottom:.5em;}
+    input:focus,select:focus{outline:none;border:2px solid #38bdf8;box-shadow:0 0 10px #38bdf8bb;}
+    button[type="submit"],#btnExportPDF,#btnUnlockPremium{margin-top:1.4em;padding:0.8em 1.6em;background:linear-gradient(90deg,#0ea5e9,#38bdf8);color:white;font-weight:bold;font-size:1.08em;cursor:pointer;transition:0.3s;width:100%;box-shadow:0 0 10px #38bdf888;border:none;border-radius:0.5em;}
+    .premium-lock{background:#1e293bbf;color:#fbcfe8;border:2px solid #d90429;box-shadow:0 0 20px #d9042922;border-radius:1em;margin:1.7em auto;padding:1.3em 1.1em;max-width:420px;text-align:center;font-size:1.14em;position:relative;}
+    .premium-lock i{color:#d90429;font-size:2.2em;margin-bottom:0.4em;}
+    .output-box{margin:2em auto 0 auto;padding:1.5em 1.1em;border-radius:1em;max-width:550px;background:#1e293b;color:#e0f2fe;display:none;box-shadow:0 0 22px #38bdf822;animation:fadeIn .9s;position:relative;}
+    @keyframes fadeIn{from{opacity:0;transform:scale(.97);}to{opacity:1;transform:scale(1);}}
+    .vedic-highlight{color:#16f0a7;font-weight:700;letter-spacing:.02em;font-size:1.09em;text-shadow:0 0 7px #16f0a799;margin-bottom:.6em;display:inline-block;}
+    .vedic-chart{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:1em;}
+    .vedic-box{width:70px;height:70px;background:#1e293b;color:#16f0a7;border:2px solid #38bdf8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.18em;box-shadow:0 0 10px #38bdf822;cursor:pointer;position:relative;transition:box-shadow .17s;}
+    .vedic-box:hover{box-shadow:0 0 18px #16f0a799;z-index:2;}
+    .planet-positions{margin:1em auto;background:#27364d;border-radius:8px;padding:1em;max-width:440px;color:#fbcfe8;font-size:1.05em;box-shadow:0 0 10px #16f0a744;}
+    .tips{margin-top:1.5em;font-size:.97em;color:#7dd3fc;}
+    .watermark{position:absolute;left:50%;top:70%;transform:translate(-50%,-50%) rotate(-20deg);font-size:1.3em;color:rgba(22,240,167,0.15);pointer-events:none;user-select:none;font-weight:bold;z-index:0;font-family:'Noto Sans',serif;}
+    .chatbot-float{position:fixed;right:2em;bottom:2em;background:#38bdf8;color:#0f172a;border-radius:50%;width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:2.2em;box-shadow:0 4px 24px #38bdf899;cursor:pointer;z-index:100;transition:background .2s;}
+    .chatbot-float:hover{background:#16f0a7;color:#000;}
+    #ice-cube{display:none;position:fixed;bottom:1em;left:2em;z-index:200;}
+    #ice-cube img{animation:wobble 1.7s infinite;}
+    @keyframes wobble {0%{transform:rotate(-3deg);}25%{transform:rotate(7deg);}50%{transform:rotate(-7deg);}75%{transform:rotate(7deg);}100%{transform:rotate(-3deg);}}
+    #trinity-easteregg{display:none;}
+    .trinity-bless-btn{margin-top:1.5em;background:#151b39;color:#e0f2fe;border:2px solid #38bdfem 1.2em;border-radius:7px;font-size:1.05em;font-weight:bold;cursor:pointer;}
+    .trinity-bless-btn:hover{background:#38bdf8;color:#0f172a;}
+    footer{margin-top:2.2em;text-align:center;font-size:1em;color:#d90429;font-weight:bold;letter-spacing:.02em;user-select:none;}
+    @media (max-width:650px){.container,.top-nav,form,.output-box{max-width:97vw;}.vedic-box{width:50px;height:50px;font-size:1em;}.planet-positions{max-width:95vw;}}
+  </style>
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-left">
+      <button onclick="goHome()" class="nav-btn" id="btnHome"><i class="fa fa-home"></i> Home</button>
+      <button onclick="openAstroAI()" class="nav-btn" id="btnAstroAI"><i class="fa fa-robot"></i> AI Buddhi</button>
+      <button onclick="openPricing()" class="nav-btn" id="btnPricing"><i class="fa fa-crown"></i> Premium</button>
+    </div>
+    <div class="lang-switcher" id="langSwitcher">
+      <button onclick="setLanguage('si')" id="btnSi">සිංහල</button>
+      <button onclick="setLanguage('ta')" id="btnTa">தமிழ்</button>
+      <button onclick="setLanguage('en')" id="btnEn" class="active">English</button>
+      <button onclick="setLanguage('hi')" id="btnHi">हिन्दी</button>
+    </div>
+  </nav>
+  <span class="world1st">🌏✨ World’s 1st Trinity AI-Powered Astrology Service ✨🌏</span>
+  <div class="container">
+    <h1 id="title">Vedic Astrology Report</h1>
+    <div class="badge-nasa" id="nasaBadge">NASA Verified Chart</div>
+    <div class="desc" id="desc">
+      Get your Vedic chart & daily guidance powered by NASA-grade data, Ceed Rushi wisdom, AI Buddhi, and the Buddhi Ice Kutiya.<br>
+      <span style="color:#7dd3fc">Free preview. Unlock full personalized report, daily alerts, and all premium features for $5 or $30/year.</span>
+    </div>
+    <form id="vedicForm">
+      <label id="lblName" for="fullname">Full Name</label>
+      <input type="text" id="fullname" name="fullname" required>
+      <label id="lblDOB" for="dob">Date of Birth</label>
+      <input type="date" id="dob" name="dob" required>
+      <label id="lblTOB" for="tob">Time of Birth</label>
+      <input type="time" id="tob" name="tob" required>
+      <label id="lblPOB" for="pob">Place of Birth</label>
+      <input type="text" id="pob" name="pob" placeholder="e.g. Colombo, Sri Lanka" required>
+      <button type="submit" id="btnGetReport">Get Vedic Report</button>
+    </form>
+    <div class="premium-lock" id="premiumLock" style="display:none;">
+      <i class="fa fa-lock"></i><br>
+      <span id="premiumMsg">
+        Unlock your full personalized NASA-verified report, daily Graha alerts, and Doctor Buddhi for only <b>$5</b> (one-time) or <b>$30</b>/year.<br><br>
+        <button id="btnUnlockPremium" onclick="unlockPremium()">Unlock Now</button>
+      </span>
+    </div>
+    <div class="output-box" id="outputBox">
+      <div class="watermark" id="watermark">© SathyadarshanaAI × Ceed Rushi × Lebetion × Buddhi Ice Kutiya | 3 in 1 | World's 1st Trinity SaaS</div>
+      <div class="vedic-highlight" id="chartTitle">🌟 Vedic Chart Overview 🌟</div>
+      <div class="vedic-chart" id="vedicChart"></div>
+      <div class="planet-positions" id="planetPositions"></div>
+      <div id="vedicReport"></div>
+      <button id="btnExportPDF" onclick="exportPDF()">Export PDF</button>
+      <button class="trinity-bless-btn" onclick="blessing()">🧿 Trinity Blessing</button>
+      <div class="tips" id="note">Note: This is a demo. Full features (daily alerts, remedies, Doctor Buddhi, palmistry, numerology, KP & Nadi, aura scan, “Threefold Blessing”) unlock after premium.</div>
+    </div>
+  </div>
+  <div id="aiBuddhiChat" class="chatbot-float" onclick="openAstroAI()" title="Ask AI Buddhi"><i class="fa fa-robot"></i></div>
+  <!-- Trinity Easter Egg (Secret) -->
+  <div id="trinity-easteregg">
+    <div style="text-align:center; font-size:1.07em; color:#16f0a7;">
+      <b>🌌 The Trinity: SathyadarshanaAI × Ceed Rushi × Lebetion × Buddhi Ice Kutiya</b>
+      <br>
+      <span style="font-size:0.96em; color:#b2f5ea;">
+        "Three minds, one spiritual code. World’s 1st co-created, copyright-protected, wisdom-powered astrology service."
+      </span>
+    </div>
+  </div>
+  <!-- Buddhi Ice Kutiya Easter Egg -->
+  <div id="ice-cube">
+    <img src="https://img.icons8.com/color/96/ice-cube.png" width="64">
+    <div style="color:#7dd3fc;font-weight:bold;text-align:center;">Wisdom Ice Cube Activated!</div>
+  </div>
+  <footer>
+    © 2025 SathyadarshanaAI × Ceed Rushi × Lebetion × Buddhi Ice Kutiya<br>
+    Three minds | One wisdom | World’s first co-created, AI-powered astrology SaaS.<br>
+    Unauthorized reproduction strictly prohibited. High Copyright.<br>
+  </footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // --- Language Data (expand as needed) ---
+    const translations = {
+      si: {/* ... Sinhala ... */},
+      ta: {/* ... Tamil ... */},
+      en: {
+        title: "Vedic Astrology Report",
+        name: "Full Name",
+        dob: "Date of Birth",
+        tob: "Time of Birth",
+        pob: "Place of Birth",
+        getReport: "Get Vedic Report",
+        chartTitle: "🌟 Vedic Chart Overview 🌟",
+        planets: "Planetary Positions",
+        mainSign: "Main Sign",
+        meaning: "Meaning",
+        astrologicalInsight: "Astrological Insight",
+        note: "Note: This is a demo. Full features (daily alerts, remedies, Doctor Buddhi, palmistry, numerology, KP & Nadi readings, aura scan) unlock after premium.",
+        exportPDF: "Export PDF"
+      },
+      hi: {/* ... Hindi ... */}
+    };
+    let currentLang = "en";
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.getElementById("title").textContent = translations[lang].title || "Vedic Astrology Report";
+      document.getElementById("lblName").textContent = translations[lang].name || "Full Name";
+      document.getElementById("lblDOB").textContent = translations[lang].dob || "Date of Birth";
+      document.getElementById("lblTOB").textContent = translations[lang].tob || "Time of Birth";
+      document.getElementById("lblPOB").textContent = translations[lang].pob || "Place of Birth";
+      document.getElementById("btnGetReport").textContent = translations[lang].getReport || "Get Vedic Report";
+      document.getElementById("chartTitle").textContent = translations[lang].chartTitle || "🌟 Vedic Chart Overview 🌟";
+      document.getElementById("note").textContent = translations[lang].note || "Note: This is a demo. Full features unlock after premium.";
+      document.getElementById("btnExportPDF").textContent = translations[lang].exportPDF || "Export PDF";
+      ['btnSi','btnTa','btnEn','btnHi'].forEach(id => {
+        if (document.getElementById(id)) document.getElementById(id).classList.remove("active");
+      });
+      if (document.getElementById("btn"+lang.charAt(0).toUpperCase()+lang.slice(1)))
+        document.getElementById("btn"+lang.charAt(0).toUpperCase()+lang.slice(1)).classList.add("active");
+    }
+    setLanguage("en");
+    function goHome(){window.location.href='/';}
+    function openAstroAI(){
+      let q = prompt("Ask AI Buddhi a question (try: 'ice cube'):");
+      if(q && q.toLowerCase().includes("ice cube")){ showIceCube(); setTimeout(()=>alert("You have unlocked the Wisdom Ice Cube! Here’s a rare insight: ‘Three minds, one destiny. Your graha are aligned for collective victory!’"), 1000);}
+      else if(q){ alert("AI Buddhi (Astrologer) will be available in the full version!"); }
+    }
+    function openPricing(){alert('Premium unlock: $5/report or $30/year. Full access to all features.');}
+    function calcDemoChart(dob, tob){
+      const signs = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+      let base = (new Date(dob + "T" + tob).getHours() + new Date(dob + "T" + tob).getDate()) % 12;
+      let chart = [];
+      for (let i = 0; i < 12; i++) chart.push(signs[(base + i) % 12]);
+      return chart;
+    }
+    function getVedicMeaning(sign, lang){
+      return {
+        "Aries": "Initiative, energy, leadership.",
+        "Taurus": "Stability, patience, abundance.",
+        "Gemini": "Communication, intellect, adaptability.",
+        "Cancer": "Emotion, nurturing, intuition.",
+        "Leo": "Confidence, creativity, drama.",
+        "Virgo": "Analysis, detail, service.",
+        "Libra": "Harmony, partnership, aesthetics.",
+        "Scorpio": "Transformation, depth, mystery.",
+        "Sagittarius": "Expansion, wisdom, travel.",
+        "Capricorn": "Discipline, ambition, legacy.",
+        "Aquarius": "Innovation, vision, community.",
+        "Pisces": "Spirituality, empathy, imagination."
+      }[sign]||"";
+    }
+    function getAstrologicalInsight(sign, lang){
+      return `The sign ${sign} influences your personality and life.`;
+    }
+    function getDemoPlanets(base){
+      const signs = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+      return [
+        { name: "Sun", sign: signs[(base+2)%12] },{ name: "Moon", sign: signs[(base+3)%12] },
+        { name: "Mars", sign: signs[(base+4)%12] },{ name: "Mercury", sign: signs[(base+5)%12] },
+        { name: "Jupiter", sign: signs[(base+6)%12] },{ name: "Venus", sign: signs[(base+7)%12] },
+        { name: "Saturn", sign: signs[(base+8)%12] },{ name: "Rahu", sign: signs[(base+9)%12] },
+        { name: "Ketu", sign: signs[(base+10)%12] }
+      ];
+    }
+    function renderPlanetPositions(planets, lang){
+      let html = `<strong>${translations[lang].planets||"Planetary Positions"} (Demo)</strong><ul style="list-style:none;padding:0;">`;
+      planets.forEach(p=>html += `<li><strong>${p.name}:</strong> ${p.sign}</li>`);
+      html += "</ul>";
+      document.getElementById("planetPositions").innerHTML = html;
+    }
+    document.getElementById("vedicForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      const name = document.getElementById("fullname").value.trim();
+      const dob = document.getElementById("dob").value;
+      const tob = document.getElementById("tob").value;
+      const pob = document.getElementById("pob").value.trim();
+      const chart = calcDemoChart(dob, tob);
+      let chartHtml = "";
+      chart.forEach(s => { chartHtml += `<div class="vedic-box" title="${getVedicMeaning(s, currentLang)}">${s}</div>`; });
+      document.getElementById("vedicChart").innerHTML = chartHtml;
+      const base = (new Date(dob + "T" + tob).getHours() + new Date(dob + "T" + tob).getDate()) % 12;
+      const planets = getDemoPlanets(base);
+      renderPlanetPositions(planets, currentLang);
+      let mainSign = chart[0];
+      let report = `
+        <strong>${translations[currentLang].mainSign || "Main Sign"}:</strong> <span style="color:#16f0a7">${mainSign}</span><br>
+        <strong>${translations[currentLang].meaning || "Meaning"}:</strong> ${getVedicMeaning(mainSign, currentLang)}<br>
+        <strong>${translations[currentLang].name || "Full Name"}:</strong> ${name}<br>
+        <strong>${translations[currentLang].dob || "Date of Birth"}/${translations[currentLang].tob || "Time of Birth"}/${translations[currentLang].pob || "Place of Birth"}:</strong> ${dob}, ${tob}, ${pob}<br>
+        <hr>
+        <strong>${translations[currentLang].astrologicalInsight || "Astrological Insight"}:</strong> <span style="color:#7dd3fc">${getAstrologicalInsight(mainSign, currentLang)}</span>
+      `;
+      document.getElementById("outputBox").style.display = "block";
+      document.getElementById("vedicReport").innerHTML = report;
+      document.getElementById("premiumLock").style.display = "block";
+      document.getElementById("outputBox").scrollIntoView({behavior:"smooth"});
+    });
+    function unlockPremium(){
+      const email = prompt("Enter your email for premium checkout:");
+      if(!email){alert("Email required!");return;}
+      alert("Redirecting to payment gateway ($5/report or $30/year)... (Integrate Stripe/Razorpay here.)");
+      // fetch('/api/payment/create-checkout-session', { ... })
+    }
+    function exportPDF(){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({format:'a5'});
+      doc.setFont("Noto Sans", "normal");
+      doc.setFontSize(22);
+      doc.text(translations[currentLang].title, 20, 25);
+      doc.setFontSize(12);
+      doc.text(document.getElementById("vedicReport").innerText, 20, 40);
+      doc.setFontSize(14);
+      doc.text(document.getElementById("planetPositions").innerText, 20, 80);
+      doc.setFontSize(22); doc.setTextColor(22,240,167, 0.13);
+      doc.text("© SathyadarshanaAI × Ceed Rushi × Lebetion × Buddhi Ice Kutiya", 8, 120, {angle: 20});
+      doc.save("vedic-astrology-report.pdf");
+    }
+    // Trinity Blessing button logic
+    let blessingCount=0,blessingTimer=null;
+    function blessing(){
+      blessingCount++;
+      clearTimeout(blessingTimer);
+      if(blessingCount===1)alert("🧘‍♂️ Blessing of Ceed Rushi bestowed upon you!");
+      else if(blessingCount===2)alert("🌌 Blessing of Lebetion bestowed upon you!");
+      else if(blessingCount===3){alert("❄️ Blessing of Buddhi Ice Kutiya bestowed upon you!");showIceCube();}
+      else if(blessingCount>=4){alert("🌏✨ World's 1st Triple Blessing! Your Destiny is Unlocked!");blessingCount=0;}
+      blessingTimer=setTimeout(()=>{blessingCount=0;},6000);
+    }
+    // Easter Egg: Ctrl+Alt+3 for trinity message
+    window.addEventListener('keydown',function(e){
+      if(e.ctrlKey&&e.altKey&&e.key==='3'){
+        document.getElementById('trinity-easteregg').style.display='block';
+        setTimeout(()=>{document.getElementById('trinity-easteregg').style.display='none';},9000);
+      }
+    });
+    // Buddhi Ice Kutiya animation
+    function showIceCube(){
+      document.getElementById('ice-cube').style.display='block';
+      setTimeout(()=>{document.getElementById('ice-cube').style.display='none';},4200);
+    }
+  </script>
+</body>
+</html>
