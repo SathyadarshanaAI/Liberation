@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sathyadarshana Music Lab — AI Dashboard</title>
+  <meta name="description" content="Sathyadarshana Music Lab – AI Music Dashboard for voice removal, enhancement, AVC, echo blend, subtitles, visualizer, and MP3/MP4 export."/>
+  <link rel="icon" href="./assets/favicon.png">
+  <style>
+    :root{
+      --bg:#050812; --card:#101827; --ink:#f0faff; --muted:#93c5fd; --accent:#38bdf8; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --line:#1e293b
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(circle at 20% 20%, #0a1224, #000),var(--bg);color:var(--ink);font-family:system-ui, Segoe UI, Roboto, Arial}
+    header{padding:18px 16px;border-bottom:1px solid var(--line);background:#0f172a;text-align:center}
+    h1{margin:4px 0 0;font-size:22px;letter-spacing:.3px;color:#7dd3fc}
+    .sub{color:var(--muted);font-size:13px}
+    .top-actions{margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .pill{display:inline-flex;gap:6px;align-items:center;background:rgba(56,189,248,.12);border:1px solid var(--line);padding:8px 14px;border-radius:999px;font-size:14px;color:var(--ink);text-decoration:none;cursor:pointer}
+    .pill:hover{background:rgba(56,189,248,.2)}
+    .wrap{max-width:1200px;margin:18px auto;padding:0 14px 40px}
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+    @media (max-width:1020px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 0 12px rgba(56,189,248,.08)}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .stack{display:grid;gap:10px}
+    label{font-size:13px;color:var(--muted)}
+    input[type="file"],input[type="text"],input[type="number"],button,select{background:#0d1627;border:1px solid var(--line);color:var(--ink);padding:8px 10px;border-radius:10px;font-size:13px}
+    input[type="range"]{width:160px}
+    button{background:var(--accent);color:#001018;border:0;font-weight:600;cursor:pointer}
+    button.ghost{background:#121a2b;border:1px solid var(--line);color:var(--muted)}
+    button.good{background:var(--ok);color:#00140c}
+    button.warn{background:var(--warn);color:#1b1000}
+    .small{font-size:12px;color:var(--muted)}
+    .section-title{font-size:13px;letter-spacing:.2px;color:#bfe5ff;margin:8px 0 6px}
+    #viz{width:100%;aspect-ratio:16/9;background:#061022;border:1px solid var(--line);border-radius:12px}
+    .log{height:120px;overflow:auto;background:#0d1422;border:1px dashed #273550;padding:8px;border-radius:10px;font-size:12px}
+    .danger-note{background:#1a0f12;border:1px solid #5c1b28;color:#ffc1d1;padding:8px;border-radius:10px;font-size:12px}
+    footer{margin:26px 0 32px;padding-top:14px;border-top:1px solid var(--accent);color:#7dd3fc;font-size:14px;text-align:center}
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="title">🎶 Sathyadarshana Music Lab — AI Dashboard</h1>
+    <div id="subtitle" class="sub">Voice Remove → Enhance → AVC → Echo/Blend → Subtitles → Visualizer → Export MP3/MP4</div>
+
+    <div class="top-actions">
+      <a class="pill" href="/index.html">🏠 Home</a>
+      <button id="langBtn" class="pill">🌐 English</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="grid">
+      <div class="card">
+        <canvas id="viz"></canvas>
+        <div class="row" style="margin-top:10px;justify-content:space-between">
+          <span class="pill">Visualizer + Lyrics Overlay</span>
+          <div class="row small">Peak: <span id="pk" class="pill" style="padding:4px 8px">0.0 dB</span> • RMS: <span id="rms" class="pill" style="padding:4px 8px">0.000</span></div>
+        </div>
+      </div>
+
+      <div class="card stack">
+        <div class="row">
+          <label>🎼 Load Music (with vocals)</label>
+          <input id="fileMusic" type="file" accept="audio/*"/>
+          <button id="btnPlay" class="ghost">Play ▶</button>
+          <button id="btnStop" class="ghost">Stop ⏹</button>
+        </div>
+        <div class="row">
+          <label>🎙️ Optional Vocal (file)</label>
+          <input id="fileVocal" type="file" accept="audio/*"/>
+          <button id="btnMic" class="ghost">Enable Mic</button>
+        </div>
+        <div class="row">
+          <label>📝 Subtitles (.lrc / .srt)</label>
+          <input id="fileSubs" type="file" accept=".lrc,.srt,.txt"/>
+          <label>Offset (ms)</label>
+          <input id="subOffset" type="number" value="0" style="width:90px"/>
+        </div>
+        <div class="row">
+          <label>🖼️ BG Image/Video (optional)</label>
+          <input id="fileBG" type="file" accept="image/*,video/*"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1 & 2 -->
+    <div class="card stack" style="margin-top:14px">
+      <div class="section-title">1) Voice Removal (center cancel) + Preserve Bass • 2) Quality Enhancement (EQ + Compressor + Noise Gate)</div>
+      <div class="row">
+        <label>Removal strength</label><input id="vrStrength" type="range" min="0" max="1" step="0.05" value="0.9"/>
+        <label>Bass preserve</label><input id="vrBass" type="range" min="80" max="400" step="10" value="180"/>
+        <label>Music gain</label><input id="musicGain" type="range" min="0" max="1.5" step="0.01" value="1"/>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="eqBass" checked/> Bass +3dB</label>
+        <label><input type="checkbox" id="eqTreble" checked/> Treble +3dB</label>
+        <label><input type="checkbox" id="useComp" checked/> Compressor</label>
+        <label><input type="checkbox" id="noiseGate"/> Noise Gate</label>
+      </div>
+      <div class="row">
+        <button id="btnApplyVR" class="good">Apply Voice Removal/Enhance</button>
+      </div>
+    </div>
+
+    <!-- 3, 4, 5 -->
+    <div class="card stack">
+      <div class="section-title">3) AVC (Auto Vocal Control) • 4) Voice Echo Balance • 5) Voice Blending</div>
+      <div class="row">
+        <label>Target vocal-to-music (dB)</label><input id="avcTarget" type="range" min="-18" max="+6" step="1" value="-6"/>
+        <button id="btnAVC" class="ghost">Start AVC</button>
+      </div>
+      <div class="row">
+        <label>Vocal gain</label><input id="vocalGain" type="range" min="0" max="2" step="0.01" value="1"/>
+        <label>Echo (ms)</label><input id="echoTime" type="range" min="0" max="900" step="10" value="120"/>
+        <label>Feedback</label><input id="echoFB" type="range" min="0" max="0.95" step="0.01" value="0.25"/>
+        <label>Wet</label><input id="echoWet" type="range" min="0" max="1" step="0.01" value="0.15"/>
+      </div>
+      <div class="row"><button id="btnBlend" class="good">Apply Vocal Echo/Blend</button></div>
+      <div class="small">Tip: Use either <b>Vocal file</b> or <b>Mic</b> or both. Blending mixes them into the master bus.</div>
+    </div>
+
+    <!-- 6 & 7 -->
+    <div class="card stack">
+      <div class="section-title">6) Subtitles + 7) Animated Video</div>
+      <div class="row">
+        <label>Sub style</label>
+        <select id="subStyle">
+          <option value="karaoke">Karaoke highlight</option>
+          <option value="bottom">Bottom caption</option>
+          <option value="none">Hidden</option>
+        </select>
+        <label>Visualizer</label>
+        <select id="vizStyle">
+          <option value="bars">Bars</option>
+          <option value="circle">Circle</option>
+          <option value="wave">Wave</option>
+        </select>
+        <button id="btnViz">Apply Visuals</button>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="card stack">
+      <div class="section-title">8) Smart AI Assist (heuristic)</div>
+      <div class="row">
+        <button id="btnAI" class="ghost">Auto-analyze + Suggest Settings</button>
+        <span class="small">Analyzes RMS & spectral centroid → sets EQ/Comp/AVC sensible defaults.</span>
+      </div>
+    </div>
+
+    <!-- 9 & 10 -->
+    <div class="card stack">
+      <div class="section-title">9) Export (Audio/Video) • 10) Share / Publish</div>
+      <div class="row">
+        <button id="recAudio" class="good">Record Audio (WebM/Opus)</button>
+        <button id="stopAudio" class="warn">Stop & Download</button>
+        <button id="recVideo" class="good">Record Video (Canvas+Audio)</button>
+        <button id="stopVideo" class="warn">Stop & Download</button>
+        <button id="mp3" class="ghost">Make MP3 (beta)</button>
+        <button id="mp4" class="ghost">Make MP4 (beta)</button>
+      </div>
+      <div class="row">
+        <button id="btnShare" class="ghost">System Share…</button>
+        <a class="pill" href="https://studio.youtube.com/" target="_blank" rel="noopener">YouTube Studio</a>
+        <a class="pill" href="https://www.facebook.com/reel/create" target="_blank" rel="noopener">Facebook Reels</a>
+      </div>
+      <div class="danger-note">Note: MP3/MP4 beta uses in-browser encoders and may be slow on phones. If it stalls, use WebM and convert on desktop.</div>
+      <div id="log" class="log"></div>
+    </div>
+
+    <!-- Publish Center -->
+    <div class="card stack" style="margin-top:14px">
+      <div class="section-title">Publish Center (YouTube · Smule · FB · TikTok)</div>
+      <div class="row">
+        <input id="pubTitle" type="text" placeholder="Title (e.g., Cover – Artist)" style="flex:1;min-width:220px">
+        <input id="pubDesc" type="text" placeholder="Description / Credits / Hashtags" style="flex:1;min-width:220px">
+      </div>
+      <div class="row" style="flex-wrap:wrap;gap:10px">
+        <a id="btnYT" class="pill" target="_blank" rel="noopener" href="https://studio.youtube.com/">▶️ Open YouTube Studio</a>
+        <a id="btnSmule" class="pill" target="_blank" rel="noopener" href="https://www.smule.com/">🎤 Open Smule (App)</a>
+        <a id="btnFB" class="pill" target="_blank" rel="noopener" href="https://www.facebook.com/reel/create">📺 Open Facebook Reels</a>
+        <a id="btnTT" class="pill" target="_blank" rel="noopener" href="https://www.tiktok.com/upload?lang=en">🎵 Open TikTok Upload</a>
+      </div>
+      <div class="small" style="margin-top:10px">
+        Tip: First, use <b>Record Video</b> (WebM) or <b>Make MP4</b> (beta) above to export, then upload via these official pages.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 Sathyadarshana · Creative Concept by Anurudda · Executed by Buddhi AI
+    <br>All Rights Reserved — High Copyright Protection Enabled
+    <br><br>
+    <small style="color:#93c5fd;max-width:900px;display:inline-block;line-height:1.4">
+      Disclaimer: This AI Music Lab is provided for educational and creative purposes.
+      Use only with your own original works or copyright-free / licensed audio.
+      YouTube videos are embedded/linked for preview only and are not downloaded, stored, or redistributed.
+      Publishing to Smule/YouTube/Facebook/TikTok must comply with their Terms of Service.
+    </small>
+  </footer>
+
+  <script>
+  // ---------- Language toggle (header text only) ----------
+  const langBtn = document.getElementById('langBtn');
+  let currentLang = 'en';
+  langBtn.addEventListener('click', () => {
+    if (currentLang === 'en') {
+      currentLang = 'si';
+      langBtn.textContent = "🌐 සිංහල";
+      document.getElementById('title').textContent = "🎶 සත්‍යදර්ශන සංගීත ශාලා — AI ඩෑෂ්බෝඩ්";
+      document.getElementById('subtitle').textContent = "Voice Remove → Enhance → AVC → Echo/Blend → Subtitles → Visualizer → Export MP3/MP4";
+    } else {
+      currentLang = 'en';
+      langBtn.textContent = "🌐 English";
+      document.getElementById('title').textContent = "🎶 Sathyadarshana Music Lab — AI Dashboard";
+      document.getElementById('subtitle').textContent = "Voice Remove → Enhance → AVC → Echo/Blend → Subtitles → Visualizer → Export MP3/MP4";
+    }
+  });
+
+  // ---------- Helpers ----------
+  const log = (...a)=>{ const el=document.getElementById('log'); el.innerHTML += a.join(' ') + "\\n"; el.scrollTop = el.scrollHeight }
+  const vizCanvas = document.getElementById('viz'); const vctx = vizCanvas.getContext('2d');
+  function fitCanvas(){ const r = vizCanvas.getBoundingClientRect(); vizCanvas.width = r.width*devicePixelRatio; vizCanvas.height = r.height*devicePixelRatio }
+  fitCanvas(); addEventListener('resize', fitCanvas);
+
+  let actx, master, analyser, mediaDest;
+  let musicSrc, musicBuf, vocalSrc, vocalBuf, micSrc;
+  let musicPath = {}, vocalPath = {};
+  let startedAt = 0, playing = false;
+  let avcTimer = null;
+  let recorderA=null, chunksA=[]; let recorderV=null, chunksV=[]; let lastBlob=null;
+
+  const state = {
+    vrStrength: 0.9, vrBass: 180, musicGain: 1,
+    vocalGain: 1, echoMs:120, echoFB:.25, echoWet:.15,
+    avcTargetDb:-6, viz:'bars', subsMode:'karaoke', cues:[], subOffset:0, currentLine:''
+  };
+
+  function ensureCtx(){
+    if (actx) return;
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    master = actx.createGain(); master.gain.value = 1;
+    analyser = actx.createAnalyser(); analyser.fftSize = 2048;
+    mediaDest = actx.createMediaStreamDestination();
+    master.connect(analyser); master.connect(actx.destination); master.connect(mediaDest);
+  }
+  function stopExisting(node){ try{ node?.stop?.(); }catch(e){} }
+  function now(){ return actx ? actx.currentTime : 0 }
+  function toDB(v){ return 20*Math.log10(v||1e-6) }
+
+  // ---------- Loaders ----------
+  async function decodeFile(file){ ensureCtx(); const ab = await file.arrayBuffer(); return await actx.decodeAudioData(ab) }
+
+  document.getElementById('fileMusic').addEventListener('change', async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    musicBuf = await decodeFile(f); log('Loaded music:', f.name, `${musicBuf.duration.toFixed(2)}s`)
+    buildMusicGraph();
+  });
+
+  document.getElementById('fileVocal').addEventListener('change', async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    vocalBuf = await decodeFile(f); log('Loaded vocal:', f.name, `${vocalBuf.duration.toFixed(2)}s`)
+  });
+
+  let bgMedia=null;
+  document.getElementById('fileBG').addEventListener('change', e=>{
+    const f=e.target.files[0]; if(!f) return;
+    if(f.type.startsWith('image/')){
+      const url = URL.createObjectURL(f); bgMedia = new Image(); bgMedia.onload = ()=>URL.revokeObjectURL(url); bgMedia.src = url; log('BG image set')
+    } else if(f.type.startsWith('video/')){
+      const url = URL.createObjectURL(f); bgMedia = document.createElement('video'); bgMedia.src=url; bgMedia.loop=true; bgMedia.muted=true; bgMedia.play(); log('BG video set')
+    }
+  });
+
+  document.getElementById('btnMic').addEventListener('click', async ()=>{
+    ensureCtx();
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      micSrc = actx.createMediaStreamSource(stream);
+      log('Mic enabled')
+    }catch(e){ log('Mic error:', e.message) }
+  });
+
+  // ---------- Music Graph w/ Voice Removal ----------
+  function buildMusicGraph(){
+    stopExisting(musicSrc);
+    if(!musicBuf){ log('Load a music file first.'); return }
+
+    musicSrc = actx.createBufferSource(); musicSrc.buffer = musicBuf; musicSrc.loop = false;
+    const splitter = actx.createChannelSplitter(2);
+    const merger   = actx.createChannelMerger(2);
+
+    const lDirect = actx.createGain(); lDirect.gain.value = 1;
+    const rDirect = actx.createGain(); rDirect.gain.value = 1;
+    const invRtoL = actx.createGain(); invRtoL.gain.value = -state.vrStrength;
+    const invLtoR = actx.createGain(); invLtoR.gain.value = -state.vrStrength;
+
+    const lowpass = actx.createBiquadFilter(); lowpass.type='lowpass'; lowpass.frequency.value = state.vrBass;
+
+    const bass = actx.createBiquadFilter(); bass.type='lowshelf'; bass.frequency.value=120; bass.gain.value = 0;
+    const treble = actx.createBiquadFilter(); treble.type='highshelf'; treble.frequency.value=6000; treble.gain.value = 0;
+    const comp = actx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=3; comp.attack.value=.006; comp.release.value=.25; comp.knee.value=2;
+
+    const out = actx.createGain(); out.gain.value = state.musicGain;
+
+    musicSrc.connect(splitter);
+    splitter.connect(lDirect, 0); splitter.connect(rDirect, 1);
+    splitter.connect(invLtoR, 0); splitter.connect(invRtoL, 1);
+    lDirect.connect(merger, 0, 0); invRtoL.connect(merger, 0, 0);
+    rDirect.connect(merger, 0, 1); invLtoR.connect(merger, 0, 1);
+
+    musicSrc.connect(lowpass);
+
+    const post = actx.createGain(); merger.connect(post); lowpass.connect(post);
+    post.connect(bass).connect(treble).connect(comp).connect(out).connect(master);
+
+    if(document.getElementById('noiseGate').checked){
+      const gate = actx.createScriptProcessor(1024, 2, 2);
+      gate.onaudioprocess = e=>{
+        for(let ch=0; ch<2; ch++){
+          const input = e.inputBuffer.getChannelData(ch);
+          const output = e.outputBuffer.getChannelData(ch);
+          let rms=0; for(let i=0;i<input.length;i++){ const s=input[i]; rms+=s*s }
+          rms = Math.sqrt(rms/input.length);
+          const g = rms < 0.004 ? 0 : 1;
+          for(let i=0;i<input.length;i++) output[i]= input[i]*g;
+        }
+      }
+      comp.disconnect(); comp.connect(gate).connect(out);
+    }
+
+    musicPath = { musicSrc, lDirect, rDirect, invLtoR, invRtoL, lowpass, bass, treble, comp, out }
+  }
+
+  function applyVoiceRemovalSettings(){
+    if(!musicPath.musicSrc){ log('Music path not ready.'); return }
+    const S = parseFloat(document.getElementById('vrStrength').value);
+    const B = parseFloat(document.getElementById('vrBass').value);
+    const G = parseFloat(document.getElementById('musicGain').value);
+    musicPath.invLtoR.gain.value = -S; musicPath.invRtoL.gain.value = -S;
+    musicPath.lowpass.frequency.value = B; musicPath.out.gain.value = G;
+    musicPath.bass.gain.value = document.getElementById('eqBass').checked? 3:0;
+    musicPath.treble.gain.value = document.getElementById('eqTreble').checked? 3:0;
+    log('Applied Voice Removal/Enhance: strength',S,'bass',B,'gain',G)
+  }
+  document.getElementById('btnApplyVR').addEventListener('click', ()=>{
+    state.vrStrength = parseFloat(document.getElementById('vrStrength').value);
+    state.vrBass = parseFloat(document.getElementById('vrBass').value);
+    state.musicGain = parseFloat(document.getElementById('musicGain').value);
+    buildMusicGraph(); applyVoiceRemovalSettings();
+  });
+
+  // ---------- Vocal Path ----------
+  function buildVocalGraph(){
+    if(!(micSrc||vocalBuf)){ log('Enable mic or load a vocal file.'); return }
+    const inNode = actx.createGain();
+    if(vocalBuf){ stopExisting(vocalSrc); vocalSrc = actx.createBufferSource(); vocalSrc.buffer = vocalBuf; vocalSrc.loop=false; vocalSrc.connect(inNode) }
+    if(micSrc){ micSrc.connect(inNode) }
+
+    const vGain = actx.createGain(); vGain.gain.value = state.vocalGain;
+    const delay = actx.createDelay(2.0); delay.delayTime.value = state.echoMs/1000;
+    const fb = actx.createGain(); fb.gain.value = state.echoFB;
+    const wet = actx.createGain(); wet.gain.value = state.echoWet;
+    const dry = actx.createGain(); dry.gain.value = 1 - state.echoWet;
+
+    inNode.connect(vGain);
+    vGain.connect(dry).connect(master);
+    vGain.connect(delay); delay.connect(fb).connect(delay);
+    delay.connect(wet).connect(master);
+
+    vocalPath = { inNode, vGain, delay, fb, wet, dry, vocalSrc }
+  }
+  function applyVocalSettings(){
+    if(!vocalPath.vGain){ log('Vocal path not ready.'); return }
+    vocalPath.vGain.gain.value = state.vocalGain = parseFloat(document.getElementById('vocalGain').value);
+    vocalPath.delay.delayTime.value = state.echoMs = parseFloat(document.getElementById('echoTime').value)/1000;
+    vocalPath.fb.gain.value = state.echoFB = parseFloat(document.getElementById('echoFB').value);
+    const wetv = state.echoWet = parseFloat(document.getElementById('echoWet').value);
+    vocalPath.wet.gain.value = wetv; vocalPath.dry.gain.value = 1-wetv;
+    log('Vocal blend updated.')
+  }
+  document.getElementById('btnBlend').addEventListener('click', ()=>{ buildVocalGraph(); applyVocalSettings(); });
+
+  // ---------- Transport ----------
+  function play(){ ensureCtx(); if(!musicPath.musicSrc){ buildMusicGraph() }
+    if(!musicPath.musicSrc){ log('Load music first.'); return }
+    stop(); buildMusicGraph(); if(vocalBuf||micSrc){ buildVocalGraph() }
+    musicPath.musicSrc.start(); if(vocalPath.vocalSrc) vocalPath.vocalSrc.start();
+    startedAt = now(); playing = true; drawViz(); log('▶ Play')
+  }
+  function stop(){ try{ stopExisting(musicPath.musicSrc); stopExisting(vocalPath.vocalSrc) }catch(e){} playing=false; log('⏹ Stopped') }
+  document.getElementById('btnPlay').addEventListener('click', play);
+  document.getElementById('btnStop').addEventListener('click', stop);
+
+  // ---------- AVC ----------
+  function startAVC(){ if(!analyser){ log('No analyser'); return }
+    const target = parseFloat(document.getElementById('avcTarget').value);
+    avcTimer && clearInterval(avcTimer);
+    const musicGainNode = musicPath.out;
+    const bins = new Uint8Array(analyser.frequencyBinCount);
+    avcTimer = setInterval(()=>{
+      analyser.getByteTimeDomainData(bins);
+      let sum=0; for(let i=0;i<bins.length;i++){ const c=(bins[i]-128)/128; sum+=c*c }
+      const rms = Math.sqrt(sum/bins.length);
+      const currentDb = toDB(rms);
+      const diff = target - currentDb;
+      const g = Math.max(0.3, Math.min(1.5, musicGainNode.gain.value * (1+diff*0.02)));
+      musicGainNode.gain.value = g;
+      document.getElementById('rms').textContent = rms.toFixed(3);
+      document.getElementById('pk').textContent = currentDb.toFixed(1) + ' dB';
+    }, 120);
+    log('AVC running… target', target,'dB')
+  }
+  document.getElementById('btnAVC').addEventListener('click', startAVC);
+
+  // ---------- Subtitles ----------
+  document.getElementById('fileSubs').addEventListener('change', async e=>{
+    const f=e.target.files[0]; if(!f) return; const text = await f.text();
+    state.cues = parseSubs(text); state.subOffset = parseInt(document.getElementById('subOffset').value||0,10); log('Loaded subtitles:', state.cues.length, 'lines')
+  });
+  function parseSubs(txt){
+    if(/\[(\d{1,2}):(\d{1,2})(?:\.(\d{1,2}))?\]/.test(txt)){ // LRC
+      return txt.split(/\n+/).flatMap(line=>{
+        const m = line.match(/\[(\d{1,2}):(\d{1,2})(?:\.(\d{1,2}))?\](.*)/); if(!m) return [];
+        const t = (+m[1])*60 + (+m[2]) + ((+m[3]||0)/100);
+        return [{ t, text:m[4].trim() }]
+      }).sort((a,b)=>a.t-b.t)
+    }
+    const blocks = txt.split(/\n\s*\n/); // SRT
+    const cues=[]; for(const b of blocks){
+      const mm = b.match(/(\d+)[\s\S]*?(\d\d:\d\d:\d\d[,.]\d+).*?-->.*?(\d\d:\d\d:\d\d[,.]\d+)[\s\S]*?\n([\s\S]*)/);
+      if(!mm) continue;
+      const s = toSec(mm[2]), e = toSec(mm[3]); const text = mm[4].replace(/\n/g,' ').trim();
+      cues.push({t:s, text}); cues.push({t:e-0.01, text:''});
+    }
+    cues.sort((a,b)=>a.t-b.t); return cues
+  }
+  function toSec(hms){ const [h,m,s]=hms.replace(',', '.').split(':').map(parseFloat); return h*3600+m*60+s }
+
+  // ---------- Visuals ----------
+  let raf=0;
+  function drawViz(){
+    cancelAnimationFrame(raf); if(!playing) return;
+    const W = vizCanvas.width, H = vizCanvas.height; vctx.clearRect(0,0,W,H);
+
+    if(bgMedia){
+      if(bgMedia instanceof HTMLVideoElement){ vctx.drawImage(bgMedia,0,0,W,H) }
+      else if(bgMedia instanceof HTMLImageElement){
+        const r = Math.max(W/bgMedia.width, H/bgMedia.height);
+        const w = bgMedia.width*r, h = bgMedia.height*r; vctx.drawImage(bgMedia,(W-w)/2,(H-h)/2,w,h)
+      }
+      vctx.fillStyle='rgba(0,0,0,0.25)'; vctx.fillRect(0,0,W,H);
+    }
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(data);
+
+    if(state.viz==='bars'){
+      const n = 84; const step = Math.floor(data.length/n); const barW = W/n;
+      for(let i=0;i<n;i++){ const v = data[i*step]/255; const h = v*H*0.6; vctx.fillStyle=`hsl(${180+v*160}, 90%, ${25+v*50}%)`; vctx.fillRect(i*barW, H-h, barW*0.9, h) }
+    } else if(state.viz==='circle'){
+      const cx=W/2, cy=H/2, R = Math.min(W,H)/4; vctx.lineWidth=2*devicePixelRatio; vctx.beginPath(); vctx.strokeStyle='rgba(160,220,255,.8)'; vctx.arc(cx,cy,R,0,Math.PI*2); vctx.stroke();
+      const n=120; for(let i=0;i<n;i++){ const a=i/n*Math.PI*2; const v=data[i%data.length]/255; const r=R+v*R*0.8; const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; vctx.fillStyle=`rgba(100,200,255,${.2+v*.8})`; vctx.fillRect(x,y,3*devicePixelRatio,3*devicePixelRatio) }
+    } else if(state.viz==='wave'){
+      const td = new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(td);
+      vctx.lineWidth=2*devicePixelRatio; vctx.strokeStyle='rgba(160,220,255,.9)'; vctx.beginPath(); for(let x=0;x<W;x++){ const i=Math.floor(x/W*td.length); const y = (td[i]/255)*H; if(x===0) vctx.moveTo(0,y); else vctx.lineTo(x,y) } vctx.stroke();
+    }
+
+    const t = (now() - startedAt) + (state.subOffset/1000);
+    if(state.cues.length){
+      const i = state.cues.findIndex((c,idx)=> t>=c.t && (idx===state.cues.length-1 || t<state.cues[idx+1].t));
+      if(i>=0){ state.currentLine = state.cues[i].text }
+      if(state.subsMode!=='none' && state.currentLine){
+        vctx.font = `${18*devicePixelRatio}px system-ui, sans-serif`;
+        vctx.fillStyle='rgba(0,0,0,.55)'; vctx.fillRect(0, H-46*devicePixelRatio, W, 46*devicePixelRatio);
+        vctx.fillStyle='#e7f5ff'; vctx.textAlign='center'; vctx.fillText(state.currentLine, W/2, H-18*devicePixelRatio);
+      }
+    }
+    raf = requestAnimationFrame(drawViz)
+  }
+  document.getElementById('btnViz').addEventListener('click', ()=>{
+    state.viz = document.getElementById('vizStyle').value;
+    state.subsMode = document.getElementById('subStyle').value;
+  });
+
+  // ---------- Smart AI (heuristic) ----------
+  document.getElementById('btnAI').addEventListener('click', ()=>{
+    const data = new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(data);
+    let low=0,hi=0; const N=data.length; for(let i=0;i<N;i++){ if(i<N*0.2) low+=data[i]; if(i>N*0.7) hi+=data[i] }
+    const lowAvg=low/(N*0.2), hiAvg=hi/(N*0.3);
+    const bassBoost = lowAvg<80; const trebleBoost = hiAvg<40;
+    document.getElementById('eqBass').checked = bassBoost;
+    document.getElementById('eqTreble').checked = trebleBoost;
+    document.getElementById('useComp').checked = true;
+    applyVoiceRemovalSettings();
+    log('AI Assist: bassBoost=',bassBoost,'trebleBoost=',trebleBoost)
+  });
+
+  // ---------- Export (Audio) ----------
+  let analyserCreated=false;
+  function ensureAnalyser(){ if(!analyserCreated && master){ master.connect(analyser); analyserCreated=true } }
+
+  function startAudioRec(){ ensureCtx(); ensureAnalyser(); if(recorderA?.state==='recording') return;
+    chunksA=[]; recorderA = new MediaRecorder(mediaDest.stream, {mimeType:'audio/webm'});
+    recorderA.ondataavailable = e=>{ if(e.data.size>0) chunksA.push(e.data) };
+    recorderA.onstop = ()=>{ const blob = new Blob(chunksA, {type:'audio/webm'}); lastBlob = blob; download(blob, 'studio-audio.webm'); log('Audio saved (WebM/Opus).') };
+    recorderA.start(); log('Recording audio…')
+  }
+  function stopAudioRec(){ if(recorderA && recorderA.state==='recording'){ recorderA.stop() } }
+  document.getElementById('recAudio').addEventListener('click', startAudioRec);
+  document.getElementById('stopAudio').addEventListener('click', stopAudioRec);
+
+  // ---------- Export (Video) ----------
+  function startVideoRec(){ ensureCtx(); ensureAnalyser(); if(recorderV?.state==='recording') return;
+    const canvasStream = vizCanvas.captureStream(30);
+    const mixed = new MediaStream();
+    canvasStream.getVideoTracks().forEach(t=>mixed.addTrack(t));
+    mediaDest.stream.getAudioTracks().forEach(t=>mixed.addTrack(t));
+    chunksV=[]; recorderV = new MediaRecorder(mixed, {mimeType:'video/webm;codecs=vp9,opus'});
+    recorderV.ondataavailable = e=>{ if(e.data.size>0) chunksV.push(e.data) };
+    recorderV.onstop = ()=>{ const blob = new Blob(chunksV, {type:'video/webm'}); lastBlob = blob; download(blob, 'studio-video.webm'); log('Video saved (WebM).') };
+    recorderV.start(); log('Recording video…')
+  }
+  function stopVideoRec(){ if(recorderV && recorderV.state==='recording'){ recorderV.stop() } }
+  document.getElementById('recVideo').addEventListener('click', startVideoRec);
+  document.getElementById('stopVideo').addEventListener('click', stopVideoRec);
+
+  function download(blob, name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 30000) }
+
+  // ---------- MP3 (beta) ----------
+  document.getElementById('mp3').addEventListener('click', async ()=>{
+    if(!musicBuf){ log('Load music first.'); return }
+    ensureCtx();
+    const off = new OfflineAudioContext(2, musicBuf.length, musicBuf.sampleRate);
+    const src = off.createBufferSource(); src.buffer = musicBuf;
+    const splitter = off.createChannelSplitter(2);
+    const merger   = off.createChannelMerger(2);
+    const lDirect = off.createGain(); const rDirect = off.createGain(); lDirect.gain.value=1; rDirect.gain.value=1;
+    const invRtoL = off.createGain(); const invLtoR = off.createGain(); invRtoL.gain.value = -state.vrStrength; invLtoR.gain.value=-state.vrStrength;
+    const lowpass=off.createBiquadFilter(); lowpass.type='lowpass'; lowpass.frequency.value=state.vrBass;
+    const bass=off.createBiquadFilter(); bass.type='lowshelf'; bass.frequency.value=120; bass.gain.value = document.getElementById('eqBass').checked?3:0;
+    const treble=off.createBiquadFilter(); treble.type='highshelf'; treble.frequency.value=6000; treble.gain=value=document.getElementById('eqTreble').checked?3:0;
+    const comp=off.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=3; comp.attack.value=.006; comp.release.value=.25;
+    const out = off.createGain(); out.gain.value = state.musicGain;
+
+    src.connect(splitter);
+    splitter.connect(lDirect,0); splitter.connect(rDirect,1); splitter.connect(invLtoR,0); splitter.connect(invRtoL,1);
+    lDirect.connect(merger,0,0); invRtoL.connect(merger,0,0); rDirect.connect(merger,0,1); invLtoR.connect(merger,0,1);
+    src.connect(lowpass);
+    const post = off.createGain(); merger.connect(post); lowpass.connect(post);
+    post.connect(bass).connect(treble).connect(comp).connect(out).connect(off.destination);
+
+    src.start(); const rendered = await off.startRendering();
+    await loadLame(); const mp3 = encodeMp3(rendered);
+    download(new Blob(mp3, {type:'audio/mpeg'}), 'studio-audio.mp3'); log('MP3 ready (music-only).')
+  });
+  async function loadLame(){ if(window.lamejs) return; const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js'; document.body.appendChild(s); await new Promise(r=>{s.onload=r}) }
+  function encodeMp3(buffer){
+    const numChannels = 2; const sampleRate = buffer.sampleRate; const mp3enc = new lamejs.Mp3Encoder(numChannels, sampleRate, 192);
+    const left = buffer.getChannelData(0), right = buffer.getChannelData(1);
+    const block = 1152; const mp3Data=[];
+    for(let i=0;i<left.length;i+=block){
+      const l = left.subarray(i, i+block); const r = right.subarray(i, i+block);
+      const mp3buf = mp3enc.encodeBuffer(floatTo16(l), floatTo16(r)); if(mp3buf.length) mp3Data.push(new Blob([mp3buf]))
+    }
+    const end = mp3enc.flush(); if(end.length) mp3Data.push(new Blob([end])); return mp3Data
+  }
+  function floatTo16(f){ const b=new Int16Array(f.length); for(let i=0;i<f.length;i++){ let s=Math.max(-1, Math.min(1, f[i])); b[i]=s<0? s*0x8000 : s*0x7fff } return b }
+
+  // ---------- MP4 (beta) ffmpeg.wasm (WebM→MP4) ----------
+  document.getElementById('mp4').addEventListener('click', async ()=>{
+    if(!lastBlob){ log('Record audio/video first, then Convert to MP4.'); return }
+    log('Loading ffmpeg.wasm (may take time)…')
+    const { createFFmpeg, fetchFile } = await loadFF();
+    const ffmpeg = createFFmpeg({ log: true }); await ffmpeg.load();
+    const data = new Uint8Array(await lastBlob.arrayBuffer()); ffmpeg.FS('writeFile', 'in.webm', data);
+    await ffmpeg.run('-i','in.webm','-c:v','copy','-c:a','aac','out.mp4');
+    const out = ffmpeg.FS('readFile','out.mp4');
+    download(new Blob([out.buffer], {type:'video/mp4'}), 'studio-video.mp4'); log('MP4 ready.')
+  });
+  async function loadFF(){ if(window._ff){ return window._ff } const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/ffmpeg.min.js'; document.body.appendChild(s); await new Promise(r=>s.onload=r); window._ff = FFmpeg; return FFmpeg }
+
+  // ---------- Share ----------
+  document.getElementById('btnShare').addEventListener('click', async ()=>{
+    if(!lastBlob){ alert('Create an audio/video first.'); return }
+    const file = new File([lastBlob], 'studio-output.webm', {type:lastBlob.type});
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      await navigator.share({ files:[file], title:'Sathyadarshana Music Lab', text:'Created with Buddhi 🎵' })
+    }else{
+      download(lastBlob, 'studio-output.webm'); alert('Your browser does not support direct share. We downloaded the file for you.')
+    }
+  });
+
+  // ---------- UI state binds ----------
+  document.getElementById('vrStrength').addEventListener('input', e=> state.vrStrength = parseFloat(e.target.value));
+  document.getElementById('vrBass').addEventListener('input', e=> state.vrBass = parseFloat(e.target.value));
+  document.getElementById('musicGain').addEventListener('input', e=> state.musicGain = parseFloat(e.target.value));
+  document.getElementById('vocalGain').addEventListener('input', e=> state.vocalGain = parseFloat(e.target.value));
+  document.getElementById('echoTime').addEventListener('input', e=> state.echoMs = parseFloat(e.target.value));
+  document.getElementById('echoFB').addEventListener('input', e=> state.echoFB = parseFloat(e.target.value));
+  document.getElementById('echoWet').addEventListener('input', e=> state.echoWet = parseFloat(e.target.value));
+
+  // ---------- Start drawing when playing ----------
+  function drawLoop(){ if(!playing) return; drawViz(); requestAnimationFrame(drawLoop) }
+  function startDraw(){ if(!playing) return; requestAnimationFrame(drawLoop) }
+  </script>
+</body>
+</html>
