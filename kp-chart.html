@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>KP Chart Generator | Chocolate Map</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Awesome Markers for gold/brown marker -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.awesome-markers/2.0.5/leaflet.awesome-markers.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body { background:#1b120c; color:#F8EDE3; font-family:sans-serif; margin:0;}
+    #map { height:240px; border-radius:12px; margin:.5rem 0 1rem; border:1px solid #3a2518; background:#1f130c;}
+    .form-row { display:flex; gap:12px; }
+    .form-row label { flex:1; }
+    button { background:linear-gradient(90deg,#7B3F00,#B36B2C,#D0914E); color:#2b170c; border:0; border-radius:12px; padding:8px 14px; font-weight:bold; }
+    input,button { font-size:1rem; padding:8px 6px; border-radius:7px; border:1px solid #4a392a; margin-bottom:9px; }
+    table { width:100%; border-collapse:collapse; margin-top:12px; background:#2e1b0f; border-radius:8px; }
+    th, td { padding:7px 6px; border-bottom:1px solid #3a2518; color:#eee; }
+    th { background:#52321c; color:#F8EDE3; }
+    .status { color:#b36b2c; margin:7px 0; }
+    /* Leaflet control color tweaks */
+    .leaflet-control-zoom a { background:#6a3700 !important; color:#fff !important; }
+    .leaflet-control-zoom a:hover { background:#d0914e !important; color:#2b170c !important; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>KP Chart Generator</h1>
+  <form id="kpForm">
+    <div class="form-row">
+      <label>Name<br><input type="text" id="name" required></label>
+      <label>Date of Birth<br><input type="date" id="dob" required></label>
+    </div>
+    <div class="form-row">
+      <label>Time of Birth<br><input type="time" id="tob" required></label>
+      <label>Place of Birth<br><input type="text" id="pob" placeholder="e.g. Colombo or McMurdo Station" autocomplete="off"></label>
+    </div>
+    <div class="form-row">
+      <label>Latitude<br><input type="number" id="lat" step="0.0001" required value="0.0000"></label>
+      <label>Longitude<br><input type="number" id="lon" step="0.0001" required value="0.0000"></label>
+    </div>
+    <label>Pick on Map</label>
+    <div id="map"></div>
+    <div class="form-row">
+      <label>Time Zone<br>
+        <input type="text" id="timezone" required placeholder="+05:30">
+        <button type="button" id="detectTzBtn" style="margin-top:6px;">Auto Detect</button>
+      </label>
+      <label>Question<br><input type="text" id="question"></label>
+    </div>
+    <button type="submit">Generate Chart</button>
+    <div class="status" id="status"></div>
+  </form>
+  <div class="chart-section">
+    <canvas id="astroChart" width="340" height="340"></canvas>
+    <div id="planetTable"></div>
+  </div>
+  <footer>
+    <small>Powered by NASA Horizons • Lebetion KP Chart • 2025</small>
+  </footer>
+</main>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Awesome Markers JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.awesome-markers/2.0.5/leaflet.awesome-markers.min.js"></script>
+<script>
+(function(){
+  // --- MAP + MARKER ---
+  const map = L.map('map',{zoomControl:true, worldCopyJump:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:''}).addTo(map);
+
+  // Gold marker
+  const goldMarker = L.AwesomeMarkers.icon({
+    icon: 'fa-location-dot',
+    prefix: 'fa',
+    markerColor: 'orange',
+    iconColor: 'white'
+  });
+
+  // Start centered on Equator (or Antarctica if lat/lon already filled)
+  let lat = parseFloat(document.getElementById('lat').value) || 0.0;
+  let lon = parseFloat(document.getElementById('lon').value) || 0.0;
+  map.setView([lat,lon], 2);
+  let marker = L.marker([lat,lon],{icon: goldMarker, draggable:true}).addTo(map);
+
+  function setLatLon(lat,lon,moveMap=true){
+    document.getElementById('lat').value = parseFloat(lat).toFixed(6);
+    document.getElementById('lon').value = parseFloat(lon).toFixed(6);
+    marker.setLatLng([lat,lon]);
+    marker.setIcon(goldMarker);
+    if(moveMap) map.setView([lat,lon], map.getZoom());
+  }
+  marker.on('dragend',()=>{ 
+    const p=marker.getLatLng(); 
+    setLatLon(p.lat,p.lng,false); 
+  });
+  map.on('click',e=>{ setLatLon(e.latlng.lat,e.latlng.lng); });
+
+  function syncFromFields(){
+    let lat = parseFloat(document.getElementById('lat').value);
+    let lon = parseFloat(document.getElementById('lon').value);
+    if(Number.isFinite(lat) && Number.isFinite(lon)){
+      setLatLon(lat,lon);
+    }
+  }
+  document.getElementById('lat').addEventListener('change', syncFromFields);
+  document.getElementById('lon').addEventListener('change', syncFromFields);
+
+  // --- Place name geocode (city/area/anything/Antarctica) ---
+  document.getElementById('pob').addEventListener('change', async function(){
+    const val = this.value.trim();
+    if(val.match(/^[-\d., ]+$/)) return; // skip if already coords
+    document.getElementById('status').textContent = 'Searching location...';
+    try{
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data && data.length){
+        setLatLon(data[0].lat, data[0].lon, true);
+        map.setView([data[0].lat, data[0].lon], 5);
+        document.getElementById('status').textContent = '✓ Location found: ' + data[0].display_name;
+      }else{
+        document.getElementById('status').textContent = 'Location not found. Try another place or coordinates.';
+      }
+    }catch{
+      document.getElementById('status').textContent = 'Error finding location.';
+    }
+  });
+
+  // --- Timezone auto ---
+  document.getElementById('detectTzBtn').onclick = function() {
+    try {
+      let offset = -new Date().getTimezoneOffset(), sign = offset>=0?'+':'-', abs = Math.abs(offset);
+      let hh = String(Math.floor(abs/60)).padStart(2,'0'), mm = String(abs%60).padStart(2,'0');
+      document.getElementById('timezone').value = `${sign}${hh}:${mm}`;
+    }catch{ document.getElementById('timezone').value = '+05:30'; }
+  };
+
+  // --- KP chart logic (demo planets, always works) ---
+  const DEMO_PLANETS = [
+    { name:'Sun',    degree:123.456 },
+    { name:'Moon',   degree:200.123 },
+    { name:'Mercury',degree:85.234  },
+    { name:'Venus',  degree:154.567 },
+    { name:'Mars',   degree:210.987 },
+    { name:'Saturn', degree:305.432 },
+    { name:'Rahu',   degree:45.876  },
+    { name:'Ketu',   degree:225.876 }
+  ];
+  function renderTable(planets){
+    let html = '<table><tr><th>Planet</th><th>Degree</th></tr>';
+    for(const p of planets){ html += `<tr><td>${p.name}</td><td>${p.degree.toFixed(3)}</td></tr>`; }
+    html+='</table>'; document.getElementById('planetTable').innerHTML = html;
+  }
+  function drawChart(planets){
+    const c = document.getElementById('astroChart'), ctx = c.getContext('2d');
+    ctx.clearRect(0,0,340,340);
+    ctx.beginPath(); ctx.arc(170,170,130,0,2*Math.PI); ctx.strokeStyle='#b36b2c'; ctx.lineWidth=4; ctx.stroke();
+    for(let i=0;i<12;i++){
+      const a = (i*30-90)*Math.PI/180;
+      ctx.beginPath(); ctx.moveTo(170,170);
+      ctx.lineTo(170+130*Math.cos(a),170+130*Math.sin(a));
+      ctx.strokeStyle='#9f876b'; ctx.lineWidth=1; ctx.stroke();
+    }
+    planets.forEach(p=>{
+      const a = ((p.degree % 360) - 90) * Math.PI / 180;
+      const x = 170 + 110 * Math.cos(a), y = 170 + 110 * Math.sin(a);
+      ctx.beginPath(); ctx.arc(x,y,10,0,2*Math.PI); ctx.fillStyle = '#d0914e'; ctx.fill();
+      ctx.fillStyle = "#2b170c"; ctx.font = "bold 12px Arial"; ctx.fillText(p.name[0], x-5, y+5);
+    });
+  }
+  document.getElementById('kpForm').onsubmit = function(e){
+    e.preventDefault();
+    renderTable(DEMO_PLANETS);
+    drawChart(DEMO_PLANETS);
+    document.getElementById('status').textContent = '✓ Chart generated (demo)';
+  };
+  // auto-preview
+  renderTable(DEMO_PLANETS); drawChart(DEMO_PLANETS); document.getElementById('status').textContent = 'Preview (demo)';
+})();
+</script>
+</body><script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => {
+    rs.forEach(r => r.unregister());
+    // SW controlled cache clear attempt
+    if (caches && caches.keys) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+    console.log('SW + caches cleared (one-off).');
+  });
+}
+</script>
+</html>
