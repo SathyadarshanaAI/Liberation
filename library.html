@@ -1,209 +1,122 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #F3F7F0;   /* very soft greenish beige */
-  color: #413D32;        /* deep natural brown */
-  margin: 0;
-}
-main {
-  max-width: 580px;
-  margin: 40px auto;
-  border: 1px solid #D0E7D2;         /* soft pastel green border */
-  padding: 28px;
-  border-radius: 13px;
-  background: #FFFDF7;                /* light cream */
-  box-shadow: 0 2px 22px #dbeee1a8;
-}
-h1 {
-  color: #86A789;                    /* modern pastel green */
-  text-align: center;
-  letter-spacing: 1px;
-}
-label {
-  margin-top: 12px;
-  display: block;
-  color: #7A8472;
-  font-weight: 500;
-}
-input, select, textarea, button {
-  display: block;
-  margin-bottom: 15px;
-  width: 100%;
-  padding: 8px;
-  font-size: 15px;
-  border-radius: 6px;
-  border: 1px solid #E6E6D6;         /* light border */
-  background: #F8FAF6;
-  color: #413D32;
-  transition: border-color 0.2s;
-}
-input:focus, select:focus, textarea:focus {
-  border-color: #86A789;
-  outline: none;
-}
-button {
-  background: linear-gradient(90deg, #B2C8BA 60%, #86A789 100%);
-  color: #fff;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  transition: background 0.17s;
-  box-shadow: 0 1px 4px #c3dac7aa;
-}
-button:hover {
-  background: linear-gradient(90deg, #86A789 0%, #B2C8BA 100%);
-  color: #fff;
-}
-#astroChart {
-  display: block;
-  margin: 24px auto;
-  background: #F8FAF6;
-  border-radius: 50%;
-  border: 2px solid #E6E6D6;
-}
-.ai-prediction {
-  background: #E6F3E6;
-  color: #4B594B;
-  padding: 13px;
-  margin-top: 16px;
-  border-radius: 11px;
-  box-shadow: 0 1px 7px #d0e7d291;
-}
-.tariff {
-  text-align: center;
-  margin-top: 1.7em;
-  color: #8B754B;
-  font-size: 1.06em;
-  border: 1.5px solid #B2C8BA;
-  border-radius: 9px;
-  padding: 12px;
-  background: #FAF7EC;
-  box-shadow: 0 1px 7px #eae7d691;
-}
-.lang-btns {
-  display: flex;
-  gap: 10px;
-  justify-content: right;
-  margin-bottom: 12px;
-}
-.lang-btns button {
-  width: auto;
-  padding: 5px 14px;
-  border-radius: 7px;
-  font-size: 0.98em;
-  background: #F8FAF6;
-  color: #78906B;
-  border: 1px solid #B2C8BA;
-  font-weight: 500;
-  box-shadow: 0 1px 3px #e2f2e7a2;
-  transition: background 0.15s, color 0.15s;
-}
-.lang-btns button.active, .lang-btns button:hover {
-  background: #86A789;
-  color: #fff;
-}
-.form-row { display: flex; gap: 10px; }
-.form-row > div { flex: 1; }
-  font-family: Arial, sans-serif;
-  background: #F3F7F0;   /* very soft greenish beige */
-  color: #413D32;        /* deep natural brown */
-  margin: 0;
-}
-main {
-  max-width: 580px;
-  margin: 40px auto;
-  border: 1px solid #D0E7D2;         /* soft pastel green border */
-  padding: 28px;
-  border-radius: 13px;
-  background: #FFFDF7;                /* light cream */
-  box-shadow: 0 2px 22px #dbeee1a8;
-}
-h1 {
-  color: #86A789;                    /* modern pastel green */
-  text-align: center;
-  letter-spacing: 1px;
-}
-label {
-  margin-top: 12px;
-  display: block;
-  color: #7A8472;
-  font-weight: 500;
-}
-input, select, textarea, button {
-  display: block;
-  margin-bottom: 15px;
-  width: 100%;
-  padding: 8px;
-  font-size: 15px;
-  border-radius: 6px;
-  border: 1px solid #E6E6D6;         /* light border */
-  background: #F8FAF6;
-  color: #413D32;
-  transition: border-color 0.2s;
-}
-input:focus, select:focus, textarea:focus {
-  border-color: #86A789;
-  outline: none;
-}
-button {
-  background: linear-gradient(90deg, #B2C8BA 60%, #86A789 100%);
-  color: #fff;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  transition: background 0.17s;
-  box-shadow: 0 1px 4px #c3dac7aa;
-}
-button:hover {
-  background: linear-gradient(90deg, #86A789 0%, #B2C8BA 100%);
-  color: #fff;
-}
-#astroChart {
-  display: block;
-  margin: 24px auto;
-  background: #F8FAF6;
-  border-radius: 50%;
-  border: 2px solid #E6E6D6;
-}
-.ai-prediction {
-  background: #E6F3E6;
-  color: #4B594B;
-  padding: 13px;
-  margin-top: 16px;
-  border-radius: 11px;
-  box-shadow: 0 1px 7px #d0e7d291;
-}
-.tariff {
-  text-align: center;
-  margin-top: 1.7em;
-  color: #8B754B;
-  font-size: 1.06em;
-  border: 1.5px solid #B2C8BA;
-  border-radius: 9px;
-  padding: 12px;
-  background: #FAF7EC;
-  box-shadow: 0 1px 7px #eae7d691;
-}
-.lang-btns {
-  display: flex;
-  gap: 10px;
-  justify-content: right;
-  margin-bottom: 12px;
-}
-.lang-btns button {
-  width: auto;
-  padding: 5px 14px;
-  border-radius: 7px;
-  font-size: 0.98em;
-  background: #F8FAF6;
-  color: #78906B;
-  border: 1px solid #B2C8BA;
-  font-weight: 500;
-  box-shadow: 0 1px 3px #e2f2e7a2;
-  transition: background 0.15s, color 0.15s;
-}
-.lang-btns button.active, .lang-btns button:hover {
-  background: #86A789;
-  color: #fff;
-}
-.form-row { display: flex; gap: 10px; }
-.form-row > div { flex: 1; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sathyadarshana Digital Library</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/assets/favicon.png">
+  <style>
+    body {margin:0; background:#0f172a; color:#e0f2fe; font-family:'Segoe UI',Arial,sans-serif;}
+    header {text-align:center; padding:2rem 0 0.5rem 0;}
+    header h1 {color:#38bdf8;}
+    .home-btn {
+      position:fixed; top:1.2rem; left:1.2rem; background:#38bdf8; color:#0f172a;
+      padding:0.5rem 1rem; border-radius:1.5rem; font-size:1.1em; font-weight:bold;
+      text-decoration:none; z-index:30; box-shadow:0 2px 12px #0f172a44; border:none; transition:background 0.2s; cursor:pointer;
+    }
+    .home-btn:hover {background:#0ea5e9; color:#e0f2fe;}
+    .container {max-width: 860px; margin:2rem auto 2.7rem auto; background:#1e293b; border-radius:1.2rem; padding:2.2rem 1.5rem 2.5rem 1.5rem; box-shadow:0 4px 24px #0f172a55;}
+    .search-row {display:flex; flex-wrap:wrap; gap:0.7em; align-items:center; margin-bottom:1.4em;}
+    .search-row input[type="text"] {flex:1; font-size:1.08em; padding:0.62em 1em; border-radius:0.5em; border:none; background:#334155; color:#e0f2fe;}
+    .search-row button {font-size:1em; padding:0.53em 1.1em; border-radius:0.5em; border:none; background:#38bdf8; color:#0f172a; font-weight:bold; cursor:pointer; transition:background 0.2s;}
+    .search-row button:hover {background:#0ea5e9; color:#fff;}
+    .filters {margin-bottom:1em; display:flex; flex-wrap:wrap; gap:0.7em;}
+    .filter-btn {padding:0.4em 1em; border:none; border-radius:0.5em; background:#334155; color:#e0f2fe; cursor:pointer;}
+    .filter-btn.active {background:#fbbf24; color:#0f172a;}
+    .section-title {color:#bae6fd; margin:2em 0 0.6em 0; font-size:1.15em;}
+    .featured-list, .book-list, .fav-list {display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.1em;}
+    .book-card {
+      background:rgba(8,47,73,0.91); border-radius:0.8em; box-shadow:0 0 10px #38bdf822; padding:1em;
+      display:flex; flex-direction:column; align-items:flex-start; min-height:120px; position:relative;
+    }
+    .book-card .book-title {color:#38bdf8; font-weight:bold; font-size:1.05em;}
+    .book-card .book-author {color:#94a3b8; font-size:0.97em;}
+    .book-card .lang {position:absolute; top:0.6em; right:1em; background:#fbbf24; color:#0f172a; border-radius:0.5em; font-size:0.93em; padding:0.1em 0.7em;}
+    .book-btn {margin-top:0.7em; font-size:0.92em; padding:0.4em 0.8em; border:none; border-radius:0.5em; background:#38bdf8; color:#0f172a; cursor:pointer;}
+    .book-btn:hover {background:#0ea5e9; color:#fff;}
+    .iframe-container {margin-top:2em; display:none;}
+    .iframe-container iframe {width:100%; height:400px; border:2px solid #38bdf8; border-radius:0.7em; background:#0f172a;}
+    .close-btn {margin-bottom:0.6em; background:#f87171; color:#fff; border:none; border-radius:0.6em; padding:0.3em 1em; cursor:pointer; font-weight:bold; float:right;}
+    .tariff-section {background:#334155; border-radius:0.7rem; padding:1.2rem; color:#bae6fd; margin-top:2.2em;}
+    .tariff-section .free {color:#38bdf8; font-weight:bold;}
+    .tariff-section .paid {color:#fbbf24; font-weight:bold;}
+    @media (max-width:600px){.container{padding:1.1rem 0.4rem 1.2rem 0.4rem;}.iframe-container iframe{height:250px;}}
+  </style>
+</head>
+<body>
+  <a href="index.html" class="home-btn">🏠 Home</a>
+  <header>
+    <h1>📚 Sathyadarshana Digital Library</h1>
+    <div style="color:#bae6fd;">Sacred Texts, Global eBooks & AI Narration</div>
+  </header>
+  <div class="container">
+    <!-- Search + Global eBook Sites -->
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Search books, author, or subject...">
+      <button onclick="searchBooks()">🔍 Local Search</button>
+      <button onclick="showSites()">🌍 eBook Sites</button>
+      <button onclick="searchOpenLibrary()">📖 Open Library</button>
+      <button onclick="showFeatured()">🌟 Featured</button>
+      <button onclick="showFavorites()">💖 My Favorites</button>
+    </div>
+    <!-- Language & Category Filters -->
+    <div class="filters">
+      <button class="filter-btn active" onclick="filterLang('all',this)">All</button>
+      <button class="filter-btn" onclick="filterLang('si',this)">සිංහල</button>
+      <button class="filter-btn" onclick="filterLang('en',this)">English</button>
+      <button class="filter-btn" onclick="filterLang('ta',this)">தமிழ்</button>
+      <button class="filter-btn" onclick="filterCat('all',this)">All Categories</button>
+      <button class="filter-btn" onclick="filterCat('spirituality',this)">Spirituality</button>
+      <button class="filter-btn" onclick="filterCat('buddhism',this)">Buddhism</button>
+      <button class="filter-btn" onclick="filterCat('ayurveda',this)">Ayurveda</button>
+      <button class="filter-btn" onclick="filterCat('novel',this)">Novels</button>
+      <button class="filter-btn" onclick="filterCat('science',this)">Science</button>
+    </div>
+    <!-- Results -->
+    <div id="bookResults" class="book-list"></div>
+    <div id="siteLinks"></div>
+    <div id="openLibResults" class="book-list"></div>
+    <div id="translatedTitle" style="color:#fbbf24;font-weight:bold;margin-top:1em;"></div>
+    <!-- Iframe Reader -->
+    <div class="iframe-container" id="iframeContainer">
+      <button class="close-btn" onclick="closeIframe()">✖ Close</button>
+      <iframe id="bookIframe" src="" loading="lazy"></iframe>
+    </div>
+    <!-- Featured + Favorites -->
+    <div id="featured" class="featured-list" style="display:none;"></div>
+    <div id="favorites" class="fav-list" style="display:none;"></div>
+    <!-- Tariff Plan -->
+    <div class="tariff-section">
+      <h2>📢 Tariff Plan</h2>
+      <ul>
+        <li><span class="free">Free:</span> Online reading, translation, basic AI narration.</li>
+        <li><span class="paid">Paid:</span> Advanced voice (multi-language), offline, narrated PDFs, AI insights.</li>
+        <li><span class="paid">Price:</span> $3/month or $20/year for premium features.</li>
+      </ul>
+    </div>
+    <!-- AI Recommendations -->
+    <div class="section-title">🤖 AI Recommendations (Demo)</div>
+    <div id="aiRecs" class="book-list"></div>
+  </div>
+  <script>
+    const books=[{title:"Dhammapada",author:"Buddha",lang:"si",cat:"buddhism",link:"https://www.sacred-texts.com/bud/sbe10/index.htm"},{title:"Bhagavad Gita",author:"Vyasa",lang:"en",cat:"spirituality",link:"https://www.sacred-texts.com/hin/gita/index.htm"},{title:"Ayurveda Secrets",author:"Dr. Senanayake",lang:"si",cat:"ayurveda",link:"https://archive.org/details/ayurvedabook"}];
+    const featuredBooks=[{title:"Dhammapada",author:"Buddha",lang:"si",cat:"buddhism",link:"https://www.sacred-texts.com/bud/sbe10/index.htm"}];
+    const aiRecs=[{title:"What the Buddha Taught",author:"Walpola Rahula",lang:"en",cat:"buddhism",link:"https://archive.org/details/whatthebuddhataught"}];
+    let currentLang='all',currentCat='all';
+    function renderBooks(list,id){const el=document.getElementById(id);if(!list.length){el.innerHTML=`<div style="color:#fbbf24;text-align:center;">No books found.</div>`;return;}let html='';list.forEach(b=>{html+=`<div class="book-card"><span class="lang">${b.lang=='si'?'සිං':b.lang=='ta'?'தமிழ்':'EN'}</span><div class="book-title">${b.title}</div><div class="book-author">${b.author}</div><a href="${b.link}" target="_blank" class="book-btn">Read</a><button class="book-btn" onclick="addFavorite('${b.title.replace(/'/g,"\\'")}')">💖</button></div>`});el.innerHTML=html;}
+    function searchBooks(){let q=document.getElementById('searchInput').value.trim().toLowerCase();let res=books.filter(b=>(currentLang=='all'||b.lang==currentLang)&&(currentCat=='all'||b.cat==currentCat)&&(b.title.toLowerCase().includes(q)||b.author.toLowerCase().includes(q)));document.getElementById('featured').style.display='none';document.getElementById('favorites').style.display='none';renderBooks(res,'bookResults');}
+    function filterLang(lang,btn){currentLang=lang;Array.from(document.querySelectorAll('.filter-btn')).forEach(b=>b.classList.remove('active'));btn.classList.add('active');searchBooks();}
+    function filterCat(cat,btn){currentCat=cat;Array.from(document.querySelectorAll('.filter-btn')).forEach(b=>b.classList.remove('active'));btn.classList.add('active');searchBooks();}
+    function showFeatured(){document.getElementById('featured').style.display='grid';document.getElementById('favorites').style.display='none';document.getElementById('bookResults').innerHTML='';renderBooks(featuredBooks,'featured');}
+    function addFavorite(t){let favs=JSON.parse(localStorage.getItem('favBooks')||'[]');if(!favs.includes(t))favs.push(t);localStorage.setItem('favBooks',JSON.stringify(favs));alert('Added to favorites!');}
+    function showFavorites(){let favs=JSON.parse(localStorage.getItem('favBooks')||'[]');let favBooks=books.filter(b=>favs.includes(b.title));document.getElementById('favorites').style.display='grid';document.getElementById('featured').style.display='none';document.getElementById('bookResults').innerHTML='';renderBooks(favBooks,'favorites');}
+    // eBook Sites
+    function showSites(){let book=document.getElementById('searchInput').value.trim();let links=[{name:"Internet Archive",url:"https://archive.org/search.php?query="+encodeURIComponent(book)},{name:"Project Gutenberg",url:"https://www.gutenberg.org/ebooks/search/?query="+encodeURIComponent(book)},{name:"Sacred Texts",url:"https://www.sacred-texts.com/search/search.php?query="+encodeURIComponent(book)},{name:"Open Library",url:"https://openlibrary.org/search?q="+encodeURIComponent(book)}];let html='<h3 style="color:#38bdf8;">eBook Sites:</h3><ul>';links.forEach(l=>{html+=`<li><a href="${l.url}" target="_blank">${l.name} – "${book}"</a></li>`});html+='</ul>';document.getElementById('siteLinks').innerHTML=html;}
+    // Open Library Search
+    function searchOpenLibrary(){let book=document.getElementById('searchInput').value.trim();if(!book){document.getElementById('openLibResults').innerHTML='<span style="color:#f87171;">Enter a book name.</span>';return;}document.getElementById('openLibResults').innerHTML='<span style="color:#38bdf8;">Searching...</span>';fetch('https://openlibrary.org/search.json?q='+encodeURIComponent(book)).then(r=>r.json()).then(d=>{if(!d.docs.length){document.getElementById('openLibResults').innerHTML='<span style="color:#f87171;">No books found.</span>';return;}let html='<h3 style="color:#38bdf8;">Books:</h3><ul>';d.docs.slice(0,6).forEach(doc=>{let url="https://openlibrary.org"+doc.key;html+=`<li><a href="#" onclick="showBookIframe('${url}');return false;">${doc.title}</a></li>`});html+='</ul>';document.getElementById('openLibResults').innerHTML=html;});}
+    function showBookIframe(url){let iframe=document.getElementById('bookIframe');document.getElementById('iframeContainer').style.display='block';iframe.src=url;window.scrollTo({top:document.getElementById('iframeContainer').offsetTop-20,behavior:'smooth'});}
+    function closeIframe(){document.getElementById('iframeContainer').style.display='none';document.getElementById('bookIframe').src='';}
+    renderBooks(aiRecs,'aiRecs');renderBooks(books,'bookResults');
+  </script>
+</body>
+</html>
