@@ -1,0 +1,375 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Numerology Report | Sathyadarshana</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sathyadarshana Numerology - Ceed Rushi enhanced, premium-level, universal wisdom.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #0f172a, #000);
+      color: #e0f2fe;
+      text-align: center;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      background: rgba(2,6,23,0.88);
+      padding: 1rem;
+      box-shadow: 0 0 12px #38bdf8;
+      z-index: 99;
+    }
+    nav a {
+      color: #e0f2fe;
+      text-decoration: none;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      border-radius: 6px;
+      transition: 0.3s;
+      font-weight: 600;
+    }
+    nav a.active, nav a:hover {
+      background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+      color: #0f172a;
+      transform: scale(1.05);
+      font-weight: bold;
+    }
+    .container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 2.3rem 1.5rem 2.5rem 1.5rem;
+      background: rgba(30,41,59,0.8);
+      border-radius: 1rem;
+      box-shadow: 0 0 22px #38bdf855;
+      position: relative;
+    }
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.3em;
+      color: #16f0a7;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 7px #16f0a799;
+    }
+    .badge-premium {
+      display: inline-block;
+      margin-bottom: 1em;
+      background: #151b30;
+      color: #fbc02d;
+      border-radius: 8px;
+      padding: 0.23em 1.1em;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      font-size: 1.05em;
+      box-shadow: 0 0 12px #fbc02d33;
+      user-select: none;
+    }
+    label {
+      display: block;
+      margin-top: 1.3em;
+      margin-bottom: .3em;
+      font-weight: 600;
+      color: #bae6fd;
+      text-align: left;
+    }
+    input, button {
+      width: 92%;
+      margin: 0.5rem auto;
+      padding: 0.88rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-size: 1.08rem;
+      background: #1e293b;
+      color: #e0f2fe;
+      display: block;
+      transition: 0.18s;
+    }
+    input:focus {
+      border: 2px solid #38bdf8;
+      background: #0f172a;
+      outline: none;
+    }
+    button {
+      background: linear-gradient(90deg, #16f0a7, #0ea5e9);
+      color: #0f172a;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1.5em;
+      font-size: 1.1em;
+      transition: 0.3s;
+      box-shadow: 0 0 10px #16f0a788;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #0ea5e9, #16f0a7);
+      color: #fff;
+      transform: scale(1.05);
+    }
+    .output-box {
+      margin-top: 2rem;
+      padding: 1.6rem 1.3rem;
+      background: rgba(22,78,99,0.9);
+      border-radius: 1rem;
+      box-shadow: 0 0 21px #38bdf855;
+      position: relative;
+      animation: fadeIn .7s;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+    .num-highlight {
+      color: #16f0a7;
+      font-size: 2.1em;
+      font-weight: bold;
+      text-shadow: 0 0 9px #16f0a799;
+      margin-bottom: .25em;
+      display: block;
+      letter-spacing: .06em;
+    }
+    .num-meaning {
+      color: #fbc02d;
+      font-size: 1.13em;
+      font-weight: 500;
+      margin-bottom:.3em;
+    }
+    .num-extra {
+      color: #bae6fd;
+      font-size: 1em;
+      margin-top: 1.1em;
+    }
+    .premium-lock {
+      background:#151b30e0;
+      color:#fbcfe8;
+      border:2px solid #d90429;
+      box-shadow:0 0 20px #d9042930;
+      border-radius:1em;
+      margin:2.2em auto 0 auto;
+      padding:1.1em 1em;
+      max-width:370px;
+      text-align:center;
+      font-size:1.13em;
+      position:relative;
+      display:none;
+    }
+    .premium-lock i {
+      color:#d90429;
+      font-size:2em;
+      margin-bottom:0.25em;
+    }
+    .num-watermark {
+      position:absolute;
+      left:50%;top:66%;
+      transform:translate(-50%,-50%) rotate(-17deg);
+      font-size:1.4em;
+      color:rgba(22,240,167,0.11);
+      pointer-events:none;
+      user-select:none;
+      font-weight:bold;
+      z-index:0;
+      font-family:'Inter',serif;
+    }
+    #lang-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 0 12px #0ea5e9;
+      z-index: 999;
+    }
+    .num-easteregg {
+      display:none;
+      position:fixed;
+      bottom:120px;
+      right:30px;
+      background:rgba(56,189,248,0.93);
+      color:#151b39;
+      font-weight:bold;
+      border-radius:10px;
+      padding:1em 1.3em;
+      box-shadow:0 0 22px #16f0a799;
+      font-size:1.1em;
+      z-index:1200;
+      animation:bounceIn .9s;
+    }
+    @keyframes bounceIn {
+      0%{opacity:0;transform:scale(.7);}
+      70%{opacity:1;transform:scale(1.05);}
+      100%{opacity:1;transform:scale(1);}
+    }
+    @media (max-width: 500px) {
+      .container { padding: 1.1rem 0.5rem 1.5rem 0.5rem; }
+      h1 { font-size: 1.17rem; }
+      .output-box { padding: 1.1rem 0.5rem; }
+      #lang-btn { width:42px; height:42px; font-size:18px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="astrology-hub.html">Hub</a>
+    <a href="astrologer.html">Report Generator</a>
+    <a href="palmistry.html">Palmistry</a>
+    <a href="numerology.html" class="active">Numerology</a>
+    <a href="nadi-jyotishya.html">Nadi</a>
+    <a href="geovision.html">GeoVision</a>
+  </nav>
+
+  <div class="container">
+    <div class="badge-premium">Ceed Rushi Enhanced | Premium-Ready | Universal Wisdom</div>
+    <h1>Numerology Calculator</h1>
+    <form id="numForm" autocomplete="off">
+      <label for="fullname">Full Name</label>
+      <input type="text" id="fullname" placeholder="Full Name" required>
+
+      <label for="dob">Date of Birth</label>
+      <input type="date" id="dob" required>
+
+      <button type="submit">Get Personalized Numerology Report</button>
+    </form>
+    <div id="result" class="output-box" style="display:none;">
+      <div class="num-watermark">© Sathyadarshana | Ceed Rushi</div>
+    </div>
+
+    <div class="premium-lock" id="premiumLock">
+      <i class="fa fa-lock"></i><br>
+      Unlock your full Ceed Rushi-powered numerology chart, relationship & destiny numbers, lucky color, and AI Buddhi for just <b>$3</b> or <b>$15/year</b>.<br>
+      <button onclick="unlockPremium()">Unlock Now</button>
+    </div>
+  </div>
+
+  <div class="num-easteregg" id="numEasterEgg"></div>
+  <div id="google_translate_element" style="display:none;"></div>
+  <button id="lang-btn" title="Translate page">🌐</button>
+
+  <footer style="margin-top:2.2em;color:#16f0a7;font-weight:bold;letter-spacing:.01em;">
+    Sathyadarshana is the light of the entire human race.<br>
+    It serves all, without distinctions of race, religion, caste, tribe, color, or social status.<br>
+    <span style="color:#fbc02d;">
+      Let’s build a future world filled with compassion, kindness, and loving-friendliness.<br>
+      I have no language, no special identity—Sathyadarshana is for the whole world.<br>
+      That’s why English, the world’s most-used language, is our language of unity.
+    </span>
+    <br>
+    <span style="color:#16f0a7;font-size:.88em;">© 2025 Sathyadarshana × Ceed Rushi | Numerology SaaS | All Rights Reserved</span>
+  </footer>
+  <!-- FontAwesome for lock icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+
+  <script>
+    // Block copy, view source, save
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if(e.ctrlKey && ['c','u','s'].includes(e.key.toLowerCase())) e.preventDefault();
+    });
+
+    // Numerology Logic
+    function numerologyNumber(str) {
+      // Simple Pythagorean value + DOB reduction
+      let numMap = {A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,I:9,J:1,K:2,L:3,M:4,N:5,O:6,P:7,Q:8,R:9,S:1,T:2,U:3,V:4,W:5,X:6,Y:7,Z:8};
+      let sum = 0;
+      str = str.toUpperCase().replace(/[^A-Z]/g,'');
+      for(let c of str) sum += numMap[c]||0;
+      while(sum>9 && sum!=11 && sum!=22 && sum!=33) sum = (sum+'').split('').reduce((a,b)=>a+ +b,0);
+      return sum;
+    }
+    function birthdayNumber(dob) {
+      let d = dob.split('-').pop();
+      let n = parseInt(d,10)||0;
+      while(n>9) n=(n+'').split('').reduce((a,b)=>a+ +b,0);
+      return n;
+    }
+    function lifePathNumber(dob) {
+      let nums = dob.replace(/-/g,'').split('');
+      let n=nums.reduce((a,b)=>a+ +b,0);
+      while(n>9 && n!=11 && n!=22 && n!=33) n=(n+'').split('').reduce((a,b)=>a+ +b,0);
+      return n;
+    }
+    const meanings = {
+      1: {title:"Leadership & Originality",desc:"You are a natural leader, innovative, courageous, and determined. You inspire others by example.",lucky:"Red, Gold"},
+      2: {title:"Harmony & Partnerships",desc:"You are diplomatic, cooperative, sensitive, and supportive. Balance and relationships are your strengths.",lucky:"Orange, Silver"},
+      3: {title:"Creativity & Joy",desc:"You are optimistic, expressive, cheerful, and imaginative. Your creativity brings happiness to yourself and others.",lucky:"Yellow, Violet"},
+      4: {title:"Stability & Discipline",desc:"You are practical, hard-working, and loyal. You build solid foundations for lasting success.",lucky:"Green, Brown"},
+      5: {title:"Adventure & Freedom",desc:"You are versatile, dynamic, and love change. Freedom and new experiences excite you.",lucky:"Blue, White"},
+      6: {title:"Care & Responsibility",desc:"You are nurturing, compassionate, and devoted. You care deeply for home and family.",lucky:"Pink, Indigo"},
+      7: {title:"Wisdom & Spirituality",desc:"You are analytical, introspective, and spiritual. You thrive on knowledge and deep thinking.",lucky:"Purple, Black"},
+      8: {title:"Power & Ambition",desc:"You are ambitious, efficient, and powerful. You are destined for achievement and material success.",lucky:"Dark Blue, Grey"},
+      9: {title:"Compassion & Completion",desc:"You are generous, wise, and humanitarian. You complete cycles and help others transcend.",lucky:"All colors"},
+      11:{title:"Master Intuition (11)",desc:"Visionary, spiritual teacher, intuitive. You inspire higher ideals.",lucky:"Silver, White"},
+      22:{title:"Master Builder (22)",desc:"Master manifestor, big achievements, practical genius.",lucky:"Gold, Blue"},
+      33:{title:"Master Healer (33)",desc:"Selfless service, unconditional love, rare spiritual teacher.",lucky:"Pink, Gold"}
+    };
+    function generateReport(name, dob) {
+      const numName = numerologyNumber(name);
+      const numLife = lifePathNumber(dob);
+      const numBirth = birthdayNumber(dob);
+      let html = `
+        <span class="num-highlight">${numName}</span>
+        <div class="num-meaning">${meanings[numName]?.title||"Unique Number"}</div>
+        <div>${meanings[numName]?.desc||""}</div>
+        <div class="num-extra"><b>Life Path Number:</b> ${numLife} <br>
+          <b>Birthday Number:</b> ${numBirth}</div>
+        <div class="num-extra"><b>Lucky Colors:</b> <span style="color:#fbc02d;">${meanings[numName]?.lucky||"All colors"}</span></div>
+        <hr>
+        <div style="font-size:0.99em;">Ceed Rushi Insight: <span style="color:#16f0a7">${getCeedInsight(numName,numLife,numBirth)}</span></div>
+      `;
+      return html;
+    }
+    function getCeedInsight(nameNum,lifeNum,birthNum){
+      if(nameNum===lifeNum||lifeNum===birthNum) return "✨ Your numbers are in harmony: Destiny unfolds with less resistance!";
+      if(nameNum===7||lifeNum===7) return "🔮 Deep spiritual journey is calling you. Trust your intuition.";
+      if(nameNum===8&&lifeNum===1) return "⚡ Ambition + leadership: Manifest big success!";
+      if([11,22,33].includes(nameNum)||[11,22,33].includes(lifeNum)) return "🌟 Master number detected – rare fate, use for higher purpose!";
+      if(nameNum===9) return "🌈 Completion cycle: Let go to welcome new blessings.";
+      return "Balance your strengths. Ceed Rushi guides your spiritual path.";
+    }
+    // Form logic
+    document.getElementById('numForm').addEventListener('submit',function(e){
+      e.preventDefault();
+      const name = document.getElementById('fullname').value.trim();
+      const dob = document.getElementById('dob').value;
+      if(!name || !dob) { alert("Please fill out both fields."); return; }
+      document.getElementById('result').innerHTML = generateReport(name,dob) + `<div class="num-watermark">© Sathyadarshana | Ceed Rushi</div>`;
+      document.getElementById('result').style.display = "block";
+      document.getElementById('premiumLock').style.display = "block";
+      // Easter Egg: if name or dob contains '3', show message!
+      if(name.includes('3')||dob.includes('3')) showNumEgg("🍀 3 detected! Special luck and creativity for you.");
+    });
+    // Premium logic (integrate with Stripe/Razorpay backend)
+    function unlockPremium(){
+      alert("Premium unlock coming soon! Stripe/Razorpay integration here. ($3/report or $15/year)");
+    }
+    // Translate
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,si,ta',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+    document.getElementById('lang-btn').addEventListener('click', () => {
+      document.querySelector('.goog-te-gadget-simple').click();
+    });
+    // Easter Egg
+    function showNumEgg(msg){
+      let box=document.getElementById('numEasterEgg');
+      box.textContent=msg;
+      box.style.display='block';
+      setTimeout(()=>{box.style.display='none';},4600);
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html> 
