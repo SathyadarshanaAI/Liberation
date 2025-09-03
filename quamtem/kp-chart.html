@@ -2,261 +2,146 @@
 <html lang="si">
 <head>
   <meta charset="utf-8">
-  <title>KP Astrology Book Generator</title>
+  <title>KP Chart Generator</title>
   <meta name="viewport" content="width=600, initial-scale=1">
   <style>
-    body { margin:0; padding:0; background:#f2f5fa; }
-    .container { max-width: 560px; margin: 32px auto; padding: 18px; background:#fff; border-radius: 13px; box-shadow:0 4px 24px #3451bf21;}
-    h2 { color:#3451bf; margin-top:0; }
-    label { display:block; margin-top:9px; margin-bottom:2px; font-weight:500;}
-    input, select, button { width:100%; padding:7px 10px; margin-bottom:10px; border-radius:7px; border:1px solid #dbeafe; background:#f8fafc;}
-    #wheelBox { display:flex; justify-content:center; margin-top:24px; }
-    #mapPreview { width:100%; height:160px; border:1px solid #bbb; border-radius:8px; margin-bottom:14px; display:none;}
-    #mapPreview iframe { width:100%; height:100%; border:0; border-radius:8px;}
-    #analysis { background:#f8f8fc; border-left:3px solid #3451bf; margin-top:24px; padding:12px 16px 12px 16px; font-size:1.08em;}
-    #kpOptions { background:#fff; border-radius:12px; box-shadow:0 2px 12px #3451bf13; margin-bottom:20px; padding:16px 20px 10px 20px; border:1.5px solid #e4e7ed; max-width:460px; margin-left:auto; margin-right:auto;}
-    #kpOptions h3 {margin:0 0 10px 0;font-size:1.14em;color:#3451bf;}
-    #kpOptions label {font-weight:500;}
-    #kpOptions select, #kpOptions input[type="checkbox"] {margin-bottom:4px;}
-    .footer { text-align:center; color:#3451bf; font-size:0.97em; letter-spacing:1px; opacity:0.88; margin:18px 0 0 0;}
-    .pdf-book { width:210mm; min-height:297mm; background:#fff; margin:0 auto 32px auto; box-shadow:0 6px 32px #0002; padding:34mm 26mm 24mm 26mm; border-radius:12px; position:relative; page-break-after:always; font-family:'Noto Serif','Malithi Web','Times New Roman',serif;}
-    .pdf-header {text-align:center;color:#3451bf;}
-    .pdf-header h1 {font-size:2em;margin:0 0 0.2em 0;}
-    .pdf-section-title {color:#3451bf;font-size:1.2em;margin:12px 0 7px 0;border-bottom:1.5px solid #dbeafe;padding-bottom:2px;}
-    .astro-table {width:100%;border-collapse:collapse;margin-bottom:7mm;}
-    .astro-table th, .astro-table td {border:1px solid #dbeafe;padding:6px 10px;text-align:left;}
-    .astro-table th {background:#f1f5fe;color:#3451bf;}
-    .astro-table tr:nth-child(even){background:#f8fafc;}
-    .pdf-footer {position:absolute;left:0;right:0;bottom:12mm;text-align:center;color:#3451bf;font-size:1em;letter-spacing:1px;opacity:0.85;}
-    #placeBox {position:relative;}
-    #placeResults {position:absolute;top:100%;left:0;right:0;z-index:10;background:#fff;border:1px solid #ddd;border-radius:0 0 8px 8px;box-shadow:0 2px 8px #0001;display:none;max-height:180px;overflow-y:auto;}
-    #placeResults .place-row:hover {background: #f1f5fa;}
-    .sinhala-word { font-family: 'Noto Sans Sinhala', 'Iskoola Pota','Malithi Web', sans-serif;}
+    body { background: #f3f6fb; font-family: 'Segoe UI', 'Noto Sans Sinhala', Arial, sans-serif; margin: 0; }
+    .container { max-width: 560px; margin: 30px auto; padding: 22px 18px 32px 18px; background: #fff; border-radius: 13px; box-shadow: 0 4px 24px #3451bf22;}
+    h2 { color: #3451bf; letter-spacing:0.5px;}
+    label { display: block; margin-top: 10px; margin-bottom: 2px; font-weight: 500;}
+    input, select, button { width: 100%; padding: 8px 10px; margin-bottom: 10px; border-radius: 7px; border: 1px solid #dbeafe; background: #f8fafc;}
+    #drawBtn { background: #3451bf; color: #fff; font-weight: 600; letter-spacing: 1px; cursor:pointer;}
+    #wheelBox { display: flex; justify-content: center; margin-top: 24px; }
+    #lagnaInfo {
+      margin: 18px 0 0 0;
+      background: #f1f5fe;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border-left: 4px solid #3451bf;
+      color: #223;
+      font-size: 1.12em;
+      font-weight: 500;
+      letter-spacing:0.2px;
+      display: none;
+    }
+    #analysis {
+      background: #f8f8fc;
+      border-left: 3px solid #3451bf;
+      margin-top: 22px;
+      padding: 13px 15px 11px 18px;
+      font-size: 1.09em;
+      border-radius: 8px;
+      color: #222;
+      min-height: 40px;
+      display:none;
+    }
+    .footer {
+      text-align: center;
+      color: #3451bf;
+      font-size: 0.98em;
+      letter-spacing: 1px;
+      opacity: 0.85;
+      margin-top: 30px;
+    }
     @media(max-width:600px){
-      .container{max-width:98vw;padding:4px;}
-      #mapPreview{height:120px;}
-      .pdf-book {padding:8mm 3vw 10mm 3vw;}
+      .container{max-width:99vw;padding:4px;}
+      #wheelBox svg{width:96vw!important;height:96vw!important;}
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>KP Chart</h2>
-    <!-- KP Options Card -->
-    <div id="kpOptions">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="font-size:1.32em; color:#3451bf;">🔭</span>
-        <h3>KP Chart Options</h3>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:170px;">
-          <label>Chart Type</label>
-          <select id="chartType">
-            <option value="kp" selected>KP (Krishnamurti)</option>
-            <option value="vedic">Vedic</option>
-            <option value="western">Western</option>
-          </select>
-        </div>
-        <div style="flex:1;min-width:170px;">
-          <label>Ayanamsa</label>
-          <select id="ayanamsa">
-            <option value="kp" selected>KP</option>
-            <option value="lahiri">Lahiri</option>
-            <option value="raman">Raman</option>
-            <option value="fagan">Fagan/Bradley</option>
-          </select>
-        </div>
-        <div style="flex:1;min-width:170px;">
-          <label>House System</label>
-          <select id="houseSystem">
-            <option value="kp" selected>KP (Placidus)</option>
-            <option value="equal">Equal</option>
-            <option value="whole">Whole Sign</option>
-          </select>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
-        <div style="flex:1;min-width:140px;display:flex;align-items:center;gap:8px;">
-          <input type="checkbox" id="showSubLords" checked style="margin-right:6px;"/>
-          <label for="showSubLords" style="cursor:pointer;">Show Sub Lords</label>
-        </div>
-        <div style="flex:1;min-width:140px;display:flex;align-items:center;gap:8px;">
-          <input type="checkbox" id="showCuspDegrees" checked style="margin-right:6px;"/>
-          <label for="showCuspDegrees" style="cursor:pointer;">Show House Cusps</label>
-        </div>
-      </div>
-    </div>
-    <!-- Form -->
-    <form id="form" autocomplete="off">
-      <label>Name</label>
-      <input id="name" required placeholder="Your name"/>
-      <label>Date of Birth</label>
-      <input id="date" type="date" required/>
-      <label>Time of Birth</label>
-      <input id="time" type="time" required value="12:00"/>
-      <label>Timezone (Manual select)</label>
-      <select id="timezone" required>
-        <option value="">Select timezone</option>
-        <option value="+05:30">IST (India/Sri Lanka) +05:30</option>
-        <option value="+06:00">Bangladesh +06:00</option>
-        <option value="+05:45">Nepal +05:45</option>
-        <option value="+01:00">CET +01:00</option>
-        <option value="-05:00">EST (US East) -05:00</option>
-        <option value="+09:00">Japan +09:00</option>
-        <option value="+03:00">Arabia +03:00</option>
-        <option value="+08:00">China +08:00</option>
-        <option value="-08:00">PST (US West) -08:00</option>
-        <option value="+00:00">UTC/GMT +00:00</option>
-      </select>
-      <label>Latitude</label>
-      <input id="lat" required placeholder="e.g. 51.5074" step="any" inputmode="decimal"/>
-      <label>Longitude</label>
-      <input id="lon" required placeholder="e.g. -0.1278" step="any" inputmode="decimal"/>
-      <label>Place</label>
-      <div id="placeBox" style="display:flex;gap:4px;position:relative;">
-        <input id="place" autocomplete="off" placeholder="e.g. Colombo, Sri Lanka" style="flex:1"/>
-        <button type="button" id="geocodeBtn" style="width:auto;">Find</button>
-        <div id="placeResults"></div>
-      </div>
-    </form>
-    <div id="mapPreview"></div>
-    <button id="drawBtn" style="margin-top:10px;width:100%;">Draw Chart</button>
-    <button id="pdfBtn" style="margin-top:8px;width:100%;background:#3451bf;color:#fff;">Download as PDF Book</button>
-    <div id="wheelBox"></div>
-    <div id="analysis"></div>
-    <div class="footer sinhala-word">sathyadarshana astrology</div>
-  </div>
-  <!-- Hidden PDF Book Container -->
-  <div id="pdfBook" style="display:none;"></div>
-  <!-- jsPDF & html2canvas -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    // Place search auto-complete
-    const placeInput = document.getElementById('place');
-    const placeResults = document.getElementById('placeResults');
-    let placeSearchTimeout = null;
-    placeInput.addEventListener('input', async function(){
-      const q = placeInput.value.trim();
-      if(q.length < 2) { placeResults.style.display='none'; return; }
-      clearTimeout(placeSearchTimeout);
-      placeSearchTimeout = setTimeout(async ()=>{
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=7`;
-        const res = await fetch(url).then(r=>r.json());
-        if(!res.length) { placeResults.style.display='none'; return; }
-        placeResults.innerHTML = res.map(pl=>`
-          <div class="place-row" style="padding:8px 12px;cursor:pointer;" data-lat="${pl.lat}" data-lon="${pl.lon}">
-            <span style="font-weight:500;">${pl.display_name.split(',')[0]}</span>
-            <br><span style="font-size:0.92em;color:#777;">${pl.display_name}</span>
-          </div>
-        `).join('');
-        placeResults.style.display = '';
-        document.querySelectorAll('.place-row').forEach(el=>{
-          el.onclick = function(){
-            placeInput.value = el.querySelector('span').textContent.trim();
-            document.getElementById('lat').value = el.getAttribute('data-lat');
-            document.getElementById('lon').value = el.getAttribute('data-lon');
-            showMap(el.getAttribute('data-lat'), el.getAttribute('data-lon'));
-            placeResults.style.display='none';
-          }
-        });
-      }, 350);
-    });
-    document.body.addEventListener('click', function(e) {
-      if(!placeInput.contains(e.target) && !placeResults.contains(e.target)){
-        placeResults.style.display='none';
-      }
-    });
-    // Geocode "Find" button
-    async function geocodePlace(q){
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
-      const res = await fetch(url).then(r=>r.json());
-      if(!res.length) return null;
-      return { lat:+res[0].lat, lon:+res[0].lon, label:res[0].display_name };
-    }
-    function showMap(lat, lon){
-      const mapDiv = document.getElementById('mapPreview');
-      if(!lat||!lon){ mapDiv.style.display='none'; return; }
-      mapDiv.style.display = '';
-      mapDiv.innerHTML = `<iframe loading="lazy" allowfullscreen
-        src="https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.02}%2C${lat-0.01}%2C${lon+0.02}%2C${lat+0.01}&layer=mapnik&marker=${lat}%2C${lon}"></iframe>
-        <div style="text-align:right;font-size:12px;margin-top:2px;">
-          <a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}" target="_blank">View Full Map</a>
-        </div>`;
-    }
-    document.getElementById('geocodeBtn').onclick = async function(){
-      const place = placeInput.value.trim();
-      if(!place){ alert("Enter place name."); return; }
-      const geo = await geocodePlace(place);
-      if(!geo){
-        alert("Place not found. Try a more specific name.");
-        return;
-      }
-      document.getElementById('lat').value = geo.lat;
-      document.getElementById('lon').value = geo.lon;
-      showMap(geo.lat, geo.lon);
-    };
-    document.getElementById('lat').addEventListener('input', ()=>{
-      const lat=document.getElementById('lat').value,lon=document.getElementById('lon').value;
-      if(lat && lon) showMap(lat, lon);
-    });
-    document.getElementById('lon').addEventListener('input', ()=>{
-      const lat=document.getElementById('lat').value,lon=document.getElementById('lon').value;
-      if(lat && lon) showMap(lat, lon);
-    });
-    // KP Chart Drawing
-    function drawKPWheelChart(planets) {
-      const wheel = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      wheel.setAttribute("width", 340);
-      wheel.setAttribute("height", 340);
-      const cx = 170, cy = 170, rOuter = 150, rInner = 70;
-      const houseColors = [
-          "#f8faff", "#dbeafe", "#e0e7ff", "#f3f8fd", "#fefce8", "#f1f5f9",
-          "#fdf2fa", "#f1f5f9", "#fff7ed", "#ecfdf5", "#fff1f2", "#f3f4f6"
-      ];
-      for(let i=0; i<12; ++i){
-        const a1 = (i/12)*2*Math.PI - Math.PI/2;
-        const a2 = ((i+1)/12)*2*Math.PI - Math.PI/2;
-        const x1 = cx + rOuter*Math.cos(a1), y1 = cy + rOuter*Math.sin(a1);
-        const x2 = cx + rOuter*Math.cos(a2), y2 = cy + rOuter*Math.sin(a2);
-        const x3 = cx + rInner*Math.cos(a2), y3 = cy + rInner*Math.sin(a2);
-        const x4 = cx + rInner*Math.cos(a1), y4 = cy + rInner*Math.sin(a1);
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d",
-            `M${x1},${y1} A${rOuter},${rOuter} 0 0,1 ${x2},${y2} `+
-            `L${x3},${y3} A${rInner},${rInner} 0 0,0 ${x4},${y4} Z`
-        );
-        path.setAttribute("fill", houseColors[i]);
-        path.setAttribute("stroke", "#bbb");
-        path.setAttribute("stroke-width", 1);
-        wheel.appendChild(path);
-      }
-      for(let i=0; i<12; ++i){
-        let a = (i/12)*2*Math.PI - Math.PI/2 + Math.PI/12;
-        let tx = cx + (rInner+45)*Math.cos(a), ty = cy + (rInner+45)*Math.sin(a)+7;
-        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        label.setAttribute("x", tx);
-        label.setAttribute("y", ty);
-        label.setAttribute("class", "kp-house-label");
-        label.setAttribute("text-anchor", "middle");
-        label.textContent = (i+1);
-        wheel.appendChild(label);
-      }
-      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
-      circle.setAttribute("r", rOuter); circle.setAttribute("fill", "none");
-      circle.setAttribute("stroke", "#3451bf"); circle.setAttribute("stroke-width", 2);
-      wheel.appendChild(circle);
-      const inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      inner.setAttribute("cx", cx); inner.setAttribute("cy", cy); inner.setAttribute("r", rInner);
-      inner.setAttribute("fill", "#fff"); inner.setAttribute("stroke", "#bbb"); inner.setAttribute("stroke-width", 1.4);
-      wheel.appendChild(inner);
-      const planetSymbols = {
-          Sun: "☉", Moon: "☽", Mercury: "☿", Venus: "♀", Mars: "♂",
-          Jupiter: "♃", Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇"
-      };
-      if (planets && planets.length) {
-        planets.forEach((pl, i)=>{
+<div class="container">
+  <h2>KP Chart Generator</h2>
+  <form id="astroForm" autocomplete="off">
+    <label>නම / Name</label>
+    <input id="name" required placeholder="ජන්මියාගේ නම" />
+    <label>උපන් දිනය / Date of Birth</label>
+    <input id="date" type="date" required />
+    <label>උපන් වේලාව / Time of Birth</label>
+    <input id="time" type="time" required value="12:00" />
+    <label>Latitude</label>
+    <input id="lat" required placeholder="e.g. 6.9271" step="any" inputmode="decimal" />
+    <label>Longitude</label>
+    <input id="lon" required placeholder="e.g. 79.8612" step="any" inputmode="decimal" />
+    <button id="drawBtn" type="submit">චක්‍රය ඇඳන්න / Draw Chart</button>
+  </form>
+  <div id="wheelBox"></div>
+  <div id="lagnaInfo"></div>
+  <div id="analysis"></div>
+  <div class="footer">sathyadarshana astrology</div>
+</div>
+<script>
+const samplePlanets = [
+  {name:"Sun", longitude: 121.3},
+  {name:"Moon", longitude: 250.9},
+  {name:"Mars", longitude: 88.2},
+  {name:"Mercury", longitude: 143.6},
+  {name:"Venus", longitude: 44.1},
+  {name:"Jupiter", longitude: 279.7},
+  {name:"Saturn", longitude: 313.4},
+  {name:"Uranus", longitude: 29.8},
+  {name:"Neptune", longitude: 325.2},
+  {name:"Pluto", longitude: 270.5},
+];
+// Simple Lagna calculation for demo (real: use astrology lib)
+function calcLagna(date, time, lat, lon) {
+  // For demo, use time to select sign
+  const signs = ["Mesha","Vrushabha","Mithuna","Kataka","Sinha","Kanya","Tula","Vrischika","Dhanu","Makara","Kumbha","Meena"];
+  let hour = parseInt(time.split(':')[0] || "0");
+  return signs[(hour % 12)];
+}
+function drawKPWheelChart(planets) {
+  const wheel = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  wheel.setAttribute("width", 340);
+  wheel.setAttribute("height", 340);
+  const cx = 170, cy = 170, rOuter = 150, rInner = 70;
+  const houseColors = [
+      "#f8faff", "#dbeafe", "#e0e7ff", "#f3f8fd", "#fefce8", "#f1f5f9",
+      "#fdf2fa", "#f1f5f9", "#fff7ed", "#ecfdf5", "#fff1f2", "#f3f4f6"
+  ];
+  for(let i=0; i<12; ++i){
+    const a1 = (i/12)*2*Math.PI - Math.PI/2;
+    const a2 = ((i+1)/12)*2*Math.PI - Math.PI/2;
+    const x1 = cx + rOuter*Math.cos(a1), y1 = cy + rOuter*Math.sin(a1);
+    const x2 = cx + rOuter*Math.cos(a2), y2 = cy + rOuter*Math.sin(a2);
+    const x3 = cx + rInner*Math.cos(a2), y3 = cy + rInner*Math.sin(a2);
+    const x4 = cx + rInner*Math.cos(a1), y4 = cy + rInner*Math.sin(a1);
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d",
+        `M${x1},${y1} A${rOuter},${rOuter} 0 0,1 ${x2},${y2} `+
+        `L${x3},${y3} A${rInner},${rInner} 0 0,0 ${x4},${y4} Z`
+    );
+    path.setAttribute("fill", houseColors[i]);
+    path.setAttribute("stroke", "#bbb");
+    path.setAttribute("stroke-width", 1);
+    wheel.appendChild(path);
+  }
+  for(let i=0; i<12; ++i){
+    let a = (i/12)*2*Math.PI - Math.PI/2 + Math.PI/12;
+    let tx = cx + (rInner+45)*Math.cos(a), ty = cy + (rInner+45)*Math.sin(a)+7;
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", tx);
+    label.setAttribute("y", ty);
+    label.setAttribute("class", "kp-house-label");
+    label.setAttribute("text-anchor", "middle");
+    label.textContent = (i+1);
+    wheel.appendChild(label);
+  }
+  const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
+  circle.setAttribute("r", rOuter); circle.setAttribute("fill", "none");
+  circle.setAttribute("stroke", "#3451bf"); circle.setAttribute("stroke-width", 2);
+  wheel.appendChild(circle);
+  const inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  inner.setAttribute("cx", cx); inner.setAttribute("cy", cy); inner.setAttribute("r", rInner);
+  inner.setAttribute("fill", "#fff"); inner.setAttribute("stroke", "#bbb"); inner.setAttribute("stroke-width", 1.4);
+  wheel.appendChild(inner);
+  const planetSymbols = {
+      Sun: "☉", Moon: "☽", Mercury: "☿", Venus: "♀", Mars: "♂",
+      Jupiter: "♃", Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇"
+  };
+  if (planets && planets.length) {
+      planets.forEach((pl, i)=>{
           let angle = (pl.longitude/360)*2*Math.PI - Math.PI/2;
           let px = cx + 100*Math.cos(angle), py = cy + 100*Math.sin(angle);
           const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -279,180 +164,55 @@
           lbl.textContent = pl.name;
           g.appendChild(lbl);
           wheel.appendChild(g);
-        });
-      }
-      document.getElementById('wheelBox').innerHTML = '';
-      document.getElementById('wheelBox').appendChild(wheel);
-    }
-    // NASA Horizons API fetch (Mock for demo)
-    async function getPlanetsFromNasa(date, time, lat, lon) {
-      // You can replace with real NASA Horizons proxy API!
-      // For demo, samplePlanets used.
-      return samplePlanets;
-    }
-    const samplePlanets = [
-      {name:"Sun", longitude: 121.3},
-      {name:"Moon", longitude: 250.9},
-      {name:"Mars", longitude: 88.2},
-      {name:"Mercury", longitude: 143.6},
-      {name:"Venus", longitude: 44.1},
-      {name:"Jupiter", longitude: 279.7},
-      {name:"Saturn", longitude: 313.4},
-      {name:"Uranus", longitude: 29.8},
-      {name:"Neptune", longitude: 325.2},
-      {name:"Pluto", longitude: 270.5},
-    ];
-    function getPlanetAnalysis(formData, planets) {
-      let txt = `<b class="sinhala-word">${formData.name || 'පරිශීලක'}ගේ KP චාටි විස්තරය:</b><br><br>`;
-      if (!planets) {
-        txt += "ග්‍රහ තොරතුරු ලබාගත නොහැක. කරුණාකර නැවත උත්සාහ කරන්න.";
-        return txt;
-      }
-      txt += `ඔබගේ උපන් මොහොතේ ප්‍රධාන ග්‍රහ පිහිටීම:<br>`;
-      planets.forEach(pl => {
-        txt += `<b>${pl.name}</b>: ${pl.longitude.toFixed(2)}°<br>`;
       });
-      txt += `<br>
-        <b>KP Astrology කෙටි විස්තරය:</b><br>
-        - <b>Sun</b>: ආත්ම ශක්තිය, අභිප්‍රේරණය.<br>
-        - <b>Moon</b>: මනෝභාවය.<br>
-        - <b>Venus</b>: ආදරය, රූපලාවණ්‍යය.<br>
-        - <b>Mars</b>: ශක්තිමත් වීම, ක්‍රියාශීලීත්වය.<br>
-        - <b>Mercury</b>: බුද්ධිය, සන්නිවේදනය.<br>
-        <br>
-        ඔබගේ ග්‍රහ පිහිටීම අනුව, ජීවිතයේ විවිධ අවස්ථාවන්හිදී ඔබට යහපත් අවස්ථා හා අභියෝග පැමිණිය හැක.<br>
-        <br>
-        <i>මෙය KP ජ්‍යෝතිෂය අනුව ස්වයංක්‍රීය විශ්ලේෂණයකි. වැඩිදුර විස්තර සඳහා වෘත්තීය ජ්‍යෝතිෂ්‍ය උපදෙස් ලබා ගන්න.</i>
-      `;
+  }
+  document.getElementById('wheelBox').innerHTML = '';
+  document.getElementById('wheelBox').appendChild(wheel);
+}
+function getPlanetAnalysis(formData, planets, lagna) {
+  let txt = `<b>${formData.name || 'පරිශීලක'}ගේ KP චාටි විස්තරය:</b><br><br>`;
+  if (!planets) {
+      txt += "ග්‍රහ තොරතුරු ලබාගත නොහැක.";
       return txt;
-    }
-    document.getElementById('drawBtn').onclick = async function(e) {
-      e.preventDefault();
-      const formData = {
-        name: document.getElementById('name').value.trim(),
-        date: document.getElementById('date').value,
-        time: document.getElementById('time').value,
-        timezone: document.getElementById('timezone').value,
-        lat: document.getElementById('lat').value,
-        lon: document.getElementById('lon').value,
-        place: document.getElementById('place').value.trim(),
-        chartType: document.getElementById('chartType').value,
-        ayanamsa: document.getElementById('ayanamsa').value,
-        houseSystem: document.getElementById('houseSystem').value,
-        showSubLords: document.getElementById('showSubLords').checked,
-        showCuspDegrees: document.getElementById('showCuspDegrees').checked,
-      };
-      if(!(formData.name && formData.date && formData.time && formData.timezone && formData.lat && formData.lon)){
-        alert('Please fill all required fields.');
-        return;
-      }
-      let planets = await getPlanetsFromNasa(formData.date, formData.time, formData.lat, formData.lon);
-      if(!planets || !planets.length) planets = samplePlanets;
-      drawKPWheelChart(planets);
-      document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets);
-    };
-    // PDF Book Generation
-    document.getElementById('pdfBtn').onclick = async function() {
-      // Collect form data
-      const formData = {
-        name: document.getElementById('name').value.trim(),
-        date: document.getElementById('date').value,
-        time: document.getElementById('time').value,
-        timezone: document.getElementById('timezone').value,
-        lat: document.getElementById('lat').value,
-        lon: document.getElementById('lon').value,
-        place: document.getElementById('place').value.trim(),
-        chartType: document.getElementById('chartType').value,
-        ayanamsa: document.getElementById('ayanamsa').value,
-        houseSystem: document.getElementById('houseSystem').value,
-        showSubLords: document.getElementById('showSubLords').checked,
-        showCuspDegrees: document.getElementById('showCuspDegrees').checked,
-      };
-      if(!(formData.name && formData.date && formData.time && formData.timezone && formData.lat && formData.lon)){
-        alert('Please fill all required fields first.');
-        return;
-      }
-      let planets = await getPlanetsFromNasa(formData.date, formData.time, formData.lat, formData.lon);
-      if(!planets || !planets.length) planets = samplePlanets;
-      // Build pages
-      let bookHtml = `
-      <div class="pdf-book">
-        <div class="pdf-header">
-          <h1>KP ජ්‍යෝතිෂය</h1>
-          <div style="font-size:1.04em;">KP Astrology Book • Generated for ${formData.name || 'You'}</div>
-        </div>
-        <div style="margin:auto; text-align:center;">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/9/94/Astrology_symbol_chart_wheel.png" alt="KP Chart" style="width:110mm;max-width:95%;opacity:0.6;"/>
-          <div style="margin-top:19mm; font-size:1.11em; color:#3451bf;">Prepared by Sathyadarshana Astrology</div>
-        </div>
-        <div class="pdf-footer sinhala-word">sathyadarshana astrology</div>
-      </div>
-      <div class="pdf-book">
-        <div class="pdf-header">
-          <h1>KP Chart</h1>
-          <div style="font-size:1.03em;">ජන්ම චක්‍රය / Birth Chart</div>
-        </div>
-        <div class="pdf-section-title">Birth Data</div>
-        <table class="astro-table">
-          <tr><th>Name</th><td>${formData.name}</td></tr>
-          <tr><th>Date</th><td>${formData.date}</td></tr>
-          <tr><th>Time</th><td>${formData.time} ${formData.timezone}</td></tr>
-          <tr><th>Place</th><td>${formData.place} (${formData.lat}, ${formData.lon})</td></tr>
-        </table>
-        <div class="pdf-section-title">Planets Positions</div>
-        <table class="astro-table">
-          <tr>
-            <th>Planet</th><th>Degree</th><th>Sign</th><th>Star Lord</th><th>Sub Lord</th>
-          </tr>
-          ${planets.map(pl=>`
-            <tr>
-              <td>${pl.name}</td>
-              <td>${pl.longitude.toFixed(2)}°</td>
-              <td>${getSign(pl.longitude)}</td>
-              <td>${getStarLord(pl.longitude)}</td>
-              <td>${getSubLord(pl.longitude)}</td>
-            </tr>`).join('')}
-        </table>
-        <div class="pdf-footer sinhala-word">sathyadarshana astrology</div>
-      </div>
-      <div class="pdf-book">
-        <div class="pdf-header">
-          <h1>KP විශ්ලේෂණය</h1>
-          <div style="font-size:1.03em;">Astrological Analysis</div>
-        </div>
-        <div class="analysis sinhala-word">
-          ${getPlanetAnalysis(formData, planets)}
-        </div>
-        <div class="pdf-footer sinhala-word">sathyadarshana astrology</div>
-      </div>
-      `;
-      document.getElementById('pdfBook').innerHTML = bookHtml;
-      // Use html2canvas + jsPDF to export all .pdf-book divs as PDF pages
-      const doc = new window.jspdf.jsPDF({unit: 'mm', format: 'a4'});
-      const pages = document.querySelectorAll('.pdf-book');
-      for(let i=0;i<pages.length;i++) {
-        if(i > 0) doc.addPage();
-        await window.html2canvas(pages[i], {scale:2, useCORS:true}).then(canvas=>{
-          const imgData = canvas.toDataURL('image/jpeg', 1.0);
-          doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-        });
-      }
-      doc.save(`kp-astrology-book-${formData.name||'user'}.pdf`);
-    };
-    // Mock KP Star Lord / Sub Lord
-    function getSign(deg){
-      const signs = ["Mesha (Aries)","Vrushabha (Taurus)","Mithuna (Gemini)","Kataka (Cancer)","Sinha (Leo)","Kanya (Virgo)","Tula (Libra)","Vrischika (Scorpio)","Dhanu (Sagittarius)","Makara (Capricorn)","Kumbha (Aquarius)","Meena (Pisces)"];
-      return signs[Math.floor((deg%360)/30)];
-    }
-    function getStarLord(deg){
-      // For real KP, use Vimshottari nakshatra sequence!
-      const lords = ["Ketu","Venus","Sun","Moon","Mars","Rahu","Jupiter","Saturn","Mercury"];
-      return lords[Math.floor(((deg%360)/13.3333)%9)];
-    }
-    function getSubLord(deg){
-      // For demo, just repeat lords!
-      return getStarLord(deg+5);
-    }
-  </script>
+  }
+  txt += `<b>ජන්ම ලග්නය (Ascendant):</b> <span style="font-size:1.12em;color:#3451bf;font-weight:600;">${lagna}</span><br>`;
+  txt += `<br><b>ප්‍රධාන ග්‍රහ පිහිටීම:</b><br>`;
+  planets.forEach(pl => {
+    txt += `<b>${pl.name}</b>: ${pl.longitude.toFixed(2)}°<br>`;
+  });
+  txt += `<br>
+  <b>KP Astrology කෙටි විස්තරය:</b><br>
+  - <b>Sun</b>: ආත්ම ශක්තිය, අභිප්‍රේරණය.<br>
+  - <b>Moon</b>: මනෝභාවය.<br>
+  - <b>Venus</b>: ආදරය, රූපලාවණ්‍යය.<br>
+  - <b>Mars</b>: ශක්තිමත් වීම, ක්‍රියාශීලීත්වය.<br>
+  - <b>Mercury</b>: බුද්ධිය, සන්නිවේදනය.<br>
+  <br>
+  ඔබගේ ලග්නය හා ග්‍රහ පිහිටීම අනුව, ජීවිතයේ විවිධ අවස්ථාවන්හිදී ඔබට යහපත් අවස්ථා හා අභියෝග පැමිණිය හැක.<br>
+  <i>මෙය KP ජ්‍යෝතිෂය අනුව ස්වයංක්‍රීය විශ්ලේෂණයකි.</i>
+  `;
+  return txt;
+}
+document.getElementById('astroForm').onsubmit = function(e){
+  e.preventDefault();
+  const formData = {
+    name: document.getElementById('name').value.trim(),
+    date: document.getElementById('date').value,
+    time: document.getElementById('time').value,
+    lat: document.getElementById('lat').value,
+    lon: document.getElementById('lon').value
+  };
+  const planets = samplePlanets; // Replace with real data if needed
+  drawKPWheelChart(planets);
+
+  // Lagna calculation
+  const lagna = calcLagna(formData.date, formData.time, formData.lat, formData.lon);
+  document.getElementById('lagnaInfo').innerHTML = `ජන්ම ලග්නය (Ascendant): <span style="color:#3451bf;font-weight:600;">${lagna}</span>`;
+  document.getElementById('lagnaInfo').style.display = '';
+  // Analysis
+  document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets, lagna);
+  document.getElementById('analysis').style.display = '';
+};
+</script>
 </body>
 </html>
