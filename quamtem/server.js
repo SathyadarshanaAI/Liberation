@@ -1,24 +1,24 @@
+// server.js
 const express = require('express');
-const cors = require('cors');
+const fetch = require('node-fetch');
 const app = express();
-app.use(cors());
+const PORT = 3000;
 
-app.get('/api/planets', (req, res) => {
-  // Fixed demo data (real calculations or API connect කරන්න පුළුවන්)
-  const planets = [
-    { name: "Sun", degree: 123.456 },
-    { name: "Moon", degree: 200.123 },
-    { name: "Mercury", degree: 85.234 },
-    { name: "Venus", degree: 154.567 },
-    { name: "Mars", degree: 210.987 },
-    { name: "Jupiter", degree: 275.654 },
-    { name: "Saturn", degree: 305.432 },
-    { name: "Rahu", degree: 45.876 },
-    { name: "Ketu", degree: 225.876 }
-  ];
-  res.json({ planets });
+app.use(express.static('public')); // 'public' dir for your html if you wish
+
+app.get('/horizons', async (req, res) => {
+    const { date, time, lat, lon } = req.query;
+    if (!date || !time || !lat || !lon) return res.status(400).json({error:"Missing parameters"});
+    const ymd = date.replace(/-/g,'');
+    const hms = time + ":00";
+    const url = `https://ssd.jpl.nasa.gov/api/horizons.api?format=json&EPHEM_TYPE=OBSERVER&OBJ_DATA=NO&MAKE_EPHEM=YES&COMMAND='10,199,299,399,499,599,699,799,899,999'&CENTER='coord@399'&SITE_COORD='${lon},${lat},0'&START_TIME='${ymd} ${hms}'&STOP_TIME='${ymd} ${hms}'&STEP_SIZE='1 d'&QUANTITIES='1,20,23'`;
+
+    try {
+        const data = await fetch(url).then(r=>r.json());
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({error: e.message});
+    }
 });
 
-app.listen(3001, () => {
-  console.log('Planetary API running at http://localhost:3001/api/planets');
-});
+app.listen(PORT, () => console.log('Proxy server running on port', PORT));
