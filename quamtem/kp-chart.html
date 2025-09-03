@@ -1,224 +1,178 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>KP Chart Generator – OSM Autocomplete & Open-Meteo Timezone</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { background: #070c16; color: #e2f0ff; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin:0; min-height:100vh; }
-    .wrap { max-width:480px; margin:36px auto; padding:15px 0 32px 0; background:#101823; border-radius:18px; box-shadow:0 0 32px 0 #1d2537; position:relative;}
-    h2 { font-weight:700; margin:13px 0 18px; font-size:1.18rem; color:#fff; text-align:center;}
-    input,select { width:100%; padding:8px 11px; border-radius:7px; border:1.5px solid #222d3f; background:#0d1321; color:#e2f0ff; font-size:1rem; margin-bottom:10px; outline:none;}
-    input:focus,select:focus { border:1.5px solid #2df3c2;}
-    button { background:linear-gradient(90deg,#60a5fa,#2df3c2); color:#070c16; border:0; border-radius:10px; padding:10px 22px; margin:10px 0; cursor:pointer; font-weight:700; letter-spacing:0.04em; font-size:1.06rem;}
-    .status { font-size:14px; color:#2df3c2; margin-top:7px; min-height:20px;}
-    label { font-weight:500; color:#fff;}
-    .row { display:flex; gap:10px;}
-    .row>div { flex:1;}
-    #pob-suggest { list-style:none; padding:0; margin:-12px 0 7px 0; background:#1a2234; position:absolute; z-index:10; max-height:120px; overflow:auto; display:none; width:94%;}
-    #pob-suggest li { cursor:pointer; padding:4px 10px;}
-    #pob-suggest li:hover { background:#232b47; color:#2df3c2;}
-    table { width:100%; border-collapse:collapse; margin-top:18px; background:rgba(12,18,34,0.96); border-radius:10px; box-shadow:0 0 8px #23228395; padding:7px 2px; font-size:0.97rem;}
-    th { color:#2df3c2; font-weight:600; background:rgba(17,25,40,0.98);}
-    td { color:#e2f0ff;}
-    .chart-section { margin:23px 0 0 0;}
-    #wheel { margin:auto; display:flex; justify-content:center; align-items:center;}
-    @media (max-width:600px) {
-      .wrap{padding:2px;max-width:99vw;}
-      input,select{width:97vw;}
-      .row{flex-direction:column;gap:2px;}
-      #wheel svg{width:98vw !important;height:auto !important;}
-    }
-    @media (min-width:420px) {
-      .latlon-row {display:flex;gap:10px;}
-      .latlon-row>div{flex:1;}
-    }
-    .latlon-row {margin-bottom:10px;}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <h2>KP Chart Generator<br>
-      <span style="font-size:0.98rem;color:#2df3c2;">– OSM Autocomplete + Open-Meteo Timezone</span>
-    </h2>
-    <form id="kpForm" autocomplete="off" style="position:relative;">
-      <label>Name</label>
-      <input type="text" id="name" required>
-      <div class="row">
-        <div>
-          <label>Date of Birth</label>
-          <input type="date" id="dob" required>
-        </div>
-        <div>
-          <label>Time of Birth</label>
-          <input type="time" id="tob" required>
-        </div>
-      </div>
-      <label>Place of Birth</label>
-      <input type="text" id="pob" placeholder="e.g. Colombo" autocomplete="off">
-      <ul id="pob-suggest"></ul>
-      <div class="latlon-row">
-        <div>
-          <label>Latitude</label>
-          <input type="number" id="lat" step="0.0001" required placeholder="Auto-fill or enter">
-        </div>
-        <div>
-          <label>Longitude</label>
-          <input type="number" id="lon" step="0.0001" required placeholder="Auto-fill or enter">
-        </div>
-      </div>
-      <label>Time Zone</label>
-      <input type="text" id="timezone" required placeholder="+00:00">
-      <button type="submit">Generate Chart</button>
-      <div class="status" id="status"></div>
-    </form>
-    <div class="chart-section">
-      <div id="wheel"></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Planet</th>
-            <th>Degree</th>
-            <th>Sign</th>
-            <th>Nakshatra</th>
-            <th>Pada</th>
-            <th>Star Lord</th>
-            <th>Sub-Lord</th>
-          </tr>
-        </thead>
-        <tbody id="tbl"></tbody>
-      </table>
-    </div>
-  </div>
-  <script>
-    // OSM Autocomplete
-    const pob = document.getElementById('pob');
-    const suggest = document.getElementById('pob-suggest');
-    pob.addEventListener('input', function() {
-      const query = pob.value.trim();
-      if (query.length < 2) { suggest.style.display = 'none'; return; }
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-        .then(res => res.json())
-        .then(data => {
-          suggest.innerHTML = '';
-          data.slice(0, 6).forEach(place => {
-            const li = document.createElement('li');
-            li.textContent = place.display_name;
-            li.onclick = () => {
-              pob.value = place.display_name;
-              document.getElementById('lat').value = parseFloat(place.lat).toFixed(4);
-              document.getElementById('lon').value = parseFloat(place.lon).toFixed(4);
-              suggest.style.display = 'none';
-              setTimeZoneFromLatLon(place.lat, place.lon);
-            };
-            suggest.appendChild(li);
-          });
-          suggest.style.display = data.length ? 'block' : 'none';
-        });
-    });
-    document.addEventListener('click', e => {
-      if (!suggest.contains(e.target) && e.target !== pob) suggest.style.display = 'none';
-    });
+<script>
+  // ---------- Utils ----------
+  const $ = (id) => document.getElementById(id);
+  const pob = $('pob');
+  const suggest = $('pob-suggest');
+  const latEl = $('lat');
+  const lonEl = $('lon');
+  const tzEl  = $('timezone');
+  const statusEl = $('status');
 
-    // Open-Meteo Time Zone API (No Key Needed) -- WORKING FOR SRI LANKA!
-    function setTimeZoneFromLatLon(lat, lon) {
-      fetch(`https://api.open-meteo.com/v1/timezone?latitude=${lat}&longitude=${lon}`)
-        .then(r => r.json())
-        .then(z => {
-          // Uncomment to debug: console.log(z);
-          if (z && typeof z.utc_offset_seconds === 'number') {
-            const offset = z.utc_offset_seconds / 3600;
-            const sign = offset >= 0 ? '+' : '-';
-            const hr = Math.floor(Math.abs(offset));
-            const min = Math.round((Math.abs(offset) - hr) * 60);
-            document.getElementById('timezone').value =
-              `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
-          } else {
-            document.getElementById('timezone').value = '+00:00';
-          }
-        })
-        .catch(() => {
-          document.getElementById('timezone').value = '+00:00';
-        });
-    }
+  function setStatus(msg) { statusEl.textContent = msg || ''; }
 
-    // KP Helpers & Chart Wheel (demo only)
-    const SIGNS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
-    function renderTable(planets) {
-      const tbody = document.getElementById('tbl');
-      tbody.innerHTML = '';
-      if (!planets) return;
-      planets.forEach(p => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${p.name}</td>
-          <td>${Number(p.degree).toFixed(2)}</td>
-          <td>${p.sign||''}</td>
-          <td>${p.nakshatra||''}</td>
-          <td>${p.pada||''}</td>
-          <td>${p.starLord||''}</td>
-          <td>${p.subLord||''}</td>`;
-        tbody.appendChild(tr);
-      });
+  // Debounce helper
+  function debounce(fn, wait=400) {
+    let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+  }
+
+  // Format +05:30 from seconds
+  function fmtOffsetFromSeconds(sec) {
+    const sign = sec >= 0 ? '+' : '-';
+    const abs = Math.abs(sec);
+    const hr  = Math.floor(abs / 3600);
+    const min = Math.round((abs % 3600) / 60);
+    return `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+  }
+
+  // Fallback: browser timezone offset for today
+  function browserOffsetNow() {
+    const m = -new Date().getTimezoneOffset(); // minutes east of UTC
+    const sign = m >= 0 ? '+' : '-';
+    const am = Math.abs(m);
+    const hr = Math.floor(am/60), min = am % 60;
+    return `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+  }
+
+  // ---------- Timezone from lat/lon (Open-Meteo) ----------
+  async function setTimeZoneFromLatLon(lat, lon) {
+    if (!lat || !lon) return;
+    try {
+      setStatus('Detecting time zone…');
+      const url = `https://api.open-meteo.com/v1/timezone?latitude=${lat}&longitude=${lon}`;
+      const r = await fetch(url);
+      const z = await r.json();
+      if (z && typeof z.utc_offset_seconds === 'number') {
+        tzEl.value = fmtOffsetFromSeconds(z.utc_offset_seconds);
+        setStatus('✓ Time zone detected');
+      } else {
+        tzEl.value = browserOffsetNow();
+        setStatus('Used browser time zone');
+      }
+    } catch {
+      tzEl.value = browserOffsetNow();
+      setStatus('Used browser time zone (offline)');
     }
-    function renderWheel(planets) {
-      if (!planets || !planets.length) {
-        document.getElementById('wheel').innerHTML = '';
-        return;
+  }
+
+  // Try tz when both lat/lon are valid
+  const tryTzFromLatLon = debounce(() => {
+    const lat = parseFloat(latEl.value);
+    const lon = parseFloat(lonEl.value);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) setTimeZoneFromLatLon(lat, lon);
+  }, 500);
+
+  latEl.addEventListener('input', tryTzFromLatLon);
+  lonEl.addEventListener('input', tryTzFromLatLon);
+
+  // ---------- OSM Autocomplete ----------
+  pob.addEventListener('input', debounce(async function () {
+    const query = pob.value.trim();
+    if (query.length < 2) { suggest.style.display = 'none'; return; }
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=0`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const data = await res.json();
+    suggest.innerHTML = '';
+    data.forEach(place => {
+      const li = document.createElement('li');
+      li.textContent = place.display_name;
+      li.onclick = () => {
+        pob.value = place.display_name;
+        latEl.value = parseFloat(place.lat).toFixed(4);
+        lonEl.value = parseFloat(place.lon).toFixed(4);
+        suggest.style.display = 'none';
+        setTimeZoneFromLatLon(place.lat, place.lon);
+      };
+      suggest.appendChild(li);
+    });
+    suggest.style.display = data.length ? 'block' : 'none';
+  }, 350));
+
+  // Close suggestions when clicking outside
+  document.addEventListener('click', e => {
+    if (!suggest.contains(e.target) && e.target !== pob) suggest.style.display = 'none';
+  });
+
+  // If user typed a place but didn’t click a suggestion, resolve on blur/enter
+  async function resolvePlaceToLatLonIfNeeded() {
+    const q = pob.value.trim();
+    if (!q) return;
+    if (latEl.value && lonEl.value) return; // already set
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+      const r = await fetch(url);
+      const [p] = await r.json();
+      if (p) {
+        latEl.value = parseFloat(p.lat).toFixed(4);
+        lonEl.value = parseFloat(p.lon).toFixed(4);
+        setTimeZoneFromLatLon(p.lat, p.lon);
       }
-      const W = 270, H = 270, Cx = W / 2, Cy = H / 2, R = 98;
-      let sectors = '', labels = '', planDots = '';
-      for (let i = 0; i < 12; i++) {
-        const a1 = (i * 30 - 90) * Math.PI / 180,
-              a2 = ((i + 1) * 30 - 90) * Math.PI / 180;
-        const x1 = Cx + R * Math.cos(a1),
-              y1 = Cy + R * Math.sin(a1),
-              x2 = Cx + R * Math.cos(a2),
-              y2 = Cy + R * Math.sin(a2);
-        sectors += `<path d="M${Cx},${Cy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z" fill="none" stroke="#2df3c2" stroke-width="1.4"/>`;
-      }
-      for (let i = 0; i < 12; i++) {
-        const a = ((i * 30 + 15) - 90) * Math.PI / 180,
-              x = Cx + (R - 16) * Math.cos(a),
-              y = Cy + (R - 16) * Math.sin(a);
-        labels += `<text x="${x}" y="${y+5}" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="bold">${SIGNS[i]}</text>`;
-      }
-      planets.forEach((p,pi) => {
-        const a = (p.degree - 90) * Math.PI / 180,
-              r = R - 30,
-              x = Cx + r * Math.cos(a),
-              y = Cy + r * Math.sin(a);
-        planDots += `<circle cx="${x}" cy="${y}" r="11" fill="#070c16" stroke="#e2f0ff" stroke-width="2"/><text x="${x}" y="${y+4}" font-size="11" fill="#2df3c2" text-anchor="middle" font-weight="bold">${p.name[0]}</text>`;
-      });
-      const svg = `<svg viewBox="0 0 ${W} ${H}" style="background:transparent;width:220px;height:220px;user-select:none;">
-        <circle cx="${Cx}" cy="${Cy}" r="${R+9}" fill="rgba(7,18,34,0.98)" />
-        ${sectors}
-        ${labels}
-        <g>${planDots}</g>
+    } catch {}
+  }
+  pob.addEventListener('blur', resolvePlaceToLatLonIfNeeded);
+  pob.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); resolvePlaceToLatLonIfNeeded(); }
+  });
+
+  // ---------- Demo table + wheel (unchanged) ----------
+  const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+  function renderTable(planets) {
+    const tbody = $('tbl'); tbody.innerHTML = '';
+    (planets||[]).forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.name}</td>
+        <td>${Number(p.degree).toFixed(2)}</td>
+        <td>${p.sign||''}</td>
+        <td>${p.nakshatra||''}</td>
+        <td>${p.pada||''}</td>
+        <td>${p.starLord||''}</td>
+        <td>${p.subLord||''}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  function renderWheel(planets) {
+    if (!planets?.length) { $('wheel').innerHTML = ''; return; }
+    const W=270,H=270,Cx=W/2,Cy=H/2,R=98;
+    let sectors='',labels='',planDots='';
+    for (let i=0;i<12;i++){
+      const a1=(i*30-90)*Math.PI/180, a2=((i+1)*30-90)*Math.PI/180;
+      const x1=Cx+R*Math.cos(a1), y1=Cy+R*Math.sin(a1),
+            x2=Cx+R*Math.cos(a2), y2=Cy+R*Math.sin(a2);
+      sectors+=`<path d="M${Cx},${Cy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z" fill="none" stroke="#2df3c2" stroke-width="1.4"/>`;
+    }
+    for (let i=0;i<12;i++){
+      const a=((i*30+15)-90)*Math.PI/180, x=Cx+(R-16)*Math.cos(a), y=Cy+(R-16)*Math.sin(a);
+      labels+=`<text x="${x}" y="${y+5}" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="bold">${SIGNS[i]}</text>`;
+    }
+    planets.forEach(p=>{
+      const a=(p.degree-90)*Math.PI/180, r=R-30, x=Cx+r*Math.cos(a), y=Cy+r*Math.sin(a);
+      planDots+=`<circle cx="${x}" cy="${y}" r="11" fill="#070c16" stroke="#e2f0ff" stroke-width="2"/><text x="${x}" y="${y+4}" font-size="11" fill="#2df3c2" text-anchor="middle" font-weight="bold">${p.name[0]}</text>`;
+    });
+    $('wheel').innerHTML =
+      `<svg viewBox="0 0 ${W} ${H}" style="background:transparent;width:220px;height:220px;user-select:none;">
+        <circle cx="${Cx}" cy="${Cy}" r="${R+9}" fill="rgba(7,18,34,0.98)" />${sectors}${labels}<g>${planDots}</g>
       </svg>`;
-      document.getElementById('wheel').innerHTML = svg;
-    }
+  }
 
-    // KP Chart Form Submit (Demo Data)
-    document.getElementById('kpForm').onsubmit = async function(e) {
-      e.preventDefault();
-      document.getElementById('status').textContent = 'Calculating...';
-      try {
-        const data = {
-          planets: [
-            {name:'Sun', degree:120.45, sign:'Cancer', nakshatra:'Pushya', pada:2, starLord:'Saturn', subLord:'Mercury'},
-            {name:'Moon', degree:203.22, sign:'Libra', nakshatra:'Vishakha', pada:3, starLord:'Jupiter', subLord:'Venus'},
-            {name:'Mars', degree:48.30, sign:'Taurus', nakshatra:'Rohini', pada:2, starLord:'Moon', subLord:'Moon'},
-            {name:'Mercury', degree:310.12, sign:'Aquarius', nakshatra:'Purva Bhadrapada', pada:1, starLord:'Jupiter', subLord:'Mercury'}
-          ]
-        };
-        renderTable(data.planets);
-        renderWheel(data.planets);
-        document.getElementById('status').textContent = '✓ Chart generated!';
-      } catch (e) {
-        document.getElementById('status').textContent = 'Error: ' + e.message;
-      }
+  // ---------- Form submit (demo planets) ----------
+  $('kpForm').onsubmit = async function(e){
+    e.preventDefault();
+    setStatus('Calculating…');
+    const data = {
+      planets: [
+        {name:'Sun', degree:120.45, sign:'Cancer',     nakshatra:'Pushya',           pada:2, starLord:'Saturn',  subLord:'Mercury'},
+        {name:'Moon',degree:203.22, sign:'Libra',      nakshatra:'Vishakha',         pada:3, starLord:'Jupiter', subLord:'Venus'},
+        {name:'Mars',degree:48.30,  sign:'Taurus',     nakshatra:'Rohini',           pada:2, starLord:'Moon',    subLord:'Moon'},
+        {name:'Mercury',degree:310.12,sign:'Aquarius', nakshatra:'Purva Bhadrapada', pada:1, starLord:'Jupiter', subLord:'Mercury'}
+      ]
     };
-  </script>
-</body>
-</html>
+    renderTable(data.planets);
+    renderWheel(data.planets);
+    setStatus('✓ Chart generated!');
+  };
+
+  // ---------- On load: set a sensible default TZ ----------
+  window.addEventListener('DOMContentLoaded', () => {
+    if (!tzEl.value) tzEl.value = browserOffsetNow();
+  });
+</script>
