@@ -1,111 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
+ 
 <head>
-  <meta charset="utf-8" />
-  <title>KP Chart Generator – All-in-One</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <style>
-    body { background:#101d2e; color:#e2f0ff; font-family:sans-serif; margin:0; }
-    .wrap { max-width:860px; margin:32px auto; padding:24px; background:#15213b; border-radius:14px; }
-    label { display:block; margin:12px 0 4px; }
-    input, select { width:100%; padding:8px; border-radius:7px; border:1px solid #284168; margin-bottom:8px; background:#162447; color:#e2f0ff;}
-    button { background:#60a5fa; color:#03122a; border:0; border-radius:8px; padding:10px 24px; margin:10px 0; cursor:pointer; }
-    #map { height: 220px; border-radius:10px; margin:12px 0 18px; }
-    .row { display:flex; gap:12px; }
-    .row > div { flex:1; }
-    .status { font-size:14px; color:#73e4ff; margin-top:8px; }
-    textarea { width:100%; background:#1a2847; color:#e2f0ff; border-radius:8px; border:1px solid #24304a; padding:8px; margin-top:12px;}
-    table { width:100%; border-collapse:collapse; margin-top:16px;}
-    th,td { border-bottom:1px solid #24304a; padding:7px; }
-    th { color:#bfe1ff; text-align:left; }
-    .chart-section { margin:30px 0; }
-    #wheel { display:flex; justify-content:center; }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <h2>KP Chart Generator – All-in-One</h2>
-    <form id="kpForm">
-      <label>Name</label>
-      <input type="text" id="name" required>
-      <div class="row">
-        <div>
-          <label>Date of Birth</label>
-          <input type="date" id="dob" required>
-        </div>
-        <div>
-          <label>Time of Birth</label>
-          <input type="time" id="tob" required>
-        </div>
-      </div>
-      <label>Place of Birth (search or use map)</label>
-      <input type="text" id="pob" placeholder="e.g. Colombo">
-      <div class="row">
-        <div>
-          <label>Latitude</label>
-          <input type="number" id="lat" step="0.0001" required placeholder="Click on map or enter">
-        </div>
-        <div>
-          <label>Longitude</label>
-          <input type="number" id="lon" step="0.0001" required placeholder="Click on map or enter">
-        </div>
-      </div>
-      <label>Time Zone 
-        <button type="button" id="detectTzBtn" style="float:right;margin-top:-2px;">Auto Detect</button>
-      </label>
-      <input type="text" id="timezone" required placeholder="+05:30">
-      <button type="submit">Generate Chart</button>
-      <div class="status" id="status"></div>
-    </form>
-    <div id="map"></div>
-    <div class="chart-section">
-      <div id="wheel"></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Planet</th><th>Degree</th><th>Sign</th><th>Nakshatra</th><th>Pada</th><th>Star Lord</th><th>Sub-Lord</th>
-          </tr>
-        </thead>
-        <tbody id="tbl"></tbody>
-      </table>
-      <textarea id="jsonPreview" rows="7" readonly placeholder="Preview will appear here"></textarea>
-    </div>
-  </div>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    // 1. Street Map
-    const map = L.map('map').setView([7.1, 79.9], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-    let marker = null;
-    map.on('click', function(e) {
-      if (marker) map.removeLayer(marker);
-      marker = L.marker(e.latlng).addTo(map);
-      document.getElementById('lat').value = e.latlng.lat.toFixed(4);
-      document.getElementById('lon').value = e.latlng.lng.toFixed(4);
-    });
-
-    // 2. Time Zone auto-detect
-    document.getElementById('detectTzBtn').onclick = function() {
-      const offset = -new Date().getTimezoneOffset();
-      const hr = Math.floor(offset/60);
-      const min = Math.abs(offset%60);
-      const tz = `${hr>=0?'+':'-'}${String(Math.abs(hr)).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
-      document.getElementById('timezone').value = tz;
-    }
-
-    // 3. KP Logic (Minimal, for demo: planets = sample data)
-    const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-    const NAKS = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishta','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
-    const DASHAS = [
-      {lord:'Ketu', years:7}, {lord:'Venus', years:20}, {lord:'Sun', years:6}, {lord:'Moon', years:10},
-      {lord:'Mars', years:7}, {lord:'Rahu', years:18}, {lord:'Jupiter', years:16}, {lord:'Saturn', years:19}, {lord:'Mercury', years:17}
-    ];
-    const NAK_LORD = (()=>{const list=[];let idx=0;for(let i=0;i<27;i++){list.push(DASHAS[idx%9].lord);idx++;}return list;})();
-    const mod = (a,b)=>((a%b)+b)%b;
-    const DEG_PER_NAK = 360/27, DEG_PER_PADA = DEG_PER_NAK/4;
-    function dms(deg){deg=mod(deg,360);const d=Math.floor(deg);const mFloat=(deg-d)*60;const m=Math.floor(mFloat);const s=Math.round((mFloat-m)*60);return `${d}°${String(m).padStart(
-
-
+    <meta charset="utf-8" />
+    <title>KP Chart Generator – Neon Pencil Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        :root {
+            --main-bg: #070c16;
+            --panel-bg: #101823;
+            --panel-glow: #1d2537;
+            --neon: #60a5fa;
+            --neon2: #2df3c2;
+            --neon3: #e6b2ff;
+            --serenity: #e2f0ff;
+            --font-main: 'Segoe UI', 'Roboto', Arial, sans-serif;
+            --white: #fff;
+        }
+ 
+        body {
+            background: var(--main-bg);
+            color: var(--serenity);
+            font-family: var(--font-main);
+            margin: 0;
+            min-height: 100vh;
+        }
+ 
+        .wrap {
+            max-width: 480px;
+            margin: 36px auto;
+            padding: 0 0 32px 0;
+            background: var(--panel-bg);
+            border-radius: 18px;
+            box-shadow: 0 0 32px 0 var(--panel-glow);
+            position: relative;
+            animation: neonBox 1.2s cubic-bezier(.9, .2, .5, 1.7);
+        }
+ 
+        @keyframes neonBox {
+            0% {
+                box-shadow: 0 0 0 0 var(--panel-glow), 0 0 0 0 var(--neon2), 0 0 0 0 var(--neon3);
+            }
+ 
+            100% {
+                box-shadow: 0 0 32px 0 var(--panel-glow);
+            }
+        }
+ 
+        h2 {
+            font-weight: 700;
+            margin: 13px 0 4px;
+            font-size: 1.18rem;
+            color: var(--white);
+        }
+ 
+        input,
+        select {
+            width: 100%;
+            padding: 8px 11px;
+            border-radius: 7px;
+            border: 1.5px solid #222d3f;
+            background: #0d1321;
+            color: var(--serenity);
+            font-size: 1rem;
+            margin-bottom: 9px;
+            outline: none;
+            box-shadow: 0 0 0 0 var(--neon2);
+            transition: box-shadow .28s;
+        }
+ 
+        input:focus,
+        select:focus {
+            border: 1.5px solid var(--neon2);
+            box-shadow: 0 0 10px 1px var(--neon2);
+        }
+ 
+        button {
+            background: linear-gradient(90deg, var(--neon), var(--neon3), var(--neon2));
+            color: #070c16;
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 22px;
+            margin: 10px 0;
+            cursor: pointer;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            font-size: 1.06rem;
+            box-shadow: 0 0 12px 1px var(--neon2), 0 2px 8px #050910;
+            text-shadow: 0 0 2px #fff8;
+            transition: filter .18s;
+        }
+ 
+        button:hover {
+            filter: brightness(1.18) drop-shadow(0 0 4px var(--neon3));
+        }
+ 
+        #map {
+            height: 160px;
+            width: 98%;
+            border-radius: 9px;
+            margin: 13px auto 14px auto;
+            box-shadow: 0 0 14px 2px #0d2237;
+            min-width: 180px;
+            max-width: 400px;
+            background: #101d2e;
+            display: block;
+        }
+ 
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+ 
+        .row>div {
+            flex: 1;
+        }
+ 
+        .status {
+            font-size: 14px;
+            color: var(--neon2);
+            margin-top: 7px;
+            min-height: 20px;
+        }
+ 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: rgba(12, 18, 34, 0.96);
+            border-radius: 10px;
+            box-shadow: 0 0 8px #23228395;
+            padding: 7px 2px;
+            font-size: 0.97rem;
+        }
+ 
+        th {
+            color: var(--neon3);
+            font-weight: 600;
+            background: rgba(17, 25, 40, 0.98);
+        }
+ 
+        td {
+            color: var(--serenity);
+        }
+ 
+        .chart-section {
+            margin: 23px 0 0 0;
+        }
+ 
+        .rasi-ico {
+            filter: drop-shadow(0 0 5px var(--neon));
+        }
