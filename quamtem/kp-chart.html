@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>KP Chart Generator – Simple OSM Autocomplete Edition</title>
+  <title>KP Chart Generator – OSM Autocomplete, Wheel & Responsive</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -15,28 +15,40 @@
       --white: #fff;
     }
     body {background:var(--main-bg);color:var(--serenity);font-family:var(--font-main);margin:0;min-height:100vh;}
-    .wrap {max-width:430px;margin:36px auto;padding:20px 0 32px 0;background:var(--panel-bg);border-radius:18px;box-shadow:0 0 32px 0 #1d2537;position:relative;}
+    .wrap {max-width:480px;margin:36px auto;padding:15px 0 32px 0;background:var(--panel-bg);border-radius:18px;box-shadow:0 0 32px 0 #1d2537;position:relative;}
     h2 {font-weight:700;margin:13px 0 18px;font-size:1.18rem;color:var(--white);text-align:center;}
-    input,select {width:98%;padding:8px 11px;border-radius:7px;border:1.5px solid #222d3f;background:#0d1321;color:var(--serenity);font-size:1rem;margin-bottom:10px;outline:none;}
+    input,select {width:100%;padding:8px 11px;border-radius:7px;border:1.5px solid #222d3f;background:#0d1321;color:var(--serenity);font-size:1rem;margin-bottom:10px;outline:none;}
     input:focus,select:focus {border:1.5px solid var(--neon2);}
     button {background:linear-gradient(90deg,var(--neon),var(--neon2));color:#070c16;border:0;border-radius:10px;padding:10px 22px;margin:10px 0;cursor:pointer;font-weight:700;letter-spacing:0.04em;font-size:1.06rem;}
     .status {font-size:14px;color:var(--neon2);margin-top:7px;min-height:20px;}
     label {font-weight:500;color:var(--white);}
     .row {display:flex;gap:10px;}
     .row>div {flex:1;}
-    #pob-suggest {list-style:none;padding:0;margin:-12px 0 7px 0;background:#1a2234;position:absolute;z-index:10;max-height:120px;overflow:auto;display:none;width:92%;}
+    #pob-suggest {list-style:none;padding:0;margin:-12px 0 7px 0;background:#1a2234;position:absolute;z-index:10;max-height:120px;overflow:auto;display:none;width:94%;}
     #pob-suggest li {cursor:pointer;padding:4px 10px;}
     #pob-suggest li:hover {background:#232b47;color:var(--neon2);}
     table {width:100%;border-collapse:collapse;margin-top:18px;background:rgba(12,18,34,0.96);border-radius:10px;box-shadow:0 0 8px #23228395;padding:7px 2px;font-size:0.97rem;}
     th {color:var(--neon2);font-weight:600;background:rgba(17,25,40,0.98);}
     td {color:var(--serenity);}
     .chart-section {margin:23px 0 0 0;}
-    @media (max-width:600px) {.wrap{padding:2px;max-width:99vw;}input,select{width:97vw;}}
+    #wheel {margin:auto;display:flex;justify-content:center;align-items:center;}
+    @media (max-width:600px) {
+      .wrap{padding:2px;max-width:99vw;}
+      input,select{width:97vw;}
+      .row{flex-direction:column;gap:2px;}
+      #wheel svg{width:98vw !important;height:auto !important;}
+    }
+    /* Show lat/lon row side-by-side on all screens unless very small */
+    @media (min-width:420px) {
+      .latlon-row {display:flex;gap:10px;}
+      .latlon-row>div{flex:1;}
+    }
+    .latlon-row {margin-bottom:10px;}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h2>KP Chart Generator<br><span style="font-size:0.98rem;color:var(--neon2);">– Simple OSM Autocomplete Edition</span></h2>
+    <h2>KP Chart Generator<br><span style="font-size:0.98rem;color:var(--neon2);">– OSM Autocomplete Edition</span></h2>
     <form id="kpForm" autocomplete="off" style="position:relative;">
       <label>Name</label>
       <input type="text" id="name" required>
@@ -53,18 +65,18 @@
       <label>Place of Birth</label>
       <input type="text" id="pob" placeholder="e.g. Colombo" autocomplete="off">
       <ul id="pob-suggest"></ul>
-      <div class="row">
+      <div class="latlon-row">
         <div>
           <label>Latitude</label>
-          <input type="number" id="lat" step="0.0001" required placeholder="Auto-filled or enter">
+          <input type="number" id="lat" step="0.0001" required placeholder="Auto-fill or enter">
         </div>
         <div>
           <label>Longitude</label>
-          <input type="number" id="lon" step="0.0001" required placeholder="Auto-filled or enter">
+          <input type="number" id="lon" step="0.0001" required placeholder="Auto-fill or enter">
         </div>
       </div>
-      <label>Time Zone <button type="button" id="detectTzBtn" style="float:right;margin-top:-2px;">Auto Detect</button></label>
-      <input type="text" id="timezone" required placeholder="+05:30">
+      <label>Time Zone</label>
+      <input type="text" id="timezone" required placeholder="+00:00">
       <button type="submit">Generate Chart</button>
       <div class="status" id="status"></div>
     </form>
@@ -73,7 +85,13 @@
       <table>
         <thead>
           <tr>
-            <th>Planet</th><th>Degree</th><th>Sign</th><th>Nakshatra</th><th>Pada</th><th>Star Lord</th><th>Sub-Lord</th>
+            <th>Planet</th>
+            <th>Degree</th>
+            <th>Sign</th>
+            <th>Nakshatra</th>
+            <th>Pada</th>
+            <th>Star Lord</th>
+            <th>Sub-Lord</th>
           </tr>
         </thead>
         <tbody id="tbl"></tbody>
@@ -81,7 +99,7 @@
     </div>
   </div>
   <script>
-    // --- OSM Autocomplete ---
+    // ----------- OSM Autocomplete + Timezone API -----------
     const pob = document.getElementById('pob');
     const suggest = document.getElementById('pob-suggest');
     pob.addEventListener('input', function() {
@@ -91,7 +109,7 @@
         .then(res => res.json())
         .then(data => {
           suggest.innerHTML = '';
-          data.slice(0,6).forEach(place => {
+          data.slice(0, 6).forEach(place => {
             const li = document.createElement('li');
             li.textContent = place.display_name;
             li.onclick = () => {
@@ -99,6 +117,20 @@
               document.getElementById('lat').value = parseFloat(place.lat).toFixed(4);
               document.getElementById('lon').value = parseFloat(place.lon).toFixed(4);
               suggest.style.display = 'none';
+              // ----- Timezone API call (GeoNames demo, replace with your API if needed) -----
+              fetch(`https://secure.geonames.org/timezoneJSON?lat=${place.lat}&lng=${place.lon}&username=demo`)
+                .then(r => r.json())
+                .then(z => {
+                  if(z && z.gmtOffset!==undefined) {
+                    const sign = z.gmtOffset>=0?'+':'-';
+                    const abs = Math.abs(z.gmtOffset);
+                    const hr = Math.floor(abs);
+                    const min = Math.round((abs-hr)*60);
+                    document.getElementById('timezone').value = `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+                  } else {
+                    document.getElementById('timezone').value = '+00:00';
+                  }
+                }).catch(()=>{document.getElementById('timezone').value = '+00:00';});
             };
             suggest.appendChild(li);
           });
@@ -109,27 +141,15 @@
       if (!suggest.contains(e.target) && e.target !== pob) suggest.style.display = 'none';
     });
 
-    document.getElementById('detectTzBtn').onclick = function() {
-      try {
-        let offset = -new Date().getTimezoneOffset();
-        let sign = offset >= 0 ? '+' : '-';
-        let absOffset = Math.abs(offset);
-        let hr = Math.floor(absOffset / 60);
-        let min = absOffset % 60;
-        let tz = `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
-        document.getElementById('timezone').value = tz;
-      } catch {
-        document.getElementById('timezone').value = '+05:30';
-      }
-    };
-
-    // --- KP Helpers (minimal for sample, add your real logic & chart code here) ---
+    // ----------- KP Helpers & Chart Wheel -----------
+    const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     function renderTable(planets){
-      const tbody=document.getElementById('tbl');tbody.innerHTML='';
-      if(!planets) return;
-      planets.forEach(p=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`
+      const tbody = document.getElementById('tbl');
+      tbody.innerHTML = '';
+      if (!planets) return;
+      planets.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
           <td>${p.name}</td>
           <td>${Number(p.degree).toFixed(2)}</td>
           <td>${p.sign||''}</td>
@@ -141,12 +161,34 @@
       });
     }
     function renderWheel(planets){
-      // Your KP chart SVG wheel rendering here (optional)
-      document.getElementById('wheel').innerHTML = '';
+      if(!planets || !planets.length) { document.getElementById('wheel').innerHTML=''; return; }
+      // Basic Rasi Chakra (wheel) SVG with planet dots:
+      const W=270,H=270,Cx=W/2,Cy=H/2,R=98;
+      let sectors='',labels='',planDots='';
+      for(let i=0;i<12;i++){
+        const a1=(i*30-90)*Math.PI/180, a2=((i+1)*30-90)*Math.PI/180;
+        const x1=Cx+R*Math.cos(a1), y1=Cy+R*Math.sin(a1), x2=Cx+R*Math.cos(a2), y2=Cy+R*Math.sin(a2);
+        sectors+=`<path d="M${Cx},${Cy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z" fill="none" stroke="#2df3c2" stroke-width="1.4"/>`;
+      }
+      for(let i=0;i<12;i++){
+        const a=((i*30+15)-90)*Math.PI/180, x=Cx+(R-16)*Math.cos(a), y=Cy+(R-16)*Math.sin(a);
+        labels+=`<text x="${x}" y="${y+5}" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="bold">${SIGNS[i]}</text>`;
+      }
+      planets.forEach((p,pi)=>{
+        const a=(p.degree-90)*Math.PI/180,r=R-30,x=Cx+r*Math.cos(a),y=Cy+r*Math.sin(a);
+        planDots+=`<circle cx="${x}" cy="${y}" r="11" fill="#070c16" stroke="#e2f0ff" stroke-width="2"/><text x="${x}" y="${y+4}" font-size="11" fill="#2df3c2" text-anchor="middle" font-weight="bold">${p.name[0]}</text>`;
+      });
+      const svg=`<svg viewBox="0 0 ${W} ${H}" style="background:transparent;width:220px;height:220px;user-select:none;">
+        <circle cx="${Cx}" cy="${Cy}" r="${R+9}" fill="rgba(7,18,34,0.98)" />
+        ${sectors}
+        ${labels}
+        <g>${planDots}</g>
+      </svg>`;
+      document.getElementById('wheel').innerHTML = svg;
     }
 
-    // --- KP Chart Form Submit (calls your backend API, you should implement this) ---
-    document.getElementById('kpForm').onsubmit = async function(e){
+    // ----------- KP Chart Form Submit (demo planets for now) -----------
+    document.getElementById('kpForm').onsubmit = async function(e) {
       e.preventDefault();
       const name = document.getElementById('name').value;
       const dob = document.getElementById('dob').value;
@@ -155,23 +197,22 @@
       const lon = parseFloat(document.getElementById('lon').value);
       const timezone = document.getElementById('timezone').value;
       document.getElementById('status').textContent = 'Calculating...';
-      // ---- CHANGE THIS: Call your planetary backend API (e.g. Node.js proxy server) ----
       try {
-        // DEMO: Fake data example. Replace this with a real fetch to your server!
-        // const resp = await fetch('http://localhost:3001/api/planets', { ... });
+        // TODO: Connect to planetary backend here! For now, show demo data.
+        // const resp = await fetch('YOUR_BACKEND_URL', { ... });
         // const data = await resp.json();
-        // For demonstration, show dummy planets:
         const data = {
           planets: [
             {name:'Sun', degree:120.45, sign:'Cancer', nakshatra:'Pushya', pada:2, starLord:'Saturn', subLord:'Mercury'},
             {name:'Moon', degree:203.22, sign:'Libra', nakshatra:'Vishakha', pada:3, starLord:'Jupiter', subLord:'Venus'},
-            // ...other planets
+            {name:'Mars', degree:48.30, sign:'Taurus', nakshatra:'Rohini', pada:2, starLord:'Moon', subLord:'Moon'},
+            {name:'Mercury', degree:310.12, sign:'Aquarius', nakshatra:'Purva Bhadrapada', pada:1, starLord:'Jupiter', subLord:'Mercury'}
           ]
         };
         renderTable(data.planets);
         renderWheel(data.planets);
         document.getElementById('status').textContent = '✓ Chart generated!';
-      } catch(e){
+      } catch (e) {
         document.getElementById('status').textContent = 'Error: ' + e.message;
       }
     };
