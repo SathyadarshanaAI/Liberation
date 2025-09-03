@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>KP Chart Generator – OSM Autocomplete, Wheel & Responsive</title>
+  <title>KP Chart Generator – OSM Autocomplete & Open-Meteo Timezone</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
@@ -38,7 +38,6 @@
       .row{flex-direction:column;gap:2px;}
       #wheel svg{width:98vw !important;height:auto !important;}
     }
-    /* Show lat/lon row side-by-side on all screens unless very small */
     @media (min-width:420px) {
       .latlon-row {display:flex;gap:10px;}
       .latlon-row>div{flex:1;}
@@ -48,7 +47,9 @@
 </head>
 <body>
   <div class="wrap">
-    <h2>KP Chart Generator<br><span style="font-size:0.98rem;color:var(--neon2);">– OSM Autocomplete Edition</span></h2>
+    <h2>KP Chart Generator<br>
+      <span style="font-size:0.98rem;color:var(--neon2);">– OSM Autocomplete + Open-Meteo Timezone</span>
+    </h2>
     <form id="kpForm" autocomplete="off" style="position:relative;">
       <label>Name</label>
       <input type="text" id="name" required>
@@ -99,7 +100,7 @@
     </div>
   </div>
   <script>
-    // ----------- OSM Autocomplete + Timezone API -----------
+    // ----- OSM Autocomplete -----
     const pob = document.getElementById('pob');
     const suggest = document.getElementById('pob-suggest');
     pob.addEventListener('input', function() {
@@ -117,20 +118,7 @@
               document.getElementById('lat').value = parseFloat(place.lat).toFixed(4);
               document.getElementById('lon').value = parseFloat(place.lon).toFixed(4);
               suggest.style.display = 'none';
-              // ----- Timezone API call (GeoNames demo, replace with your API if needed) -----
-              fetch(`https://secure.geonames.org/timezoneJSON?lat=${place.lat}&lng=${place.lon}&username=demo`)
-                .then(r => r.json())
-                .then(z => {
-                  if(z && z.gmtOffset!==undefined) {
-                    const sign = z.gmtOffset>=0?'+':'-';
-                    const abs = Math.abs(z.gmtOffset);
-                    const hr = Math.floor(abs);
-                    const min = Math.round((abs-hr)*60);
-                    document.getElementById('timezone').value = `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
-                  } else {
-                    document.getElementById('timezone').value = '+00:00';
-                  }
-                }).catch(()=>{document.getElementById('timezone').value = '+00:00';});
+              setTimeZoneFromLatLon(place.lat, place.lon);
             };
             suggest.appendChild(li);
           });
@@ -141,7 +129,27 @@
       if (!suggest.contains(e.target) && e.target !== pob) suggest.style.display = 'none';
     });
 
-    // ----------- KP Helpers & Chart Wheel -----------
+    // ----- Open-Meteo Time Zone API (No Key Needed) -----
+    function setTimeZoneFromLatLon(lat, lon) {
+      fetch(`https://api.open-meteo.com/v1/timezone?latitude=${lat}&longitude=${lon}`)
+        .then(r => r.json())
+        .then(z => {
+          if(z && z.utc_offset_seconds !== undefined) {
+            const offset = z.utc_offset_seconds/3600;
+            const sign = offset >=0 ? '+' : '-';
+            const hr = Math.floor(Math.abs(offset));
+            const min = Math.round((Math.abs(offset)-hr)*60);
+            document.getElementById('timezone').value = `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+          } else {
+            document.getElementById('timezone').value = '+00:00';
+          }
+        })
+        .catch(()=>{
+          document.getElementById('timezone').value = '+00:00';
+        });
+    }
+
+    // ----- KP Helpers & Chart Wheel -----
     const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     function renderTable(planets){
       const tbody = document.getElementById('tbl');
@@ -187,7 +195,7 @@
       document.getElementById('wheel').innerHTML = svg;
     }
 
-    // ----------- KP Chart Form Submit (demo planets for now) -----------
+    // ----- KP Chart Form Submit (Demo Data) -----
     document.getElementById('kpForm').onsubmit = async function(e) {
       e.preventDefault();
       const name = document.getElementById('name').value;
@@ -199,8 +207,6 @@
       document.getElementById('status').textContent = 'Calculating...';
       try {
         // TODO: Connect to planetary backend here! For now, show demo data.
-        // const resp = await fetch('YOUR_BACKEND_URL', { ... });
-        // const data = await resp.json();
         const data = {
           planets: [
             {name:'Sun', degree:120.45, sign:'Cancer', nakshatra:'Pushya', pada:2, starLord:'Saturn', subLord:'Mercury'},
