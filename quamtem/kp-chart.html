@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="utf-8" />
   <title>KP Chart</title>
   <style>
     body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #f8fafc; color: #222;}
@@ -11,6 +11,7 @@
     #wheelBox { display: flex; justify-content: center; margin-top: 24px; }
     #mapPreview { width: 100%; height: 170px; border: 1px solid #bbb; border-radius: 8px; margin-bottom: 14px; display: none;}
     #mapPreview iframe { width:100%; height:100%; border:0; border-radius:8px;}
+    #analysis { background:#f8f8fc; border-left:3px solid #3451bf; margin-top:24px; padding:12px 16px 12px 16px; font-size:1.08em;}
     @media(max-width:600px){
       .container{max-width:98vw;padding:4px;}
       #mapPreview{height:120px;}
@@ -23,21 +24,28 @@
     <form id="form">
       <label>Name</label>
       <input id="name" required placeholder="Your name"/>
-
       <label>Date of Birth</label>
       <input id="date" type="date" required/>
-
       <label>Time of Birth</label>
       <input id="time" type="time" required value="12:00"/>
-
-      <label>Timezone</label>
-      <select id="timezone"></select>
-
+      <label>Timezone (Manual select)</label>
+      <select id="timezone" required>
+        <option value="">Select timezone</option>
+        <option value="+05:30">IST (India/Sri Lanka) +05:30</option>
+        <option value="+06:00">Bangladesh +06:00</option>
+        <option value="+05:45">Nepal +05:45</option>
+        <option value="+01:00">CET +01:00</option>
+        <option value="-05:00">EST (US East) -05:00</option>
+        <option value="+09:00">Japan +09:00</option>
+        <option value="+03:00">Arabia +03:00</option>
+        <option value="+08:00">China +08:00</option>
+        <option value="-08:00">PST (US West) -08:00</option>
+        <option value="+00:00">UTC/GMT +00:00</option>
+      </select>
       <label>Latitude</label>
       <input id="lat" required placeholder="e.g. 51.5074" step="any" inputmode="decimal"/>
       <label>Longitude</label>
       <input id="lon" required placeholder="e.g. -0.1278" step="any" inputmode="decimal"/>
-
       <label>Place</label>
       <div style="display:flex;gap:4px;">
         <input id="place" placeholder="e.g. London, UK" style="flex:1"/>
@@ -47,29 +55,9 @@
     <div id="mapPreview"></div>
     <button id="drawBtn" style="margin-top:10px;width:100%;">Draw Chart</button>
     <div id="wheelBox"></div>
+    <div id="analysis"></div>
   </div>
 <script>
-// ---- Timezone select ----
-const timezones = [
-  { value:"+05:30", label:"IST (India/Sri Lanka) +05:30" },
-  { value:"+06:00", label:"Bangladesh +06:00" },
-  { value:"+05:45", label:"Nepal +05:45" },
-  { value:"+01:00", label:"CET +01:00" },
-  { value:"-05:00", label:"EST (US East) -05:00" },
-  { value:"+09:00", label:"Japan +09:00" },
-  { value:"+03:00", label:"Arabia +03:00" },
-  { value:"+08:00", label:"China +08:00" },
-  { value:"-08:00", label:"PST (US West) -08:00" },
-  { value:"+00:00", label:"UTC/GMT +00:00" }
-];
-const tzSel = document.getElementById('timezone');
-timezones.forEach(tz=>{
-  const o = document.createElement('option');
-  o.value = tz.value; o.textContent = tz.label;
-  tzSel.appendChild(o);
-});
-tzSel.value = "+00:00"; // Default London
-
 // ---- Map view logic ----
 async function geocodePlace(q){
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
@@ -101,4 +89,96 @@ document.getElementById('geocodeBtn').onclick = async function(){
 };
 // On Lat/Lon change, show map preview
 document.getElementById('lat').addEventListener('input', ()=>{
-  const lat=document.getElementById('lat').value,lon
+  const lat=document.getElementById('lat').value,lon=document.getElementById('lon').value;
+  if(lat && lon) showMap(lat, lon);
+});
+document.getElementById('lon').addEventListener('input', ()=>{
+  const lat=document.getElementById('lat').value,lon=document.getElementById('lon').value;
+  if(lat && lon) showMap(lat, lon);
+});
+
+// ---- KP Wheel Chart (12-house) ----
+function drawKPWheelChart() {
+    const wheel = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    wheel.setAttribute("width", 340);
+    wheel.setAttribute("height", 340);
+    wheel.innerHTML = '';
+    const cx = 170, cy = 170, rOuter = 150, rInner = 70;
+    // Outer circle
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
+    circle.setAttribute("r", rOuter); circle.setAttribute("fill", "#fafafa");
+    circle.setAttribute("stroke", "#888"); circle.setAttribute("stroke-width", 2);
+    wheel.appendChild(circle);
+    // 12 houses
+    for(let i=0; i<12; ++i){
+        let a = (i/12) * 2 * Math.PI - Math.PI/2;
+        let x1 = cx + rInner * Math.cos(a), y1 = cy + rInner * Math.sin(a);
+        let x2 = cx + rOuter * Math.cos(a), y2 = cy + rOuter * Math.sin(a);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+        line.setAttribute("stroke", "#888");
+        line.setAttribute("stroke-width", 1.1);
+        wheel.appendChild(line);
+        // House numbers
+        let tx = cx + (rInner+35) * Math.cos(a + Math.PI/12), ty = cy + (rInner+35) * Math.sin(a + Math.PI/12)+5;
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("x", tx);
+        label.setAttribute("y", ty);
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("font-size", "16px");
+        label.setAttribute("fill", "#444");
+        label.textContent = (i+1);
+        wheel.appendChild(label);
+    }
+    // Inner circle
+    const inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    inner.setAttribute("cx", cx); inner.setAttribute("cy", cy); inner.setAttribute("r", rInner);
+    inner.setAttribute("fill", "#fff"); inner.setAttribute("stroke", "#aaa"); inner.setAttribute("stroke-width", 1.3);
+    wheel.appendChild(inner);
+
+    document.getElementById('wheelBox').innerHTML = '';
+    document.getElementById('wheelBox').appendChild(wheel);
+}
+
+// ---- Generate 300-word sample analysis (placeholder, random planets) ----
+function getPlanetAnalysis(formData) {
+    // You can connect real astrology logic here. For now, this is a static text with planet names as a placeholder.
+    const planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
+    let txt = `Astrological Analysis for ${formData.name || 'the native'}:<br><br>`;
+    txt += `This is a sample KP astrology analysis based on your planetary positions. `;
+    txt += `Your birth details suggest a unique alignment of the nine classical planets which influence your personality, life path, and experiences. `;
+    txt += `For example, if the Sun is prominent in your chart, it may indicate leadership qualities, confidence, and a strong sense of self. `;
+    txt += `The Moon's influence reflects your emotional nature and how you respond to life's changes. Mars contributes energy, drive, and courage, while Mercury governs communication, intellect, and adaptability. Jupiter brings wisdom, optimism, and opportunities for growth, whereas Venus is associated with love, beauty, and creativity. Saturn shapes discipline, challenges, and long-term achievements. Rahu and Ketu, the lunar nodes, highlight karmic lessons and spiritual evolution.<br><br>`;
+    txt += `With your given date, time, and place, a full KP analysis would consider the exact house positions and aspects of each planet. `;
+    txt += `You may experience periods of growth and transformation, especially when major planets transit key houses in your chart. `;
+    txt += `Self-awareness, adaptability, and persistence can help you navigate both challenges and opportunities. `;
+    txt += `Remember, astrology provides guidance and self-knowledge, but your choices and actions are equally vital in shaping your destiny.<br><br>`;
+    txt += `<i>This is an automatically generated summary. For an in-depth personalized analysis, consult a professional KP astrologer with your full birth chart.</i>`;
+    return txt;
+}
+
+document.getElementById('drawBtn').onclick = function(e) {
+    e.preventDefault();
+    // Collect form data
+    const formData = {
+      name: document.getElementById('name').value.trim(),
+      date: document.getElementById('date').value,
+      time: document.getElementById('time').value,
+      timezone: document.getElementById('timezone').value,
+      lat: document.getElementById('lat').value,
+      lon: document.getElementById('lon').value,
+      place: document.getElementById('place').value.trim()
+    };
+    // Validate required fields
+    if(!(formData.name && formData.date && formData.time && formData.timezone && formData.lat && formData.lon)){
+      alert('Please fill all required fields.');
+      return;
+    }
+    drawKPWheelChart();
+    document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData);
+};
+</script>
+</body>
+</html>
