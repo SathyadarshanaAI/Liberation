@@ -5,33 +5,21 @@
   <title>KP Chart Generator – OSM Autocomplete & Open-Meteo Timezone</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --main-bg: #070c16;
-      --panel-bg: #101823;
-      --neon: #60a5fa;
-      --neon2: #2df3c2;
-      --serenity: #e2f0ff;
-      --font-main: 'Segoe UI','Roboto',Arial,sans-serif;
-      --white: #fff;
-    }
-    body {background:var(--main-bg);color:var(--serenity);font-family:var(--font-main);margin:0;min-height:100vh;}
-    .wrap {max-width:480px;margin:36px auto;padding:15px 0 32px 0;background:var(--panel-bg);border-radius:18px;box-shadow:0 0 32px 0 #1d2537;position:relative;}
-    h2 {font-weight:700;margin:13px 0 18px;font-size:1.18rem;color:var(--white);text-align:center;}
-    input,select {width:100%;padding:8px 11px;border-radius:7px;border:1.5px solid #222d3f;background:#0d1321;color:var(--serenity);font-size:1rem;margin-bottom:10px;outline:none;}
-    input:focus,select:focus {border:1.5px solid var(--neon2);}
-    button {background:linear-gradient(90deg,var(--neon),var(--neon2));color:#070c16;border:0;border-radius:10px;padding:10px 22px;margin:10px 0;cursor:pointer;font-weight:700;letter-spacing:0.04em;font-size:1.06rem;}
-    .status {font-size:14px;color:var(--neon2);margin-top:7px;min-height:20px;}
-    label {font-weight:500;color:var(--white);}
-    .row {display:flex;gap:10px;}
-    .row>div {flex:1;}
-    #pob-suggest {list-style:none;padding:0;margin:-12px 0 7px 0;background:#1a2234;position:absolute;z-index:10;max-height:120px;overflow:auto;display:none;width:94%;}
-    #pob-suggest li {cursor:pointer;padding:4px 10px;}
-    #pob-suggest li:hover {background:#232b47;color:var(--neon2);}
-    table {width:100%;border-collapse:collapse;margin-top:18px;background:rgba(12,18,34,0.96);border-radius:10px;box-shadow:0 0 8px #23228395;padding:7px 2px;font-size:0.97rem;}
-    th {color:var(--neon2);font-weight:600;background:rgba(17,25,40,0.98);}
-    td {color:var(--serenity);}
-    .chart-section {margin:23px 0 0 0;}
-    #wheel {margin:auto;display:flex;justify-content:center;align-items:center;}
+    body { background: #070c16; color: #e2f0ff; font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; margin:0; min-height:100vh; }
+    .wrap { max-width:480px; margin:36px auto; padding:15px 0 32px 0; background:#101823; border-radius:18px; box-shadow:0 0 32px 0 #1d2537; position:relative;}
+    h2 { font-weight:700; margin:13px 0 18px; font-size:1.18rem; color:#fff; text-align:center;}
+    input,select { width:100%; padding:8px 11px; border-radius:7px; border:1.5px solid #222d3f; background:#0d1321; color:#e2f0ff; font-size:1rem; margin-bottom:10px; outline:none;}
+    input:focus,select:focus { border:1.5px solid #2df3c2;}
+    button { background:linear-gradient(90deg,#60a5fa,#2df3c2); color:#070c16; border:0; border-radius:10px; padding:10px 22px; margin:10px 0; cursor:pointer; font-weight:700; letter-spacing:0.04em; font-size:1.06rem;}
+    .status { font-size:14px; color:#2df3c2; margin-top:7px; min-height:20px;}
+    label { font-weight:500; color:#fff;}
+    .row { display:flex; gap:10px;}
+    .row>div { flex:1;}
+    #pob-suggest { list-style:none; padding:0; margin:-12px 0 7px 0; background:#1a2234; position:absolute; z-index:10;px #23228395; padding:7px 2px; font-size:0.97rem;}
+    th { color:#2df3c2; font-weight:600; background:rgba(17,25,40,0.98);}
+    td { color:#e2f0ff;}
+    .chart-section { margin:23px 0 0 0;}
+    #wheel { margin:auto; display:flex; justify-content:center; align-items:center;}
     @media (max-width:600px) {
       .wrap{padding:2px;max-width:99vw;}
       input,select{width:97vw;}
@@ -48,7 +36,7 @@
 <body>
   <div class="wrap">
     <h2>KP Chart Generator<br>
-      <span style="font-size:0.98rem;color:var(--neon2);">– OSM Autocomplete + Open-Meteo Timezone</span>
+      <span style="font-size:0.98rem;color:#2df3c2;">– OSM Autocomplete + Open-Meteo Timezone</span>
     </h2>
     <form id="kpForm" autocomplete="off" style="position:relative;">
       <label>Name</label>
@@ -100,7 +88,7 @@
     </div>
   </div>
   <script>
-    // ----- OSM Autocomplete -----
+    // OSM Autocomplete
     const pob = document.getElementById('pob');
     const suggest = document.getElementById('pob-suggest');
     pob.addEventListener('input', function() {
@@ -129,27 +117,29 @@
       if (!suggest.contains(e.target) && e.target !== pob) suggest.style.display = 'none';
     });
 
-    // ----- Open-Meteo Time Zone API (No Key Needed) -----
+    // Open-Meteo Time Zone API (No Key Needed) -- FIXED!
     function setTimeZoneFromLatLon(lat, lon) {
       fetch(`https://api.open-meteo.com/v1/timezone?latitude=${lat}&longitude=${lon}`)
         .then(r => r.json())
         .then(z => {
-          if(z && z.utc_offset_seconds !== undefined) {
-            const offset = z.utc_offset_seconds/3600;
-            const sign = offset >=0 ? '+' : '-';
+          // Debug: console.log(z);
+          if (z && typeof z.utc_offset_seconds === 'number') {
+            const offset = z.utc_offset_seconds / 3600;
+            const sign = offset >= 0 ? '+' : '-';
             const hr = Math.floor(Math.abs(offset));
-            const min = Math.round((Math.abs(offset)-hr)*60);
-            document.getElementById('timezone').value = `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+            const min = Math.round((Math.abs(offset) - hr) * 60);
+            document.getElementById('timezone').value =
+              `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
           } else {
             document.getElementById('timezone').value = '+00:00';
           }
         })
-        .catch(()=>{
+        .catch(() => {
           document.getElementById('timezone').value = '+00:00';
         });
     }
 
-    // ----- KP Helpers & Chart Wheel -----
+    // KP Helpers & Chart Wheel (demo only)
     const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     function renderTable(planets){
       const tbody = document.getElementById('tbl');
@@ -170,7 +160,6 @@
     }
     function renderWheel(planets){
       if(!planets || !planets.length) { document.getElementById('wheel').innerHTML=''; return; }
-      // Basic Rasi Chakra (wheel) SVG with planet dots:
       const W=270,H=270,Cx=W/2,Cy=H/2,R=98;
       let sectors='',labels='',planDots='';
       for(let i=0;i<12;i++){
@@ -195,18 +184,11 @@
       document.getElementById('wheel').innerHTML = svg;
     }
 
-    // ----- KP Chart Form Submit (Demo Data) -----
+    // KP Chart Form Submit (Demo Data)
     document.getElementById('kpForm').onsubmit = async function(e) {
       e.preventDefault();
-      const name = document.getElementById('name').value;
-      const dob = document.getElementById('dob').value;
-      const tob = document.getElementById('tob').value;
-      const lat = parseFloat(document.getElementById('lat').value);
-      const lon = parseFloat(document.getElementById('lon').value);
-      const timezone = document.getElementById('timezone').value;
       document.getElementById('status').textContent = 'Calculating...';
       try {
-        // TODO: Connect to planetary backend here! For now, show demo data.
         const data = {
           planets: [
             {name:'Sun', degree:120.45, sign:'Cancer', nakshatra:'Pushya', pada:2, starLord:'Saturn', subLord:'Mercury'},
