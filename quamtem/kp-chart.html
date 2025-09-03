@@ -1,288 +1,111 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Sathyadarshana Astrology – KP Chart Generator</title>
+  <title>KP Chart Generator – All-in-One</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
-    body { background: #070c16; color: #e2f0ff; font-family: 'Noto Sans Sinhala','Segoe UI',Arial,sans-serif; margin:0; min-height:100vh;}
-    .wrap { max-width:600px; margin:14px auto; padding:10px 0 32px 0; background:#101823; border-radius:15px; box-shadow:0 0 22px 0 #1d2537; position:relative;}
-    h2 { font-weight:700; margin:13px 0 10px; font-size:1.25rem; color:#fff; text-align:center;}
-    .brand {color:#2df3c2; font-size:1.09rem; text-align:center; margin-bottom:8px;}
-    .contact {color:#60a5fa; font-size:0.97rem;text-align:center;margin-bottom:14px;}
-    input,select { width:100%; padding:8px 11px; border-radius:7px; border:1.5px solid #222d3f; background:#0d1321; color:#e2f0ff; font-size:1rem; margin-bottom:10px; outline:none;}
-    input:focus,select:focus { border:1.5px solid #2df3c2;}
-    button { background:linear-gradient(90deg,#60a5fa,#2df3c2); color:#070c16; border:0; border-radius:9px; padding:8px 16px; margin:10px 5px 0 0; cursor:pointer; font-weight:700; letter-spacing:0.04em; font-size:1.06rem;}
-    .status { font-size:14px; color:#2df3c2; margin-top:7px; min-height:20px;}
-    label { font-weight:500; color:#fff;}
-    .row { display:flex; gap:10px;}
-    .row>div { flex:1;}
-    #pob-suggest { list-style:none; padding:0; margin:-12px 0 7px 0; background:#1a2234; position:absolute; z-index:10; max-height:120px; overflow:auto; display:none; width:94%;}
-    #pob-suggest li { cursor:pointer; padding:4px 10px;}
-    #pob-suggest li:hover { background:#232b47; color:#2df3c2;}
-    .latlon-row {display:flex;gap:10px; margin-bottom:10px;}
-    .latlon-row>div {flex:1;}
-    .chart-section { margin:20px 0 0 0; }
-    #wheel { margin:auto; display:flex; justify-content:center; align-items:center; background: #181e29; border-radius:11px; box-shadow:0 0 15px #23228395;}
-    #wheel svg { width:99vw; max-width:480px; height:auto; background:#181e29; }
-    .summary { background:#161e2a; color:#e2f0ff; margin:18px 0 10px 0; border-radius:8px; padding:13px 17px; font-size:1.04rem; line-height:1.7;}
-    .down-btns {text-align:center; margin:4px;}
-    .down-btns button {margin-right:6px;}
-    @media (max-width:650px) {
-      .wrap{max-width:99vw;}
-      #wheel svg{width:98vw !important;max-width:98vw !important;}
-    }
-    @media (max-width:420px) {
-      .row,.latlon-row{flex-direction:column;gap:2px;}
-      #wheel svg{width:99vw !important;}
-    }
+    body { background:#101d2e; color:#e2f0ff; font-family:sans-serif; margin:0; }
+    .wrap { max-width:860px; margin:32px auto; padding:24px; background:#15213b; border-radius:14px; }
+    label { display:block; margin:12px 0 4px; }
+    input, select { width:100%; padding:8px; border-radius:7px; border:1px solid #284168; margin-bottom:8px; background:#162447; color:#e2f0ff;}
+    button { background:#60a5fa; color:#03122a; border:0; border-radius:8px; padding:10px 24px; margin:10px 0; cursor:pointer; }
+    #map { height: 220px; border-radius:10px; margin:12px 0 18px; }
+    .row { display:flex; gap:12px; }
+    .row > div { flex:1; }
+    .status { font-size:14px; color:#73e4ff; margin-top:8px; }
+    textarea { width:100%; background:#1a2847; color:#e2f0ff; border-radius:8px; border:1px solid #24304a; padding:8px; margin-top:12px;}
+    table { width:100%; border-collapse:collapse; margin-top:16px;}
+    th,td { border-bottom:1px solid #24304a; padding:7px; }
+    th { color:#bfe1ff; text-align:left; }
+    .chart-section { margin:30px 0; }
+    #wheel { display:flex; justify-content:center; }
   </style>
-  <!-- jsPDF for PDF export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="wrap">
-    <h2>KP Chart Generator</h2>
-    <div class="brand">Sathyadarshana Astrology</div>
-    <div class="contact">
-      Email: <a href="mailto:sathyanirvana@gmail.com" style="color:#2df3c2;">sathyanirvana@gmail.com</a><br>
-      WhatsApp: <a href="https://wa.me/94757500000" style="color:#2df3c2;">+94 75 750 0000</a>
-    </div>
-    <form id="kpForm" autocomplete="off" style="position:relative;">
-      <label>නම</label>
+    <h2>KP Chart Generator – All-in-One</h2>
+    <form id="kpForm">
+      <label>Name</label>
       <input type="text" id="name" required>
       <div class="row">
         <div>
-          <label>උපන් දිනය</label>
+          <label>Date of Birth</label>
           <input type="date" id="dob" required>
         </div>
         <div>
-          <label>උපන් වේලාව</label>
+          <label>Time of Birth</label>
           <input type="time" id="tob" required>
         </div>
       </div>
-      <label>උපන් ස්ථානය</label>
-      <input type="text" id="pob" placeholder="Colombo, Galle, Kandy..." autocomplete="off">
-      <ul id="pob-suggest"></ul>
-      <div class="latlon-row">
+      <label>Place of Birth (search or use map)</label>
+      <input type="text" id="pob" placeholder="e.g. Colombo">
+      <div class="row">
         <div>
           <label>Latitude</label>
-          <input type="number" id="lat" step="0.0001" required placeholder="Auto-fill or enter">
+          <input type="number" id="lat" step="0.0001" required placeholder="Click on map or enter">
         </div>
         <div>
           <label>Longitude</label>
-          <input type="number" id="lon" step="0.0001" required placeholder="Auto-fill or enter">
+          <input type="number" id="lon" step="0.0001" required placeholder="Click on map or enter">
         </div>
       </div>
-      <label>Time Zone</label>
-      <input type="text" id="timezone" required placeholder="+00:00">
-      <button type="submit">චාටි එක ලබා ගන්න</button>
+      <label>Time Zone 
+        <button type="button" id="detectTzBtn" style="float:right;margin-top:-2px;">Auto Detect</button>
+      </label>
+      <input type="text" id="timezone" required placeholder="+05:30">
+      <button type="submit">Generate Chart</button>
       <div class="status" id="status"></div>
     </form>
+    <div id="map"></div>
     <div class="chart-section">
       <div id="wheel"></div>
-      <div class="down-btns" id="downBtns" style="display:none;">
-        <button onclick="downloadSVG()">චාටි රූපය (PNG)</button>
-        <button onclick="downloadPDF()">PDF එක</button>
-      </div>
-      <div class="summary" id="summary" style="display:none;"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Planet</th><th>Degree</th><th>Sign</th><th>Nakshatra</th><th>Pada</th><th>Star Lord</th><th>Sub-Lord</th>
+          </tr>
+        </thead>
+        <tbody id="tbl"></tbody>
+      </table>
+      <textarea id="jsonPreview" rows="7" readonly placeholder="Preview will appear here"></textarea>
     </div>
   </div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // OSM Autocomplete
-    const pob = document.getElementById('pob');
-    const suggest = document.getElementById('pob-suggest');
-    pob.addEventListener('input', function() {
-      const query = pob.value.trim();
-      if (query.length < 2) { suggest.style.display = 'none'; return; }
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-        .then(res => res.json())
-        .then(data => {
-          suggest.innerHTML = '';
-          data.slice(0, 6).forEach(place => {
-            const li = document.createElement('li');
-            li.textContent = place.display_name;
-            li.onclick = () => {
-              pob.value = place.display_name;
-              document.getElementById('lat').value = parseFloat(place.lat).toFixed(4);
-              document.getElementById('lon').value = parseFloat(place.lon).toFixed(4);
-              suggest.style.display = 'none';
-              setTimeZoneFromLatLon(place.lat, place.lon);
-            };
-            suggest.appendChild(li);
-          });
-          suggest.style.display = data.length ? 'block' : 'none';
-        });
-    });
-    document.addEventListener('click', e => {
-      if (!suggest.contains(e.target) && e.target !== pob) suggest.style.display = 'none';
+    // 1. Street Map
+    const map = L.map('map').setView([7.1, 79.9], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    let marker = null;
+    map.on('click', function(e) {
+      if (marker) map.removeLayer(marker);
+      marker = L.marker(e.latlng).addTo(map);
+      document.getElementById('lat').value = e.latlng.lat.toFixed(4);
+      document.getElementById('lon').value = e.latlng.lng.toFixed(4);
     });
 
-    // Open-Meteo Time Zone API
-    function setTimeZoneFromLatLon(lat, lon) {
-      fetch(`https://api.open-meteo.com/v1/timezone?latitude=${lat}&longitude=${lon}`)
-        .then(r => r.json())
-        .then(z => {
-          if (z && typeof z.utc_offset_seconds === 'number') {
-            const offset = z.utc_offset_seconds / 3600;
-            const sign = offset >= 0 ? '+' : '-';
-            const hr = Math.floor(Math.abs(offset));
-            const min = Math.round((Math.abs(offset) - hr) * 60);
-            document.getElementById('timezone').value =
-              `${sign}${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
-          } else {
-            document.getElementById('timezone').value = '+00:00';
-          }
-        })
-        .catch(() => {
-          document.getElementById('timezone').value = '+00:00';
-        });
+    // 2. Time Zone auto-detect
+    document.getElementById('detectTzBtn').onclick = function() {
+      const offset = -new Date().getTimezoneOffset();
+      const hr = Math.floor(offset/60);
+      const min = Math.abs(offset%60);
+      const tz = `${hr>=0?'+':'-'}${String(Math.abs(hr)).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+      document.getElementById('timezone').value = tz;
     }
 
-    // KP Chart Wheel with "Pencil" rashi (sign) boundaries and planet dots
-    const SIGNS = [
-      {name:'මේෂ',en:'Aries',clr:'#ffcb6b'},
-      {name:'වෘෂභ',en:'Taurus',clr:'#b5e5a7'},
-      {name:'මිථුන',en:'Gemini',clr:'#f4e2d8'},
-      {name:'කටක',en:'Cancer',clr:'#a0d8ef'},
-      {name:'සිංහ',en:'Leo',clr:'#ffe066'},
-      {name:'කාන්‍යා',en:'Virgo',clr:'#91eac9'},
-      {name:'තුලා',en:'Libra',clr:'#c3b7f9'},
-      {name:'වෘශ්චික',en:'Scorpio',clr:'#ffaab5'},
-      {name:'ධනු',en:'Sagittarius',clr:'#e2e2e2'},
-      {name:'මකර',en:'Capricorn',clr:'#bcd9ea'},
-      {name:'කුම්භ',en:'Aquarius',clr:'#b3fff6'},
-      {name:'මීන',en:'Pisces',clr:'#e5d7f6'}
+    // 3. KP Logic (Minimal, for demo: planets = sample data)
+    const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+    const NAKS = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishta','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
+    const DASHAS = [
+      {lord:'Ketu', years:7}, {lord:'Venus', years:20}, {lord:'Sun', years:6}, {lord:'Moon', years:10},
+      {lord:'Mars', years:7}, {lord:'Rahu', years:18}, {lord:'Jupiter', years:16}, {lord:'Saturn', years:19}, {lord:'Mercury', years:17}
     ];
+    const NAK_LORD = (()=>{const list=[];let idx=0;for(let i=0;i<27;i++){list.push(DASHAS[idx%9].lord);idx++;}return list;})();
+    const mod = (a,b)=>((a%b)+b)%b;
+    const DEG_PER_NAK = 360/27, DEG_PER_PADA = DEG_PER_NAK/4;
+    function dms(deg){deg=mod(deg,360);const d=Math.floor(deg);const mFloat=(deg-d)*60;const m=Math.floor(mFloat);const s=Math.round((mFloat-m)*60);return `${d}°${String(m).padStart(
 
-    function renderWheel(planets) {
-      const W = 500, H = 500, Cx = W/2, Cy = H/2, R = 202;
-      let sectors = '', labels = '', planDots = '';
-      // "Pencil art": jagged/pencil line per rashi
-      for (let i = 0; i < 12; i++) {
-        const a1 = (i*30-90)*Math.PI/180, a2 = ((i+1)*30-90)*Math.PI/180;
-        // Pencil: jagged rashi border using small lines
-        let path = `M${Cx},${Cy} `;
-        const steps = 13, dA = (a2-a1)/steps;
-        for (let j=0;j<=steps;j++) {
-          const rmod = R + (j%2==0?0:7);
-          const ang = a1 + dA*j;
-          const x = Cx + rmod*Math.cos(ang), y = Cy + rmod*Math.sin(ang);
-          path += `L${x},${y} `;
-        }
-        path += `Z`;
-        sectors += `<path d="${path}" fill="none" stroke="#e5e3d4" stroke-width="1.9" stroke-linecap="round" stroke-dasharray="2,4"/>`;
-      }
-      // Rashi color backgrounds (light)
-      for (let i=0;i<12;i++) {
-        const a1=(i*30-90)*Math.PI/180, a2=((i+1)*30-90)*Math.PI/180;
-        const x1 = Cx+R*Math.cos(a1), y1=Cy+R*Math.sin(a1);
-        const x2 = Cx+R*Math.cos(a2), y2=Cy+R*Math.sin(a2);
-        const midA = (a1+a2)/2, midR = R-65;
-        const mx = Cx+midR*Math.cos(midA), my = Cy+midR*Math.sin(midA);
-        labels += `<text x="${mx}" y="${my}" font-size="29" fill="#fafae6" text-anchor="middle" font-family="Noto Sans Sinhala,Arial" font-weight="bold">${SIGNS[i].name}</text>`;
-      }
-      // Planet dots (random demo, spread across wheel)
-      planets.forEach((p,idx)=>{
-        const deg = p.degree-90, a = deg*Math.PI/180, r = R-35;
-        const x = Cx + r*Math.cos(a), y = Cy + r*Math.sin(a);
-        planDots += `<circle cx="${x}" cy="${y}" r="18" fill="#070c16" stroke="#2df3c2" stroke-width="2.6"/>
-          <text x="${x}" y="${y+7}" font-size="22" fill="#e2f0ff" text-anchor="middle" font-weight="bold">${p.name[0]}</text>`;
-      });
-      // Outline and background
-      const svg = `<svg id="svgChart" viewBox="0 0 ${W} ${H}" style="background:#181e29;width:99vw;max-width:480px;">
-        <circle cx="${Cx}" cy="${Cy}" r="${R+14}" fill="#1b223b" stroke="#2df3c2" stroke-width="3"/>
-        <circle cx="${Cx}" cy="${Cy}" r="${R-50}" fill="#151b26" stroke="#2df3c2" stroke-width="1.2"/>
-        ${sectors}
-        ${planDots}
-        ${labels}
-      </svg>`;
-      document.getElementById('wheel').innerHTML = svg;
-    }
 
-    // Chart summary (Sinhala, 250+ words, demo sample)
-    function generateSummary(name) {
-      return `
-<b>${name} මහතා/මෙනෙවියගේ ජීවිතයේ ඉදිරි කාලය පිළිබඳ කෙටි විචාරය</b><br>
-ජන්ම චාට් එක අනුව ඔබගේ ජීවිතයේ සුව-දුක්, ආරෝග්‍යය හා අධ්‍යාපනික අත්දැකීම් විවිධ පැතිකඩකින් හමුවේ. ඔබගේ ශාරීරික හා මානසික සෞඛ්‍යය වසර ගණනාවකදී තරමක් හොඳින් පවත්නා බව පෙනේ. එහෙත් අකාලික ආසාදන, සෙමින් යන රෝග, හෝ ශරීරයේ ශක්තිහරණය වැනි දේවල් සෑහෙන්න පාලනය කළ යුතුය.<br><br>
-අධ්‍යාපනය පිළිබඳව, ඔබට ඉගෙනීමේ උනන්දුව හා නව විෂයයන් උදෙසා උත්සාහය පවතින අතර, විශේෂයෙන්ම තාක්ෂණය හා භාෂා අංශ වලට වඩාත් ආකර්ෂණය තිබේ. විභාග, උසස් අධ්‍යාපන උත්සාහයන් සමහරවිට ප්‍රථම වරට සාර්ථක නොවිය හැකි නමුත් පළපුරුද්ද හා අධිෂ්ඨානය නිසා අන්තිමට ජයග්‍රහණය ලැබිය හැක.<br><br>
-ප්‍රේමය හා විවාහය සම්බන්ධව, ආරම්භයේදී ඔබට විවිධ අභියෝග හෝ විපරම් ඇතිවිය හැකියි. නමුත් විශ්වාසය හා අවංකතාවය මත සබඳතා දිගුකාලීන විය හැක. ජීවිතයේ විශේෂතම ආදර සම්බන්ධතාවය 30-32 වයස අවධියේ ඇතිවිය හැක.<br><br>
-රැකියා හා වෘත්තිය දිශාවට, ඔබට නව අභියෝග, තාක්ෂණික හෝ කළමනාකරණ අංශවලට ඇදහිය හැකියි. ඔබගේ ක්‍රියාශීලීත්වය හා නව අදහස් නිසා ප්‍රබල ගෞරවයක් ලැබිය හැක. කෙටි කාලීන කඩාවැටීම් උදාවිය හැකි නමුත්, අධිෂ්ඨානය හා නවෝත්පාදනශීලීත්වය නිසා එය ජයගන්න පුළුවන්.<br><br>
-අනතුරු හා විපත්, විශේෂයෙන්ම වාහන අනතුරු, ඉතා ඉවසිලිමත් වීමෙන් වැළැක්විය හැකියි. නව ව්‍යාපාර අරඹන විට හෝ විදේශ ගමන් වලදී වැඩි අවධානයක් යොමු කරන්න.<br><br>
-සාමාන්‍යයෙන්, ඔබගේ ජීවිතය තුළ ජයග්‍රහණ හා අභියෝග දෙකම හමු වේ. ප්‍රධාන යහපත් සමය 2026-2031 අතරදී පැවතිය හැකියි. ආදරය, සෞඛ්‍යය, වෘත්තිය සහ මුදල් ආදායම පිළිබඳව සුදුසු තීරණ ගන්නා වහාම ජීවිතය සාර්ථක කරගන්න පුළුවන්.
-      `;
-    }
-
-    // PDF + PNG download
-    function downloadSVG() {
-      const svg = document.getElementById('svgChart');
-      const xml = new XMLSerializer().serializeToString(svg);
-      const svg64 = btoa(unescape(encodeURIComponent(xml)));
-      const imgSrc = 'data:image/svg+xml;base64,' + svg64;
-      const img = new window.Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        canvas.width = svg.viewBox.baseVal.width;
-        canvas.height = svg.viewBox.baseVal.height;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#181e29';
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.drawImage(img, 0, 0);
-        const a = document.createElement('a');
-        a.download = "kp-chart.png";
-        a.href = canvas.toDataURL('image/png');
-        a.click();
-      };
-      img.src = imgSrc;
-    }
-    function downloadPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
-      doc.setFont("helvetica");
-      doc.setFontSize(18);
-      doc.text("Sathyadarshana Astrology", 45, 40);
-      doc.setFontSize(14);
-      doc.text("KP Chart & ජීවිත විචාරය", 45, 65);
-      // Chart image
-      const svg = document.getElementById('svgChart');
-      const xml = new XMLSerializer().serializeToString(svg);
-      const svg64 = btoa(unescape(encodeURIComponent(xml)));
-      const imgSrc = 'data:image/svg+xml;base64,' + svg64;
-      const img = new window.Image();
-      img.onload = function() {
-        doc.addImage(img, 'PNG', 45, 80, 320, 320);
-        doc.setFontSize(12);
-        doc.text(document.getElementById('summary').innerText, 45, 410, {maxWidth:510});
-        doc.setFontSize(10);
-        doc.text("Email: sathyanirvana@gmail.com | WhatsApp: +94 75 750 0000", 45, 780);
-        doc.save("sathyadarshana-kp-chart.pdf");
-      };
-      img.src = imgSrc;
-    }
-
-    // --- KP Chart Form Submit (demo planetary data only) ---
-    document.getElementById('kpForm').onsubmit = async function(e) {
-      e.preventDefault();
-      document.getElementById('status').textContent = 'Calculating...';
-      // TODO: Connect to real planetary API for live chart
-      // For demo: random spread
-      const planets = [
-        {name:'සූර්ය', degree: 120.45},
-        {name:'චන්ද්‍ර', degree: 203.22},
-        {name:'අඟහරුවා', degree: 48.30},
-        {name:'බුධ', degree: 310.12},
-        {name:'ගුරු', degree: 277.4},
-        {name:'ශුක්‍ර', degree: 22.8},
-        {name:'ශනි', degree: 194.0}
-      ];
-      renderWheel(planets);
-      document.getElementById('downBtns').style.display = '';
-      const name = document.getElementById('name').value;
-      const summary = generateSummary(name||"ජන්මියා");
-      document.getElementById('summary').style.display = '';
-      document.getElementById('summary').innerHTML = summary;
-      document.getElementById('status').textContent = '✓ චාටි එක සකසා ඇත!';
-    };
-  </script>
-</body>
-</html>
