@@ -58,7 +58,6 @@
     <div id="analysis"></div>
   </div>
 <script>
-// ---- Map view logic ----
 async function geocodePlace(q){
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
   const res = await fetch(url).then(r=>r.json());
@@ -87,7 +86,6 @@ document.getElementById('geocodeBtn').onclick = async function(){
   document.getElementById('lon').value = geo.lon;
   showMap(geo.lat, geo.lon);
 };
-// On Lat/Lon change, show map preview
 document.getElementById('lat').addEventListener('input', ()=>{
   const lat=document.getElementById('lat').value,lon=document.getElementById('lon').value;
   if(lat && lon) showMap(lat, lon);
@@ -97,8 +95,7 @@ document.getElementById('lon').addEventListener('input', ()=>{
   if(lat && lon) showMap(lat, lon);
 });
 
-// ---- KP Wheel Chart (12-house) ----
-function drawKPWheelChart() {
+function drawKPWheelChart(planets) {
     const wheel = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     wheel.setAttribute("width", 340);
     wheel.setAttribute("height", 340);
@@ -138,30 +135,83 @@ function drawKPWheelChart() {
     inner.setAttribute("fill", "#fff"); inner.setAttribute("stroke", "#aaa"); inner.setAttribute("stroke-width", 1.3);
     wheel.appendChild(inner);
 
+    // Planets (draw as colored dots, if available)
+    if (planets) {
+        const planetColors = ["#e68a00","#aad","red","#1ca","#fb0","#e8a","#555","#222","#999","#bbb"];
+        planets.forEach((pl,i)=>{
+            // Houses in KP are each 30 deg, so house = Math.floor(longitude/30)
+            let angle = (pl.longitude/360)*2*Math.PI - Math.PI/2;
+            let px = cx + 110*Math.cos(angle), py = cy + 110*Math.sin(angle);
+            const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            dot.setAttribute("cx", px); dot.setAttribute("cy", py);
+            dot.setAttribute("r", 8);
+            dot.setAttribute("fill", planetColors[i%planetColors.length]);
+            dot.setAttribute("stroke", "#222"); dot.setAttribute("stroke-width", 1.4);
+            wheel.appendChild(dot);
+            // Planet label
+            const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            t.setAttribute("x", px); t.setAttribute("y", py-15);
+            t.setAttribute("text-anchor","middle");
+            t.setAttribute("font-size","13px");
+            t.setAttribute("fill","#111");
+            t.textContent = pl.name;
+            wheel.appendChild(t);
+        });
+    }
+
     document.getElementById('wheelBox').innerHTML = '';
     document.getElementById('wheelBox').appendChild(wheel);
 }
 
-// ---- Generate 300-word sample analysis (placeholder, random planets) ----
-function getPlanetAnalysis(formData) {
-    // You can connect real astrology logic here. For now, this is a static text with planet names as a placeholder.
-    const planets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
-    let txt = `Astrological Analysis for ${formData.name || 'the native'}:<br><br>`;
-    txt += `This is a sample KP astrology analysis based on your planetary positions. `;
-    txt += `Your birth details suggest a unique alignment of the nine classical planets which influence your personality, life path, and experiences. `;
-    txt += `For example, if the Sun is prominent in your chart, it may indicate leadership qualities, confidence, and a strong sense of self. `;
-    txt += `The Moon's influence reflects your emotional nature and how you respond to life's changes. Mars contributes energy, drive, and courage, while Mercury governs communication, intellect, and adaptability. Jupiter brings wisdom, optimism, and opportunities for growth, whereas Venus is associated with love, beauty, and creativity. Saturn shapes discipline, challenges, and long-term achievements. Rahu and Ketu, the lunar nodes, highlight karmic lessons and spiritual evolution.<br><br>`;
-    txt += `With your given date, time, and place, a full KP analysis would consider the exact house positions and aspects of each planet. `;
-    txt += `You may experience periods of growth and transformation, especially when major planets transit key houses in your chart. `;
-    txt += `Self-awareness, adaptability, and persistence can help you navigate both challenges and opportunities. `;
-    txt += `Remember, astrology provides guidance and self-knowledge, but your choices and actions are equally vital in shaping your destiny.<br><br>`;
-    txt += `<i>This is an automatically generated summary. For an in-depth personalized analysis, consult a professional KP astrologer with your full birth chart.</i>`;
+function getPlanetAnalysis(formData, planets) {
+    let txt = `<b>KP Astrological Analysis for ${formData.name || 'the native'}:</b><br><br>`;
+    if (!planets) {
+        txt += "Planets' data could not be loaded at this time. Please check your connection or try again later.";
+        return txt;
+    }
+    txt += `Your planetary positions at birth:<br>`;
+    planets.forEach(pl => {
+        txt += `<b>${pl.name}</b>: ${pl.longitude.toFixed(2)}°<br>`;
+    });
+    txt += `<br>Based on KP astrology, the position of each planet in your chart influences your life's path, opportunities, and challenges. For example, if your Mars is close to the ascendant, you may show courage and initiative, while a strong Venus in a favorable house can enhance creativity and relationships. The unique combination in your chart points to periods of growth and learning, especially when your main chart houses are influenced by Jupiter and Saturn. Rahu and Ketu, the lunar nodes, highlight karmic lessons and spiritual evolution. 
+    <br><br>
+    This is an automatically generated summary using NASA Horizons planetary data. For a more in-depth personalized analysis, consult a professional KP astrologer with your full birth chart and life context.
+    `;
     return txt;
 }
 
-document.getElementById('drawBtn').onclick = function(e) {
+async function getPlanetsFromNasa(date, time, lat, lon) {
+    try {
+        // Call your backend proxy, adjust /horizons path if needed
+        const url = `/horizons?date=${date}&time=${time}&lat=${lat}&lon=${lon}`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        // Horizons API output: data.result (text) or data["ephemeris"]
+        // We'll parse data.result for ecliptic longitudes
+        if (!data.result) return null;
+        const lines = data.result.split('\n');
+        const planetNames = ["Sun", "Mercury", "Venus", "Moon", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"];
+        // Find $$SOE (start of ephemeris) and $$EOE (end)
+        const start = lines.findIndex(l=>l.includes('$$SOE'));
+        const end = lines.findIndex(l=>l.includes('$$EOE'));
+        let planets = [];
+        for(let i=start+1;i<end;i++){
+            let row = lines[i].trim().split(/\s+/);
+            if(row.length>=5) {
+                let name = planetNames[i-(start+1)];
+                let longitude = parseFloat(row[4]);
+                if (!isNaN(longitude)) planets.push({name, longitude});
+            }
+        }
+        return planets;
+    } catch(e) {
+        return null;
+    }
+}
+
+document.getElementById('drawBtn').onclick = async function(e) {
     e.preventDefault();
-    // Collect form data
     const formData = {
       name: document.getElementById('name').value.trim(),
       date: document.getElementById('date').value,
@@ -171,13 +221,14 @@ document.getElementById('drawBtn').onclick = function(e) {
       lon: document.getElementById('lon').value,
       place: document.getElementById('place').value.trim()
     };
-    // Validate required fields
     if(!(formData.name && formData.date && formData.time && formData.timezone && formData.lat && formData.lon)){
       alert('Please fill all required fields.');
       return;
     }
-    drawKPWheelChart();
-    document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData);
+    // Get planet data from NASA Horizons via your proxy
+    const planets = await getPlanetsFromNasa(formData.date, formData.time, formData.lat, formData.lon);
+    drawKPWheelChart(planets);
+    document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets);
 };
 </script>
 </body>
