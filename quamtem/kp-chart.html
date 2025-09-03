@@ -1,81 +1,277 @@
-const express = require('express');
-const fetch = require('node-fetch');
+<!-- quamtom/kp-chart.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>KP – Chart</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--line:#1e293b;--txt:#e0f2fe;--muted:#93c5fd;--accent:#38bdf8}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,Segoe UI,Arial}
+    a{color:#7dd3fc;text-decoration:none}
+    .wrap{max-width:1100px;margin:24px auto;padding:16px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    #google_translate_element{background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:4px 8px}
 
-const app = express();
-const port = 3000;
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+    .row{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+    .pill{background:#091426;border:1px solid var(--line);border-radius:999px;padding:8px 12px}
+    #wheel{width:100%;aspect-ratio:1/1;display:block;background:#071224;border:1px solid var(--line);border-radius:12px}
+    h2{margin:6px 0 12px}
+    h3{margin:0 0 12px;color:var(--muted);font-weight:600}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:8px;border-bottom:1px solid #0f2339;text-align:left}
+    th{color:var(--muted);font-weight:600}
+    .mono{font-variant-numeric:tabular-nums}
+    #err{color:#fca5a5;margin-top:8px}
 
-// Helper: Horizons planet IDs
-const PLANET_IDS = {
-  Sun: '10',
-  Moon: '301',
-  Mercury: '199',
-  Venus: '299',
-  Mars: '499',
-  Jupiter: '599',
-  Saturn: '699',
-  Uranus: '799',
-  Neptune: '899',
-  Pluto: '999'
-};
+    /* KP 12-box grid */
+    #kpGrid{max-width:680px;margin:16px auto;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .kpBox{background:#0b1220;border:1px solid #1e293b;border-radius:10px;padding:10px;min-height:78px;text-align:center}
+    .kpBox.asc{box-shadow:0 0 0 2px var(--accent) inset}
+    .kpTitle{color:#7dd3fc;font-weight:600;margin-bottom:6px}
+    .kpList{font-size:14px;color:#cfeaff;line-height:1.25}
+    #ascNote{max-width:680px;margin:6px auto 0;color:#93c5fd;text-align:center}
 
-// Main API endpoint
-// Example: /api/planets?date=2025-08-22&time=12:00:00&lat=6.9271&lon=79.8612
-app.get('/api/planets', async (req, res) => {
-  const { date, time, lat, lon } = req.query;
-  if (!date || !time || !lat || !lon) {
-    return res.status(400).json({ error: 'Missing required parameters.' });
-  }
+    /* Dasha table */
+    #dashaWrap{margin-top:18px}
+    #dashaWrap table th:nth-child(1){width:36px}
+    @media (max-width:860px){ .grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <p style="margin:0"><a href="./">← Back</a></p>
+      <div id="google_translate_element"></div>
+    </div>
 
-  try {
-    const planetResults = [];
-    for (const [name, id] of Object.entries(PLANET_IDS)) {
-      // NASA Horizons observer mode, geodetic coordinates
-      const params = new URLSearchParams({
-        format: 'text',
-        COMMAND: `'${id}'`,
-        EPHEM_TYPE: 'OBSERVER',
-        CENTER: `'coord@399'`, // Earth, user-defined coordinates
-        SITE_COORD: `${lon},${lat},0`, // lon,lat,alt (deg,deg,km)
-        START_TIME: `'${date} ${time}'`,
-        STOP_TIME: `'${date} ${time}'`,
-        STEP_SIZE: `'1 m'`,
-        QUANTITIES: '1,20', // 1=Astrometric RA/DEC, 20=Apparent longitude/latitude
-        CSV_FORMAT: 'YES'
+    <div class="card">
+      <h2>KP – Live Chart</h2>
+      <div class="row" id="summary"></div>
+
+      <div class="grid">
+        <!-- Left: Wheel + KP 12-box grid -->
+        <div>
+          <canvas id="wheel"></canvas>
+          <div id="err"></div>
+
+          <!-- KP 12-box grid -->
+          <div id="kpGrid"></div>
+          <div id="ascNote"></div>
+
+          <!-- Dasha -->
+          <div id="dashaWrap" class="card" style="margin-top:12px">
+            <h3>Vimshottari Maha Dasha</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Lord</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th class="mono">Years</th>
+                </tr>
+              </thead>
+              <tbody id="dashaBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right: Calculations -->
+        <div>
+          <h3>Calculated Positions</h3>
+          <table id="calcTable">
+            <thead>
+              <tr>
+                <th>Planet</th>
+                <th>Sign</th>
+                <th>Deg (D°M′)</th>
+                <th class="mono">° (0–360)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+          <div id="moonExtra" style="margin-top:12px;color:var(--muted)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- libs (all inside /quamtom/) -->
+  <script src="./ephemeris-data.js"></script>
+  <script src="./kp-astro.js"></script>
+  <script src="./chart-ui.js"></script>
+  <script src="./chart-engine.js"></script>
+  <script src="./dasha.js"></script>
+
+  <!-- Google Translate -->
+  <script>
+    function googleTranslateElementInit(){
+      new google.translate.TranslateElement({
+        pageLanguage:'en', includedLanguages:'en,si,ta',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <script>
+    // ---------- helpers ----------
+    const SIGNS = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+    const norm360 = d => ((d % 360) + 360) % 360;
+    const signIndex = deg => Math.floor(norm360(deg)/30);
+    const toDMS = deg => { const d=Math.floor(deg), m=Math.floor((deg-d)*60); return `${d}°${String(m).padStart(2,'0')}′`; };
+
+    function parseLocalISO(iso){
+      if(!iso) return new Date();
+      const [d,t='00:00'] = iso.split('T');
+      const [Y,M,D] = d.split('-').map(Number);
+      const [h,m] = t.split(':').map(Number);
+      return new Date(Y, M-1, D, h, m, 0);
+    }
+    function jdFromLocalISO(iso){ const dt=parseLocalISO(iso); return dt.getTime()/86400000 + 2440587.5; }
+    function gstDeg(JD){ const T=(JD-2451545)/36525; let G=280.46061837 + 360.98564736629*(JD-2451545)+0.000387933*T*T - (T*T*T)/38710000; return norm360(G); }
+    function computeAscendantStrict(dtISO, latDeg, lonDeg){
+      const JD  = jdFromLocalISO(dtISO);
+      const eps = (23.439291 - 0.0130042*((JD-2451545)/36525)) * Math.PI/180;
+      const LST = (gstDeg(JD) + (+lonDeg)) * Math.PI/180;
+      const φ   = (+latDeg) * Math.PI/180;
+      const num = -Math.cos(LST);
+      const den =  Math.sin(LST)*Math.cos(eps) + Math.tan(φ)*Math.sin(eps);
+      const λ   = Math.atan2(num, den)*180/Math.PI;
+      return norm360(λ);
+    }
+
+    // ---------- UI state ----------
+    const name = localStorage.getItem('kp_name') || '';
+    const dt   = localStorage.getItem('kp_dt')   || '';
+    const lat  = localStorage.getItem('kp_lat');
+    const lon  = localStorage.getItem('kp_lon');
+
+    if (!name || !dt || lat === null || lon === null) {
+      alert('Missing birth data. Please start again.');
+      location.href = './';
+    }
+
+    // Summary pills
+    const s = document.getElementById('summary');
+    const pill = t => { const b=document.createElement('span'); b.className='pill'; b.textContent=t; return b; };
+    s.append(pill(`Name: ${name}`));
+    s.append(pill(`Date/Time: ${dt}`));
+    s.append(pill(`Lat: ${Number(lat).toFixed(4)}`));
+    s.append(pill(`Lon: ${Number(lon).toFixed(4)}`));
+
+    const cv = document.getElementById('wheel');
+    const errBox = document.getElementById('err');
+    const showErr = m => errBox.textContent = m ? ('⚠ ' + m) : '';
+
+    function fitCanvasSquare(el){
+      const max = Math.min(680, el.clientWidth || el.parentElement.clientWidth || 680);
+      el.width = max; el.height = max;
+    }
+
+    function drawKPBoxes(eph, ascDeg){
+      const grid = document.getElementById('kpGrid');
+      grid.innerHTML = '';
+
+      const ascSign = signIndex(ascDeg);
+      const houses  = Array.from({length:12}, (_,i)=> (ascSign + i) % 12);
+      const buckets = Array.from({length:12}, ()=>[]);
+
+      (eph.planets || []).forEach(p=>{
+        const h = (signIndex(p.degree) - ascSign + 12) % 12;
+        buckets[h].push(p);
       });
 
-      const response = await fetch('https://ssd.jpl.nasa.gov/api/horizons.api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
+      houses.forEach((signIx,i)=>{
+        const box = document.createElement('div');
+        box.className = 'kpBox' + (i===0 ? ' asc' : '');
+        const title = document.createElement('div');
+        title.className = 'kpTitle';
+        title.textContent = (i===0? 'Ascendant • ':'House '+(i+1)+' • ') + SIGNS[signIx];
+
+        const list = document.createElement('div');
+        list.className = 'kpList';
+        list.innerHTML = buckets[i].length
+          ? buckets[i].map(p=>`${p.name} ${norm360(p.degree).toFixed(2)}°`).join('<br>')
+          : "<span style='opacity:.6'>—</span>";
+
+        box.appendChild(title);
+        box.appendChild(list);
+        grid.appendChild(box);
       });
 
-      const text = await response.text();
+      const note = document.getElementById('ascNote');
+      note.textContent = `Ascendant: ${SIGNS[ascSign]} ${norm360(ascDeg).toFixed(2)}°`;
+    }
 
-      // Parse CSV section for "Date__(UT)__HR:MN", "APmag", "AppLon" columns
-      // Find the line starting with "$$SOE" and ending with "$$EOE"
-      const lines = text.split('\n');
-      const start = lines.findIndex(line => line.includes('$$SOE'));
-      const end = lines.findIndex(line => line.includes('$$EOE'));
-      if (start === -1 || end === -1) continue;
-      const csvLine = lines[start + 1];
-      if (!csvLine) continue;
-      // Columns: Date__(UT)__HR:MN, ... , APPARENT LONGITUDE (deg) is last column
-      const cols = csvLine.trim().split(',');
+    function render(){
+      try{
+        fitCanvasSquare(cv);
+        const eph = (window.computeEphemeris || window.computeMockEphemeris)?.(dt, +lat, +lon);
+        if (!eph) { showErr('Ephemeris not available'); return; }
 
-      // Last column is apparent longitude (deg)
-      const degree = parseFloat(cols[cols.length - 2]);
-      if (!isNaN(degree)) {
-        planetResults.push({ name, degree });
+        // Draw wheel
+        if (typeof window.drawWheel === 'function') {
+          window.drawWheel(cv, eph);
+        } else if (typeof window.renderWheelEngine === 'function') {
+          window.renderWheelEngine(cv, eph);
+        } else {
+          showErr('No wheel renderer found. Check chart-ui.js / chart-engine.js');
+        }
+
+        // Table
+        const tbody = document.querySelector('#calcTable tbody');
+        tbody.innerHTML='';
+        (eph.planets || []).forEach(p=>{
+          const abs = norm360(p.degree);
+          const sIx = Math.floor(abs/30);
+          const inS = abs - sIx*30;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${p.name}</td>
+            <td>${SIGNS[sIx]}</td>
+            <td class="mono">${toDMS(inS)}</td>
+            <td class="mono">${abs.toFixed(2)}</td>`;
+          tbody.appendChild(tr);
+        });
+
+        // Moon Sub-Lord (if available)
+        const moon=(eph.planets||[]).find(x=>x.name==='Moon');
+        if(moon && typeof window.calculateSubLord==='function'){
+          const sl = window.calculateSubLord(norm360(moon.degree));
+          document.getElementById('moonExtra').innerHTML =
+            `🌙 Moon Sub-Lord: <b style="color:var(--accent)">${sl}</b>`;
+        } else {
+          document.getElementById('moonExtra').textContent = '';
+        }
+
+        // Ascendant & KP boxes
+        const ascDeg = computeAscendantStrict(dt, +lat, +lon);
+        drawKPBoxes(eph, ascDeg);
+
+        // Vimshottari Dasha (Moon degree FIRST, then date)
+        const moonBody = (eph.planets||[]).find(p=>p.name==='Moon');
+        if(moonBody && window.computeVimshottariDasha && window.renderDashaTable){
+          const md = window.computeVimshottariDasha(norm360(moonBody.degree), dt, 120);
+          window.renderDashaTable('dashaBody', md.slice(0,18));
+        }
+
+        showErr('');
+      }catch(e){
+        console.error(e);
+        showErr(e.message || 'Unknown error while drawing chart');
       }
     }
 
-    res.json(planetResults);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+    window.addEventListener('load', render);
+    window.addEventListener('resize', ()=> requestAnimationFrame(render));
+  </script>
+</body>
+</html>
 
-app.listen(port, () => {
-  console.log(`NASA Horizons proxy running at http://localhost:${port}`);
-});
-Nasa....
+q...chart.12aug 557am
