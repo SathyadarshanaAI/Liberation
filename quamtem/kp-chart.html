@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>KP Chart</title>
+  <title>KP Chart with NASA Horizons</title>
   <style>
     body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #f8fafc; color: #222;}
     .container { max-width: 560px; margin: 24px auto; padding: 16px; background: #fff; border-radius: 10px; box-shadow:0 2px 12px #0001;}
@@ -16,6 +16,9 @@
       .container{max-width:98vw;padding:4px;}
       #mapPreview{height:120px;}
     }
+    #wheelBox svg { background: #fff; border-radius: 50%; box-shadow: 0 2px 12px #0001; }
+    .kp-planet { font-family: 'Segoe UI Symbol', 'Noto Emoji', 'Arial', sans-serif; font-size: 22px; }
+    .kp-house-label { font-family: inherit; font-size: 16px; font-weight: bold; fill: #3451bf; }
   </style>
 </head>
 <body>
@@ -99,70 +102,127 @@ function drawKPWheelChart(planets) {
     const wheel = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     wheel.setAttribute("width", 340);
     wheel.setAttribute("height", 340);
-    wheel.innerHTML = '';
     const cx = 170, cy = 170, rOuter = 150, rInner = 70;
-    // Outer circle
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
-    circle.setAttribute("r", rOuter); circle.setAttribute("fill", "#fafafa");
-    circle.setAttribute("stroke", "#888"); circle.setAttribute("stroke-width", 2);
-    wheel.appendChild(circle);
-    // 12 houses
+    // Draw colored houses
+    const houseColors = [
+        "#f8faff", "#dbeafe", "#e0e7ff", "#f3f8fd", "#fefce8", "#f1f5f9",
+        "#fdf2fa", "#f1f5f9", "#fff7ed", "#ecfdf5", "#fff1f2", "#f3f4f6"
+    ];
     for(let i=0; i<12; ++i){
-        let a = (i/12) * 2 * Math.PI - Math.PI/2;
-        let x1 = cx + rInner * Math.cos(a), y1 = cy + rInner * Math.sin(a);
-        let x2 = cx + rOuter * Math.cos(a), y2 = cy + rOuter * Math.sin(a);
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", x1); line.setAttribute("y1", y1);
-        line.setAttribute("x2", x2); line.setAttribute("y2", y2);
-        line.setAttribute("stroke", "#888");
-        line.setAttribute("stroke-width", 1.1);
-        wheel.appendChild(line);
-        // House numbers
-        let tx = cx + (rInner+35) * Math.cos(a + Math.PI/12), ty = cy + (rInner+35) * Math.sin(a + Math.PI/12)+5;
+        const a1 = (i/12)*2*Math.PI - Math.PI/2;
+        const a2 = ((i+1)/12)*2*Math.PI - Math.PI/2;
+        const x1 = cx + rOuter*Math.cos(a1), y1 = cy + rOuter*Math.sin(a1);
+        const x2 = cx + rOuter*Math.cos(a2), y2 = cy + rOuter*Math.sin(a2);
+        const x3 = cx + rInner*Math.cos(a2), y3 = cy + rInner*Math.sin(a2);
+        const x4 = cx + rInner*Math.cos(a1), y4 = cy + rInner*Math.sin(a1);
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d",
+            `M${x1},${y1} A${rOuter},${rOuter} 0 0,1 ${x2},${y2} `+
+            `L${x3},${y3} A${rInner},${rInner} 0 0,0 ${x4},${y4} Z`
+        );
+        path.setAttribute("fill", houseColors[i]);
+        path.setAttribute("stroke", "#bbb");
+        path.setAttribute("stroke-width", 1);
+        wheel.appendChild(path);
+    }
+    // Draw house numbers
+    for(let i=0; i<12; ++i){
+        let a = (i/12)*2*Math.PI - Math.PI/2 + Math.PI/12;
+        let tx = cx + (rInner+45)*Math.cos(a), ty = cy + (rInner+45)*Math.sin(a)+7;
         const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
         label.setAttribute("x", tx);
         label.setAttribute("y", ty);
+        label.setAttribute("class", "kp-house-label");
         label.setAttribute("text-anchor", "middle");
-        label.setAttribute("font-size", "16px");
-        label.setAttribute("fill", "#444");
         label.textContent = (i+1);
         wheel.appendChild(label);
     }
-    // Inner circle
+    // Draw inner and outer circle
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
+    circle.setAttribute("r", rOuter); circle.setAttribute("fill", "none");
+    circle.setAttribute("stroke", "#3451bf"); circle.setAttribute("stroke-width", 2);
+    wheel.appendChild(circle);
+
     const inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     inner.setAttribute("cx", cx); inner.setAttribute("cy", cy); inner.setAttribute("r", rInner);
-    inner.setAttribute("fill", "#fff"); inner.setAttribute("stroke", "#aaa"); inner.setAttribute("stroke-width", 1.3);
+    inner.setAttribute("fill", "#fff"); inner.setAttribute("stroke", "#bbb"); inner.setAttribute("stroke-width", 1.4);
     wheel.appendChild(inner);
-
-    // Planets (draw as colored dots, if available)
-    if (planets) {
-        const planetColors = ["#e68a00","#aad","red","#1ca","#fb0","#e8a","#555","#222","#999","#bbb"];
-        planets.forEach((pl,i)=>{
-            // Houses in KP are each 30 deg, so house = Math.floor(longitude/30)
+    // Draw planets
+    const planetSymbols = {
+        Sun: "☉", Moon: "☽", Mercury: "☿", Venus: "♀", Mars: "♂",
+        Jupiter: "♃", Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇"
+    };
+    if (planets && planets.length) {
+        planets.forEach((pl, i)=>{
             let angle = (pl.longitude/360)*2*Math.PI - Math.PI/2;
-            let px = cx + 110*Math.cos(angle), py = cy + 110*Math.sin(angle);
+            let px = cx + 100*Math.cos(angle), py = cy + 100*Math.sin(angle);
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            // Dot
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             dot.setAttribute("cx", px); dot.setAttribute("cy", py);
-            dot.setAttribute("r", 8);
-            dot.setAttribute("fill", planetColors[i%planetColors.length]);
-            dot.setAttribute("stroke", "#222"); dot.setAttribute("stroke-width", 1.4);
-            wheel.appendChild(dot);
-            // Planet label
+            dot.setAttribute("r", 13); dot.setAttribute("fill", "#fff7c2");
+            dot.setAttribute("stroke", "#ad8500"); dot.setAttribute("stroke-width", 1.6);
+            g.appendChild(dot);
+            // Symbol
             const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            t.setAttribute("x", px); t.setAttribute("y", py-15);
-            t.setAttribute("text-anchor","middle");
-            t.setAttribute("font-size","13px");
-            t.setAttribute("fill","#111");
-            t.textContent = pl.name;
-            wheel.appendChild(t);
+            t.setAttribute("x", px); t.setAttribute("y", py+7);
+            t.setAttribute("class", "kp-planet");
+            t.setAttribute("text-anchor", "middle");
+            t.textContent = planetSymbols[pl.name] || pl.name[0];
+            g.appendChild(t);
+            // Label
+            const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            lbl.setAttribute("x", px); lbl.setAttribute("y", py+25);
+            lbl.setAttribute("text-anchor", "middle");
+            lbl.setAttribute("font-size", "11px");
+            lbl.setAttribute("fill", "#222");
+            lbl.textContent = pl.name;
+            g.appendChild(lbl);
+            wheel.appendChild(g);
         });
     }
-
     document.getElementById('wheelBox').innerHTML = '';
     document.getElementById('wheelBox').appendChild(wheel);
 }
-
+// NASA Horizons API fetch
+async function getPlanetsFromNasa(date, time, lat, lon) {
+    try {
+        const url = `/horizons?date=${date}&time=${time}&lat=${lat}&lon=${lon}`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data.result) return null;
+        const lines = data.result.split('\n');
+        const planetNames = ["Sun", "Mercury", "Venus", "Moon", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"];
+        const start = lines.findIndex(l=>l.includes('$$SOE'));
+        const end = lines.findIndex(l=>l.includes('$$EOE'));
+        let planets = [];
+        for(let i=start+1;i<end;i++){
+            let row = lines[i].trim().split(/\s+/);
+            if(row.length>=5){
+                let name = planetNames[i-(start+1)];
+                let longitude = parseFloat(row[4]);
+                if (!isNaN(longitude)) planets.push({name, longitude});
+            }
+        }
+        return planets;
+    } catch (e) {
+        return null;
+    }
+}
+const samplePlanets = [
+  {name:"Sun", longitude: 121.3},
+  {name:"Moon", longitude: 250.9},
+  {name:"Mars", longitude: 88.2},
+  {name:"Mercury", longitude: 143.6},
+  {name:"Venus", longitude: 44.1},
+  {name:"Jupiter", longitude: 279.7},
+  {name:"Saturn", longitude: 313.4},
+  {name:"Uranus", longitude: 29.8},
+  {name:"Neptune", longitude: 325.2},
+  {name:"Pluto", longitude: 270.5},
+];
 function getPlanetAnalysis(formData, planets) {
     let txt = `<b>KP Astrological Analysis for ${formData.name || 'the native'}:</b><br><br>`;
     if (!planets) {
@@ -179,37 +239,6 @@ function getPlanetAnalysis(formData, planets) {
     `;
     return txt;
 }
-
-async function getPlanetsFromNasa(date, time, lat, lon) {
-    try {
-        // Call your backend proxy, adjust /horizons path if needed
-        const url = `/horizons?date=${date}&time=${time}&lat=${lat}&lon=${lon}`;
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        const data = await res.json();
-        // Horizons API output: data.result (text) or data["ephemeris"]
-        // We'll parse data.result for ecliptic longitudes
-        if (!data.result) return null;
-        const lines = data.result.split('\n');
-        const planetNames = ["Sun", "Mercury", "Venus", "Moon", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"];
-        // Find $$SOE (start of ephemeris) and $$EOE (end)
-        const start = lines.findIndex(l=>l.includes('$$SOE'));
-        const end = lines.findIndex(l=>l.includes('$$EOE'));
-        let planets = [];
-        for(let i=start+1;i<end;i++){
-            let row = lines[i].trim().split(/\s+/);
-            if(row.length>=5) {
-                let name = planetNames[i-(start+1)];
-                let longitude = parseFloat(row[4]);
-                if (!isNaN(longitude)) planets.push({name, longitude});
-            }
-        }
-        return planets;
-    } catch(e) {
-        return null;
-    }
-}
-
 document.getElementById('drawBtn').onclick = async function(e) {
     e.preventDefault();
     const formData = {
@@ -225,8 +254,8 @@ document.getElementById('drawBtn').onclick = async function(e) {
       alert('Please fill all required fields.');
       return;
     }
-    // Get planet data from NASA Horizons via your proxy
-    const planets = await getPlanetsFromNasa(formData.date, formData.time, formData.lat, formData.lon);
+    let planets = await getPlanetsFromNasa(formData.date, formData.time, formData.lat, formData.lon);
+    if(!planets || !planets.length) planets = samplePlanets; // fallback
     drawKPWheelChart(planets);
     document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets);
 };
