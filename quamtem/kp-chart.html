@@ -15,7 +15,10 @@
     label { font-weight:500; color:#fff;}
     .row { display:flex; gap:10px;}
     .row>div { flex:1;}
-    #pob-suggest { list-style:none; padding:0; margin:-12px 0 7px 0; background:#1a2234; position:absolute; z-index:10;px #23228395; padding:7px 2px; font-size:0.97rem;}
+    #pob-suggest { list-style:none; padding:0; margin:-12px 0 7px 0; background:#1a2234; position:absolute; z-index:10; max-height:120px; overflow:auto; display:none; width:94%;}
+    #pob-suggest li { cursor:pointer; padding:4px 10px;}
+    #pob-suggest li:hover { background:#232b47; color:#2df3c2;}
+    table { width:100%; border-collapse:collapse; margin-top:18px; background:rgba(12,18,34,0.96); border-radius:10px; box-shadow:0 0 8px #23228395; padding:7px 2px; font-size:0.97rem;}
     th { color:#2df3c2; font-weight:600; background:rgba(17,25,40,0.98);}
     td { color:#e2f0ff;}
     .chart-section { margin:23px 0 0 0;}
@@ -117,12 +120,12 @@
       if (!suggest.contains(e.target) && e.target !== pob) suggest.style.display = 'none';
     });
 
-    // Open-Meteo Time Zone API (No Key Needed) -- FIXED!
+    // Open-Meteo Time Zone API (No Key Needed) -- WORKING FOR SRI LANKA!
     function setTimeZoneFromLatLon(lat, lon) {
       fetch(`https://api.open-meteo.com/v1/timezone?latitude=${lat}&longitude=${lon}`)
         .then(r => r.json())
         .then(z => {
-          // Debug: console.log(z);
+          // Uncomment to debug: console.log(z);
           if (z && typeof z.utc_offset_seconds === 'number') {
             const offset = z.utc_offset_seconds / 3600;
             const sign = offset >= 0 ? '+' : '-';
@@ -140,8 +143,8 @@
     }
 
     // KP Helpers & Chart Wheel (demo only)
-    const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-    function renderTable(planets){
+    const SIGNS = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+    function renderTable(planets) {
       const tbody = document.getElementById('tbl');
       tbody.innerHTML = '';
       if (!planets) return;
@@ -158,24 +161,36 @@
         tbody.appendChild(tr);
       });
     }
-    function renderWheel(planets){
-      if(!planets || !planets.length) { document.getElementById('wheel').innerHTML=''; return; }
-      const W=270,H=270,Cx=W/2,Cy=H/2,R=98;
-      let sectors='',labels='',planDots='';
-      for(let i=0;i<12;i++){
-        const a1=(i*30-90)*Math.PI/180, a2=((i+1)*30-90)*Math.PI/180;
-        const x1=Cx+R*Math.cos(a1), y1=Cy+R*Math.sin(a1), x2=Cx+R*Math.cos(a2), y2=Cy+R*Math.sin(a2);
-        sectors+=`<path d="M${Cx},${Cy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z" fill="none" stroke="#2df3c2" stroke-width="1.4"/>`;
+    function renderWheel(planets) {
+      if (!planets || !planets.length) {
+        document.getElementById('wheel').innerHTML = '';
+        return;
       }
-      for(let i=0;i<12;i++){
-        const a=((i*30+15)-90)*Math.PI/180, x=Cx+(R-16)*Math.cos(a), y=Cy+(R-16)*Math.sin(a);
-        labels+=`<text x="${x}" y="${y+5}" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="bold">${SIGNS[i]}</text>`;
+      const W = 270, H = 270, Cx = W / 2, Cy = H / 2, R = 98;
+      let sectors = '', labels = '', planDots = '';
+      for (let i = 0; i < 12; i++) {
+        const a1 = (i * 30 - 90) * Math.PI / 180,
+              a2 = ((i + 1) * 30 - 90) * Math.PI / 180;
+        const x1 = Cx + R * Math.cos(a1),
+              y1 = Cy + R * Math.sin(a1),
+              x2 = Cx + R * Math.cos(a2),
+              y2 = Cy + R * Math.sin(a2);
+        sectors += `<path d="M${Cx},${Cy} L${x1},${y1} A${R},${R} 0 0,1 ${x2},${y2} Z" fill="none" stroke="#2df3c2" stroke-width="1.4"/>`;
       }
-      planets.forEach((p,pi)=>{
-        const a=(p.degree-90)*Math.PI/180,r=R-30,x=Cx+r*Math.cos(a),y=Cy+r*Math.sin(a);
-        planDots+=`<circle cx="${x}" cy="${y}" r="11" fill="#070c16" stroke="#e2f0ff" stroke-width="2"/><text x="${x}" y="${y+4}" font-size="11" fill="#2df3c2" text-anchor="middle" font-weight="bold">${p.name[0]}</text>`;
+      for (let i = 0; i < 12; i++) {
+        const a = ((i * 30 + 15) - 90) * Math.PI / 180,
+              x = Cx + (R - 16) * Math.cos(a),
+              y = Cy + (R - 16) * Math.sin(a);
+        labels += `<text x="${x}" y="${y+5}" font-size="13" fill="#60a5fa" text-anchor="middle" font-weight="bold">${SIGNS[i]}</text>`;
+      }
+      planets.forEach((p,pi) => {
+        const a = (p.degree - 90) * Math.PI / 180,
+              r = R - 30,
+              x = Cx + r * Math.cos(a),
+              y = Cy + r * Math.sin(a);
+        planDots += `<circle cx="${x}" cy="${y}" r="11" fill="#070c16" stroke="#e2f0ff" stroke-width="2"/><text x="${x}" y="${y+4}" font-size="11" fill="#2df3c2" text-anchor="middle" font-weight="bold">${p.name[0]}</text>`;
       });
-      const svg=`<svg viewBox="0 0 ${W} ${H}" style="background:transparent;width:220px;height:220px;user-select:none;">
+      const svg = `<svg viewBox="0 0 ${W} ${H}" style="background:transparent;width:220px;height:220px;user-select:none;">
         <circle cx="${Cx}" cy="${Cy}" r="${R+9}" fill="rgba(7,18,34,0.98)" />
         ${sectors}
         ${labels}
