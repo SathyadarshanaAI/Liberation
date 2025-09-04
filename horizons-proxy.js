@@ -1,37 +1,45 @@
-// Main API endpoint
-// Example: /api/planets?date=2025-08-23&time=12:00:00&lat=6.9271&lon=79.8612
-app.get('/api/planets', async (req, res) => {
-  const { date, time, lat, lon } = req.query;
-  if (!date || !time || !lat || !lon) {
-    return res.status(400).json({ error: "Missing required query parameters." });
-  }
+const express = require('express');
+const fetch = require('node-fetch');
 
+const app = express();
+const PORT = 3000;
+
+// CORS (optional, for browser fetch)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  next();
+});
+
+app.get('/horizons', async (req, res) => {
   try {
-    const planetResults = [];
-    // Example planet list (name and Horizons ID)
-    const planets = [
-      { name: "Sun", id: 10 },
-      { name: "Moon", id: 301 },
-      { name: "Mercury", id: 199 },
-      { name: "Venus", id: 299 },
-      { name: "Mars", id: 499 },
-      { name: "Jupiter", id: 599 },
-      { name: "Saturn", id: 699 },
-      { name: "Uranus", id: 799 },
-      { name: "Neptune", id: 899 }
-    ];
-
-    for (const {name, id} of planets) {
-      // NASA Horizons or your own data-fetching logic here
-      // Example: using a dummy data response
-      planetResults.push({
-        name,
-        degree: Math.random() * 360 // replace this with real data fetching logic
-      });
+    const { date, time, lat, lon } = req.query;
+    if (!date || !time || !lat || !lon) {
+      return res.status(400).json({ error: "Missing parameters: date, time, lat, lon are required" });
     }
-
-    res.json(planetResults);
-  } catch (err) {
-    res.status(500).json({ error: 'Internal server error.' });
+    const COMMAND = "10,199,299,301,499,599,699,799,899,999";
+    const base = 'https://ssd.jpl.nasa.gov/api/horizons.api';
+    const SITE_COORD = `${lon},${lat},0`;
+    const START_TIME = `${date} ${time}`;
+    const STOP_TIME = `${date} ${time}`;
+    const params = new URLSearchParams({
+      format: 'json',
+      COMMAND,
+      CENTER: 'coord@399',
+      SITE_COORD,
+      START_TIME,
+      STOP_TIME,
+      STEP_SIZE: '1 d',
+      QUANTITIES: '1,20,23'
+    });
+    const url = `${base}?${params.toString()}`;
+    const r = await fetch(url, { headers: { 'User-Agent': 'KP-Chart-Proxy' } });
+    const data = await r.json();
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Proxy server running on port ${PORT}`);
 });
