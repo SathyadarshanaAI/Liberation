@@ -34,6 +34,8 @@
       h2 { font-size: 1.33em;}
       .topbar {flex-direction:column;align-items:flex-start;gap:6px;}
     }
+    #placeGroup {display:flex;gap:4px;}
+    #geocodeBtn {width:auto;background:#4a5fbf;color:#fff;padding:7px 16px;border-radius:7px;margin-bottom:0;font-size:1em;}
   </style>
 </head>
 <body>
@@ -125,7 +127,11 @@
       <label>Longitude</label>
       <input id="lon" required placeholder="e.g. 79.8612" step="any" inputmode="decimal"/>
       <label>Place</label>
-      <input id="place" autocomplete="off" placeholder="e.g. Colombo, Sri Lanka"/>
+      <div id="placeGroup">
+        <input id="place" autocomplete="off" placeholder="e.g. Colombo, Sri Lanka" style="flex:1"/>
+        <button type="button" id="geocodeBtn">Find</button>
+      </div>
+      <div id="placeResult" style="font-size:0.98em;color:#3451bf;margin-top:3px;"></div>
       <button id="drawBtn" type="submit">Draw KP Chart</button>
       <button id="pdfBtn" type="button" style="margin-bottom:7px;">Download as PDF Book</button>
     </form>
@@ -134,20 +140,39 @@
     <div class="footer">sathyadarshana astrology</div>
   </div>
   <script>
-    // Simple i18n translation (for demo)
+    // i18n translation (static labels only)
     const translations = {
       en: {},
-      si: {"Name":"නම","Date of Birth":"උපන් දිනය","Time of Birth":"උපන් වේලාව","Timezone":"කාල කලාපය","Latitude":"අක්ෂාංශය","Longitude":"දේශාංශය","Place":"ස්ථානය","Draw KP Chart":"KP චාට් එක සකසන්න","Download as PDF Book":"PDF පොතක් ලෙස බාගන්න","Home":"මුල් පිටුව"},
-      ta: {"Name":"பெயர்","Date of Birth":"பிறந்த தேதி","Time of Birth":"பிறந்த நேரம்","Timezone":"நேரம் மண்டலம்","Latitude":"அட்சரேகை","Longitude":"தீர்கரேகை","Place":"இடம்","Draw KP Chart":"KP வரைபடம் வரையவும்","Download as PDF Book":"PDF நூலை பதிவிறக்கவும்","Home":"முகப்பு"}
-      // Add more languages as needed...
+      si: {"Name":"නම","Date of Birth":"උපන් දිනය","Time of Birth":"උපන් වේලාව","Timezone":"කාල කලාපය","Latitude":"අක්ෂාංශය","Longitude":"දේශාංශය","Place":"ස්ථානය","Draw KP Chart":"KP චාට් එක සකසන්න","Download as PDF Book":"PDF පොතක් ලෙස බාගන්න","Home":"මුල් පිටුව","Find":"සොයන්න"},
+      ta: {"Name":"பெயர்","Date of Birth":"பிறந்த தேதி","Time of Birth":"பிறந்த நேரம்","Timezone":"நேரம் மண்டலம்","Latitude":"அட்சரேகை","Longitude":"தீர்கரேகை","Place":"இடம்","Draw KP Chart":"KP வரைபடம் வரையவும்","Download as PDF Book":"PDF நூலை பதிவிறக்கவும்","Home":"முகப்பு","Find":"கண்டுபிடி"}
     };
     function setLang(lang) {
-      [...document.querySelectorAll('label,button,h2,h3,.home-btn')].forEach(el => {
+      [...document.querySelectorAll('label,button,h2,h3,.home-btn,#geocodeBtn')].forEach(el => {
         const orig = el.getAttribute('data-orig') || el.textContent.trim();
         el.setAttribute('data-orig', orig);
         el.textContent = translations[lang] && translations[lang][orig] ? translations[lang][orig] : orig;
       });
     }
+    // Place "Find" functionality
+    async function geocodePlace(q){
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+      const res = await fetch(url).then(r=>r.json());
+      if(!res.length) return null;
+      return { lat:+res[0].lat, lon:+res[0].lon, label:res[0].display_name };
+    }
+    document.getElementById('geocodeBtn').onclick = async function(){
+      const place = document.getElementById('place').value.trim();
+      if(!place){ alert("Enter place name."); return; }
+      const geo = await geocodePlace(place);
+      const placeResult = document.getElementById('placeResult');
+      if(!geo){
+        placeResult.innerHTML = "<span style='color:#c00;'>Place not found. Try a more specific name.</span>";
+        return;
+      }
+      document.getElementById('lat').value = geo.lat;
+      document.getElementById('lon').value = geo.lon;
+      placeResult.innerHTML = `<span>📍 <b>${geo.label}</b> <span style="color:#333;">(${geo.lat}, ${geo.lon})</span></span>`;
+    };
     // KP Wheel Chart SVG
     function drawKPWheelChart(planets) {
       const wheel = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -228,8 +253,7 @@
       document.getElementById('wheelBox').innerHTML = '';
       document.getElementById('wheelBox').appendChild(wheel);
     }
-
-    // Sample Planets
+    // Sample Planets (for demo)
     const samplePlanets = [
       {name:"Sun", longitude: 121.3},
       {name:"Moon", longitude: 250.9},
@@ -242,8 +266,7 @@
       {name:"Neptune", longitude: 325.2},
       {name:"Pluto", longitude: 270.5},
     ];
-
-    // Planetary results - About 300 words (can customize!)
+    // Planetary results - About 300 words
     const planetaryAnalysisText = `
       <b>Detailed Planetary Analysis</b><br><br>
       In KP Astrology, each planet represents specific aspects of life and characteristics. The Sun signifies soul, vitality, authority, and ego. When strongly placed, it gives leadership, confidence, and the ability to shine in society. The Moon denotes mind, emotions, memory, and comfort. Its placement affects one's emotional stability and adaptability. Mercury primarily rules intellect, communication, logic, and learning style. A strong Mercury brings quick wit and analytical skills, while affliction can cause nervousness or indecision. Venus governs love, relationships, beauty, and artistic talents. Benefic Venus enhances charm and creativity, but negative influences may result in indulgence or relationship issues.<br><br>
@@ -251,8 +274,6 @@
       Rahu and Ketu are lunar nodes, showing karmic lessons and spiritual growth. Rahu brings material desires, innovation, and unconventional thinking, while Ketu indicates detachment, intuition, and past-life influences. Uranus, Neptune, and Pluto have generational impacts, influencing transformation, spirituality, and collective evolution.<br><br>
       In summary, the interplay of these planets in your birth chart, along with their lords and aspects, shapes your unique destiny. Favorable planetary positions can bring success, happiness, and growth, whereas challenging configurations signal areas for self-improvement and learning. Remember, astrology offers guidance, but self-effort and attitude play a crucial role in shaping your life's journey.
     `;
-
-    // Analysis Box
     function getPlanetAnalysis(formData, planets) {
       let txt = `<b>${formData.name || 'User'}'s KP Chart Analysis:</b><br><br>`;
       if (!planets) {
@@ -271,7 +292,6 @@
       txt += planetaryAnalysisText;
       return txt;
     }
-
     document.getElementById('form').onsubmit = function(e){
       e.preventDefault();
       const formData = {
@@ -296,8 +316,6 @@
       drawKPWheelChart(planets);
       document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets);
     };
-
-    // PDF Book button (demo only)
     document.getElementById('pdfBtn').onclick = function(){ alert("PDF Book export is available in full version. (Demo UI only)"); };
   </script>
 </body>
