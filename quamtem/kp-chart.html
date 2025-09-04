@@ -9,34 +9,38 @@
     .container { max-width: 540px; margin: 40px auto 32px auto; padding:24px 16px 26px 16px; background:#fff; border-radius: 15px; box-shadow: 0 6px 36px #3451bf19, 0 1.5px 7px #b1b1b117;}
     h2 { color:#3451bf; margin-top:0;text-align:center; }
     label { display:block; margin-top:9px; margin-bottom:2px; font-weight:500;}
-    input, select, button { width:100%; padding:8px 11px; margin-bottom:9px; border-radius:7px; border:1px solid #dbeafe; background:#f8fafc; font-size:1em;}
+    input, select, button { width:100%; padding:8px 11px; margin-bottom:9px; border-radius1px solid #dbeafe; background:#f8fafc; font-size:1em;}
     input:focus,select:focus{border-color:#3451bf;}
-    #drawBtn { background: linear-gradient(90deg, #3451bf 80%, #5e7bdf 100%); color: #fff; font-weight: 600; letter-spacing: 1px; cursor:pointer; border:none; margin-top:8px; border-radius:8px; font-size:1.07em; padding:12px 0; transition:background .18s; box-shadow:0 2px 8px #3451bf13;}
+    #drawBtn { background: linear-gradient(90deg, #3451bf 80%, #5e7bdf 100%); color: #fff; font-weight: 600;; margin-top:8px; border-radius:8px; font-size:1.07em; padding:12px 0; transition:background .18s; box-shadow:0 2px 8px #3451bf13;}
     #wheelBox { display:flex; justify-content:center; margin-top:22px; }
     #analysis { background:#f8f8fc; border-left:3px solid #3451bf; margin-top:22px; padding:13px 16px 12px 16px; font-size:1.09em; border-radius:7px; color:#26334d; min-height:40px;}
     .footer { text-align:center; color:#3451bf; font-size:1em; letter-spacing:1px; opacity:0.88; margin-top:28px;}
     @media(max-width:600px){
-      .container{maxvw !important;height:95vw !important;}
+      .container{max-width:99vw;padding:4vw;}
+      #wheelBox svg{width:95vw !important;height:95vw !important;}
       h2 { font-size: 1.33em;}
     }
     #placeGroup {display:flex;gap:4px;}
-    #geocodeBtn {width:auto;background:#4a5fbf;color:#fff;padding:7px 16px;border-radius:px;margin-bottom:0;font-size:1em;}
+    #geocodeBtn {width:auto;background:#4a5fbf;color:#fff;padding:7px 16px;border-radius:7px;margin-bottom:0;font-size:1em;}
   </style>
 </head>
 <body>
   <div class="container">
     <h2>KP Astrology Chart <br><span style="font-size:0.74em;">(NASA Horizons Real Data)</span></h2>
-    <form id="form" autocomplete="name" required placeholder="Your name" />
+    <form id="form" autocomplete="off">
+      <label>Name</label>
+      <input id="name" required placeholder="Your name" />
       <label>Date of Birth</label>
       <input id="date" type="date" required />
       <label>Time of Birth</label>
       <input id="time" type="time" required value="12:00" />
-      <label>Time Zone">Asia/Colombo (+05:30)</option>
+      <label>Time Zone</label>
+      <select id="tz" required>
+        <option value="+05:30">Asia/Colombo (+05:30)</option>
         <option value="+05:45">Asia/Kathmandu (+05:45)</option>
         <option value="+05:00">Asia/Karachi (+05:00)</option>
         <option value="+06:00">Asia/Dhaka (+06:00)</option>
         <option value="+00:00">UTC (+00:00)</option>
-        <!-- Add more common zones if needed -->
       </select>
       <label>Latitude</label>
       <input id="lat" required placeholder="e.g. 6.9271" step="any" inputmode="decimal" />
@@ -82,15 +86,15 @@
         // date: "YYYY-MM-DD", time: "HH:MM", tzOffset: "+05:30"
         const d = new Date(date + "T" + time + ":00");
         const sign = tzOffset[0];
-        const hours = parseInt(tzOffset.substr(1,2));
-        const mins = parseInt(tzOffset.substr(4,2));
+        const hours = parseInt(tzOffset.substr(1, 2));
+        const mins = parseInt(tzOffset.substr(4, 2));
         const offset = (hours * 60 + mins) * (sign === "+" ? -1 : 1); // JS Date: positive is behind UTC
         d.setMinutes(d.getMinutes() + offset);
         const yyyy = d.getUTCFullYear();
-        const mm = ("0"+(d.getUTCMonth()+1)).slice(-2);
-        const dd = ("0"+d.getUTCDate()).slice(-2);
-        const hh = ("0"+d.getUTCHours()).slice(-2);
-        const min = ("0"+d.getUTCMinutes()).slice(-2);
+        const mm = ("0" + (d.getUTCMonth() + 1)).slice(-2);
+        const dd = ("0" + d.getUTCDate()).slice(-2);
+        const hh = ("0" + d.getUTCHours()).slice(-2);
+        const min = ("0" + d.getUTCMinutes()).slice(-2);
         return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
       } catch {
         return null;
