@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { margin:0; padding:0; background:linear-gradient(135deg,#f2f5fa 0,#eaf0ff 100%); font-family:'Segoe UI',Arial,sans-serif; }
-    .container { max-width: 540px; margin: 40px auto 32px auto; padding:24px 16px 26px 16px; background:#fff; border-radius: 15px; box-shadow: 0 6px 36px #3451bf19,0 1.5px 7px #b1b1b117; }
+    .container { max-width: 540px; margin: 40px auto 32px auto; padding:24px 16px 26px 16px; background:#fff; border-radius: 15px; box-shadow: 0 6px 36px #3451bf19,0 1.5px 7px #b1b1b117;}
     h2 { color:#3451bf; margin-top:0;text-align:center; }
     .topbar {display:flex;align-items:center;gap:12px;margin-bottom:22px;}
     .home-btn {background:#3451bf;color:#fff;border:none;padding:8px 18px 8px 18px;border-radius:7px;font-size:1.08em;cursor:pointer;font-weight:600;letter-spacing:1px;box-shadow:0 2px 8px #3451bf13;}
@@ -47,11 +47,6 @@
           <option value="en" selected>English</option>
           <option value="si">සිංහල (Sinhala)</option>
           <option value="ta">தமிழ் (Tamil)</option>
-          <option value="es">Español</option>
-          <option value="fr">Français</option>
-          <option value="zh">中文</option>
-          <option value="ar">العربية</option>
-          <option value="hi">हिन्दी</option>
         </select>
       </div>
     </div>
@@ -173,6 +168,27 @@
       document.getElementById('lon').value = geo.lon;
       placeResult.innerHTML = `<span>📍 <b>${geo.label}</b> <span style="color:#333;">(${geo.lat}, ${geo.lon})</span></span>`;
     };
+    // AstroSeek API - Real Planets
+    async function getPlanetsFromAstroSeek(date, time, lat, lon) {
+      if(!date || !time || !lat || !lon) return null;
+      const [year, month, day] = date.split('-');
+      const [hour, min] = time.split(':');
+      const url = `https://www.astro-seek.com/api.php?bdate=${year}-${month}-${day}&bhour=${hour}&bmin=${min}&blat=${lat}&blon=${lon}&bsec=00&country=LK`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (!json.planets) return null;
+        return {
+          planets: Object.entries(json.planets).map(([name, obj]) => ({
+            name, longitude: obj.deg
+          })),
+          asc: json.ascendant
+        };
+      } catch(e) {
+        return null;
+      }
+    }
     // KP Wheel Chart SVG
     function drawKPWheelChart(planets) {
       const wheel = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -253,19 +269,6 @@
       document.getElementById('wheelBox').innerHTML = '';
       document.getElementById('wheelBox').appendChild(wheel);
     }
-    // Sample Planets (for demo)
-    const samplePlanets = [
-      {name:"Sun", longitude: 121.3},
-      {name:"Moon", longitude: 250.9},
-      {name:"Mars", longitude: 88.2},
-      {name:"Mercury", longitude: 143.6},
-      {name:"Venus", longitude: 44.1},
-      {name:"Jupiter", longitude: 279.7},
-      {name:"Saturn", longitude: 313.4},
-      {name:"Uranus", longitude: 29.8},
-      {name:"Neptune", longitude: 325.2},
-      {name:"Pluto", longitude: 270.5},
-    ];
     // Planetary results - About 300 words
     const planetaryAnalysisText = `
       <b>Detailed Planetary Analysis</b><br><br>
@@ -274,8 +277,16 @@
       Rahu and Ketu are lunar nodes, showing karmic lessons and spiritual growth. Rahu brings material desires, innovation, and unconventional thinking, while Ketu indicates detachment, intuition, and past-life influences. Uranus, Neptune, and Pluto have generational impacts, influencing transformation, spirituality, and collective evolution.<br><br>
       In summary, the interplay of these planets in your birth chart, along with their lords and aspects, shapes your unique destiny. Favorable planetary positions can bring success, happiness, and growth, whereas challenging configurations signal areas for self-improvement and learning. Remember, astrology offers guidance, but self-effort and attitude play a crucial role in shaping your life's journey.
     `;
-    function getPlanetAnalysis(formData, planets) {
+    // Zodiac signs for lagna display
+    const signs = ["Aries (Mesha)", "Taurus (Vrushabha)", "Gemini (Mithuna)", "Cancer (Kataka)", "Leo (Simha)", "Virgo (Kanya)", "Libra (Thula)", "Scorpio (Vrischika)", "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"];
+    // Analysis Box
+    function getPlanetAnalysis(formData, planets, asc) {
       let txt = `<b>${formData.name || 'User'}'s KP Chart Analysis:</b><br><br>`;
+      // Lagna/Ascendant
+      if (asc && typeof asc.deg === "number") {
+        const ascSign = signs[Math.floor(asc.deg/30)%12];
+        txt += `<b>Lagna (Ascendant):</b> ${ascSign}<br><br>`;
+      }
       if (!planets) {
         txt += "Planetary data unavailable. Please try again.";
         return txt;
@@ -292,7 +303,7 @@
       txt += planetaryAnalysisText;
       return txt;
     }
-    document.getElementById('form').onsubmit = function(e){
+    document.getElementById('form').onsubmit = async function(e){
       e.preventDefault();
       const formData = {
         name: document.getElementById('name').value.trim(),
@@ -312,9 +323,16 @@
         alert('Please fill all required fields.');
         return;
       }
-      let planets = samplePlanets; // Replace with real astrology API for production
+      // Real planetary positions from AstroSeek
+      let astroData = await getPlanetsFromAstroSeek(formData.date, formData.time, formData.lat, formData.lon);
+      let planets = astroData && astroData.planets ? astroData.planets : [];
+      let asc = astroData && astroData.asc ? astroData.asc : null;
+      if(!planets.length){
+        alert("Could not fetch planetary positions. Please check your details or try again later.");
+        return;
+      }
       drawKPWheelChart(planets);
-      document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets);
+      document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets, asc);
     };
     document.getElementById('pdfBtn').onclick = function(){ alert("PDF Book export is available in full version. (Demo UI only)"); };
   </script>
