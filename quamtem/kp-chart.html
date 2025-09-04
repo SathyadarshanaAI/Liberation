@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>KP Astrology Chart (Cancelled/Partial Version)</title>
+  <title>KP Astrology Chart (Real NASA Data)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { margin:0; padding:0; background:linear-gradient(135deg,#f2f5fa 0,#eaf0ff 100%); font-family:'Segoe UI',Arial,sans-serif; }
@@ -16,24 +16,28 @@
     #analysis { background:#f8f8fc; border-left:3px solid #3451bf; margin-top:22px; padding:13px 16px 12px 16px; font-size:1.09em; border-radius:7px; color:#26334d; min-height:40px;}
     .footer { text-align:center; color:#3451bf; font-size:1em; letter-spacing:1px; opacity:0.88; margin-top:28px;}
     @media(max-width:600px){
-      .container{max-width:99vw;padding:4vw;}
-      #wheelBox svg{width:95vw !important;height:95vw !important;}
+      .container{maxvw !important;height:95vw !important;}
       h2 { font-size: 1.33em;}
     }
     #placeGroup {display:flex;gap:4px;}
-    #geocodeBtn {width:auto;background:#4a5fbf;color:#fff;padding:7px 16px;border-radius:7px;margin-bottom:0;font-size:1em;}
+    #geocodeBtn {width:auto;background:#4a5fbf;color:#fff;padding:7px 16px;border-radius:px;margin-bottom:0;font-size:1em;}
   </style>
 </head>
 <body>
   <div class="container">
     <h2>KP Astrology Chart <br><span style="font-size:0.74em;">(NASA Horizons Real Data)</span></h2>
-    <form id="form" autocomplete="off">
-      <label>Name</label>
-      <input id="name" required placeholder="Your name" />
+    <form id="form" autocomplete="name" required placeholder="Your name" />
       <label>Date of Birth</label>
       <input id="date" type="date" required />
       <label>Time of Birth</label>
       <input id="time" type="time" required value="12:00" />
+      <label>Time Zone">Asia/Colombo (+05:30)</option>
+        <option value="+05:45">Asia/Kathmandu (+05:45)</option>
+        <option value="+05:00">Asia/Karachi (+05:00)</option>
+        <option value="+06:00">Asia/Dhaka (+06:00)</option>
+        <option value="+00:00">UTC (+00:00)</option>
+        <!-- Add more common zones if needed -->
+      </select>
       <label>Latitude</label>
       <input id="lat" required placeholder="e.g. 6.9271" step="any" inputmode="decimal" />
       <label>Longitude</label>
@@ -64,13 +68,34 @@
       const geo = await geocodePlace(place);
       const placeResult = document.getElementById('placeResult');
       if (!geo) {
-        placeResult.innerHTML = "<span style='color:#c00;'>Place not found.        placeResult.innerHTML = "<span style='color:#c00;'>Place not found. Try a more specific name.</span>";
+        placeResult.innerHTML = "<span style='color:#c00;'>Place not found. Try a more specific name.</span>";
         return;
       }
       document.getElementById('lat').value = geo.lat;
       document.getElementById('lon').value = geo.lon;
       placeResult.innerHTML = `<span>📍 <b>${geo.label}</b> <span style="color:#333;">(${geo.lat}, ${geo.lon})</span></span>`;
     };
+
+    // Convert local date/time + tz to UTC "YYYY-MM-DD HH:MM"
+    function localToUTC(date, time, tzOffset) {
+      try {
+        // date: "YYYY-MM-DD", time: "HH:MM", tzOffset: "+05:30"
+        const d = new Date(date + "T" + time + ":00");
+        const sign = tzOffset[0];
+        const hours = parseInt(tzOffset.substr(1,2));
+        const mins = parseInt(tzOffset.substr(4,2));
+        const offset = (hours * 60 + mins) * (sign === "+" ? -1 : 1); // JS Date: positive is behind UTC
+        d.setMinutes(d.getMinutes() + offset);
+        const yyyy = d.getUTCFullYear();
+        const mm = ("0"+(d.getUTCMonth()+1)).slice(-2);
+        const dd = ("0"+d.getUTCDate()).slice(-2);
+        const hh = ("0"+d.getUTCHours()).slice(-2);
+        const min = ("0"+d.getUTCMinutes()).slice(-2);
+        return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+      } catch {
+        return null;
+      }
+    }
 
     // NASA Horizons API planet codes
     const planetCodes = [
@@ -89,7 +114,7 @@
 
     // Fetch real planetary positions from NASA Horizons API via CORS proxy
     async function getPlanetsFromHorizons(date, time, lat, lon) {
-      const dt = `${date}T${time}:00`;
+      const dt = `${date} ${time}`;
       const codes = planetCodes.map(p=>p.code).join(",");
       const apiUrl = `https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND='${codes}'&OBJ_DATA='NO'&MAKE_EPHEM='YES'&EPHEM_TYPE='OBSERVER'&CENTER='coord@399'&SITE_COORD='${lon},${lat},0'&START_TIME='${dt}'&STOP_TIME='${dt}'&STEP_SIZE='1 d'&QUANTITIES='1,4,20'`;
       // Use a public CORS proxy
@@ -169,7 +194,17 @@
       const time = document.getElementById('time').value;
       const lat = document.getElementById('lat').value;
       const lon = document.getElementById('lon').value;
-      let planets = await getPlanetsFromHorizons(date, time, lat, lon);
+      const tz = document.getElementById('tz').value;
+      // Convert birth time to UTC
+      const utcDateTime = localToUTC(date, time, tz);
+      if (!utcDateTime) {
+        document.getElementById('analysis').innerHTML = "<span style='color:#c00;'>Date/Time/Zone conversion error.</span>";
+        document.getElementById('drawBtn').disabled = false;
+        document.getElementById('drawBtn').innerText = "Draw KP Chart";
+        return;
+      }
+      const [utcDate, utcTime] = utcDateTime.split(' ');
+      let planets = await getPlanetsFromHorizons(utcDate, utcTime, lat, lon);
       if (!planets || planets.length < 5) {
         planets = getDemoPlanets();
         document.getElementById('analysis').innerHTML = "<span style='color:#c00;'>Real-time data unavailable. Showing demo data.</span>";
