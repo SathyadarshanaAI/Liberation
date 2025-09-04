@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -81,18 +80,18 @@
     <!-- Form -->
     <form id="form" autocomplete="off">
       <label>Name</label>
-      <input id="name" required placeholder="Your name"/>
+      <input id="name" required placeholder="Your name" />
       <label>Date of Birth</label>
-      <input id="date" type="date" required/>
+      <input id="date" type="date" required />
       <label>Time of Birth</label>
-      <input id="time" type="time" required value="12:00"/>
+      <input id="time" type="time" required value="12:00" />
       <label>Latitude</label>
-      <input id="lat" required placeholder="e.g. 6.9271" step="any" inputmode="decimal"/>
+      <input id="lat" required placeholder="e.g. 6.9271" step="any" inputmode="decimal" />
       <label>Longitude</label>
-      <input id="lon" required placeholder="e.g. 79.8612" step="any" inputmode="decimal"/>
+      <input id="lon" required placeholder="e.g. 79.8612" step="any" inputmode="decimal" />
       <label>Place</label>
       <div id="placeGroup">
-        <input id="place" autocomplete="off" placeholder="e.g. Colombo, Sri Lanka" style="flex:1"/>
+        <input id="place" autocomplete="off" placeholder="e.g. Colombo, Sri Lanka" style="flex:1" />
         <button type="button" id="geocodeBtn">Find</button>
       </div>
       <div id="placeResult" style="font-size:0.98em;color:#3451bf;margin-top:3px;"></div>
@@ -104,18 +103,18 @@
   </div>
   <script>
     // Place "Find" functionality
-    async function geocodePlace(q){
+    async function geocodePlace(q) {
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
-      const res = await fetch(url).then(r=>r.json());
-      if(!res.length) return null;
-      return { lat:+res[0].lat, lon:+res[0].lon, label:res[0].display_name };
+      const res = await fetch(url).then(r => r.json());
+      if (!res.length) return null;
+      return { lat: +res[0].lat, lon: +res[0].lon, label: res[0].display_name };
     }
-    document.getElementById('geocodeBtn').onclick = async function(){
+    document.getElementById('geocodeBtn').onclick = async function() {
       const place = document.getElementById('place').value.trim();
-      if(!place){ alert("Enter place name."); return; }
+      if (!place) { alert("Enter place name."); return; }
       const geo = await geocodePlace(place);
       const placeResult = document.getElementById('placeResult');
-      if(!geo){
+      if (!geo) {
         placeResult.innerHTML = "<span style='color:#c00;'>Place not found. Try a more specific name.</span>";
         return;
       }
@@ -270,12 +269,12 @@
       return txt;
     }
 
-    document.getElementById('form').onsubmit = async function(e){
+    document.getElementById('form').onsubmit = async function(e) {
       e.preventDefault();
       const formData = {
         name: document.getElementById('name').value.trim(),
         date: document.getElementById('date').value,
-        time: documentById('time').value,
+        time: document.getElementById('time').value,
         lat: document.getElementById('lat').value,
         lon: document.getElementById('lon').value,
         place: document.getElementById('place').value.trim(),
@@ -292,6 +291,13 @@
       document.getElementById('analysis').innerHTML = "Calculating real planetary positions from NASA Horizons...";
       let planets = await getPlanetsFromHorizons(formData.date, formData.time, formData.lat, formData.lon);
       if(!planets || !planets.length){
-        alert("Could not fetch </script>
+        alert("Could not fetch planetary positions from NASA Horizons. Please check your details or try again later.");
+        document.getElementById('analysis').innerHTML = "Error: Could not fetch planetary positions.";
+        return;
+      }
+      drawKPWheelChart(planets);
+      document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets);
+    };
+  </script>
 </body>
 </html>
