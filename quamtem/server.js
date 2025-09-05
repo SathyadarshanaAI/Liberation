@@ -6,7 +6,7 @@ const PORT = 3000;
 
 // Optional: Enable CORS for browser access
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Origin", "*");
   next();
 });
 
@@ -16,7 +16,7 @@ app.get('/horizons', async (req, res) => {
     const params = new URLSearchParams({
       format: 'json',
       COMMAND: '399',
-      CENTER: 'coord@399',
+399',
       SITE_COORD: '79.8612,6.9271,0',
       START_TIME: '2025-09-03 00:00',
       STOP_TIME: '2025-09-03 23:59',
@@ -34,6 +34,7 @@ app.get('/horizons', async (req, res) => {
   }
 });
 
+// NOTE: app.listen() එක file එකේ අවසන් කොටස!
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Proxy server running on port ${PORT}`);
 });
