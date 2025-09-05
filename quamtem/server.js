@@ -1,10 +1,10 @@
 const express = require('express');
-const fetch = require('node-fetch'); // If not installed: npm i node-fetch@2
+const fetch = require('node-fetch'); // Install: npm i node-fetch@2
 
 const app = express();
 const PORT = 3000;
 
-// CORS (if you want browser access)
+// (Optionally enable CORS if you use browser fetch)
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   next();
@@ -34,6 +34,7 @@ app.get('/horizons', async (req, res) => {
   }
 });
 
+// listen at the END of the file!
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Proxy server running on port ${PORT}`);
 });
