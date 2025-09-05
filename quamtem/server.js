@@ -4,7 +4,7 @@ const fetch = require('node-fetch'); // Install: npm i node-fetch@2
 const app = express();
 const PORT = 3000;
 
-// Enable CORS (optional, browser access)
+// Optional: Enable CORS for browser use
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   next();
@@ -15,7 +15,7 @@ app.get('/horizons', async (req, res) => {
     const base = 'https://ssd.jpl.nasa.gov/api/horizons.api';
     const params = new URLSearchParams({
       format: 'json',
-      COMMAND: '399', // Eg: 399 for Earth; Change as needed
+      COMMAND: '399', // Earth object ID
       CENTER: 'coord@399',
       SITE_COORD: '79.8612,6.9271,0',
       START_TIME: '2025-09-03 00:00',
