@@ -1,8 +1,8 @@
-9const express = require('express');
+const express = require('express');
 const fetch = require('node-fetch'); // Make sure to install node-fetch v2: npm i node-fetch@2
 
 const app = express();
-const PORT = 3000;
+const PORT = 8080; // Port variable changed here
 
 // CORS (for browser fetch)
 app.use((req, res, next) => {
@@ -40,6 +40,7 @@ app.get('/horizons', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// If running on Termux/Android, use '0.0.0.0' as host sometimes:
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Proxy server running on port ${PORT}`);
 });
