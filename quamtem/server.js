@@ -1,10 +1,10 @@
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'); // Make sure to install node-fetch v2: npm i node-fetch@2
 
 const app = express();
 const PORT = 3000;
 
-// CORS (optional, for browser fetch)
+// CORS (for browser fetch)
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   next();
