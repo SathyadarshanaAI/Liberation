@@ -9,9 +9,9 @@
     .container { max-width: 540px; margin: 40px auto 32px auto; padding:24px 16px 26px 16px; background:#fff; border-radius: 15px; box-shadow: 0 6px 36px #3451bf19, 0 1.5px 7px #b1b1b117;}
     h2 { color:#3451bf; margin-top:0;text-align:center; }
     label { display:block; margin-top:9px; margin-bottom:2px; font-weight:500;}
-    input, select, button { width:100%; padding:8px 11px; margin-bottom:9px; border-radius1px solid #dbeafe; background:#f8fafc; font-size:1em;}
+    input, select, button { width:100%; padding:8px 11px; margin-bottom:9px; border-radius:7px; border:1px solid #dbeafe; background:#f8fafc; font-size:1em;}
     input:focus,select:focus{border-color:#3451bf;}
-    #drawBtn { background: linear-gradient(90deg, #3451bf 80%, #5e7bdf 100%); color: #fff; font-weight: 600;; margin-top:8px; border-radius:8px; font-size:1.07em; padding:12px 0; transition:background .18s; box-shadow:0 2px 8px #3451bf13;}
+    #drawBtn { background: linear-gradient(90deg, #3451bf 80%, #5e7bdf 100%); color: #fff; font-weight: 600; letter-spacing: 1px; cursor:pointer; border:none; margin-top:8px; border-radius:8px; font-size:1.07em; padding:12px 0; transition:background .18s; box-shadow:0 2px 8px #3451bf13;}
     #wheelBox { display:flex; justify-content:center; margin-top:22px; }
     #analysis { background:#f8f8fc; border-left:3px solid #3451bf; margin-top:22px; padding:13px 16px 12px 16px; font-size:1.09em; border-radius:7px; color:#26334d; min-height:40px;}
     .footer { text-align:center; color:#3451bf; font-size:1em; letter-spacing:1px; opacity:0.88; margin-top:28px;}
@@ -26,7 +26,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>KP Astrology Chart <br><span style="font-size:0.74em;">(NASA Horizons Real Data)</span></h2>
+    <h2>KP Astrology Chart <br><span style="font-size:0.74em;">(NASA Horizons Real Data via Local Proxy)</span></h2>
     <form id="form" autocomplete="off">
       <label>Name</label>
       <input id="name" required placeholder="Your name" />
@@ -116,15 +116,12 @@
     ];
     const signs = ["Aries (Mesha)", "Taurus (Vrushabha)", "Gemini (Mithuna)", "Cancer (Kataka)", "Leo (Simha)", "Virgo (Kanya)", "Libra (Thula)", "Scorpio (Vrischika)", "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"];
 
-    // Fetch real planetary positions from NASA Horizons API via CORS proxy
-    async function getPlanetsFromHorizons(date, time, lat, lon) {
-      const dt = `${date} ${time}`;
-      const codes = planetCodes.map(p=>p.code).join(",");
-      const apiUrl = `https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND='${codes}'&OBJ_DATA='NO'&MAKE_EPHEM='YES'&EPHEM_TYPE='OBSERVER'&CENTER='coord@399'&SITE_COORD='${lon},${lat},0'&START_TIME='${dt}'&STOP_TIME='${dt}'&STEP_SIZE='1 d'&QUANTITIES='1,4,20'`;
-      // Use a public CORS proxy
-      const proxy = "https://corsproxy.io/?";
+    // Fetch real planetary positions from local Node.js Proxy
+    async function getPlanetsFromProxy(date, time, lat, lon) {
+      // Call your local Node.js proxy (server.js)
+      const apiUrl = `http://localhost:3000/horizons?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
       try {
-        const res = await fetch(proxy + apiUrl);
+        const res = await fetch(apiUrl);
         const data = await res.json();
         // Parse positions
         const results = [];
@@ -208,7 +205,7 @@
         return;
       }
       const [utcDate, utcTime] = utcDateTime.split(' ');
-      let planets = await getPlanetsFromHorizons(utcDate, utcTime, lat, lon);
+      let planets = await getPlanetsFromProxy(utcDate, utcTime, lat, lon);
       if (!planets || planets.length < 5) {
         planets = getDemoPlanets();
         document.getElementById('analysis').innerHTML = "<span style='color:#c00;'>Real-time data unavailable. Showing demo data.</span>";
