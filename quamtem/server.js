@@ -34,7 +34,6 @@ app.get('/horizons', async (req, res) => {
   }
 });
 
-// NOTE: app.listen() එක file එකේ අවසන් කොටස්!
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Proxy server running on port ${PORT}`);
 });
