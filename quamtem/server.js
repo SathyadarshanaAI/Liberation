@@ -1,44 +1,37 @@
-// server.js - Node.js Express proxy for NASA Horizons API (CommonJS format)
+cat > server.js <<'EOF'
+// server.js - Node.js Express proxy for NASA Horizons API (CommonJS)
 const express = require('express');
-const fetch = require('node-fetch');  // using node-fetch v2 for CommonJS2
+const fetch = require('node-fetch');  // node-fetch v2
 const app = express();
 
-// Enable CORS for all requests (so the proxy can be called from any origin)
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');       // allow any domain
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', '*');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204); // quickly respond to preflight OPTIONS
-  }
+// CORS (allow all)
+app.use((req,res,next)=>{
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Access-Control-Allow-Methods','GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers','*');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
 
-// Proxy endpoint: forwards query parameters to NASA Horizons API
-app.get('/horizons', async (req, res) => {
-  try {
-    const horizonsUrl = 'https://ssd-api.jpl.nasa.gov/api/horizons.api';
-    // Construct the target URL with the same query string received
-    const queryString = new URLSearchParams(req.query).toString();  // Node has URLSearchParams globally3
-    const targetUrl = queryString ? `${horizonsUrl}?${queryString}` : horizonsUrl;
-    
-    // Fetch data from NASA Horizons API
-    const response = await fetch(targetUrl);
-    const contentType = response.headers.get('content-type') || 'text/plain';
-    // Forward status and content-type from NASA response
-    res.status(response.status);
-    res.setHeader('Content-Type', contentType);
-    // Read response body (as text) and send it
-    const body = await response.text();
+// Proxy endpoint
+app.get('/horizons', async (req,res)=>{
+  try{
+    const base = 'https://ssd-api.jpl.nasa.gov/api/horizons.api';
+    const qs = new URLSearchParams(req.query).toString();
+    const url = qs ? `${base}?${qs}` : base;
+
+    const r = await fetch(url, { headers:{'User-Agent':'QuamtemProxy/1.0'} });
+    const contentType = r.headers.get('content-type') || 'text/plain';
+    const body = await r.text();
+    res.status(r.status);
+    res.set('Content-Type', contentType);
     res.send(body);
-  } catch (err) {
-    console.error('Error fetching Horizons API:', err);
-    res.status(500).json({ error: err.message });
+  }catch(e){
+    console.error('Horizons proxy error:', e);
+    res.status(500).json({ error: String(e && e.message || e) });
   }
 });
 
-// Start the server on port 3000 (or PORT env if provided)
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Horizons proxy server listening at http://localhost:${PORT}`);
-});
+app.listen(PORT, ()=> console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
+EOF
