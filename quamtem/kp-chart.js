@@ -1,75 +1,40 @@
-// kp-chart.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>KP Chart Demo | Sathyadarshana</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; margin: 20px; background: #f5f7fa; }
+    h1 { color: #3451bf; }
+    #chart { margin-top: 20px; }
+    textarea { width: 100%; height: 200px; margin-top: 20px; }
+    button { padding: 8px 12px; border-radius: 5px; background: #3451bf; color: #fff; border: none; }
+  </style>
+</head>
+<body>
+  <h1>🔭 KP Chart – Sathyadarshana</h1>
 
-// Zodiac Signs
-const ZODIACS = [
-  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-];
+  <button id="btnFetch">Get Sun Data</button>
+  <div id="chart"></div>
 
-// Nakshatras & their Lords
-const NAKSHATRAS = [
-  { name: 'Ashwini', lord: 'Ketu' }, { name: 'Bharani', lord: 'Venus' }, /* ... */ { name: 'Revati', lord: 'Mercury' }
-];
+  <h3>Raw JSON</h3>
+  <textarea id="output" readonly></textarea>
 
-// Sub-Lord Sequence (Vimshottari Dasa order)
-const SUB_LORDS = ['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'];
+  <script>
+    document.getElementById('btnFetch').onclick = async () => {
+      try {
+        const url = "http://127.0.0.1:3000/horizons?format=json&COMMAND=10&EPHEM_TYPE=OBSERVER&CENTER=coord@399&SITE_COORD=79.86,6.93,0&START_TIME=2025-09-06T12:00:00&STOP_TIME=2025-09-06T12:00:01&STEP_SIZE=1 m";
+        const r = await fetch(url);
+        const j = await r.json();
+        document.getElementById('output').value = JSON.stringify(j, null, 2);
 
-// Helper: Zodiac sign from degree
-function getZodiacSign(degree) {
-  return ZODIACS[Math.floor((degree % 360) / 30)];
-}
-
-// Helper: Nakshatra from degree
-function getNakshatra(degree) {
-  const index = Math.floor((degree % 360) / (13 + 1/3));
-  return NAKSHATRAS[index];
-}
-
-// Helper: Sub Lord (KP logic simplified)
-function getSubLord(degree) {
-  // Simplified: Use degree % 120, divided by dasa period length, etc.
-  // KP sub-lord real calculation is complex!
-  const dasaLength = [7,20,6,10,7,18,16,19,17]; // years
-  let pos = degree % 120;
-  let lordIdx = 0;
-  let offset = 0;
-  for(let i=0;i<dasaLength.length;i++) {
-    offset += dasaLength[i] * 360/120;
-    if(pos < offset) {
-      lordIdx = i;
-      break;
-    }
-  }
-  return SUB_LORDS[lordIdx];
-}
-
-// Main: Generate KP Chart Data for planets (needs planetary degrees as input)
-function generateKPChart(planets) {
-  // planets: array of { name: 'Sun', degree: 123.45 }
-  return planets.map(p => {
-    const sign = getZodiacSign(p.degree);
-    const nak = getNakshatra(p.degree);
-    const sublord = getSubLord(p.degree);
-    return {
-      planet: p.name,
-      degree: p.degree,
-      sign,
-      nakshatra: nak.name,
-      nakLord: nak.lord,
-      subLord: sublord
+        // very simple chart (just text for now)
+        document.getElementById('chart').innerHTML = "<b>Response Status:</b> " + j.result.status;
+      } catch (err) {
+        document.getElementById('output').value = "Error: " + err;
+      }
     };
-  });
-}
-
-// Example usage (stubbed data):
-const samplePlanets = [
-  { name: 'Sun', degree: 123.45 },
-  { name: 'Moon', degree: 210.12 },
-  { name: 'Mars', degree: 17.89 },
-  // ... add all planets
-];
-
-// Usage:
-const kpTable = generateKPChart(samplePlanets);
-console.log(kpTable);
-
+  </script>
+</body>
+</html>
