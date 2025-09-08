@@ -1,0 +1,13 @@
+{
+  "name": "nasa-horizons-proxy",
+  "version": "1.0.0",
+  "description": "Express proxy server for NASA JPL Horizons API (CommonJS)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "node-fetch": "^2.6.9"
+  }
+}
