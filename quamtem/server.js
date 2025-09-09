@@ -1,3 +1,4 @@
+cat > server.js <<'EOF'
 // server.js - Node.js Express proxy for NASA Horizons API (CommonJS)
 const express = require('express');
 const fetch = require('node-fetch');  // node-fetch v2
@@ -93,7 +94,7 @@ async function computeGeoLongitudes(utc){
   return Promise.all(tasks);
 }
 
-// ---------- 2) Geocentric ECLIPTIC longitudes ----------
+// ---------- 2) Geocentric longitudes ----------
 app.get('/geo-longitudes', async (req,res)=>{
   try{
     const utc = req.query.utc;
@@ -110,9 +111,9 @@ app.get('/geo-longitudes', async (req,res)=>{
 app.get('/topo-longitudes', async (req,res)=>{
   try{
     const utc = req.query.utc;
-    const { lat, lon } = req.query; // reserved for future true-topocentric
+    const { lat, lon } = req.query;
     if (!utc) return res.status(400).json({ error: "use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
-    const planets = await computeGeoLongitudes(utc); // TODO: replace with true topo using coord@399
+    const planets = await computeGeoLongitudes(utc); // TODO: true topo later
     res.json({ utc, center: `Topocentric approx (lat=${lat||'NA'}, lon=${lon||'NA'})`, ref_plane: 'ECLIPTIC', planets });
   }catch(e){
     console.error(e);
@@ -122,3 +123,4 @@ app.get('/topo-longitudes', async (req,res)=>{
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, ()=> console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
+EOF
