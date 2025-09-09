@@ -1,4 +1,3 @@
-cat > ~/server.js <<'EOF'
 // server.js - Node.js Express proxy for NASA Horizons API (CommonJS)
 
 const express = require('express');
@@ -66,7 +65,7 @@ function buildVectorsURL(id, utcISO){
   u.searchParams.set('START_TIME', t);
   u.searchParams.set('STOP_TIME',  t);
   u.searchParams.set('STEP_SIZE','1 m');
-  u.searchParams.set('CSV_FORMAT','YES');      // YES/NO per Horizons
+  u.searchParams.set('CSV_FORMAT','YES');
   u.searchParams.set('OBJ_DATA','NO');
   u.searchParams.set('COMMAND', id);
   return u.toString();
@@ -134,4 +133,3 @@ app.get('/topo-longitudes', async (req,res)=>{
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, ()=> console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
-EOF
