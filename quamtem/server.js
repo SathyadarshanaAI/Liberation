@@ -1,7 +1,8 @@
-cat > server.js <<'EOF'
+cat > ~/server.js <<'EOF'
 // server.js - Node.js Express proxy for NASA Horizons API (CommonJS)
+
 const express = require('express');
-const fetch = require('node-fetch');  // node-fetch v2
+const fetch = require('node-fetch'); // v2
 const app = express();
 
 // CORS (allow all)
@@ -13,10 +14,10 @@ app.use((req,res,next)=>{
   next();
 });
 
-// ---------- 1) Raw pass-through ----------
+// ---------- RAW pass-through ----------
 app.get('/horizons', async (req,res)=>{
   try{
-    const base = 'https://ssd-api.jpl.nasa.gov/api/horizons.api';
+    const base = 'https://ssd.jpl.nasa.gov/api/horizons.api';
     const qs = new URLSearchParams(req.query).toString();
     const url = qs ? `${base}?${qs}` : base;
 
@@ -32,7 +33,7 @@ app.get('/horizons', async (req,res)=>{
   }
 });
 
-// ---------- shared helpers ----------
+// ---------- helpers ----------
 const PLANETS = [
   { name: 'Sun',     id: '10'  },
   { name: 'Moon',    id: '301' },
@@ -45,23 +46,32 @@ const PLANETS = [
   { name: 'Neptune', id: '899' },
   { name: 'Pluto',   id: '999' }
 ];
+
 const degNorm = d => ((d % 360) + 360) % 360;
 const rad2deg = r => r * 180 / Math.PI;
+
+// "2025-09-06T12:00:00Z" -> "2025-09-06 12:00:00"
+function toHorizonsTime(utcISO){
+  const t = String(utcISO).replace('T',' ').replace(/Z$/,'');
+  return /\d{2}:\d{2}:\d{2}$/.test(t) ? t : t + ':00';
+}
 
 function buildVectorsURL(id, utcISO){
   const u = new URL('https://ssd.jpl.nasa.gov/api/horizons.api');
   u.searchParams.set('format','json');
   u.searchParams.set('EPHEM_TYPE','VECTORS');
-  u.searchParams.set('CENTER','399');          // geocentric
-  u.searchParams.set('REF_PLANE','ECLIPTIC');  // XY in ecliptic
-  u.searchParams.set('START_TIME', utcISO);
-  u.searchParams.set('STOP_TIME',  utcISO);
+  u.searchParams.set('CENTER','500@399');      // Earth center (geocentric)
+  u.searchParams.set('REF_PLANE','ECLIPTIC');  // ecliptic XY
+  const t = toHorizonsTime(utcISO);
+  u.searchParams.set('START_TIME', t);
+  u.searchParams.set('STOP_TIME',  t);
   u.searchParams.set('STEP_SIZE','1 m');
-  u.searchParams.set('CSV_FORMAT','TRUE');
+  u.searchParams.set('CSV_FORMAT','YES');      // YES/NO per Horizons
   u.searchParams.set('OBJ_DATA','NO');
   u.searchParams.set('COMMAND', id);
   return u.toString();
 }
+
 function parseXYFromResult(json){
   const txt = (json && json.result) || '';
   const lines = txt.split(/\r?\n/);
@@ -76,6 +86,7 @@ function parseXYFromResult(json){
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return { x, y };
 }
+
 async function computeGeoLongitudes(utc){
   const tasks = PLANETS.map(async (b)=>{
     const url = buildVectorsURL(b.id, utc);
@@ -94,26 +105,26 @@ async function computeGeoLongitudes(utc){
   return Promise.all(tasks);
 }
 
-// ---------- 2) Geocentric longitudes ----------
+// ---------- KP-friendly routes ----------
 app.get('/geo-longitudes', async (req,res)=>{
   try{
     const utc = req.query.utc;
     if (!utc) return res.status(400).json({ error: "use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
     const planets = await computeGeoLongitudes(utc);
-    res.json({ utc, center: 'Geocentric (399)', ref_plane: 'ECLIPTIC', planets });
+    res.json({ utc, center: 'Geocentric (500@399)', ref_plane: 'ECLIPTIC', planets });
   }catch(e){
     console.error(e);
     res.status(500).json({ error: String(e && e.message || e) });
   }
 });
 
-// ---------- 3) Topocentric placeholder (currently returns geo) ----------
+// (placeholder: currently same as geo)
 app.get('/topo-longitudes', async (req,res)=>{
   try{
     const utc = req.query.utc;
     const { lat, lon } = req.query;
     if (!utc) return res.status(400).json({ error: "use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
-    const planets = await computeGeoLongitudes(utc); // TODO: true topo later
+    const planets = await computeGeoLongitudes(utc);
     res.json({ utc, center: `Topocentric approx (lat=${lat||'NA'}, lon=${lon||'NA'})`, ref_plane: 'ECLIPTIC', planets });
   }catch(e){
     console.error(e);
