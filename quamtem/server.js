@@ -105,7 +105,29 @@ app.get('/geo-longitudes', async (req,res)=>{
   }catch(e){
     console.error(e);
     res.status(500).json({ error: String(e && e.message || e) });
-  }
+  }// 👉 Add this helper (top of helpers section)
+function toHorizonsTime(utcISO){
+  // "2025-09-06T12:00:00Z" -> "2025-09-06 12:00:00"
+  const t = String(utcISO).replace('T',' ').replace(/Z$/,'');
+  return /\d{2}:\d{2}:\d{2}$/.test(t) ? t : t + ':00';
+}
+
+// 👉 Replace your buildVectorsURL with this version
+function buildVectorsURL(id, utcISO){
+  const u = new URL('https://ssd.jpl.nasa.gov/api/horizons.api');
+  u.searchParams.set('format','json');
+  u.searchParams.set('EPHEM_TYPE','VECTORS');
+  u.searchParams.set('CENTER','500@399');      // Earth center (geocentric)
+  u.searchParams.set('REF_PLANE','ECLIPTIC');  // ecliptic XY
+  const t = toHorizonsTime(utcISO);
+  u.searchParams.set('START_TIME', t);
+  u.searchParams.set('STOP_TIME',  t);
+  u.searchParams.set('STEP_SIZE','1 m');
+  u.searchParams.set('CSV_FORMAT','YES');      // YES (not TRUE)
+  u.searchParams.set('OBJ_DATA','NO');
+  u.searchParams.set('COMMAND', id);
+  return u.toString();
+}
 });
 
 const PORT = process.env.PORT || 3000;
