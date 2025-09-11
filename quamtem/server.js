@@ -1,10 +1,9 @@
-cat > server.js <<'EOF'
 // server.js - Node.js Express proxy for NASA Horizons API (CommonJS)
 const express = require('express');
 const fetch = require('node-fetch');  // node-fetch v2
 const app = express();
 
-// CORS (allow all)
+// --- CORS (allow all) ---
 app.use((req,res,next)=>{
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET,OPTIONS');
@@ -16,7 +15,7 @@ app.use((req,res,next)=>{
 // ---------- 1) Raw proxy endpoint (pass-through) ----------
 app.get('/horizons', async (req,res)=>{
   try{
-    const base = 'https://ssd-api.jpl.nasa.gov/api/horizons.api';
+    const base = 'https://ssd.jpl.nasa.gov/api/horizons.api';
     const qs = new URLSearchParams(req.query).toString();
     const url = qs ? `${base}?${qs}` : base;
 
@@ -28,7 +27,7 @@ app.get('/horizons', async (req,res)=>{
     res.send(body);
   }catch(e){
     console.error('Horizons proxy error:', e);
-    res.status(500).json({ error: String(e && e.message || e) });
+    res.status(500).json({ error: String(e?.message || e) });
   }
 });
 
@@ -49,16 +48,23 @@ const PLANETS = [
 const degNorm = d => ((d % 360) + 360) % 360;
 const rad2deg = r => r * 180 / Math.PI;
 
+// --- Horizons needs proper "YYYY-MM-DD HH:mm:ss" format ---
+function toHorizonsTime(utcISO){
+  const t = String(utcISO).replace('T',' ').replace(/Z$/,'');
+  return /\d{2}:\d{2}:\d{2}$/.test(t) ? t : t + ':00';
+}
+
 function buildVectorsURL(id, utcISO){
   const u = new URL('https://ssd.jpl.nasa.gov/api/horizons.api');
   u.searchParams.set('format','json');
   u.searchParams.set('EPHEM_TYPE','VECTORS');
-  u.searchParams.set('CENTER','399');          // geocentric
-  u.searchParams.set('REF_PLANE','ECLIPTIC');  // XY in ecliptic
-  u.searchParams.set('START_TIME', utcISO);
-  u.searchParams.set('STOP_TIME',  utcISO);
+  u.searchParams.set('CENTER','500@399');      // Earth center (geocentric)
+  u.searchParams.set('REF_PLANE','ECLIPTIC');  // ecliptic XY
+  const t = toHorizonsTime(utcISO);
+  u.searchParams.set('START_TIME', t);
+  u.searchParams.set('STOP_TIME',  t);
   u.searchParams.set('STEP_SIZE','1 m');
-  u.searchParams.set('CSV_FORMAT','TRUE');     // CSV inside JSON result
+  u.searchParams.set('CSV_FORMAT','YES');      // YES (not TRUE)
   u.searchParams.set('OBJ_DATA','NO');
   u.searchParams.set('COMMAND', id);
   return u.toString();
@@ -79,57 +85,61 @@ function parseXYFromResult(json){
   return { x, y };
 }
 
-// GET /geo-longitudes?utc=YYYY-MM-DDTHH:mm:ss
+async function computeGeoLongitudes(utc){
+  const tasks = PLANETS.map(async (b)=>{
+    const url = buildVectorsURL(b.id, utc);
+    try{
+      const r = await fetch(url, { headers:{'User-Agent':'QuamtemProxy/1.0'} });
+      if (!r.ok) return { name: b.name, error: `HTTP ${r.status}` };
+      const j = await r.json();
+      const xy = parseXYFromResult(j);
+      if (!xy) return { name: b.name, error: 'parse' };
+      const lon = degNorm(rad2deg(Math.atan2(xy.y, xy.x)));
+      return { name: b.name, longitude: lon };
+    }catch(err){
+      return { name: b.name, error: String(err?.message || err) };
+    }
+  });
+  return Promise.all(tasks);
+}
+
+// ---------- KP endpoints ----------
 app.get('/geo-longitudes', async (req,res)=>{
   try{
     const utc = req.query.utc;
-    if (!utc) return res.status(400).json({ error: "use ?utc=YYYY-MM-DDTHH:mm[:ss]" });
+    if (!utc) return res.status(400).json({ error: "use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
 
-    const tasks = PLANETS.map(async (b)=>{
-      const url = buildVectorsURL(b.id, utc);
-      try{
-        const r = await fetch(url, { headers:{'User-Agent':'QuamtemProxy/1.0'} });
-        if (!r.ok) return { name: b.name, error: `HTTP ${r.status}` };
-        const j = await r.json();
-        const xy = parseXYFromResult(j);
-        if (!xy) return { name: b.name, error: 'parse' };
-        const lon = degNorm(rad2deg(Math.atan2(xy.y, xy.x)));
-        return { name: b.name, longitude: lon };
-      }catch(err){
-        return { name: b.name, error: String(err && err.message || err) };
-      }
-    });
+    let planets = await computeGeoLongitudes(utc);
 
-    const planets = await Promise.all(tasks);
-    res.json({ utc, center: 'Geocentric (399)', ref_plane: 'ECLIPTIC', planets });
+    // --- optional sidereal correction ---
+    const ayan = parseFloat(req.query.ayan);
+    if (Number.isFinite(ayan)) {
+      planets = planets.map(p =>
+        p.longitude != null
+          ? { ...p, longitude: degNorm(p.longitude - ayan) }
+          : p
+      );
+    }
+
+    res.json({ utc, center: 'Geocentric (500@399)', ref_plane: 'ECLIPTIC', planets });
   }catch(e){
     console.error(e);
-    res.status(500).json({ error: String(e && e.message || e) });
-  }// 👉 Add this helper (top of helpers section)
-function toHorizonsTime(utcISO){
-  // "2025-09-06T12:00:00Z" -> "2025-09-06 12:00:00"
-  const t = String(utcISO).replace('T',' ').replace(/Z$/,'');
-  return /\d{2}:\d{2}:\d{2}$/.test(t) ? t : t + ':00';
-}
+    res.status(500).json({ error: String(e?.message || e) });
+  }
+});
 
-// 👉 Replace your buildVectorsURL with this version
-function buildVectorsURL(id, utcISO){
-  const u = new URL('https://ssd.jpl.nasa.gov/api/horizons.api');
-  u.searchParams.set('format','json');
-  u.searchParams.set('EPHEM_TYPE','VECTORS');
-  u.searchParams.set('CENTER','500@399');      // Earth center (geocentric)
-  u.searchParams.set('REF_PLANE','ECLIPTIC');  // ecliptic XY
-  const t = toHorizonsTime(utcISO);
-  u.searchParams.set('START_TIME', t);
-  u.searchParams.set('STOP_TIME',  t);
-  u.searchParams.set('STEP_SIZE','1 m');
-  u.searchParams.set('CSV_FORMAT','YES');      // YES (not TRUE)
-  u.searchParams.set('OBJ_DATA','NO');
-  u.searchParams.set('COMMAND', id);
-  return u.toString();
-}
+// ---------- topo-longitudes (placeholder) ----------
+app.get('/topo-longitudes', async (req,res)=>{
+  try{
+    const utc = req.query.utc; const { lat, lon } = req.query;
+    if (!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
+    const planets = await computeGeoLongitudes(utc);
+    res.json({ utc, center:`Topocentric approx (lat=${lat||'NA'}, lon=${lon||'NA'})`, ref_plane:'ECLIPTIC', planets });
+  }catch(e){
+    console.error(e);
+    res.status(500).json({ error:String(e?.message || e) });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, ()=> console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
-EOF
