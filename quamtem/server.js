@@ -3,7 +3,6 @@ mv -f server.js server.bad 2>/dev/null || true
 
 cat > server.js <<'EOF'
 // server.js — Node.js Express proxy for NASA JPL Horizons (CommonJS)
-
 const express = require("express");
 const fetch = require("node-fetch"); // v2
 const app = express();
@@ -52,7 +51,7 @@ function buildVectorsURL(id, utcISO){
   const u = new URL("https://ssd.jpl.nasa.gov/api/horizons.api");
   u.searchParams.set("format","json");
   u.searchParams.set("EPHEM_TYPE","VECTORS");
-  u.searchParams.set("CENTER","500@399");      // Earth center (geocentric)
+  u.searchParams.set("CENTER","500@399");      // Earth center
   u.searchParams.set("REF_PLANE","ECLIPTIC");  // ecliptic XY
   const t = toHorizonsTime(utcISO);
   u.searchParams.set("START_TIME", t);
@@ -102,7 +101,7 @@ app.get("/geo-longitudes", async (req,res)=>{
     if(!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
     let planets = await computeGeoLongitudes(utc);
 
-    // Optional sidereal offset: e.g., ?ayan=23.86 (Lahiri)
+    // Optional sidereal offset: ?ayan=23.86 (Lahiri)
     const ayan = parseFloat(req.query.ayan);
     if (Number.isFinite(ayan)) {
       planets = planets.map(p => (
@@ -113,13 +112,11 @@ app.get("/geo-longitudes", async (req,res)=>{
     res.json({ utc, center:"Geocentric (500@399)", ref_plane:"ECLIPTIC", planets });
   }catch(e){ console.error(e); res.status(500).json({ error:String(e?.message || e) }); }
 });
-
-// Placeholder (currently same as geocentric)
 app.get("/topo-longitudes", async (req,res)=>{
   try{
     const utc = req.query.utc; const { lat, lon } = req.query;
     if(!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
-    const planets = await computeGeoLongitudes(utc);
+    const planets = await computeGeoLongitudes(utc); // placeholder
     res.json({ utc, center:`Topocentric approx (lat=${lat||"NA"}, lon=${lon||"NA"})`, ref_plane:"ECLIPTIC", planets });
   }catch(e){ console.error(e); res.status(500).json({ error:String(e?.message || e) }); }
 });
