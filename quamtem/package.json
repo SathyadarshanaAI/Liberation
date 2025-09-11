@@ -1,4 +1,3 @@
-cat > package.json <<'JSON'
 {
   "name": "quamtem-horizons-proxy",
   "private": true,
@@ -11,4 +10,3 @@ cat > package.json <<'JSON'
     "start": "node server.js"
   }
 }
-JSON
