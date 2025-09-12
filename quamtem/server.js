@@ -1,11 +1,9 @@
-# 1) project folder
-mkdir -p ~/quamtem && cd ~/quamtem
+cd ~/quamtem || mkdir -p ~/quamtem && cd ~/quamtem
 
-# 2) package + deps
-npm init -y
-npm i express node-fetch@2
+# 1) safety backup
+[ -f server.js ] && cp server.js server.js.bak
 
-# 3) CLEAN server.js (pure JS only)
+# 2) CLEAN server.js (‼️ EOF එක *තනි පේළියක් විතරයි*; අතරේ කිසිම shell command නෑ)
 cat > server.js <<'EOF'
 // server.js — NASA JPL Horizons proxy (CommonJS)
 const express = require("express");
@@ -131,16 +129,10 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
 EOF
 
-# 4) start script
-node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));console.log('start set')"
+# 3) scripts + deps (if not already)
+node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
+npm i express node-fetch@2
 
-# 5) kill old node (if any)
+# 4) kill any old nodes and run fresh
 pkill -f "node server.js" 2>/dev/null || true
-
-# 6) (optional) local proxy bypass (shell env)
-export NO_PROXY=localhost,127.0.0.1,::1
-export no_proxy=localhost,127.0.0.1,::1
-unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-
-# 7) run
 npm start
