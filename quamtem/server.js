@@ -1,14 +1,11 @@
 cd ~
-# old process නවත්තන්න (ඇතිනම්)
 pkill -f "node server.js" 2>/dev/null || true
+mv -f server.js server.BAD 2>/dev/null || true
 
-# පරණ server.js එක backup කරලා
-mv -f server.js server.bad 2>/dev/null || true
-
-# නව server.js එක pure JS එකම දාන්න (HEREDOC එක අවසානයේ EOF එක single line එකක් විතරයි!)
+# ⬇️ PURE JS ONLY — Paste everything between EOF/EOF exactly. 
+# EOF line එක පස්සේ කිසිම command එකක් paste කරන්න එපා.
 cat > server.js <<'EOF'
 // server.js — Node.js Express proxy for NASA JPL Horizons (CommonJS)
-
 const express = require("express");
 const fetch = require("node-fetch"); // v2
 const app = express();
@@ -63,7 +60,7 @@ function buildVectorsURL(id, utcISO){
   u.searchParams.set("START_TIME", t);
   u.searchParams.set("STOP_TIME",  t);
   u.searchParams.set("STEP_SIZE","1 m");
-  u.searchParams.set("CSV_FORMAT","YES");      // YES (not TRUE)
+  u.searchParams.set("CSV_FORMAT","YES");
   u.searchParams.set("OBJ_DATA","NO");
   u.searchParams.set("COMMAND", id);
   return u.toString();
@@ -107,8 +104,7 @@ app.get("/geo-longitudes", async (req,res)=>{
     if(!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
     let planets = await computeGeoLongitudes(utc);
 
-    // Optional sidereal offset: ?ayan=23.86 (Lahiri)
-    const ayan = parseFloat(req.query.ayan);
+    const ayan = parseFloat(req.query.ayan); // optional sidereal offset
     if (Number.isFinite(ayan)) {
       planets = planets.map(p => (
         p.longitude != null ? { ...p, longitude: degNorm(p.longitude - ayan) } : p
