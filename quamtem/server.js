@@ -1,13 +1,9 @@
-# 0) project folder
-cd ~/quamtem || exit 1
+cd ~/quamtem
 
-# 1) stop any old node
-pkill -f "node server.js" 2>/dev/null || true
+# backup (optional)
+cp -f server.js server.js.bak 2>/dev/null || true
 
-# 2) remove BOM/CRLF just in case (safe even if not present)
-sed -i 's/\r$//' server.js 2>/dev/null || true
-
-# 3) OVERWRITE server.js with a CLEAN file (⚠️ type/paste exactly; EOF line alone!)
+# OVERWRITE: clean server.js (HEREDOC එක අවසාන EOF එක Single quotes සමඟ)
 cat > server.js <<'EOF'
 // server.js — NASA JPL Horizons proxy (CommonJS)
 const express = require("express");
@@ -48,13 +44,16 @@ const PLANETS = [
   { name: "Saturn", id: "699" }, { name: "Uranus", id: "799" }, { name: "Neptune", id: "899" },
   { name: "Pluto", id: "999" }
 ];
+
 const degNorm = d => ((d % 360) + 360) % 360;
 const rad2deg = r => r * 180 / Math.PI;
 
+// "2025-09-06T12:00:00Z" -> "2025-09-06 12:00:00"
 function toHorizonsTime(utcISO){
   const t = String(utcISO).replace("T"," ").replace(/Z$/,"");
   return /\d{2}:\d{2}:\d{2}$/.test(t) ? t : (t + ":00");
 }
+
 function buildVectorsURL(id, utcISO){
   const u = new URL("https://ssd.jpl.nasa.gov/api/horizons.api");
   u.searchParams.set("format","json");
@@ -65,15 +64,18 @@ function buildVectorsURL(id, utcISO){
   u.searchParams.set("START_TIME", t);
   u.searchParams.set("STOP_TIME",  t);
   u.searchParams.set("STEP_SIZE","1 m");
-  u.searchParams.set("CSV_FORMAT","YES");      // YES/NO
+  u.searchParams.set("CSV_FORMAT","YES");      // YES (Horizons expects YES/NO)
   u.searchParams.set("OBJ_DATA","NO");
   u.searchParams.set("COMMAND", id);
   return u.toString();
 }
+
 function parseXYFromResult(json){
   const txt = (json && json.result) || "";
   const lines = txt.split(/\r?\n/);
-  const headerIx = lines.findIndex(l => /(^|,)\s*X\b/i.test(l) && /(^|,)\s*Y\b/i.test(l));
+  const headerIx = lines.findIndex(
+    l => /(^|,)\s*X\b/i.test(l) && /(^|,)\s*Y\b/i.test(l)
+  );
   if (headerIx < 0) return null;
   let rowIx = headerIx + 1;
   while (rowIx < lines.length && lines[rowIx].trim().startsWith("!")) rowIx++;
@@ -84,6 +86,7 @@ function parseXYFromResult(json){
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return { x, y };
 }
+
 async function computeGeoLongitudes(utc){
   const tasks = PLANETS.map(async (b)=>{
     const url = buildVectorsURL(b.id, utc);
@@ -102,19 +105,22 @@ async function computeGeoLongitudes(utc){
   return Promise.all(tasks);
 }
 
-// ---- KP endpoint (optional sidereal via ?ayan=23.86) ----
+// ---- KP endpoint (with optional sidereal ayanamsa) ----
 app.get("/geo-longitudes", async (req,res)=>{
   try{
     const utc = req.query.utc;
     if(!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
 
     let planets = await computeGeoLongitudes(utc);
+
+    // Optional: ?ayan=23.86 (Lahiri) to shift to sidereal
     const ayan = parseFloat(req.query.ayan);
     if (Number.isFinite(ayan)) {
       planets = planets.map(p => (
         p.longitude != null ? { ...p, longitude: degNorm(p.longitude - ayan) } : p
       ));
     }
+
     res.json({ utc, center:"Geocentric (500@399)", ref_plane:"ECLIPTIC", planets });
   }catch(e){
     console.error(e);
@@ -125,15 +131,3 @@ app.get("/geo-longitudes", async (req,res)=>{
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
 EOF
-
-# 4) show first 70 lines to confirm ONLY JS is present
-nl -ba server.js | sed -n '1,70p'
-
-# 5) make sure start script exists
-node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
-
-# 6) install deps (idempotent)
-npm i express node-fetch@2
-
-# 7) run
-npm start
