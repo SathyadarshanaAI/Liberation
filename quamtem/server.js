@@ -1,10 +1,18 @@
+# 1) project folder
+mkdir -p ~/quamtem && cd ~/quamtem
+
+# 2) package + deps
+npm init -y
+npm i express node-fetch@2
+
+# 3) CLEAN server.js (pure JS only)
 cat > server.js <<'EOF'
-// server.js — Node.js Express proxy for NASA JPL Horizons (CommonJS)
+// server.js — NASA JPL Horizons proxy (CommonJS)
 const express = require("express");
 const fetch = require("node-fetch"); // v2
 const app = express();
 
-// ---- CORS ----
+// CORS
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
@@ -33,32 +41,36 @@ app.get("/horizons", async (req, res) => {
 
 // ---- helpers ----
 const PLANETS = [
-  { name: "Sun", id: "10" },{ name: "Moon", id: "301" },{ name: "Mercury", id: "199" },
-  { name: "Venus", id: "299" },{ name: "Mars", id: "499" },{ name: "Jupiter", id: "599" },
-  { name: "Saturn", id: "699" },{ name: "Uranus", id: "799" },{ name: "Neptune", id: "899" },
-  { name: "Pluto", id: "999" },
+  { name: "Sun", id: "10" }, { name: "Moon", id: "301" }, { name: "Mercury", id: "199" },
+  { name: "Venus", id: "299" }, { name: "Mars", id: "499" }, { name: "Jupiter", id: "599" },
+  { name: "Saturn", id: "699" }, { name: "Uranus", id: "799" }, { name: "Neptune", id: "899" },
+  { name: "Pluto", id: "999" }
 ];
 const degNorm = d => ((d % 360) + 360) % 360;
 const rad2deg = r => r * 180 / Math.PI;
+
+// "2025-09-06T12:00:00Z" -> "2025-09-06 12:00:00"
 function toHorizonsTime(utcISO){
   const t = String(utcISO).replace("T"," ").replace(/Z$/,"");
-  return /\d{2}:\d{2}:\d{2}$/.test(t) ? t : t + ":00";
+  return /\d{2}:\d{2}:\d{2}$/.test(t) ? t : (t + ":00");
 }
+
 function buildVectorsURL(id, utcISO){
   const u = new URL("https://ssd.jpl.nasa.gov/api/horizons.api");
   u.searchParams.set("format","json");
   u.searchParams.set("EPHEM_TYPE","VECTORS");
-  u.searchParams.set("CENTER","500@399");
-  u.searchParams.set("REF_PLANE","ECLIPTIC");
+  u.searchParams.set("CENTER","500@399");      // Earth center (geocentric)
+  u.searchParams.set("REF_PLANE","ECLIPTIC");  // ecliptic XY
   const t = toHorizonsTime(utcISO);
   u.searchParams.set("START_TIME", t);
   u.searchParams.set("STOP_TIME",  t);
   u.searchParams.set("STEP_SIZE","1 m");
-  u.searchParams.set("CSV_FORMAT","YES");
+  u.searchParams.set("CSV_FORMAT","YES");      // YES/NO expected
   u.searchParams.set("OBJ_DATA","NO");
   u.searchParams.set("COMMAND", id);
   return u.toString();
 }
+
 function parseXYFromResult(json){
   const txt = (json && json.result) || "";
   const lines = txt.split(/\r?\n/);
@@ -73,6 +85,7 @@ function parseXYFromResult(json){
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return { x, y };
 }
+
 async function computeGeoLongitudes(utc){
   const tasks = PLANETS.map(async (b)=>{
     const url = buildVectorsURL(b.id, utc);
@@ -91,13 +104,15 @@ async function computeGeoLongitudes(utc){
   return Promise.all(tasks);
 }
 
-// ---- KP endpoints ----
+// ---- KP endpoint (optional sidereal shift) ----
 app.get("/geo-longitudes", async (req,res)=>{
   try{
     const utc = req.query.utc;
     if(!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
+
     let planets = await computeGeoLongitudes(utc);
 
+    // ?ayan=23.86 (Lahiri) -> sidereal shift
     const ayan = parseFloat(req.query.ayan);
     if (Number.isFinite(ayan)) {
       planets = planets.map(p => (
@@ -106,9 +121,26 @@ app.get("/geo-longitudes", async (req,res)=>{
     }
 
     res.json({ utc, center:"Geocentric (500@399)", ref_plane:"ECLIPTIC", planets });
-  }catch(e){ console.error(e); res.status(500).json({ error:String(e?.message || e) }); }
+  }catch(e){
+    console.error(e);
+    res.status(500).json({ error:String(e?.message || e) });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
 EOF
+
+# 4) start script
+node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));console.log('start set')"
+
+# 5) kill old node (if any)
+pkill -f "node server.js" 2>/dev/null || true
+
+# 6) (optional) local proxy bypass (shell env)
+export NO_PROXY=localhost,127.0.0.1,::1
+export no_proxy=localhost,127.0.0.1,::1
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+
+# 7) run
+npm start
