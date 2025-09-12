@@ -1,9 +1,3 @@
-cd ~
-pkill -f "node server.js" 2>/dev/null || true
-mv -f server.js server.BAD 2>/dev/null || true
-
-# ⬇️ PURE JS ONLY — Paste everything between EOF/EOF exactly. 
-# EOF line එක පස්සේ කිසිම command එකක් paste කරන්න එපා.
 cat > server.js <<'EOF'
 // server.js — Node.js Express proxy for NASA JPL Horizons (CommonJS)
 const express = require("express");
@@ -54,8 +48,8 @@ function buildVectorsURL(id, utcISO){
   const u = new URL("https://ssd.jpl.nasa.gov/api/horizons.api");
   u.searchParams.set("format","json");
   u.searchParams.set("EPHEM_TYPE","VECTORS");
-  u.searchParams.set("CENTER","500@399");      // Earth center
-  u.searchParams.set("REF_PLANE","ECLIPTIC");  // ecliptic XY
+  u.searchParams.set("CENTER","500@399");
+  u.searchParams.set("REF_PLANE","ECLIPTIC");
   const t = toHorizonsTime(utcISO);
   u.searchParams.set("START_TIME", t);
   u.searchParams.set("STOP_TIME",  t);
@@ -104,7 +98,7 @@ app.get("/geo-longitudes", async (req,res)=>{
     if(!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
     let planets = await computeGeoLongitudes(utc);
 
-    const ayan = parseFloat(req.query.ayan); // optional sidereal offset
+    const ayan = parseFloat(req.query.ayan);
     if (Number.isFinite(ayan)) {
       planets = planets.map(p => (
         p.longitude != null ? { ...p, longitude: degNorm(p.longitude - ayan) } : p
@@ -112,14 +106,6 @@ app.get("/geo-longitudes", async (req,res)=>{
     }
 
     res.json({ utc, center:"Geocentric (500@399)", ref_plane:"ECLIPTIC", planets });
-  }catch(e){ console.error(e); res.status(500).json({ error:String(e?.message || e) }); }
-});
-app.get("/topo-longitudes", async (req,res)=>{
-  try{
-    const utc = req.query.utc; const { lat, lon } = req.query;
-    if(!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
-    const planets = await computeGeoLongitudes(utc); // placeholder
-    res.json({ utc, center:`Topocentric approx (lat=${lat||"NA"}, lon=${lon||"NA"})`, ref_plane:"ECLIPTIC", planets });
   }catch(e){ console.error(e); res.status(500).json({ error:String(e?.message || e) }); }
 });
 
