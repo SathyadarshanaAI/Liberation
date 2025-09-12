@@ -1,9 +1,13 @@
+# 0) project folder
 cd ~/quamtem || exit 1
 
-# 1) safety backup
-cp server.js server.js.bak 2>/dev/null || true
+# 1) stop any old node
+pkill -f "node server.js" 2>/dev/null || true
 
-# 2) write a CLEAN server.js (pure JS only)
+# 2) remove BOM/CRLF just in case (safe even if not present)
+sed -i 's/\r$//' server.js 2>/dev/null || true
+
+# 3) OVERWRITE server.js with a CLEAN file (⚠️ type/paste exactly; EOF line alone!)
 cat > server.js <<'EOF'
 // server.js — NASA JPL Horizons proxy (CommonJS)
 const express = require("express");
@@ -122,12 +126,14 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
 EOF
 
-# 3) ensure start script exists
+# 4) show first 70 lines to confirm ONLY JS is present
+nl -ba server.js | sed -n '1,70p'
+
+# 5) make sure start script exists
 node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
 
-# 4) deps
+# 6) install deps (idempotent)
 npm i express node-fetch@2
 
-# 5) stop any old node & run
-pkill -f "node server.js" 2>/dev/null || true
+# 7) run
 npm start
