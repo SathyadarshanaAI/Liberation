@@ -1,9 +1,9 @@
-cd ~/quamtem || mkdir -p ~/quamtem && cd ~/quamtem
+cd ~/quamtem || exit 1
 
-# backup old file so we can compare later if needed
-[ -f server.js ] && mv server.js server.js.broken
+# 1) safety backup
+cp server.js server.js.bak 2>/dev/null || true
 
-# write a CLEAN server.js (no shell lines, no comments)
+# 2) write a CLEAN server.js (pure JS only)
 cat > server.js <<'EOF'
 // server.js — NASA JPL Horizons proxy (CommonJS)
 const express = require("express");
@@ -122,12 +122,12 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
 EOF
 
-# make sure start script exists
+# 3) ensure start script exists
 node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
 
-# deps (express + node-fetch v2)
+# 4) deps
 npm i express node-fetch@2
 
-# kill any old node & run
+# 5) stop any old node & run
 pkill -f "node server.js" 2>/dev/null || true
 npm start
