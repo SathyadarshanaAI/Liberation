@@ -1,9 +1,9 @@
-cd ~/quamtem || { echo "folder not found"; exit 1; }
+cd ~/quamtem || mkdir -p ~/quamtem && cd ~/quamtem
 
-# backup (optional)
-[ -f server.js ] && cp server.js server.js.bak
+# backup old file so we can compare later if needed
+[ -f server.js ] && mv server.js server.js.broken
 
-# write clean server.js (HEREDOC closes at the final EOF only)
+# write a CLEAN server.js (no shell lines, no comments)
 cat > server.js <<'EOF'
 // server.js — NASA JPL Horizons proxy (CommonJS)
 const express = require("express");
@@ -98,13 +98,13 @@ async function computeGeoLongitudes(utc){
   return Promise.all(tasks);
 }
 
-// ---- KP endpoint (optional sidereal ayanamsa via ?ayan=23.86) ----
+// ---- KP endpoint (optional sidereal via ?ayan=23.86) ----
 app.get("/geo-longitudes", async (req,res)=>{
   try{
     const utc = req.query.utc;
     if(!utc) return res.status(400).json({ error:"use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
-    let planets = await computeGeoLongitudes(utc);
 
+    let planets = await computeGeoLongitudes(utc);
     const ayan = parseFloat(req.query.ayan);
     if (Number.isFinite(ayan)) {
       planets = planets.map(p => (
@@ -121,3 +121,13 @@ app.get("/geo-longitudes", async (req,res)=>{
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
 EOF
+
+# make sure start script exists
+node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
+
+# deps (express + node-fetch v2)
+npm i express node-fetch@2
+
+# kill any old node & run
+pkill -f "node server.js" 2>/dev/null || true
+npm start
