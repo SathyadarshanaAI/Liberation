@@ -1,8 +1,14 @@
 cd ~
+# old process නවත්තන්න (ඇතිනම්)
+pkill -f "node server.js" 2>/dev/null || true
+
+# පරණ server.js එක backup කරලා
 mv -f server.js server.bad 2>/dev/null || true
 
+# නව server.js එක pure JS එකම දාන්න (HEREDOC එක අවසානයේ EOF එක single line එකක් විතරයි!)
 cat > server.js <<'EOF'
 // server.js — Node.js Express proxy for NASA JPL Horizons (CommonJS)
+
 const express = require("express");
 const fetch = require("node-fetch"); // v2
 const app = express();
