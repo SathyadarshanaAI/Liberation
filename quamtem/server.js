@@ -1,10 +1,3 @@
-# 1) project dir
-cd ~/quamtem 2>/dev/null || { mkdir -p ~/quamtem && cd ~/quamtem; }
-
-# 2) BACKUP (if exists)
-cp -f server.js server.js.bak 2>/dev/null || true
-
-# 3) WRITE A FRESH, CLEAN server.js  (HEREDOC starts now — paste AS-IS)
 cat > server.js <<'JS'
 // server.js — NASA JPL Horizons proxy (CommonJS, CLEAN)
 const express = require("express");
