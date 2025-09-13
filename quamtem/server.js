@@ -1,12 +1,12 @@
-# 1) project dir එකට යන්න
-cd ~/quamtem 2>/dev/null || mkdir -p ~/quamtem && cd ~/quamtem
+# 1) project dir
+cd ~/quamtem 2>/dev/null || { mkdir -p ~/quamtem && cd ~/quamtem; }
 
-# 2) backup (ඇතිනම්)
+# 2) BACKUP (if exists)
 cp -f server.js server.js.bak 2>/dev/null || true
 
-# 3) CLEAN server.js එක අලුතින් ලියන්න  (⛔️ මෙහි shell lines ഒന്നක්වත් නැ!)
+# 3) WRITE A FRESH, CLEAN server.js  (HEREDOC starts now — paste AS-IS)
 cat > server.js <<'JS'
-// server.js — NASA JPL Horizons proxy (CommonJS, clean)
+// server.js — NASA JPL Horizons proxy (CommonJS, CLEAN)
 const express = require("express");
 const fetch = require("node-fetch"); // v2
 const app = express();
@@ -64,7 +64,7 @@ function buildVectorsURL(id, utcISO){
   u.searchParams.set("START_TIME", t);
   u.searchParams.set("STOP_TIME",  t);
   u.searchParams.set("STEP_SIZE","1 m");
-  u.searchParams.set("CSV_FORMAT","YES");      // YES (Horizons expects YES/NO)
+  u.searchParams.set("CSV_FORMAT","YES");      // YES/NO expected
   u.searchParams.set("OBJ_DATA","NO");
   u.searchParams.set("COMMAND", id);
   return u.toString();
@@ -73,9 +73,7 @@ function buildVectorsURL(id, utcISO){
 function parseXYFromResult(json){
   const txt = (json && json.result) || "";
   const lines = txt.split(/\r?\n/);
-  const headerIx = lines.findIndex(
-    l => /(^|,)\s*X\b/i.test(l) && /(^|,)\s*Y\b/i.test(l)
-  );
+  const headerIx = lines.findIndex(l => /(^|,)\s*X\b/i.test(l) && /(^|,)\s*Y\b/i.test(l));
   if (headerIx < 0) return null;
   let rowIx = headerIx + 1;
   while (rowIx < lines.length && lines[rowIx].trim().startsWith("!")) rowIx++;
@@ -130,15 +128,3 @@ app.get("/geo-longitudes", async (req,res)=>{
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
 JS
-
-# 4) start script හදාගන්න
-node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
-
-# 5) deps (ඇත්තම version)
-npm i express node-fetch@2
-
-# 6) පරණ node process නැත්තම් හොඳයි; safety එකට kill
-pkill -f "node server.js" 2>/dev/null || true
-
-# 7) run
-npm start
