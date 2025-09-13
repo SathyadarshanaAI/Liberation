@@ -1,11 +1,12 @@
-cd ~/quamtem
+# 1) project dir එකට යන්න
+cd ~/quamtem 2>/dev/null || mkdir -p ~/quamtem && cd ~/quamtem
 
-# backup (optional)
+# 2) backup (ඇතිනම්)
 cp -f server.js server.js.bak 2>/dev/null || true
 
-# OVERWRITE: clean server.js (HEREDOC එක අවසාන EOF එක Single quotes සමඟ)
-cat > server.js <<'EOF'
-// server.js — NASA JPL Horizons proxy (CommonJS)
+# 3) CLEAN server.js එක අලුතින් ලියන්න  (⛔️ මෙහි shell lines ഒന്നක්වත් නැ!)
+cat > server.js <<'JS'
+// server.js — NASA JPL Horizons proxy (CommonJS, clean)
 const express = require("express");
 const fetch = require("node-fetch"); // v2
 const app = express();
@@ -19,7 +20,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ---- RAW pass-through ----
+// ---------- RAW pass-through ----------
 app.get("/horizons", async (req, res) => {
   try {
     const base = "https://ssd.jpl.nasa.gov/api/horizons.api";
@@ -37,14 +38,13 @@ app.get("/horizons", async (req, res) => {
   }
 });
 
-// ---- helpers ----
+// ---------- helpers ----------
 const PLANETS = [
   { name: "Sun", id: "10" }, { name: "Moon", id: "301" }, { name: "Mercury", id: "199" },
   { name: "Venus", id: "299" }, { name: "Mars", id: "499" }, { name: "Jupiter", id: "599" },
   { name: "Saturn", id: "699" }, { name: "Uranus", id: "799" }, { name: "Neptune", id: "899" },
   { name: "Pluto", id: "999" }
 ];
-
 const degNorm = d => ((d % 360) + 360) % 360;
 const rad2deg = r => r * 180 / Math.PI;
 
@@ -105,7 +105,7 @@ async function computeGeoLongitudes(utc){
   return Promise.all(tasks);
 }
 
-// ---- KP endpoint (with optional sidereal ayanamsa) ----
+// ---------- KP endpoint (optional ?ayan=23.86 for Lahiri) ----------
 app.get("/geo-longitudes", async (req,res)=>{
   try{
     const utc = req.query.utc;
@@ -113,7 +113,6 @@ app.get("/geo-longitudes", async (req,res)=>{
 
     let planets = await computeGeoLongitudes(utc);
 
-    // Optional: ?ayan=23.86 (Lahiri) to shift to sidereal
     const ayan = parseFloat(req.query.ayan);
     if (Number.isFinite(ayan)) {
       planets = planets.map(p => (
@@ -130,4 +129,16 @@ app.get("/geo-longitudes", async (req,res)=>{
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
-EOF
+JS
+
+# 4) start script හදාගන්න
+node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.start='node server.js';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2))"
+
+# 5) deps (ඇත්තම version)
+npm i express node-fetch@2
+
+# 6) පරණ node process නැත්තම් හොඳයි; safety එකට kill
+pkill -f "node server.js" 2>/dev/null || true
+
+# 7) run
+npm start
