@@ -1,4 +1,18 @@
-// ---- top: existing requires ----
+/**
+ * ==========================================================
+ *  Copyright (c) 2025 Sathyadarshana AI Buddhi
+ *  All Rights Reserved.
+ *
+ *  This software and associated documentation files are
+ *  proprietary to Sathyadarshana (Light of Truth).
+ *
+ *  Unauthorized copying, modification, distribution or use
+ *  in whole or in part is strictly prohibited.
+ *
+ *  Contact: sathyadarshana2025@gmail.com
+ * ==========================================================
+ */
+
 const express = require("express");
 const fetch = require("node-fetch");
 const crypto = require("crypto");
@@ -51,8 +65,24 @@ function degToSign(deg){
   return SIG[idx];
 }
 
-// ---- stub: keep your existing function here ----
-// async function computeGeoLongitudes(utc, ayan) { ... }
+// ---- stub: planetary longitudes ----
+async function computeGeoLongitudes(utc, ayan) {
+  // Here you can connect NASA Horizons API or static demo data
+  return {
+    utc,
+    center: "Geocentric (500@399)",
+    ref_plane: "ECLIPTIC",
+    planets: [
+      { name:"Sun", longitude:120 },
+      { name:"Moon", longitude:15 },
+      { name:"Mars", longitude:210 },
+      { name:"Mercury", longitude:80 },
+      { name:"Venus", longitude:95 },
+      { name:"Jupiter", longitude:10 },
+      { name:"Saturn", longitude:300 }
+    ]
+  };
+}
 
 // ---- text engine (English only) ----
 function sectionText(planets){
