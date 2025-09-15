@@ -1,151 +1,150 @@
-// server.js — NASA JPL Horizons Proxy + Geo Longitudes Helper
-// ---------------------------------------
-
+// ---- top: existing requires ----
 const express = require("express");
-const fetch = require("node-fetch"); // make sure version 2 installed: npm i node-fetch@2
+const fetch = require("node-fetch");
+const crypto = require("crypto");
 
 const app = express();
+app.use(express.static("public"));
+app.use(express.json());
 
-// --- CORS setup ---
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "*");
-  if (req.method === "OPTIONS") return res.sendStatus(204);
-  next();
-});
-
-// --- Base planets list ---
-const PLANETS = [
-  { name: "Sun", id: "10" },
-  { name: "Moon", id: "301" },
-  { name: "Mercury", id: "199" },
-  { name: "Venus", id: "299" },
-  { name: "Mars", id: "499" },
-  { name: "Jupiter", id: "599" },
-  { name: "Saturn", id: "699" },
-  { name: "Uranus", id: "799" },
-  { name: "Neptune", id: "899" },
-  { name: "Pluto", id: "999" },
-];
-
-const degNorm = d => ((d % 360) + 360) % 360;
-const rad2deg = r => (r * 180) / Math.PI;
-
-function toHorizonsTime(utcISO) {
-  const t = String(utcISO).replace("T", " ").replace(/Z$/, "");
-  return /\d{2}:\d{2}(:\d{2})?$/.test(t) ? t : t + ":00";
-}
-
-function buildVectorsURL(id, utcISO) {
-  const u = new URL("https://ssd.jpl.nasa.gov/api/horizons.api");
-  u.searchParams.set("format", "json");
-  u.searchParams.set("EPHEM_TYPE", "VECTORS");
-  u.searchParams.set("CENTER", "500@399"); // geocentric
-  u.searchParams.set("REF_PLANE", "ECLIPTIC");
-  const t = toHorizonsTime(utcISO);
-  u.searchParams.set("START_TIME", t);
-  u.searchParams.set("STOP_TIME", t);
-  u.searchParams.set("STEP_SIZE", "1 m");
-  u.searchParams.set("CSV_FORMAT", "YES");
-  u.searchParams.set("OBJ_DATA", "NO");
-  u.searchParams.set("COMMAND", id);
-  return u.toString();
-}
-
-function parseXYFromResult(json) {
-  const txt = (json && json.result) || "";
-  const lines = txt.split(/\r?\n/);
-  const headerIx = lines.findIndex(
-    l => /(^|,)\s*X\b/i.test(l) && /(^|,)\s*Y\b/i.test(l)
-  );
-  if (headerIx < 0) return null;
-  let rowIx = headerIx + 1;
-  while (rowIx < lines.length && lines[rowIx].trim().startsWith("!")) rowIx++;
-  const hdr = lines[headerIx].split(",").map(s => s.trim().toUpperCase());
-  const row = (lines[rowIx] || "").split(",").map(s => s.trim());
-  const ix = hdr.indexOf("X"),
-    iy = hdr.indexOf("Y");
-  const x = parseFloat(row[ix]),
-    y = parseFloat(row[iy]);
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-  return { x, y };
-}
-
-async function computeGeoLongitudes(utc) {
-  return Promise.all(
-    PLANETS.map(async b => {
-      const url = buildVectorsURL(b.id, utc);
-      try {
-        const r = await fetch(url, {
-          headers: { "User-Agent": "QuamtemProxy/1.0" },
-        });
-        if (!r.ok) return { name: b.name, error: `HTTP ${r.status}` };
-        const j = await r.json();
-        const xy = parseXYFromResult(j);
-        if (!xy) return { name: b.name, error: "parse" };
-        const lon = degNorm(rad2deg(Math.atan2(xy.y, xy.x)));
-        return { name: b.name, longitude: lon };
-      } catch (err) {
-        return { name: b.name, error: String(err?.message || err) };
-      }
-    })
-  );
-}
-
-// --- API endpoints ---
-
-// Pass-through to Horizons
-app.get("/horizons", async (req, res) => {
-  try {
-    const base = "https://ssd.jpl.nasa.gov/api/horizons.api";
-    const qs = new URLSearchParams(req.query).toString();
-    const url = qs ? `${base}?${qs}` : base;
-    const r = await fetch(url, { headers: { "User-Agent": "QuamtemProxy/1.0" } });
-    const body = await r.text();
-    res.status(r.status);
-    res.set("Content-Type", r.headers.get("content-type") || "text/plain");
-    res.send(body);
-  } catch (e) {
-    console.error("Horizons proxy error:", e);
-    res.status(500).json({ error: String(e?.message || e) });
-  }
-});
-
-// KP geo-longitudes
-app.get("/geo-longitudes", async (req, res) => {
-  try {
-    const utc = req.query.utc;
-    if (!utc)
-      return res
-        .status(400)
-        .json({ error: "use ?utc=YYYY-MM-DDTHH:mm[:ss]Z" });
-
-    let planets = await computeGeoLongitudes(utc);
-
-    const ayan = parseFloat(req.query.ayan);
-    if (Number.isFinite(ayan)) {
-      planets = planets.map(p =>
-        p.longitude != null
-          ? { ...p, longitude: degNorm(p.longitude - ayan) }
-          : p
-      );
+// ---- rate limit ----
+const buckets = new Map();
+function rateLimit(maxPerMinute = 60) {
+  return (req, res, next) => {
+    const now = Date.now();
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.ip ||
+      req.connection.remoteAddress ||
+      "local";
+    const b = buckets.get(ip) || { count: 0, ts: now };
+    if (now - b.ts > 60_000) {
+      b.count = 0;
+      b.ts = now;
     }
+    b.count++;
+    buckets.set(ip, b);
+    if (b.count > maxPerMinute)
+      return res.status(429).json({ error: "Too many requests" });
+    next();
+  };
+}
+app.use(rateLimit(90));
+
+// ---- helpers ----
+const SECRET = process.env.ASTRO_SECRET || "change-me-super-secret";
+const SIG = [
+  "Aries","Taurus","Gemini","Cancer","Leo","Virgo",
+  "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"
+];
+const pad = n => String(n).padStart(2,"0");
+const toUTC = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+
+function hashId(id){
+  return crypto.createHash("sha256").update(String(id)).digest("hex").slice(0,24);
+}
+function sign(payload){
+  return crypto.createHmac("sha256", SECRET).update(payload).digest("hex");
+}
+function degToSign(deg){
+  const idx = Math.floor(((deg%360)+360)%360 / 30);
+  return SIG[idx];
+}
+
+// ---- stub: keep your existing function here ----
+// async function computeGeoLongitudes(utc, ayan) { ... }
+
+// ---- text engine (English only) ----
+function sectionText(planets){
+  const get = n => planets.find(p=>p.name===n)?.longitude ?? null;
+  const sun=get("Sun"), moon=get("Moon"), mar=get("Mars"), ven=get("Venus"),
+        mer=get("Mercury"), jup=get("Jupiter"), sat=get("Saturn");
+
+  const health = (sat!=null && Math.abs(sat - sun) % 180 < 5)
+    ? "Vitality steady; joints and bones require attention."
+    : "Energy fluctuates; maintain consistent sleep and balanced diet.";
+
+  const education = (mer!=null && ["Gemini","Virgo"].includes(degToSign(mer)))
+    ? "Quick grasp for languages and analytics; self-study is fruitful."
+    : "Learning benefits from repetition and solid foundations.";
+
+  const love = (ven!=null && ["Taurus","Libra","Pisces"].includes(degToSign(ven)))
+    ? "Affection flows easily; excellent for proposals and harmony."
+    : "Conversations need patience; avoid misunderstandings.";
+
+  const career = (mar!=null && ["Aries","Capricorn","Leo","Scorpio"].includes(degToSign(mar)))
+    ? "Leadership roles and initiative favored. Small goals achieved quickly."
+    : "Progress through cooperation; maintain documentation.";
+
+  const luck = (jup!=null && ["Sagittarius","Pisces","Cancer"].includes(degToSign(jup)))
+    ? "Good fortune through travel, teaching, and spiritual pursuits."
+    : "Moderate but steady luck; careful budgeting advised.";
+
+  return { health, education, love, career, luck };
+}
+
+function composePreview(planets){
+  const sec = sectionText(planets);
+  const order = ["health","education","love","career","luck"];
+  let text = order.map(k=>sec[k]).join(" ");
+  const words = text.split(/\s+/);
+  if (words.length > 300) text = words.slice(0,300).join(" ") + "...";
+  return { text, words: Math.min(words.length, 300), sections: sec };
+}
+
+function composeFull(planets){
+  const sec = sectionText(planets);
+  const cycles = "Next 30 days favor steady growth. Productive windows: days 5–8 and 18–21. Avoid impulsive spending near lunar squares.";
+  const remedies = "Remedies: early sunlight 10m daily, walking Tue/Thu, donate grains on Thursdays, keep gratitude journal.";
+  const text = [
+    sec.health, sec.education, sec.love, sec.career, sec.luck,
+    cycles, remedies
+  ].join(" ");
+  return { text, sections: sec, cycles, remedies, words: text.split(/\s+/).length };
+}
+
+// ---- endpoints ----
+app.get("/horoscope-free", async (req,res)=>{
+  try{
+    const utc = req.query.utc || toUTC(new Date());
+    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
+    const id  = req.query.id || "guest";
+
+    const geo = await computeGeoLongitudes(utc, ayan);
+    const pr  = composePreview(geo.planets);
 
     res.json({
-      utc,
-      center: "Geocentric (500@399)",
-      ref_plane: "ECLIPTIC",
-      planets,
+      kind:"free-preview",
+      utc: geo.utc, center: geo.center, ref_plane: geo.ref_plane,
+      id_hash: hashId(id),
+      ...pr
     });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: String(e?.message || e) });
-  }
+  }catch(e){ console.error(e); res.status(500).json({error:"free-failed"}); }
 });
 
-// --- Start server ---
+app.get("/horoscope-full", async (req,res)=>{
+  try{
+    const utc = req.query.utc || toUTC(new Date());
+    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
+    const id  = req.query.id;
+    const token = req.query.token;
+
+    if (!id || !token) return res.status(401).json({ error:"auth-required" });
+    const expected = sign(`${id}:${utc}`);
+    if (token !== expected) return res.status(403).json({ error:"invalid-token" });
+
+    const geo = await computeGeoLongitudes(utc, ayan);
+    const full = composeFull(geo.planets);
+
+    res.json({
+      kind:"full-report",
+      utc: geo.utc, center: geo.center, ref_plane: geo.ref_plane,
+      id_hash: hashId(id),
+      ...full
+    });
+  }catch(e){ console.error(e); res.status(500).json({error:"full-failed"}); }
+});
+
+// ---- start ----
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`Horizons proxy server listening at http://localhost:${PORT}`)
-);
+app.listen(PORT, ()=> console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
