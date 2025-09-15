@@ -134,6 +134,37 @@ function composeFull(planets){
 }
 
 // ---- endpoints ----
+
+// geo-longitudes (for KP chart etc.)
+app.get("/geo-longitudes", async (req, res) => {
+  try {
+    const utc = req.query.utc;
+    if (!utc) return res.status(400).json({ error: "utc required" });
+
+    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
+    const geo = await computeGeoLongitudes(utc, ayan);
+
+    let planets = geo.planets;
+    if (Number.isFinite(ayan)) {
+      planets = planets.map(p => ({
+        ...p,
+        longitude: ((p.longitude - ayan) % 360 + 360) % 360
+      }));
+    }
+
+    res.json({
+      utc: geo.utc,
+      center: geo.center,
+      ref_plane: geo.ref_plane,
+      planets
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "geo-failed" });
+  }
+});
+
+// free horoscope preview
 app.get("/horoscope-free", async (req,res)=>{
   try{
     const utc = req.query.utc || toUTC(new Date());
@@ -152,6 +183,7 @@ app.get("/horoscope-free", async (req,res)=>{
   }catch(e){ console.error(e); res.status(500).json({error:"free-failed"}); }
 });
 
+// full horoscope (token secured)
 app.get("/horoscope-full", async (req,res)=>{
   try{
     const utc = req.query.utc || toUTC(new Date());
