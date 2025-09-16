@@ -1,16 +1,19 @@
 /**
- * ==========================================================
- *  Copyright (c) 2025 Sathyadarshana AI Buddhi
- *  All Rights Reserved.
+ * ======================================================================
+ *  © 2025 Sathyadarshana AI Buddhi – Light of Truth Project
+ *  ALL RIGHTS RESERVED – HIGH COPYRIGHT PROTECTION
  *
- *  This software and associated documentation files are
- *  proprietary to Sathyadarshana (Light of Truth).
+ *  This software, algorithms, and documentation are proprietary to
+ *  Sathyadarshana (Light of Truth). Unauthorized reproduction,
+ *  modification, distribution, reverse engineering, or derivative
+ *  works – in whole or in part – are STRICTLY PROHIBITED.
  *
- *  Unauthorized copying, modification, distribution or use
- *  in whole or in part is strictly prohibited.
+ *  This code is protected under International Copyright Law.
+ *  Violators may be subject to civil and criminal penalties.
  *
- *  Contact: sathyadarshana2025@gmail.com
- * ==========================================================
+ *  Authorized use ONLY under direct permission from:
+ *  Email: sathyadarshana2025@gmail.com
+ * ======================================================================
  */
 
 const express = require("express");
@@ -21,7 +24,7 @@ const app = express();
 app.use(express.static("public"));
 app.use(express.json());
 
-// ---- rate limit ----
+// ---------------- Rate Limiting ----------------
 const buckets = new Map();
 function rateLimit(maxPerMinute = 60) {
   return (req, res, next) => {
@@ -45,29 +48,31 @@ function rateLimit(maxPerMinute = 60) {
 }
 app.use(rateLimit(90));
 
-// ---- helpers ----
+// ---------------- Helpers ----------------
 const SECRET = process.env.ASTRO_SECRET || "change-me-super-secret";
-const SIG = [
+const SIGNS = [
   "Aries","Taurus","Gemini","Cancer","Leo","Virgo",
   "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"
 ];
-const pad = n => String(n).padStart(2,"0");
-const toUTC = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
 
-function hashId(id){
+const pad = n => String(n).padStart(2,"0");
+const toUTC = d =>
+  `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+
+function hashId(id) {
   return crypto.createHash("sha256").update(String(id)).digest("hex").slice(0,24);
 }
-function sign(payload){
+function sign(payload) {
   return crypto.createHmac("sha256", SECRET).update(payload).digest("hex");
 }
-function degToSign(deg){
-  const idx = Math.floor(((deg%360)+360)%360 / 30);
-  return SIG[idx];
+function degToSign(deg) {
+  const idx = Math.floor(((deg % 360) + 360) % 360 / 30);
+  return SIGNS[idx];
 }
 
-// ---- stub: planetary longitudes ----
+// ---------------- Stub Planetary Longitudes ----------------
+// Future upgrade: replace with NASA Horizons API
 async function computeGeoLongitudes(utc, ayan) {
-  // Here you can connect NASA Horizons API or static demo data
   return {
     utc,
     center: "Geocentric (500@399)",
@@ -84,7 +89,7 @@ async function computeGeoLongitudes(utc, ayan) {
   };
 }
 
-// ---- text engine (English only) ----
+// ---------------- Horoscope Text Engine ----------------
 function sectionText(planets){
   const get = n => planets.find(p=>p.name===n)?.longitude ?? null;
   const sun=get("Sun"), moon=get("Moon"), mar=get("Mars"), ven=get("Venus"),
@@ -133,11 +138,11 @@ function composeFull(planets){
   return { text, sections: sec, cycles, remedies, words: text.split(/\s+/).length };
 }
 
-// ---- endpoints ----
+// ---------------- Endpoints ----------------
 
-// geo-longitudes (for KP chart etc.)
-app.get("/geo-longitudes", async (req, res) => {
-  try {
+// raw geo longitudes
+app.get("/geo-longitudes", async (req,res)=>{
+  try{
     const utc = req.query.utc;
     if (!utc) return res.status(400).json({ error: "utc required" });
 
@@ -158,13 +163,10 @@ app.get("/geo-longitudes", async (req, res) => {
       ref_plane: geo.ref_plane,
       planets
     });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "geo-failed" });
-  }
+  }catch(e){ console.error(e); res.status(500).json({error:"geo-failed"}); }
 });
 
-// free horoscope preview
+// free preview
 app.get("/horoscope-free", async (req,res)=>{
   try{
     const utc = req.query.utc || toUTC(new Date());
@@ -183,7 +185,7 @@ app.get("/horoscope-free", async (req,res)=>{
   }catch(e){ console.error(e); res.status(500).json({error:"free-failed"}); }
 });
 
-// full horoscope (token secured)
+// full report (requires token)
 app.get("/horoscope-full", async (req,res)=>{
   try{
     const utc = req.query.utc || toUTC(new Date());
@@ -207,6 +209,6 @@ app.get("/horoscope-full", async (req,res)=>{
   }catch(e){ console.error(e); res.status(500).json({error:"full-failed"}); }
 });
 
-// ---- start ----
+// ---------------- Start Server ----------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=> console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
+app.listen(PORT, ()=> console.log(`Server listening at http://localhost:${PORT}`));
