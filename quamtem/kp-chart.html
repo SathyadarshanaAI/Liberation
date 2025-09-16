@@ -1,110 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>KP Chart • Local NASA Proxy</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  :root{--brand:#3451bf}
-  body{margin:0;padding:0;background:linear-gradient(135deg,#f2f5fa 0,#eaf0ff 100%);font-family:system-ui,Segoe UI,Arial,sans-serif}
-  .wrap{max-width:560px;margin:32px auto;background:#fff;border-radius:14px;box-shadow:0 6px 32px #3451bf22;padding:18px}
-  h2{color:var(--brand);margin:8px 0 12px;text-align:center}
-  label{display:block;margin-top:8px;font-weight:600}
-  input,select,button{width:100%;padding:10px 12px;border:1px solid #dbeafe;border-radius:8px;background:#f8fafc;margin-top:6px}
-  button{background:linear-gradient(90deg,#3451bf,#5e7bdf);color:#fff;font-weight:700;border:none;cursor:pointer;margin-top:12px}
-  #wheel{display:flex;justify-content:center;margin-top:16px}
-  table{border-collapse:collapse;margin:14px auto}
-  th,td{border:1px solid #e6edff;padding:6px 10px}
-  th{background:#eff4ff;color:#3451bf}
-  .row{display:flex;gap:8px;align-items:center}
-  .row > *{flex:1}
-</style>
+  <meta charset="UTF-8">
+  <title>KP Chart Generator | Sathyadarshana</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a192f;
+      color: #e2f0ff;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 12px;
+    }
+    h1 {
+      text-align: center;
+      color: #60a5fa;
+      text-shadow: 0 0 6px #2df3c2;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    button {
+      background: #2df3c2;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #60a5fa;
+      color: #fff;
+    }
+    .btn-group {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <h2>KP Astrology Chart<br><small>(NASA Horizons • Local Proxy)</small></h2>
+  <div class="container">
+    <h1>KP Chart Generator</h1>
+    <label>Full Name</label>
+    <input type="text" id="fullName" placeholder="Your Name">
 
-  <div class="row">
-    <label style="flex:2">UTC Date-Time (Z)
-      <input id="utc" value="2025-09-06T12:00:00Z" />
-    </label>
-    <label style="flex:1">Ayan (°) <small style="font-weight:400">(optional)</small>
-      <input id="ayan" placeholder="e.g. 23.86" inputmode="decimal" />
-    </label>
+    <label>Date of Birth</label>
+    <input type="date" id="dob">
+
+    <label>Time of Birth</label>
+    <input type="time" id="tob">
+
+    <label>UTC Offset</label>
+    <input type="text" id="utcOffset" placeholder="+05:30">
+
+    <div class="btn-group">
+      <button id="analyzeBtn">🔎 Preview Horoscope</button>
+      <button id="freePdfBtn">📄 Download Free PDF</button>
+      <button id="lifePdfBtn">💠 Download Full Life Report ($5)</button>
+    </div>
   </div>
 
-  <button id="go">Fetch & Draw</button>
+  <script>
+    <!-- 
+    ==========================================================
+      Copyright (c) 2025 Sathyadarshana AI Buddhi
+      All Rights Reserved.
 
-  <div id="note" style="margin-top:10px;color:#3451bf"></div>
-  <div id="wheel"></div>
-  <div id="table"></div>
-</div>
+      This software and associated documentation files are
+      proprietary to Sathyadarshana (Light of Truth).
 
-<script>
-const PROXY = "http://127.0.0.1:3000"; // your server.js
-const SIGNS = ["Aries (Mesha)","Taurus (Vrushabha)","Gemini (Mithuna)","Cancer (Kataka)","Leo (Simha)","Virgo (Kanya)","Libra (Thula)","Scorpio (Vrischika)","Sagittarius (Dhanu)","Capricorn (Makara)","Aquarius (Kumbha)","Pisces (Meena)"];
+      Unauthorized copying, modification, distribution or use
+      in whole or in part is strictly prohibited.
 
-function norm(d){ d%=360; if(d<0)d+=360; return d; }
+      Contact: sathyadarshana2025@gmail.com
+    ==========================================================
+    -->
+  </script>
 
-async function fetchLongitudes(utc, ayan){
-  let url = `${PROXY}/geo-longitudes?utc=${encodeURIComponent(utc)}`;
-  if (ayan !== "" && !isNaN(parseFloat(ayan))) url += `&ayan=${encodeURIComponent(ayan)}`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
-}
-
-function drawWheel(planets){
-  const w=340,r=135,cx=w/2,cy=w/2;
-  let svg=`<svg width="${w}" height="${w}" viewBox="0 0 ${w} ${w}">`;
-  for(let i=0;i<12;i++){
-    const a1=(i*30-90)*Math.PI/180,a2=((i+1)*30-90)*Math.PI/180;
-    const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1);
-    const x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
-    svg+=`<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z" fill="${i%2?'#e7eaff':'#eef2fc'}" stroke="#cfd8ec"/>`;
-    const tx=cx+(r-28)*Math.cos((a1+a2)/2),ty=cy+(r-28)*Math.sin((a1+a2)/2);
-    svg+=`<text x="${tx}" y="${ty}" fill="#3451bf" font-size="12" font-weight="700" text-anchor="middle" alignment-baseline="middle">${SIGNS[i].split(" ")[0]}</text>`;
-  }
-  for(const p of planets){
-    const a=(p.longitude-90)*Math.PI/180;
-    const px=cx+(r-55)*Math.cos(a),py=cy+(r-55)*Math.sin(a);
-    svg+=`<circle cx="${px}" cy="${py}" r="12" fill="#fff" stroke="#3451bf" stroke-width="2"/>`;
-    svg+=`<text x="${px}" y="${py+4}" fill="#3451bf" font-size="12" font-weight="700" text-anchor="middle">${p.name[0]}</text>`;
-  }
-  svg+=`</svg>`;
-  document.getElementById('wheel').innerHTML = svg;
-}
-
-function drawTable(planets){
-  let html = `<table><tr><th>Planet</th><th>Degree</th><th>Sign</th></tr>`;
-  for(const p of planets){
-    const s = Math.floor(norm(p.longitude)/30);
-    const d = (norm(p.longitude)%30).toFixed(2);
-    html += `<tr><td>${p.name}</td><td>${d}°</td><td>${SIGNS[s]}</td></tr>`;
-  }
-  html += `</table>`;
-  document.getElementById('table').innerHTML = html;
-}
-
-document.getElementById('go').onclick = async ()=>{
-  const utc = document.getElementById('utc').value.trim();
-  const ayan = document.getElementById('ayan').value.trim();
-  const btn = document.getElementById('go'); btn.disabled=true; btn.textContent='Loading…';
-  document.getElementById('note').textContent='';
-  try{
-    const data = await fetchLongitudes(utc, ayan);
-    if(!data.planets || !data.planets.length) throw new Error('No planets returned');
-    drawWheel(data.planets);
-    drawTable(data.planets);
-    document.getElementById('note').textContent = `Center: ${data.center} • Ref: ${data.ref_plane}`;
-  }catch(e){
-    document.getElementById('note').innerHTML = `<span style="color:#c00">Error: ${String(e.message||e)}</span>`;
-    document.getElementById('wheel').innerHTML = '';
-    document.getElementById('table').innerHTML = '';
-  }finally{
-    btn.disabled=false; btn.textContent='Fetch & Draw';
-  }
-};
-</script>
+  <script src="kp-chart.js"></script>
 </body>
 </html>
