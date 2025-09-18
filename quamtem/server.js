@@ -16,199 +16,169 @@
  * ======================================================================
  */
 
-const express = require("express");
-const fetch = require("node-fetch");
-const crypto = require("crypto");
+// ---- Helpers ---------------------------------------------------------------
 
-const app = express();
-app.use(express.static("public"));
-app.use(express.json());
-
-// ---------------- Rate Limiting ----------------
-const buckets = new Map();
-function rateLimit(maxPerMinute = 60) {
-  return (req, res, next) => {
-    const now = Date.now();
-    const ip =
-      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-      req.ip ||
-      req.connection.remoteAddress ||
-      "local";
-    const b = buckets.get(ip) || { count: 0, ts: now };
-    if (now - b.ts > 60_000) {
-      b.count = 0;
-      b.ts = now;
-    }
-    b.count++;
-    buckets.set(ip, b);
-    if (b.count > maxPerMinute)
-      return res.status(429).json({ error: "Too many requests" });
-    next();
-  };
-}
-app.use(rateLimit(90));
-
-// ---------------- Helpers ----------------
-const SECRET = process.env.ASTRO_SECRET || "change-me-super-secret";
-const SIGNS = [
-  "Aries","Taurus","Gemini","Cancer","Leo","Virgo",
-  "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"
-];
-
-const pad = n => String(n).padStart(2,"0");
-const toUTC = d =>
-  `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
-
-function hashId(id) {
-  return crypto.createHash("sha256").update(String(id)).digest("hex").slice(0,24);
-}
-function sign(payload) {
-  return crypto.createHmac("sha256", SECRET).update(payload).digest("hex");
-}
-function degToSign(deg) {
-  const idx = Math.floor(((deg % 360) + 360) % 360 / 30);
-  return SIGNS[idx];
+/** Normalize user-typed UTC offset like "+5 30", "+5.30", "0530" -> "+05:30" */
+function normalizeUtcOffset(raw) {
+  if (!raw) return "";
+  let s = raw.trim().replace(/\u00A0/g, " "); // NBSP -> space
+  // Replace dot or space with colon
+  s = s.replace(/[.\s]/g, ":");
+  // If only digits like +0530 or -1130
+  const mDigits = s.match(/^([+-])?(\d{1,2}):?(\d{2})?$/);
+  if (mDigits) {
+    const sign = mDigits[1] || "+";
+    const hh = String(mDigits[2]).padStart(2, "0");
+    const mm = String(mDigits[3] ?? "00").padStart(2, "0");
+    return `${sign}${hh}:${mm}`;
+  }
+  // If already like +H:MM or +HH:MM
+  const mColon = s.match(/^([+-])?(\d{1,2}):(\d{2})$/);
+  if (mColon) {
+    const sign = mColon[1] || "+";
+    const hh = String(mColon[2]).padStart(2, "0");
+    const mm = mColon[3];
+    return `${sign}${hh}:${mm}`;
+  }
+  return s;
 }
 
-// ---------------- Stub Planetary Longitudes ----------------
-// Future upgrade: replace with NASA Horizons API
-async function computeGeoLongitudes(utc, ayan) {
-  return {
-    utc,
-    center: "Geocentric (500@399)",
-    ref_plane: "ECLIPTIC",
-    planets: [
-      { name:"Sun", longitude:120 },
-      { name:"Moon", longitude:15 },
-      { name:"Mars", longitude:210 },
-      { name:"Mercury", longitude:80 },
-      { name:"Venus", longitude:95 },
-      { name:"Jupiter", longitude:10 },
-      { name:"Saturn", longitude:300 }
-    ]
-  };
+/** Validate offset in range -12:00 .. +14:00 */
+function isValidUtc(offset) {
+  const m = offset.match(/^([+-])(0\d|1[0-4]):([0-5]\d)$/);
+  if (!m) return false;
+  const hh = parseInt(m[2], 10), mm = parseInt(m[3], 10);
+  if (hh === 14 && mm !== 0) return false;
+  return true;
 }
 
-// ---------------- Horoscope Text Engine ----------------
-function sectionText(planets){
-  const get = n => planets.find(p=>p.name===n)?.longitude ?? null;
-  const sun=get("Sun"), moon=get("Moon"), mar=get("Mars"), ven=get("Venus"),
-        mer=get("Mercury"), jup=get("Jupiter"), sat=get("Saturn");
-
-  const health = (sat!=null && Math.abs(sat - sun) % 180 < 5)
-    ? "Vitality steady; joints and bones require attention."
-    : "Energy fluctuates; maintain consistent sleep and balanced diet.";
-
-  const education = (mer!=null && ["Gemini","Virgo"].includes(degToSign(mer)))
-    ? "Quick grasp for languages and analytics; self-study is fruitful."
-    : "Learning benefits from repetition and solid foundations.";
-
-  const love = (ven!=null && ["Taurus","Libra","Pisces"].includes(degToSign(ven)))
-    ? "Affection flows easily; excellent for proposals and harmony."
-    : "Conversations need patience; avoid misunderstandings.";
-
-  const career = (mar!=null && ["Aries","Capricorn","Leo","Scorpio"].includes(degToSign(mar)))
-    ? "Leadership roles and initiative favored. Small goals achieved quickly."
-    : "Progress through cooperation; maintain documentation.";
-
-  const luck = (jup!=null && ["Sagittarius","Pisces","Cancer"].includes(degToSign(jup)))
-    ? "Good fortune through travel, teaching, and spiritual pursuits."
-    : "Moderate but steady luck; careful budgeting advised.";
-
-  return { health, education, love, career, luck };
+function saveLocal(fields) {
+  localStorage.setItem("kpChartForm", JSON.stringify(fields));
+}
+function loadLocal() {
+  try { return JSON.parse(localStorage.getItem("kpChartForm") || "{}"); }
+  catch { return {}; }
 }
 
-function composePreview(planets){
-  const sec = sectionText(planets);
-  const order = ["health","education","love","career","luck"];
-  let text = order.map(k=>sec[k]).join(" ");
-  const words = text.split(/\s+/);
-  if (words.length > 300) text = words.slice(0,300).join(" ") + "...";
-  return { text, words: Math.min(words.length, 300), sections: sec };
+function readForm() {
+  const fullName = document.getElementById("fullName").value.trim();
+  const dob = document.getElementById("dob").value;      // yyyy-mm-dd
+  const tob = document.getElementById("tob").value;      // HH:MM
+  let utcOffset = normalizeUtcOffset(document.getElementById("utcOffset").value);
+
+  // write back normalized text so user sees the fix
+  document.getElementById("utcOffset").value = utcOffset;
+
+  const errors = [];
+  if (!fullName) errors.push("Full Name is required.");
+  if (!dob) errors.push("Date of Birth is required.");
+  if (!tob) errors.push("Time of Birth is required.");
+  if (!isValidUtc(utcOffset)) errors.push("UTC Offset must be like +05:30 and within -12:00..+14:00.");
+
+  return { ok: errors.length === 0, errors, data: { fullName, dob, tob, utcOffset } };
 }
 
-function composeFull(planets){
-  const sec = sectionText(planets);
-  const cycles = "Next 30 days favor steady growth. Productive windows: days 5–8 and 18–21. Avoid impulsive spending near lunar squares.";
-  const remedies = "Remedies: early sunlight 10m daily, walking Tue/Thu, donate grains on Thursdays, keep gratitude journal.";
-  const text = [
-    sec.health, sec.education, sec.love, sec.career, sec.luck,
-    cycles, remedies
-  ].join(" ");
-  return { text, sections: sec, cycles, remedies, words: text.split(/\s+/).length };
+function showPreview({ fullName, dob, tob, utcOffset }) {
+  const msg =
+`KP Input Preview
+
+Name        : ${fullName}
+Birth Date  : ${dob}
+Birth Time  : ${tob}
+UTC Offset  : ${utcOffset}
+
+(Next: plug into NASA/Swiss-Eph/KP calc.)`;
+  alert(msg);
 }
 
-// ---------------- Endpoints ----------------
+// Simple PDF with jsPDF (very light)
+async function makePdf(filename, payload, { watermark } = {}) {
+  const { jsPDF } = window.jspdf || {};
+  if (!jsPDF) { alert("PDF engine not loaded."); return; }
 
-// raw geo longitudes
-app.get("/geo-longitudes", async (req,res)=>{
-  try{
-    const utc = req.query.utc;
-    if (!utc) return res.status(400).json({ error: "utc required" });
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(16);
+  doc.text("Sathyadarshana – KP Horoscope", 40, 60);
+  doc.setFontSize(11);
 
-    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
-    const geo = await computeGeoLongitudes(utc, ayan);
+  let y = 100;
+  for (const line of payload.split("\n")) {
+    doc.text(line, 40, y);
+    y += 18;
+  }
 
-    let planets = geo.planets;
-    if (Number.isFinite(ayan)) {
-      planets = planets.map(p => ({
-        ...p,
-        longitude: ((p.longitude - ayan) % 360 + 360) % 360
-      }));
-    }
+  if (watermark) {
+    doc.setFontSize(60);
+    doc.setTextColor(200, 200, 200);
+    doc.text(watermark, 60, 500, { angle: 30, opacity: 0.25 });
+    doc.setTextColor(0, 0, 0);
+  }
+  doc.save(filename);
+}
 
-    res.json({
-      utc: geo.utc,
-      center: geo.center,
-      ref_plane: geo.ref_plane,
-      planets
-    });
-  }catch(e){ console.error(e); res.status(500).json({error:"geo-failed"}); }
+// ---- Wire up ---------------------------------------------------------------
+
+window.addEventListener("DOMContentLoaded", () => {
+  // Prefill from local storage (nice on mobile)
+  const saved = loadLocal();
+  if (saved.fullName) document.getElementById("fullName").value = saved.fullName;
+  if (saved.dob) document.getElementById("dob").value = saved.dob;
+  if (saved.tob) document.getElementById("tob").value = saved.tob;
+  if (saved.utcOffset) document.getElementById("utcOffset").value = saved.utcOffset;
+
+  // Normalize offset live (space -> colon etc.)
+  const utcEl = document.getElementById("utcOffset");
+  utcEl.addEventListener("blur", () => {
+    utcEl.value = normalizeUtcOffset(utcEl.value);
+  });
+
+  document.getElementById("analyzeBtn").addEventListener("click", () => {
+    const state = readForm();
+    if (!state.ok) return alert(state.errors.join("\n"));
+    saveLocal(state.data);
+    showPreview(state.data);
+  });
+
+  document.getElementById("freePdfBtn").addEventListener("click", async () => {
+    const state = readForm();
+    if (!state.ok) return alert(state.errors.join("\n"));
+    saveLocal(state.data);
+
+    const { fullName, dob, tob, utcOffset } = state.data;
+    const text = [
+      `Name: ${fullName}`,
+      `Birth: ${dob} ${tob} (${utcOffset})`,
+      "",
+      "This is a FREE summary. Detailed KP Sub-Lord, Star-Lord,",
+      "Ruling Planets, Bhava cusps, Vimshottari, and predictions",
+      "will appear in the Full Life Report."
+    ].join("\n");
+    await makePdf(`KP_Free_${fullName || "Report"}.pdf`, text, { watermark: "FREE" });
+  });
+
+  document.getElementById("lifePdfBtn").addEventListener("click", async () => {
+    const state = readForm();
+    if (!state.ok) return alert(state.errors.join("\n"));
+    saveLocal(state.data);
+
+    // TODO: plug real KP calculations here, then build rich PDF
+    const { fullName, dob, tob, utcOffset } = state.data;
+    const text = [
+      `Full Life Report – Input`,
+      `Name: ${fullName}`,
+      `Birth: ${dob} ${tob} (${utcOffset})`,
+      "",
+      "• KP Sub-Lord analysis",
+      "• Nakshatra & Star-Lord",
+      "• Ruling Planets",
+      "• Cuspal Interlinks",
+      "• Vimshottari Dasha timeline",
+      "• Prediction summary",
+      "",
+      "© Sathyadarshana · All rights reserved."
+    ].join("\n");
+
+    await makePdf(`KP_Life_${fullName || "Report"}.pdf`, text);
+  });
 });
-
-// free preview
-app.get("/horoscope-free", async (req,res)=>{
-  try{
-    const utc = req.query.utc || toUTC(new Date());
-    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
-    const id  = req.query.id || "guest";
-
-    const geo = await computeGeoLongitudes(utc, ayan);
-    const pr  = composePreview(geo.planets);
-
-    res.json({
-      kind:"free-preview",
-      utc: geo.utc, center: geo.center, ref_plane: geo.ref_plane,
-      id_hash: hashId(id),
-      ...pr
-    });
-  }catch(e){ console.error(e); res.status(500).json({error:"free-failed"}); }
-});
-
-// full report (requires token)
-app.get("/horoscope-full", async (req,res)=>{
-  try{
-    const utc = req.query.utc || toUTC(new Date());
-    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
-    const id  = req.query.id;
-    const token = req.query.token;
-
-    if (!id || !token) return res.status(401).json({ error:"auth-required" });
-    const expected = sign(`${id}:${utc}`);
-    if (token !== expected) return res.status(403).json({ error:"invalid-token" });
-
-    const geo = await computeGeoLongitudes(utc, ayan);
-    const full = composeFull(geo.planets);
-
-    res.json({
-      kind:"full-report",
-      utc: geo.utc, center: geo.center, ref_plane: geo.ref_plane,
-      id_hash: hashId(id),
-      ...full
-    });
-  }catch(e){ console.error(e); res.status(500).json({error:"full-failed"}); }
-});
-
-// ---------------- Start Server ----------------
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=> console.log(`Server listening at http://localhost:${PORT}`));
