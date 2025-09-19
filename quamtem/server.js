@@ -1,134 +1,97 @@
-/**
- * ======================================================================
- *  © 2025 Sathyadarshana AI Buddhi – Light of Truth Project
- *  ALL RIGHTS RESERVED – HIGH COPYRIGHT PROTECTION
- *  Unauthorized reproduction, modification, distribution, or reverse
- *  engineering is strictly prohibited.
- * ======================================================================
- */
-// saver.js  — KP Wheel (Demo) + Simple Express Server
-// -----------------------------------------------
-// Run:  node saver.js
-// Open: http://127.0.0.1:3000/  (Home page)
-//       http://127.0.0.1:3000/wheel-svg  (SVG output)
+// server.js — KP Demo + Graha plotting (SVG)
+const express = require('express');
+const path = require('path');
 
-const express = require("express");
-const path = require("path");
-
-const app  = express();
+const app = express();
 const PORT = 3000;
-const HOST = "127.0.0.1";
 
-// Serve current folder (optional: if you keep index.html, images, etc.)
+// Serve current folder (so /index.html, etc. work)
 app.use(express.static(path.join(__dirname)));
 
-// --------------------------------------------------
-// Helpers to draw a simple 12-house KP wheel in SVG
-// --------------------------------------------------
-const SIGNS = [
-  "Aries","Taurus","Gemini","Cancer","Leo","Virgo",
-  "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"
-];
-
-function degToXY(cx, cy, r, deg) {
-  const rad = (Math.PI / 180) * deg;
+// --- Helpers -------------------------------------------------
+const degToXY = (cx, cy, r, deg) => {
+  const rad = (Math.PI / 180) * (deg - 90); // 0° at top, clockwise
   return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
-}
+};
 
-/**
- * generateWheelSVG:
- *  - 12 houses (each 30°)
- *  - outer + inner circle
- *  - house radial lines
- *  - sign labels in the middle ring
- *  - center title
- */
-function generateWheelSVG({
-  width = 400, height = 400,
-  cx = 200, cy = 200,
-  rOuter = 180, rInner = 110,
-  title = "KP Wheel (Demo)"
-} = {}) {
+// --- Routes --------------------------------------------------
 
-  // Radial house lines (every 30°)
-  let lines = "";
+// Root page (link to the SVG)
+app.get('/', (req, res) => {
+  res.type('html').send(`<!doctype html>
+  <html><body style="font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height:1.4">
+    <h1>KP Demo (SVG)</h1>
+    <p><a href="/wheel-svg">Open Wheel SVG</a></p>
+    <p>Tip: Use <code>/wheel-svg?demo=1</code> for sample graha positions.</p>
+  </body></html>`);
+});
+
+// Simple “wheel” with optional graha plotting
+app.get('/wheel-svg', (req, res) => {
+  const W = 600, H = 600, CX = 300, CY = 300;
+  const R_OUT = 260;
+  const R_IN  = 210;    // house-label radius
+  const R_P   = 230;    // planet plot radius
+
+  // 12 house lines + labels
+  let lines = '';
+  let houseLabels = '';
   for (let i = 0; i < 12; i++) {
-    const deg = i * 30 - 90; // start at top
-    const [x1, y1] = degToXY(cx, cy, rInner, deg);
-    const [x2, y2] = degToXY(cx, cy, rOuter, deg);
-    lines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#222" stroke-width="1"/>`;
+    const d  = i * 30;
+    const [x1, y1] = degToXY(CX, CY, 60, d);         // small inner tick start
+    const [x2, y2] = degToXY(CX, CY, R_OUT, d);      // outer circle
+    lines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#777" stroke-width="1"/>`;
+  }
+  for (let i = 0; i < 12; i++) {
+    const mid = i * 30 + 15; // middle of the house
+    const [lx, ly] = degToXY(CX, CY, R_IN, mid);
+    houseLabels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#666">${i+1}</text>`;
   }
 
-  // Sign labels (mid ring between rInner & rOuter)
-  const rMid = (rInner + rOuter) / 2;
-  let labels = "";
-  for (let i = 0; i < 12; i++) {
-    // place label in the middle of each 30° sector
-    const midDeg = (i * 30 + 15) - 90;
-    const [lx, ly] = degToXY(cx, cy, rMid, midDeg);
-    const sign = SIGNS[i];
-    labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="11" text-anchor="middle" dominant-baseline="middle">${sign}</text>`;
+  // --- Demo graha data (you can replace with real angles later) ---
+  // degrees are 0° at Aries cusp (top) and increase clockwise.
+  const useDemo = 'demo' in req.query || true; // keep demo on by default for now
+  const graha = useDemo ? [
+    { name: "Sun (සූර්ය)",    deg:  95 },
+    { name: "Moon (චන්ද්‍ර)",  deg: 212 },
+    { name: "Mars (කුජ)",     deg:  12 },
+    { name: "Mercury (බුධ)",  deg: 178 },
+    { name: "Jupiter (ගුරු)", deg: 332 },
+    { name: "Venus (ශුක්‍ර)",  deg: 256 },
+    { name: "Saturn (ශනි)",   deg:  45 },
+    { name: "Rahu (රාහු)",    deg: 120 },
+    { name: "Ketu (කේතු)",    deg: 300 },
+  ] : [];
+
+  let planets = '';
+  for (const p of graha) {
+    const [px, py] = degToXY(CX, CY, R_P, p.deg);
+    const [tx, ty] = degToXY(CX, CY, R_P + 18, p.deg);
+    planets += `
+      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4" fill="black"/>
+      <text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="12">${p.name}</text>
+    `;
   }
 
-  // Outer & inner circles
-  const circles = `
-    <circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="#000" stroke-width="2"/>
-    <circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="#000" stroke-width="1"/>
-  `;
-
-  // Title at center
-  const centerTitle = `<text x="${cx}" y="${cy}" font-size="12" text-anchor="middle" dominant-baseline="middle">${title}</text>`;
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-  <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+  <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
     <rect width="100%" height="100%" fill="white"/>
-    ${circles}
+    <!-- Outer + inner circles -->
+    <circle cx="${CX}" cy="${CY}" r="${R_OUT}" fill="none" stroke="black" stroke-width="2"/>
+    <circle cx="${CX}" cy="${CY}" r="60" fill="none" stroke="#999" stroke-width="1"/>
+    <!-- House lines & labels -->
     ${lines}
-    ${labels}
-    ${centerTitle}
+    ${houseLabels}
+    <!-- Title -->
+    <text x="${CX}" y="${CY}" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="#333">KP Wheel (Demo)</text>
+    <!-- Graha -->
+    ${planets}
   </svg>`;
-}
 
-// -----------------------
-// Routes
-// -----------------------
-
-// Home page with link to SVG
-app.get("/", (req, res) => {
-  res.set("Content-Type", "text/html; charset=utf-8");
-  res.send(`<!doctype html>
-  <html>
-    <head>
-      <meta charset="utf-8"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1"/>
-      <title>KP Demo</title>
-      <style>
-        body{font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding:20px}
-        a.btn{display:inline-block; padding:10px 14px; border:1px solid #222; border-radius:8px; text-decoration:none}
-      </style>
-    </head>
-    <body>
-      <h1>KP Demo</h1>
-      <p><a class="btn" href="/wheel-svg">Open Wheel SVG</a></p>
-      <p>Tip: <code>/wheel-svg?title=My%20Chart</code> වගේ query param එකකින් මැද title එක වෙනස් කරගන්න පුළුවන්.</p>
-    </body>
-  </html>`);
+  res.set('Content-Type', 'image/svg+xml; charset=utf-8').send(svg);
 });
 
-// SVG output (supports ?title=…)
-app.get("/wheel-svg", (req, res) => {
-  const title = typeof req.query.title === "string" && req.query.title.trim()
-    ? req.query.title.trim()
-    : "KP Wheel (Demo)";
-
-  const svg = generateWheelSVG({ title });
-  res.set("Content-Type", "image/svg+xml; charset=utf-8");
-  res.send(svg);
-});
-
-// -----------------------
-// Start server
-// -----------------------
-app.listen(PORT, HOST, () => {
-  console.log(`✅ Server running on http://${HOST}:${PORT}`);
+// -------------------------------------------------------------
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://127.0.0.1:${PORT}`);
 });
