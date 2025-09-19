@@ -65,4 +65,239 @@
           </select>
         </div>
       </div>
-      <div style="display
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+        <div style="flex:1;min-width:110px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="showSubLords" checked style="margin-right:6px;"/>
+          <label for="showSubLords" style="cursor:pointer;">Show Sub Lords</label>
+        </div>
+        <div style="flex:1;min-width:110px;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="showCuspDegrees" checked style="margin-right:6px;"/>
+          <label for="showCuspDegrees" style="cursor:pointer;">Show House Cusps</label>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:0.98em;color:#888;">(KP options are for UI only. Real KP calculations require astrology backend.)</div>
+    </div>
+    <!-- Form -->
+    <form id="form" autocomplete="off">
+      <label>Name</label>
+      <input id="name" required placeholder="Your name"/>
+      <label>Date of Birth</label>
+      <input id="date" type="date" required/>
+      <label>Time of Birth</label>
+      <input id="time" type="time" required value="12:00"/>
+      <label>Latitude</label>
+      <input id="lat" required placeholder="e.g. 6.9271" step="any" inputmode="decimal"/>
+      <label>Longitude</label>
+      <input id="lon" required placeholder="e.g. 79.8612" step="any" inputmode="decimal"/>
+      <label>Place</label>
+      <div id="placeGroup">
+        <input id="place" autocomplete="off" placeholder="e.g. Colombo, Sri Lanka" style="flex:1"/>
+        <button type="button" id="geocodeBtn">Find</button>
+      </div>
+      <div id="placeResult" style="font-size:0.98em;color:#3451bf;margin-top:3px;"></div>
+      <button id="drawBtn" type="submit">Draw KP Chart</button>
+    </form>
+    <div id="wheelBox"></div>
+    <div id="analysis"></div>
+    <div class="footer">sathyadarshana astrology</div>
+  </div>
+  <script>
+    // Place "Find" functionality
+    async function geocodePlace(q){
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+      const res = await fetch(url).then(r=>r.json());
+      if(!res.length) return null;
+      return { lat:+res[0].lat, lon:+res[0].lon, label:res[0].display_name };
+    }
+    document.getElementById('geocodeBtn').onclick = async function(){
+      const place = document.getElementById('place').value.trim();
+      if(!place){ alert("Enter place name."); return; }
+      const geo = await geocodePlace(place);
+      const placeResult = document.getElementById('placeResult');
+      if(!geo){
+        placeResult.innerHTML = "<span style='color:#c00;'>Place not found. Try a more specific name.</span>";
+        return;
+      }
+      document.getElementById('lat').value = geo.lat;
+      document.getElementById('lon').value = geo.lon;
+      placeResult.innerHTML = `<span>📍 <b>${geo.label}</b> <span style="color:#333;">(${geo.lat}, ${geo.lon})</span></span>`;
+    };
+
+    // NASA Horizons planet codes (Sun, Mercury, Venus, Moon, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto)
+    const planetCodes = [
+      {name:"Sun", code:"10"},
+      {name:"Mercury", code:"199"},
+      {name:"Venus", code:"299"},
+      {name:"Moon", code:"301"},
+      {name:"Mars", code:"499"},
+      {name:"Jupiter", code:"599"},
+      {name:"Saturn", code:"699"},
+      {name:"Uranus", code:"799"},
+      {name:"Neptune", code:"899"},
+      {name:"Pluto", code:"999"}
+    ];
+    const signs = ["Aries (Mesha)", "Taurus (Vrushabha)", "Gemini (Mithuna)", "Cancer (Kataka)", "Leo (Simha)", "Virgo (Kanya)", "Libra (Thula)", "Scorpio (Vrischika)", "Sagittarius (Dhanu)", "Capricorn (Makara)", "Aquarius (Kumbha)", "Pisces (Meena)"];
+
+    async function getPlanetsFromHorizons(date, time, lat, lon) {
+      const dt = `${date}T${time}:00`;
+      const codes = planetCodes.map(p=>p.code).join(",");
+      const url = `https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND='${codes}'&OBJ_DATA=NO&MAKE_EPHEM=YES&TABLE_TYPE=OBSERVER&START_TIME='${dt}'&STOP_TIME='${dt}'&STEP_SIZE='1 m'&QUANTITIES='1'&SITE_COORD='${lat},${lon},0'`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if(!json.result) return null;
+      const lines = json.result.split('\n');
+      const planets = [];
+      for(let p of planetCodes){
+        const planetIdx = lines.findIndex(line=>line.includes(`Target body name: ${p.name}`));
+        if(planetIdx < 0) continue;
+        let dataLine = null;
+        for(let i=planetIdx; i<lines.length; ++i){
+          if(lines[i].includes('$$SOE')){
+            dataLine = lines[i+1];
+            break;
+          }
+        }
+        if(!dataLine) continue;
+        const parts = dataLine.trim().split(/\s+/);
+        const ra = parseFloat(parts[3]);
+        planets.push({
+          name: p.name,
+          longitude: ra
+        });
+      }
+      return planets;
+    }
+
+    function drawKPWheelChart(planets) {
+      const wheel = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      wheel.setAttribute("width", 340);
+      wheel.setAttribute("height", 340);
+      const cx = 170, cy = 170, rOuter = 150, rInner = 70;
+      const houseColors = [
+          "#f8faff", "#dbeafe", "#e0e7ff", "#f3f8fd", "#fefce8", "#f1f5f9",
+          "#fdf2fa", "#f1f5f9", "#fff7ed", "#ecfdf5", "#fff1f2", "#f3f4f6"
+      ];
+      for(let i=0; i<12; ++i){
+        const a1 = (i/12)*2*Math.PI - Math.PI/2;
+        const a2 = ((i+1)/12)*2*Math.PI - Math.PI/2;
+        const x1 = cx + rOuter*Math.cos(a1), y1 = cy + rOuter*Math.sin(a1);
+        const x2 = cx + rOuter*Math.cos(a2), y2 = cy + rOuter*Math.sin(a2);
+        const x3 = cx + rInner*Math.cos(a2), y3 = cy + rInner*Math.sin(a2);
+        const x4 = cx + rInner*Math.cos(a1), y4 = cy + rInner*Math.sin(a1);
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d",
+            `M${x1},${y1} A${rOuter},${rOuter} 0 0,1 ${x2},${y2} `+
+            `L${x3},${y3} A${rInner},${rInner} 0 0,0 ${x4},${y4} Z`
+        );
+        path.setAttribute("fill", houseColors[i]);
+        path.setAttribute("stroke", "#bbb");
+        path.setAttribute("stroke-width", 1);
+        wheel.appendChild(path);
+      }
+      for(let i=0; i<12; ++i){
+        let a = (i/12)*2*Math.PI - Math.PI/2 + Math.PI/12;
+        let tx = cx + (rInner+45)*Math.cos(a), ty = cy + (rInner+45)*Math.sin(a)+7;
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("x", tx);
+        label.setAttribute("y", ty);
+        label.setAttribute("class", "kp-house-label");
+        label.setAttribute("text-anchor", "middle");
+        label.textContent = (i+1);
+        wheel.appendChild(label);
+      }
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
+      circle.setAttribute("r", rOuter); circle.setAttribute("fill", "none");
+      circle.setAttribute("stroke", "#3451bf"); circle.setAttribute("stroke-width", 2);
+      wheel.appendChild(circle);
+      const inner = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      inner.setAttribute("cx", cx); inner.setAttribute("cy", cy); inner.setAttribute("r", rInner);
+      inner.setAttribute("fill", "#fff"); inner.setAttribute("stroke", "#bbb"); inner.setAttribute("stroke-width", 1.4);
+      wheel.appendChild(inner);
+      const planetSymbols = {
+          Sun: "☉", Moon: "☽", Mercury: "☿", Venus: "♀", Mars: "♂",
+          Jupiter: "♃", Saturn: "♄", Uranus: "♅", Neptune: "♆", Pluto: "♇"
+      };
+      if (planets && planets.length) {
+        planets.forEach((pl, i)=>{
+          let angle = (pl.longitude/360)*2*Math.PI - Math.PI/2;
+          let px = cx + 100*Math.cos(angle), py = cy + 100*Math.sin(angle);
+          const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          dot.setAttribute("cx", px); dot.setAttribute("cy", py);
+          dot.setAttribute("r", 13); dot.setAttribute("fill", "#fff7c2");
+          dot.setAttribute("stroke", "#ad8500"); dot.setAttribute("stroke-width", 1.6);
+          g.appendChild(dot);
+          const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          t.setAttribute("x", px); t.setAttribute("y", py+7);
+          t.setAttribute("class", "kp-planet");
+          t.setAttribute("text-anchor", "middle");
+          t.textContent = planetSymbols[pl.name] || pl.name[0];
+          g.appendChild(t);
+          const lbl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          lbl.setAttribute("x", px); lbl.setAttribute("y", py+25);
+          lbl.setAttribute("text-anchor", "middle");
+          lbl.setAttribute("font-size", "11px");
+          lbl.setAttribute("fill", "#222");
+          lbl.textContent = pl.name;
+          g.appendChild(lbl);
+          wheel.appendChild(g);
+        });
+      }
+      document.getElementById('wheelBox').innerHTML = '';
+      document.getElementById('wheelBox').appendChild(wheel);
+    }
+
+    function getPlanetAnalysis(formData, planets) {
+      let txt = `<b>${formData.name || 'User'}'s KP Chart Analysis (NASA Horizons):</b><br><br>`;
+      if (!planets) {
+        txt += "Planetary data unavailable. Please try again.";
+        return txt;
+      }
+      txt += `<b>Main Planetary Positions at Birth:</b><br>`;
+      txt += '<table style="border-collapse:collapse;margin:7px 0;"><tr><th style="border:1px solid #dbeafe;padding:3px 7px;">Planet</th><th style="border:1px solid #dbeafe;padding:3px 7px;">Degree</th><th style="border:1px solid #dbeafe;padding:3px 7px;">Sign</th></tr>';
+      planets.forEach(pl => {
+        const signNum = Math.floor(pl.longitude / 30) % 12;
+        txt += `<tr>
+            <td style="border:1px solid #dbeafe;padding:3px 7px;">${pl.name}</td>
+            <td style="border:1px solid #dbeafe;padding:3px 7px;">${pl.longitude.toFixed(2)}°</td>
+            <td style="border:1px solid #dbeafe;padding:3px 7px;">${signs[signNum]}</td>
+          </tr>`;
+      });
+      txt += '</table>';
+      txt += `<br><i>Note: Positions are astronomical (NASA Horizons, RA used as ecliptic longitude for demo). KP/Vedic options are UI only.</i>`;
+      return txt;
+    }
+
+    document.getElementById('form').onsubmit = async function(e){
+      e.preventDefault();
+      const formData = {
+        name: document.getElementById('name').value.trim(),
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value,
+        lat: document.getElementById('lat').value,
+        lon: document.getElementById('lon').value,
+        place: document.getElementById('place').value.trim(),
+        chartType: document.getElementById('chartType').value,
+        ayanamsa: document.getElementById('ayanamsa').value,
+        houseSystem: document.getElementById('houseSystem').value,
+        showSubLords: document.getElementById('showSubLords').checked,
+        showCuspDegrees: document.getElementById('showCuspDegrees').checked,
+      };
+      if(!(formData.name && formData.date && formData.time && formData.lat && formData.lon)){
+        alert('Please fill all required fields.');
+        return;
+      }
+      document.getElementById('analysis').innerHTML = "Calculating real planetary positions from NASA Horizons...";
+      let planets = await getPlanetsFromHorizons(formData.date, formData.time, formData.lat, formData.lon);
+      if(!planets || !planets.length){
+        alert("Could not fetch planetary positions from NASA Horizons. Please check your details or try again later.");
+        document.getElementById('analysis').innerHTML = "Error: Could not fetch planetary positions.";
+        return;
+      }
+      drawKPWheelChart(planets);
+      document.getElementById('analysis').innerHTML = getPlanetAnalysis(formData, planets);
+    };
+  </script>
+</body>
+</html>
