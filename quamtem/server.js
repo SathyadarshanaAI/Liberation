@@ -6,105 +6,129 @@
  *  engineering is strictly prohibited.
  * ======================================================================
  */
+// saver.js  — KP Wheel (Demo) + Simple Express Server
+// -----------------------------------------------
+// Run:  node saver.js
+// Open: http://127.0.0.1:3000/  (Home page)
+//       http://127.0.0.1:3000/wheel-svg  (SVG output)
 
-const express = require('express');
-const fetch = require('node-fetch');
-const path = require('path');
-const fs = require('fs');
+const express = require("express");
+const path = require("path");
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const app  = express();
+const PORT = 3000;
+const HOST = "127.0.0.1";
 
-// ---------------- Middleware ----------------
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // html, js, css
+// Serve current folder (optional: if you keep index.html, images, etc.)
+app.use(express.static(path.join(__dirname)));
 
-// ---------------- Geocode API ----------------
-app.get('/api/geocode', async (req, res) => {
-  try {
-    const q = req.query.q;
-    if (!q) return res.json({ ok: false, error: "Missing query" });
+// --------------------------------------------------
+// Helpers to draw a simple 12-house KP wheel in SVG
+// --------------------------------------------------
+const SIGNS = [
+  "Aries","Taurus","Gemini","Cancer","Leo","Virgo",
+  "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"
+];
 
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`;
-    const r = await fetch(url, { headers: { "User-Agent": "SathyadarshanaKP/1.0" } });
-    const j = await r.json();
+function degToXY(cx, cy, r, deg) {
+  const rad = (Math.PI / 180) * deg;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
 
-    const results = j.map(p => ({
-      name: p.display_name,
-      lat: parseFloat(p.lat),
-      lon: parseFloat(p.lon)
-    }));
+/**
+ * generateWheelSVG:
+ *  - 12 houses (each 30°)
+ *  - outer + inner circle
+ *  - house radial lines
+ *  - sign labels in the middle ring
+ *  - center title
+ */
+function generateWheelSVG({
+  width = 400, height = 400,
+  cx = 200, cy = 200,
+  rOuter = 180, rInner = 110,
+  title = "KP Wheel (Demo)"
+} = {}) {
 
-    res.json({ ok: true, results });
-  } catch (e) {
-    res.json({ ok: false, error: e.message });
+  // Radial house lines (every 30°)
+  let lines = "";
+  for (let i = 0; i < 12; i++) {
+    const deg = i * 30 - 90; // start at top
+    const [x1, y1] = degToXY(cx, cy, rInner, deg);
+    const [x2, y2] = degToXY(cx, cy, rOuter, deg);
+    lines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#222" stroke-width="1"/>`;
   }
-});
 
-// ---------------- Timezone API ----------------
-app.get('/api/timezone', async (req, res) => {
-  try {
-    const { lat, lon, ts } = req.query;
-    if (!lat || !lon) return res.json({ ok: false, error: "Missing lat/lon" });
-
-    // Open-Meteo Timezone API
-    const url = `https://api.open-meteo.com/v1/timezone?latitude=${lat}&longitude=${lon}&timestamp=${ts || Math.floor(Date.now()/1000)}`;
-    const r = await fetch(url);
-    const j = await r.json();
-
-    if (!j.utc_offset_seconds) throw new Error("No timezone data");
-
-    res.json({
-      ok: true,
-      tzid: j.timezone,
-      offsetSec: j.utc_offset_seconds
-    });
-  } catch (e) {
-    res.json({ ok: false, error: e.message });
+  // Sign labels (mid ring between rInner & rOuter)
+  const rMid = (rInner + rOuter) / 2;
+  let labels = "";
+  for (let i = 0; i < 12; i++) {
+    // place label in the middle of each 30° sector
+    const midDeg = (i * 30 + 15) - 90;
+    const [lx, ly] = degToXY(cx, cy, rMid, midDeg);
+    const sign = SIGNS[i];
+    labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-size="11" text-anchor="middle" dominant-baseline="middle">${sign}</text>`;
   }
-});
 
-// ---------------- Save Report (DB) ----------------
-const DB_FILE = path.join(__dirname, 'reports.json');
-
-app.post('/api/saveReport', (req, res) => {
-  try {
-    const data = req.body;
-    if (!data.reportId) return res.json({ ok: false, error: "Missing reportId" });
-
-    let db = [];
-    if (fs.existsSync(DB_FILE)) {
-      db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    }
-    db.push({ ...data, savedAt: new Date().toISOString() });
-
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
-
-    res.json({ ok: true, message: "Report saved" });
-  } catch (e) {
-    res.json({ ok: false, error: e.message });
-  }
-});
-
-// ---------------- Wheel SVG (Demo) ----------------
-app.get('/wheel-svg', (req, res) => {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-      <circle cx="200" cy="200" r="180" fill="none" stroke="black" stroke-width="2"/>
-      ${Array.from({length: 12}).map((_,i)=>{
-        const angle = (i/12)*2*Math.PI;
-        const x = 200 + 180 * Math.cos(angle);
-        const y = 200 + 180 * Math.sin(angle);
-        return `<line x1="200" y1="200" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="black"/>`;
-      }).join("\n")}
-      <text x="180" y="20" font-size="14">KP Wheel (Demo)</text>
-    </svg>
+  // Outer & inner circles
+  const circles = `
+    <circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="none" stroke="#000" stroke-width="2"/>
+    <circle cx="${cx}" cy="${cy}" r="${rInner}" fill="none" stroke="#000" stroke-width="1"/>
   `;
-  res.setHeader('Content-Type', 'image/svg+xml');
+
+  // Title at center
+  const centerTitle = `<text x="${cx}" y="${cy}" font-size="12" text-anchor="middle" dominant-baseline="middle">${title}</text>`;
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+  <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+    <rect width="100%" height="100%" fill="white"/>
+    ${circles}
+    ${lines}
+    ${labels}
+    ${centerTitle}
+  </svg>`;
+}
+
+// -----------------------
+// Routes
+// -----------------------
+
+// Home page with link to SVG
+app.get("/", (req, res) => {
+  res.set("Content-Type", "text/html; charset=utf-8");
+  res.send(`<!doctype html>
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <title>KP Demo</title>
+      <style>
+        body{font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding:20px}
+        a.btn{display:inline-block; padding:10px 14px; border:1px solid #222; border-radius:8px; text-decoration:none}
+      </style>
+    </head>
+    <body>
+      <h1>KP Demo</h1>
+      <p><a class="btn" href="/wheel-svg">Open Wheel SVG</a></p>
+      <p>Tip: <code>/wheel-svg?title=My%20Chart</code> වගේ query param එකකින් මැද title එක වෙනස් කරගන්න පුළුවන්.</p>
+    </body>
+  </html>`);
+});
+
+// SVG output (supports ?title=…)
+app.get("/wheel-svg", (req, res) => {
+  const title = typeof req.query.title === "string" && req.query.title.trim()
+    ? req.query.title.trim()
+    : "KP Wheel (Demo)";
+
+  const svg = generateWheelSVG({ title });
+  res.set("Content-Type", "image/svg+xml; charset=utf-8");
   res.send(svg);
 });
 
-// ---------------- Start ----------------
-app.listen(PORT, () => {
-  console.log(`Server running on http://127.0.0.1:${PORT}`);
+// -----------------------
+// Start server
+// -----------------------
+app.listen(PORT, HOST, () => {
+  console.log(`✅ Server running on http://${HOST}:${PORT}`);
 });
