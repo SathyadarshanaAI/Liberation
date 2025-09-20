@@ -1,231 +1,212 @@
-/*!
- * KP Astrology Mini Server (Termux-Friendly)
- * -------------------------------------------
- * Proxy + API + SVG Wheel for real planetary positions (NASA Horizons).
- * © 2025 Sathyadarshana Astrology. All Rights Reserved.
+/**
+ * ==========================================================
+ *  Copyright (c) 2025 Sathyadarshana AI Buddhi
+ *  All Rights Reserved.
  *
- * Permission to use for personal/non-commercial purposes is granted.
- * Reproduction or distribution of the source, in whole or part,
- * requires explicit written consent from the copyright holder.
+ *  This software and associated documentation files are
+ *  proprietary to Sathyadarshana (Light of Truth).
+ *
+ *  Unauthorized copying, modification, distribution or use
+ *  in whole or in part is strictly prohibited.
+ *
+ *  Contact: sathyadarshana2025@gmail.com
+ * ==========================================================
  */
 
-////////////////////  Imports & Setup  ////////////////////
-const express = require('express');
-const path = require('path');
+const express = require("express");
+const fetch = require("node-fetch");
+const crypto = require("crypto");
 
-// Node 18+ has global fetch. Fallback for older Node.
-const _fetch = typeof fetch === 'function'
-  ? fetch
-  : (...a) => import('node-fetch').then(({ default: f }) => f(...a));
+const app = express();
+app.use(express.static("public"));
+app.use(express.json());
 
-const app  = express();
-const PORT = 3000;
+// ---- rate limit ----
+const buckets = new Map();
+function rateLimit(maxPerMinute = 60) {
+  return (req, res, next) => {
+    const now = Date.now();
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.ip ||
+      req.connection.remoteAddress ||
+      "local";
+    const b = buckets.get(ip) || { count: 0, ts: now };
+    if (now - b.ts > 60_000) {
+      b.count = 0;
+      b.ts = now;
+    }
+    b.count++;
+    buckets.set(ip, b);
+    if (b.count > maxPerMinute)
+      return res.status(429).json({ error: "Too many requests" });
+    next();
+  };
+}
+app.use(rateLimit(90));
 
-////////////////////  Basic Middleware  ///////////////////
-// CORS: allow browser UIs to call our API locally.
-app.use((req, res, next) => {
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-  next();
-});
-
-// Static files: serve ./public (kp-chart.html lives here)
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
-
-// Convenience route: /kp -> kp-chart.html
-app.get('/kp', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'kp-chart.html'));
-});
-
-////////////////////  Math / Astro Helpers  //////////////////
-const degToXY = (cx, cy, r, deg) => {
-  const rad = (Math.PI / 180) * (deg - 90); // 0° at top, clockwise
-  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
-};
-const parseRAtoDeg = (raStr) => {
-  const p = raStr.trim().replace(/:/g, ' ').split(/\s+/).map(Number);
-  const H = p[0] || 0, M = p[1] || 0, S = p[2] || 0;
-  return (H + M / 60 + S / 3600) * 15;
-};
-const parseDecToDeg = (decStr) => {
-  const t = decStr.trim().replace(/:/g, ' ').split(/\s+/);
-  if (t.length === 1 && !isNaN(parseFloat(t[0]))) return parseFloat(t[0]);
-  const neg = t[0].startsWith('-');
-  const d = Math.abs(parseFloat(t[0])) || 0, m = parseFloat(t[1]) || 0, s = parseFloat(t[2]) || 0;
-  const v = d + m / 60 + s / 3600;
-  return neg ? -v : v;
-};
-const eqToEclLon = (raDeg, decDeg) => {
-  const eps = 23.4392911 * Math.PI / 180; // J2000 mean obliquity
-  const ra  = raDeg  * Math.PI / 180;
-  const dec = decDeg * Math.PI / 180;
-  const sinL = Math.sin(ra) * Math.cos(eps) + Math.tan(dec) * Math.sin(eps);
-  const cosL = Math.cos(ra);
-  let lam = Math.atan2(sinL, cosL) * 180 / Math.PI;
-  if (lam < 0) lam += 360;
-  return lam;
-};
-
-////////////////////  NASA Horizons Proxy  //////////////////
-// Raw proxy → avoids browser CORS when you call from pages.
-app.get('/horizons', async (req, res) => {
-  const qs  = new URLSearchParams(req.query).toString();
-  const url = `https://ssd.jpl.nasa.gov/api/horizons.api?${qs}`;
-  try {
-    const r = await _fetch(url);
-    const text = await r.text(); // NASA sometimes wraps JSON in text
-    res.set('Access-Control-Allow-Origin', '*');
-    res.type('text/plain').send(text);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-////////////////////  /api/graha — Real Planets  //////////////////
-const PLANETS = [
-  { name: 'Sun', code: '10' },     { name: 'Mercury', code: '199' },
-  { name: 'Venus', code: '299' },  { name: 'Moon', code: '301' },
-  { name: 'Mars', code: '499' },   { name: 'Jupiter', code: '599' },
-  { name: 'Saturn', code: '699' }, { name: 'Uranus', code: '799' },
-  { name: 'Neptune', code: '899' },{ name: 'Pluto', code: '999' },
+// ---- helpers ----
+const SECRET = process.env.ASTRO_SECRET || "change-me-super-secret";
+const SIG = [
+  "Aries","Taurus","Gemini","Cancer","Leo","Virgo",
+  "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"
 ];
+const pad = n => String(n).padStart(2,"0");
+const toUTC = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
 
-// tiny cache to keep API fast while testing
-const cache = new Map();
-const keyOf  = (dt, lat, lon, code) => `${dt}|${lat}|${lon}|${code}`;
-
-async function fetchOnePlanet(dtISO, lat, lon, code, name) {
-  const key = keyOf(dtISO, lat, lon, code);
-  if (cache.has(key)) return cache.get(key);
-
-  // NOTE: SITE_COORD must be lon,lat,km
-  const url = `https://ssd.jpl.nasa.gov/api/horizons.api`
-    + `?format=json&MAKE_EPHEM=YES&TABLE_TYPE=OBSERVER&QUANTITIES='1'`
-    + `&START_TIME='${dtISO}'&STOP_TIME='${dtISO}'&STEP_SIZE='1 m'`
-    + `&SITE_COORD='${lon},${lat},0'&COMMAND='${code}'`;
-
-  const r = await _fetch(url);
-  const j = await r.json();
-  const text = j.result || '';
-
-  const lines = text.split(/\r?\n/);
-  const iS = lines.findIndex(l => l.includes('$$SOE'));
-  const iE = lines.findIndex((l, i) => i > iS && l.includes('$$EOE'));
-  if (iS < 0 || iE < 0) return null;
-
-  const row = lines.slice(iS + 1, iE).find(l => /\S/.test(l)) || '';
-  const raMatch  = row.match(/\b(\d{1,2}[:\s]\d{1,2}[:\s]\d{1,2}(\.\d+)?)\b/);
-  const decMatch = row.match(/[+\-]?\d{1,2}(?::|\s)\d{1,2}(?::|\s)\d{1,2}(\.\d+)?|[+\-]?\d+\.\d+/g);
-  if (!raMatch || !decMatch) return null;
-
-  const raDeg  = parseRAtoDeg(raMatch[1]);
-  const decDeg = parseDecToDeg(decMatch[0]);
-  const eclLon = eqToEclLon(raDeg, decDeg);
-
-  const val = { name, longitude: eclLon };
-  cache.set(key, val);
-  return val;
+function hashId(id){
+  return crypto.createHash("sha256").update(String(id)).digest("hex").slice(0,24);
+}
+function sign(payload){
+  return crypto.createHmac("sha256", SECRET).update(payload).digest("hex");
+}
+function degToSign(deg){
+  const idx = Math.floor(((deg%360)+360)%360 / 30);
+  return SIG[idx];
 }
 
-app.get('/api/graha', async (req, res) => {
-  const dt  = (req.query.dt  || '').trim();  // UTC "YYYY-MM-DDTHH:MM:SS"
-  const lat = Number(req.query.lat);
-  const lon = Number(req.query.lon);
-  if (!dt || !isFinite(lat) || !isFinite(lon)) {
-    return res.status(400).json({ error: 'Required: dt (UTC ISO), lat, lon' });
-  }
+// ---- stub: planetary longitudes ----
+async function computeGeoLongitudes(utc, ayan) {
+  // Here you can connect NASA Horizons API or static demo data
+  return {
+    utc,
+    center: "Geocentric (500@399)",
+    ref_plane: "ECLIPTIC",
+    planets: [
+      { name:"Sun", longitude:120 },
+      { name:"Moon", longitude:15 },
+      { name:"Mars", longitude:210 },
+      { name:"Mercury", longitude:80 },
+      { name:"Venus", longitude:95 },
+      { name:"Jupiter", longitude:10 },
+      { name:"Saturn", longitude:300 }
+    ]
+  };
+}
+
+// ---- text engine (English only) ----
+function sectionText(planets){
+  const get = n => planets.find(p=>p.name===n)?.longitude ?? null;
+  const sun=get("Sun"), moon=get("Moon"), mar=get("Mars"), ven=get("Venus"),
+        mer=get("Mercury"), jup=get("Jupiter"), sat=get("Saturn");
+
+  const health = (sat!=null && Math.abs(sat - sun) % 180 < 5)
+    ? "Vitality steady; joints and bones require attention."
+    : "Energy fluctuates; maintain consistent sleep and balanced diet.";
+
+  const education = (mer!=null && ["Gemini","Virgo"].includes(degToSign(mer)))
+    ? "Quick grasp for languages and analytics; self-study is fruitful."
+    : "Learning benefits from repetition and solid foundations.";
+
+  const love = (ven!=null && ["Taurus","Libra","Pisces"].includes(degToSign(ven)))
+    ? "Affection flows easily; excellent for proposals and harmony."
+    : "Conversations need patience; avoid misunderstandings.";
+
+  const career = (mar!=null && ["Aries","Capricorn","Leo","Scorpio"].includes(degToSign(mar)))
+    ? "Leadership roles and initiative favored. Small goals achieved quickly."
+    : "Progress through cooperation; maintain documentation.";
+
+  const luck = (jup!=null && ["Sagittarius","Pisces","Cancer"].includes(degToSign(jup)))
+    ? "Good fortune through travel, teaching, and spiritual pursuits."
+    : "Moderate but steady luck; careful budgeting advised.";
+
+  return { health, education, love, career, luck };
+}
+
+function composePreview(planets){
+  const sec = sectionText(planets);
+  const order = ["health","education","love","career","luck"];
+  let text = order.map(k=>sec[k]).join(" ");
+  const words = text.split(/\s+/);
+  if (words.length > 300) text = words.slice(0,300).join(" ") + "...";
+  return { text, words: Math.min(words.length, 300), sections: sec };
+}
+
+function composeFull(planets){
+  const sec = sectionText(planets);
+  const cycles = "Next 30 days favor steady growth. Productive windows: days 5–8 and 18–21. Avoid impulsive spending near lunar squares.";
+  const remedies = "Remedies: early sunlight 10m daily, walking Tue/Thu, donate grains on Thursdays, keep gratitude journal.";
+  const text = [
+    sec.health, sec.education, sec.love, sec.career, sec.luck,
+    cycles, remedies
+  ].join(" ");
+  return { text, sections: sec, cycles, remedies, words: text.split(/\s+/).length };
+}
+
+// ---- endpoints ----
+
+// geo-longitudes (for KP chart etc.)
+app.get("/geo-longitudes", async (req, res) => {
   try {
-    const out = [];
-    for (const p of PLANETS) {
-      const v = await fetchOnePlanet(dt, lat, lon, p.code, p.name);
-      if (v) out.push(v);
+    const utc = req.query.utc;
+    if (!utc) return res.status(400).json({ error: "utc required" });
+
+    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
+    const geo = await computeGeoLongitudes(utc, ayan);
+
+    let planets = geo.planets;
+    if (Number.isFinite(ayan)) {
+      planets = planets.map(p => ({
+        ...p,
+        longitude: ((p.longitude - ayan) % 360 + 360) % 360
+      }));
     }
-    res.json({ dt, lat, lon, planets: out });
+
+    res.json({
+      utc: geo.utc,
+      center: geo.center,
+      ref_plane: geo.ref_plane,
+      planets
+    });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: "geo-failed" });
   }
 });
 
-////////////////////  SVG Wheel (demo / real)  //////////////////
-app.get('/wheel-svg', async (req, res) => {
-  const W = 600, H = 600, CX = 300, CY = 300;
-  const R_OUT = 260, R_IN = 210, R_P = 230;
+// free horoscope preview
+app.get("/horoscope-free", async (req,res)=>{
+  try{
+    const utc = req.query.utc || toUTC(new Date());
+    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
+    const id  = req.query.id || "guest";
 
-  let lines = '', labels = '';
-  for (let i = 0; i < 12; i++) {
-    const d = i * 30;
-    const [x1, y1] = degToXY(CX, CY, 60, d);
-    const [x2, y2] = degToXY(CX, CY, R_OUT, d);
-    lines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#777" stroke-width="1"/>`;
-  }
-  for (let i = 0; i < 12; i++) {
-    const mid = i * 30 + 15;
-    const [lx, ly] = degToXY(CX, CY, R_IN, mid);
-    labels += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#666">${i + 1}</text>`;
-  }
+    const geo = await computeGeoLongitudes(utc, ayan);
+    const pr  = composePreview(geo.planets);
 
-  let graha = [];
-  const useReal = (req.query.use || '').toLowerCase() === 'real';
-  if (useReal) {
-    const dt  = (req.query.dt  || '').trim();
-    const lat = Number(req.query.lat);
-    const lon = Number(req.query.lon);
-    if (dt && isFinite(lat) && isFinite(lon)) {
-      try {
-        const out = [];
-        for (const p of PLANETS) {
-          const v = await fetchOnePlanet(dt, lat, lon, p.code, p.name);
-          if (v) out.push(v);
-        }
-        graha = out.map(o => ({ name: o.name, deg: o.longitude }));
-      } catch {
-        graha = []; // still render wheel
-      }
-    }
-  } else {
-    graha = [
-      { name: 'Sun (සූර්ය)',    deg:  95 },
-      { name: 'Moon (චන්ද්‍ර)',  deg: 212 },
-      { name: 'Mars (කුජ)',     deg:  12 },
-      { name: 'Mercury (බුධ)',  deg: 178 },
-      { name: 'Jupiter (ගුරු)', deg: 332 },
-      { name: 'Venus (ශුක්‍ර)',  deg: 256 },
-      { name: 'Saturn (ශනි)',   deg:  45 },
-      { name: 'Rahu (රාහු)',    deg: 120 },
-      { name: 'Ketu (කේතු)',    deg: 300 },
-    ];
-  }
-
-  let dots = '';
-  for (const p of graha) {
-    const [px, py] = degToXY(CX, CY, R_P, p.deg);
-    const [tx, ty] = degToXY(CX, CY, R_P + 18, p.deg);
-    dots += `
-      <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4" fill="black"/>
-      <text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="12">${p.name}</text>
-    `;
-  }
-
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-  <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-    <rect width="100%" height="100%" fill="white"/>
-    <circle cx="${CX}" cy="${CY}" r="${R_OUT}" fill="none" stroke="black" stroke-width="2"/>
-    <circle cx="${CX}" cy="${CY}" r="60" fill="none" stroke="#999" stroke-width="1"/>
-    ${lines}
-    ${labels}
-    <text x="${CX}" y="${CY}" text-anchor="middle" dominant-baseline="middle" font-size="18" fill="#333">
-      KP Wheel (${useReal ? 'Real' : 'Demo'})
-    </text>
-    ${dots}
-  </svg>`;
-
-  res.set('Content-Type', 'image/svg+xml; charset=utf-8').send(svg);
+    res.json({
+      kind:"free-preview",
+      utc: geo.utc, center: geo.center, ref_plane: geo.ref_plane,
+      id_hash: hashId(id),
+      ...pr
+    });
+  }catch(e){ console.error(e); res.status(500).json({error:"free-failed"}); }
 });
 
-////////////////////  Misc  //////////////////
-app.get('/status', (_req, res) => res.send('OK'));
+// full horoscope (token secured)
+app.get("/horoscope-full", async (req,res)=>{
+  try{
+    const utc = req.query.utc || toUTC(new Date());
+    const ayan = req.query.ayan ? parseFloat(req.query.ayan) : undefined;
+    const id  = req.query.id;
+    const token = req.query.token;
 
-////////////////////  Start  //////////////////
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://127.0.0.1:${PORT}`);
+    if (!id || !token) return res.status(401).json({ error:"auth-required" });
+    const expected = sign(`${id}:${utc}`);
+    if (token !== expected) return res.status(403).json({ error:"invalid-token" });
+
+    const geo = await computeGeoLongitudes(utc, ayan);
+    const full = composeFull(geo.planets);
+
+    res.json({
+      kind:"full-report",
+      utc: geo.utc, center: geo.center, ref_plane: geo.ref_plane,
+      id_hash: hashId(id),
+      ...full
+    });
+  }catch(e){ console.error(e); res.status(500).json({error:"full-failed"}); }
 });
+
+// ---- start ----
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, ()=> console.log(`Horizons proxy server listening at http://localhost:${PORT}`));
