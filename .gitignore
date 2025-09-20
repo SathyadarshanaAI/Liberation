@@ -1,0 +1,12 @@
+# Node dependencies
+node_modules/
+
+# Local environment secrets
+.env
+
+# Local data output
+saved/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
