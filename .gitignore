@@ -1,12 +1,32 @@
-# Node dependencies
+# Node.js dependencies
 node_modules/
 
-# Local environment secrets
-.env
-
-# Local data output
+# Saved horoscope / local JSON
 saved/
 
-# OS / editor junk
+# Environment variables
+.env
+*.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS junk
 .DS_Store
 Thumbs.db
+
+# Build / cache
+dist/
+build/
+.cache/
+.tmp/
+.next/
+out/
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
