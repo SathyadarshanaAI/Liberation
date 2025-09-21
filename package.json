@@ -1,0 +1,15 @@
+{
+  "name": "liberation-api",
+  "version": "1.0.0",
+  "main": "randor/server.js",
+  "scripts": {
+    "start": "node randor/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.18.3",
+    "node-fetch": "^2.7.0"
+  }
+}
