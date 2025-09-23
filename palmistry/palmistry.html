@@ -1,5 +1,4 @@
-cd ~/palmistry
-cat > palmistry.html <<'HTML'
+
 <!DOCTYPE html>
 <html lang="si">
 <head>
@@ -25,16 +24,27 @@ cat > palmistry.html <<'HTML'
     .sl{width:180px}
     footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
   </style>
-  <!-- OpenCV.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js"></script>
+
+  <!-- OpenCV.js with fallback -->
+  <script>
+    (function loadCV(){
+      const primary = "https://docs.opencv.org/4.x/opencv.js";          // official
+      const fallback= "https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";
+      const s = document.createElement('script');
+      s.src = primary; s.async = true;
+      s.onerror = () => { console.warn("Primary OpenCV CDN failed — using fallback"); 
+                          const f=document.createElement('script'); f.src=fallback; f.async=true; document.head.appendChild(f); };
+      document.head.appendChild(s);
+    })();
+  </script>
 </head>
 <body>
   <h1>🖐️ Palmistry – AI Overlay</h1>
 
   <div class="wrap">
     <video id="cam" autoplay playsinline muted></video>
-    <!-- overlay image: hide if not found -->
-    <img class="ghost" src="https://i.ibb.co/1K7K0gF/palm-overlay-demo.png" alt="overlay" onerror="this.style.display='none'">
+    <img class="ghost" src="https://i.ibb.co/1K7K0gF/palm-overlay-demo.png" alt="overlay"
+         onerror="this.style.display='none'">
     <canvas id="cv"></canvas>
   </div>
 
@@ -43,7 +53,7 @@ cat > palmistry.html <<'HTML'
   <div class="btns">
     <button class="flip" id="flipBtn">↔️ Flip</button>
     <button class="cap"  id="capBtn">📸 Capture</button>
-    <button class="an"   id="anBtn" disabled>✨ Analyze</button>
+    <button class="an"   id="anBtn" disabled title="Loading OpenCV…">✨ Analyze</button>
     <button class="save" id="saveBtn" disabled>💾 Save PNG</button>
   </div>
 
@@ -84,9 +94,10 @@ capBtn.onclick=()=>{
   canvas.width=video.videoWidth; canvas.height=video.videoHeight;
   ctx.save(); if(flipped){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
   ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
-  captured=true; anBtn.disabled=false; saveBtn.disabled=false;
+  captured=true; saveBtn.disabled=false;
 };
 
+// Save
 saveBtn.onclick=()=>{
   const url = canvas.toDataURL('image/png');
   const a=document.createElement('a'); a.href=url; a.download='palm_overlay_'+Date.now()+'.png'; a.click();
@@ -96,14 +107,29 @@ saveBtn.onclick=()=>{
 th1El.oninput=()=>th1v.textContent=th1El.value;
 gkEl.oninput =()=>gkv.textContent=gkEl.value;
 
+// ---------- OpenCV ready gate ----------
+(function waitForCV(){
+  const ready = () => {
+    console.log("✅ OpenCV ready");
+    anBtn.disabled = false;
+    anBtn.title = "";
+  };
+  const poll = () => (window.cv && cv.Mat) ? ready() : setTimeout(poll, 200);
+  // Some builds set onRuntimeInitialized
+  if (window.cv && cv['onRuntimeInitialized'] !== undefined) {
+    cv['onRuntimeInitialized'] = ready; poll();
+  } else {
+    poll();
+  }
+})();
+
 // ---------- ANALYZE ----------
 anBtn.onclick = ()=> {
   if (!captured) return alert('Capture first!');
   if (!window.cv || !cv.Mat) return alert('OpenCV.js not loaded yet'); 
-  analyze();
+  analyze();    // Gabor + adaptive + skeleton + neon overlay
 };
 
-// Gabor + adaptive + skeleton + neon overlay
 function analyze(){
   const src = cv.imread(canvas);
 
@@ -159,16 +185,13 @@ function analyze(){
   linesRGBA.delete(); tint.delete(); out.delete(); clahe.delete(); src.delete();
 }
 
-/* ---------- Morphological skeletonization (OpenCV.js) ---------- */
+/* ---------- Morphological skeletonization ---------- */
 function skeletonize(bin){
-  // bin: CV_8U (0/255)
   const size = new cv.Size(3,3);
   const element = cv.getStructuringElement(cv.MORPH_CROSS, size);
   const skel = cv.Mat.zeros(bin.rows, bin.cols, cv.CV_8U);
   const temp = new cv.Mat();
   const eroded = new cv.Mat();
-
-  // iterate until image fully eroded
   while (true){
     cv.erode(bin, eroded, element);
     cv.dilate(eroded, temp, element);
@@ -181,17 +204,5 @@ function skeletonize(bin){
   return skel;
 }
 </script>
-  function waitForCV() {
-    if (window.cv && cv.Mat) {
-      console.log("✅ OpenCV.js loaded");
-      document.getElementById('anBtn').disabled = false;
-    } else {
-      console.log("⏳ Waiting OpenCV...");
-      setTimeout(waitForCV, 300);
-    }
-  }
-  waitForCV();
-</script>
 </body>
 </html>
-HTML
