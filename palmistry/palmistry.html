@@ -54,5 +54,68 @@
       src.delete(); gray.delete(); color.delete();
     }
   </script>
+  // ... (rest of your JS stays the same)
+
+  function analyze() {
+    if (!window.cv || !cv.Mat) { alert('OpenCV.js not ready'); return; }
+
+    // 1) Read current canvas
+    const src   = cv.imread(canvas);
+
+    // 2) Skin mask (YCrCb)
+    const ycrcb = new cv.Mat();
+    cv.cvtColor(src, ycrcb, cv.COLOR_RGBA2YCrCb);
+    const low  = new cv.Mat(ycrcb.rows, ycrcb.cols, ycrcb.type(), [0,133,77,0]);   // Y,Cr,Cb
+    const high = new cv.Mat(ycrcb.rows, ycrcb.cols, ycrcb.type(), [255,173,127,255]);
+    const skin = new cv.Mat();
+    cv.inRange(ycrcb, low, high, skin);
+    cv.medianBlur(skin, skin, 5);
+    let k5 = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(5,5));
+    cv.morphologyEx(skin, skin, cv.MORPH_CLOSE, k5);
+
+    // 3) Largest skin contour → hand ROI mask
+    const contours = new cv.MatVector(), hier = new cv.Mat();
+    cv.findContours(skin, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+    const handMask = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC1);
+    let maxA = 0, idx = -1;
+    for (let i=0;i<contours.size();i++){ const a = cv.contourArea(contours.get(i)); if (a>maxA){maxA=a;idx=i;} }
+    if (idx >= 0) cv.drawContours(handMask, contours, idx, new cv.Scalar(255), -1);
+
+    // 4) Preprocess for lines  (contrast↑ + denoise)
+    const gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    const clahe = new cv.CLAHE(2.0, new cv.Size(8,8)); // contrast
+    clahe.apply(gray, gray);
+    cv.bilateralFilter(gray, gray, 9, 75, 75);
+    cv.GaussianBlur(gray, gray, new cv.Size(3,3), 0);
+
+    // 5) Edges (Canny) + keep only inside hand mask
+    const edges = new cv.Mat();
+    cv.Canny(gray, edges, 60, 140, 3, false);
+    cv.bitwise_and(edges, handMask, edges);
+
+    // 6) Morphology to make lines bolder
+    let k3 = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
+    cv.dilate(edges, edges, k3);
+    cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, k3);
+
+    // 7) Blend back on top of original (white lines on photo)
+    const linesRGBA = new cv.Mat();        // edges -> RGBA
+    cv.cvtColor(edges, linesRGBA, cv.COLOR_GRAY2RGBA);
+    // make lines bright color (cyan)
+    const colorize = new cv.Mat(linesRGBA.rows, linesRGBA.cols, linesRGBA.type(), [0,255,255,255]);
+    cv.bitwise_and(colorize, linesRGBA, linesRGBA); // color only where edges=255
+
+    const out = new cv.Mat();
+    cv.addWeighted(src, 1.0, linesRGBA, 0.9, 0, out);
+    cv.imshow(canvas, out);
+
+    // --- cleanup
+    src.delete(); ycrcb.delete(); low.delete(); high.delete(); skin.delete();
+    contours.delete(); hier.delete(); handMask.delete();
+    gray.delete(); clahe.delete(); edges.delete(); k3.delete(); k5.delete();
+    linesRGBA.delete(); colorize.delete(); out.delete();
+  }
+</script>
 </body>
 </html>
