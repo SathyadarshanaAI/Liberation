@@ -181,6 +181,17 @@ function skeletonize(bin){
   return skel;
 }
 </script>
+  function waitForCV() {
+    if (window.cv && cv.Mat) {
+      console.log("✅ OpenCV.js loaded");
+      document.getElementById('anBtn').disabled = false;
+    } else {
+      console.log("⏳ Waiting OpenCV...");
+      setTimeout(waitForCV, 300);
+    }
+  }
+  waitForCV();
+</script>
 </body>
 </html>
 HTML
