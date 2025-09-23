@@ -1,121 +1,182 @@
 <!DOCTYPE html>
 <html lang="si">
 <head>
-  <meta charset="UTF-8">
-  <title>Palmistry Overlay – Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Palmistry – AI Overlay (Lebetion)</title>
   <style>
-    body { background:#111; color:#eee; font-family:sans-serif; text-align:center; padding:1em; }
-    video, canvas { width:90%; max-width:360px; border:2px solid #16f0a7; border-radius:12px; margin:0.5em 0; }
-    button { margin:0.5em; padding:0.6em 1.2em; border:none; border-radius:8px; font-size:1em; }
-    .capture { background:#38bdf8; }
-    .analyze { background:#16f0a7; }
+    :root{--pri:#16f0a7;--sec:#38bdf8}
+    body{margin:0;background:#0b0f16;color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial,sans-serif;text-align:center}
+    h1{margin:16px 0 6px}
+    .wrap{display:inline-block;position:relative;margin:10px auto}
+    video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;background:#0e1625}
+    .ghost{position:absolute;inset:0;width:100%;height:100%;opacity:.32;pointer-events:none}
+    .btns{margin:12px 0 14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    button{border:none;border-radius:10px;padding:.6em 1.1em;font-weight:700;cursor:pointer}
+    .flip{background:#16243a;color:#cfe9ff}
+    .cap{background:var(--sec);color:#07121f}
+    .an{background:var(--pri);color:#07121f}
+    .save{background:#fbbf24;color:#111827}
+    .hint{color:#a6c8ff;margin:6px 0 2px}
+    .row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+    .chip{background:#0f172a;border:1px solid #1f2c48;border-radius:999px;padding:.25em .6em}
+    .sl{width:180px}
+    footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
   </style>
+  <!-- OpenCV.js (techstark mirror is reliable) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js"></script>
 </head>
 <body>
-  <h1>🖐️ Palmistry Overlay Demo</h1>
-  <video id="camera" autoplay playsinline muted></video>
-  <canvas id="canvas"></canvas>
-  <p>අත overlay එකට align කරලා <b>Capture ➝ Analyze</b> ඔබන්න</p>
-  <button class="capture" onclick="captureFrame()">📸 Capture</button>
-  <button class="analyze" onclick="analyzePalm()">✨ Analyze</button>
+  <h1>🖐️ Palmistry – AI Overlay</h1>
 
-  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
-  <script>
-    const video = document.getElementById('camera');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+  <div class="wrap">
+    <video id="cam" autoplay playsinline muted></video>
+    <!-- optional hand outline guide -->
+    <img class="ghost" src="https://i.ibb.co/1K7K0gF/palm-overlay-demo.png" alt="overlay">
+    <canvas id="cv"></canvas>
+  </div>
 
-    // camera
-    navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' } })
-      .then(stream => video.srcObject = stream);
+  <p class="hint">අත overlay එකට align කරලා <b>Capture → Analyze</b> කරන්න</p>
 
-    function captureFrame() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    }
+  <div class="btns">
+    <button class="flip" id="flipBtn">↔️ Flip</button>
+    <button class="cap"  id="capBtn">📸 Capture</button>
+    <button class="an"   id="anBtn" disabled>✨ Analyze</button>
+    <button class="save" id="saveBtn" disabled>💾 Save PNG</button>
+  </div>
 
-    function analyzePalm() {
-      if (typeof cv === 'undefined') {
-        alert('⏳ OpenCV.js not loaded yet!');
-        return;
-      }
-      let src = cv.imread(canvas);
-      let gray = new cv.Mat();
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-      cv.Canny(gray, gray, 80, 150);
+  <div class="row">
+    <span class="chip">Edge: <input id="th1" class="sl" type="range" min="20" max="120" value="60"> <small id="th1v">60</small></span>
+    <span class="chip">Detail: <input id="gk" class="sl" type="range" min="7" max="23" step="2" value="15"> <small id="gkv">15</small></span>
+  </div>
 
-      // color overlay
-      let color = new cv.Mat();
-      cv.cvtColor(gray, color, cv.COLOR_GRAY2RGBA);
-      cv.imshow(canvas, color);
+  <footer>© 2025 Lebetion · Sathyadarshana – Palmistry AI Overlay</footer>
 
-      src.delete(); gray.delete(); color.delete();
-    }
-  </script>
-  // ... (rest of your JS stays the same)
+<script>
+const video  = document.getElementById('cam');
+const canvas = document.getElementById('cv');
+const ctx    = canvas.getContext('2d');
+const flipBtn= document.getElementById('flipBtn');
+const capBtn = document.getElementById('capBtn');
+const anBtn  = document.getElementById('anBtn');
+const saveBtn= document.getElementById('saveBtn');
+const th1El  = document.getElementById('th1');
+const gkEl   = document.getElementById('gk');
+const th1v   = document.getElementById('th1v');
+const gkv    = document.getElementById('gkv');
 
-  function analyze() {
-    if (!window.cv || !cv.Mat) { alert('OpenCV.js not ready'); return; }
+let flipped=false, captured=false;
 
-    // 1) Read current canvas
-    const src   = cv.imread(canvas);
+// camera
+navigator.mediaDevices?.getUserMedia({video:{facingMode:"environment"}})
+  .then(s=>video.srcObject=s)
+  .catch(()=>alert("📷 Camera unavailable or blocked"));
 
-    // 2) Skin mask (YCrCb)
-    const ycrcb = new cv.Mat();
-    cv.cvtColor(src, ycrcb, cv.COLOR_RGBA2YCrCb);
-    const low  = new cv.Mat(ycrcb.rows, ycrcb.cols, ycrcb.type(), [0,133,77,0]);   // Y,Cr,Cb
-    const high = new cv.Mat(ycrcb.rows, ycrcb.cols, ycrcb.type(), [255,173,127,255]);
-    const skin = new cv.Mat();
-    cv.inRange(ycrcb, low, high, skin);
-    cv.medianBlur(skin, skin, 5);
-    let k5 = cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(5,5));
-    cv.morphologyEx(skin, skin, cv.MORPH_CLOSE, k5);
+function fit(){ const w=Math.min(420, Math.floor(innerWidth*0.92)); const h=Math.floor(w*4/3); canvas.width=w; canvas.height=h; }
+addEventListener('resize', fit, {passive:true}); fit();
 
-    // 3) Largest skin contour → hand ROI mask
-    const contours = new cv.MatVector(), hier = new cv.Mat();
-    cv.findContours(skin, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-    const handMask = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC1);
-    let maxA = 0, idx = -1;
-    for (let i=0;i<contours.size();i++){ const a = cv.contourArea(contours.get(i)); if (a>maxA){maxA=a;idx=i;} }
-    if (idx >= 0) cv.drawContours(handMask, contours, idx, new cv.Scalar(255), -1);
+flipBtn.onclick=()=>{ flipped=!flipped; video.style.transform = flipped?'scaleX(-1)':'none'; };
 
-    // 4) Preprocess for lines  (contrast↑ + denoise)
-    const gray = new cv.Mat();
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-    const clahe = new cv.CLAHE(2.0, new cv.Size(8,8)); // contrast
-    clahe.apply(gray, gray);
-    cv.bilateralFilter(gray, gray, 9, 75, 75);
-    cv.GaussianBlur(gray, gray, new cv.Size(3,3), 0);
+capBtn.onclick=()=>{
+  if(video.videoWidth===0) return alert('Video not ready');
+  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+  ctx.save(); if(flipped){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
+  captured=true; anBtn.disabled=false; saveBtn.disabled=false;
+};
 
-    // 5) Edges (Canny) + keep only inside hand mask
-    const edges = new cv.Mat();
-    cv.Canny(gray, edges, 60, 140, 3, false);
-    cv.bitwise_and(edges, handMask, edges);
+saveBtn.onclick=()=>{
+  const url = canvas.toDataURL('image/png');
+  const a=document.createElement('a'); a.href=url; a.download='palm_overlay_'+Date.now()+'.png'; a.click();
+};
 
-    // 6) Morphology to make lines bolder
-    let k3 = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
-    cv.dilate(edges, edges, k3);
-    cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, k3);
+// sliders UI
+th1El.oninput=()=>th1v.textContent=th1El.value;
+gkEl.oninput =()=>gkv.textContent=gkEl.value;
 
-    // 7) Blend back on top of original (white lines on photo)
-    const linesRGBA = new cv.Mat();        // edges -> RGBA
-    cv.cvtColor(edges, linesRGBA, cv.COLOR_GRAY2RGBA);
-    // make lines bright color (cyan)
-    const colorize = new cv.Mat(linesRGBA.rows, linesRGBA.cols, linesRGBA.type(), [0,255,255,255]);
-    cv.bitwise_and(colorize, linesRGBA, linesRGBA); // color only where edges=255
+// ---------- ANALYZE: Gabor bank + adaptive + skeleton + neon overlay ----------
+anBtn.onclick = ()=> {
+  if (!captured) return alert('Capture first!');
+  if (!window.cv || !cv.Mat) return alert('OpenCV.js not loaded yet'); 
+  analyze();
+};
 
-    const out = new cv.Mat();
-    cv.addWeighted(src, 1.0, linesRGBA, 0.9, 0, out);
-    cv.imshow(canvas, out);
+function analyze(){
+  const src = cv.imread(canvas);
 
-    // --- cleanup
-    src.delete(); ycrcb.delete(); low.delete(); high.delete(); skin.delete();
-    contours.delete(); hier.delete(); handMask.delete();
-    gray.delete(); clahe.delete(); edges.delete(); k3.delete(); k5.delete();
-    linesRGBA.delete(); colorize.delete(); out.delete();
+  // grayscale + CLAHE
+  const gray = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  const clahe = new cv.CLAHE(2.2, new cv.Size(8,8));
+  clahe.apply(gray, gray);
+
+  // Gabor bank (multi orientation ridge enhancer)
+  const gSum = new cv.Mat.zeros(gray.rows, gray.cols, cv.CV_32F);
+  const ksize = (+gkEl.value)|0;      // kernel size (odd)
+  const sigma = 4.0, lambd = 10.0, gamma = 0.5, psi = 0;
+  const degs  = [0,20,40,60,80,100,120,140];
+  let resp = new cv.Mat();
+  for(const d of degs){
+    const th = d*Math.PI/180;
+    const kern = cv.getGaborKernel(new cv.Size(ksize,ksize), sigma, th, lambd, gamma, psi, cv.CV_32F);
+    cv.filter2D(gray, resp, cv.CV_32F, kern);
+    cv.max(gSum, resp, gSum);
+    kern.delete();
   }
+  resp.delete();
+  const g8 = new cv.Mat();
+  cv.normalize(gSum, gSum, 0, 255, cv.NORM_MINMAX);
+  gSum.convertTo(g8, cv.CV_8U);
+
+  // adaptive threshold (local binarize)
+  const bin = new cv.Mat();
+  cv.adaptiveThreshold(g8, bin, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 21, - (+(th1El.value)) );
+
+  // morphology clean & bold
+  const k3 = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
+  cv.morphologyEx(bin, bin, cv.MORPH_OPEN, k3);
+  cv.dilate(bin, bin, k3);
+
+  // skeletonize (morphological thinning)
+  const skel = skeletonize(bin);
+
+  // colorize (neon cyan)
+  const linesRGBA = new cv.Mat();
+  cv.cvtColor(skel, linesRGBA, cv.COLOR_GRAY2RGBA);
+  const tint = new cv.Mat(linesRGBA.rows, linesRGBA.cols, linesRGBA.type(), [0,255,255,255]);
+  cv.bitwise_and(tint, linesRGBA, linesRGBA);
+
+  // blend back on original
+  const out = new cv.Mat();
+  cv.addWeighted(src, 1.0, linesRGBA, 1.0, 0, out);
+  cv.imshow(canvas, out);
+
+  // cleanup
+  gray.delete(); gSum.delete(); g8.delete(); bin.delete(); k3.delete();
+  linesRGBA.delete(); tint.delete(); out.delete(); clahe.delete(); src.delete();
+}
+
+/* ---------- Morphological skeletonization (OpenCV.js) ---------- */
+function skeletonize(bin){
+  // bin: CV_8U (0/255)
+  const size = new cv.Size(3,3);
+  const element = cv.getStructuringElement(cv.MORPH_CROSS, size);
+  const skel = cv.Mat.zeros(bin.rows, bin.cols, cv.CV_8U);
+  const temp = new cv.Mat();
+  const eroded = new cv.Mat();
+
+  // iterate until image fully eroded
+  while (true){
+    cv.erode(bin, eroded, element);
+    cv.dilate(eroded, temp, element);
+    cv.subtract(bin, temp, temp);
+    cv.bitwise_or(skel, temp, skel);
+    eroded.copyTo(bin);
+    if (cv.countNonZero(bin) === 0) break;
+  }
+  temp.delete(); eroded.delete(); element.delete();
+  return skel;
+}
 </script>
 </body>
 </html>
