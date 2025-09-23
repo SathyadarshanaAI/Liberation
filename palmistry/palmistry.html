@@ -1,78 +1,150 @@
 <!DOCTYPE html>
 <html lang="si">
 <head>
-  <meta charset="UTF-8">
-  <title>Palmistry Overlay Analyzer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Palmistry Overlay + Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { background:#111; color:#eee; font-family:sans-serif; text-align:center; padding:1em; }
-    video, canvas { width:90%; max-width:360px; border:2px solid #16f0a7; border-radius:12px; }
-    .btn { margin:0.5em; padding:0.5em 1.2em; font-size:1em; border:none; border-radius:6px; cursor:pointer; }
-    .btn-cap { background:#38bdf8; color:#000; }
-    .btn-an { background:#16f0a7; color:#000; }
-    .overlay-img {
-      position:absolute; top:0; left:50%; transform:translateX(-50%);
-      width:90%; max-width:360px; opacity:0.35; pointer-events:none;
-    }
-    .wrap { position:relative; display:inline-block; }
+    body{background:#0b0f16;color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial,sans-serif;margin:0;text-align:center}
+    h1{margin:18px 0 8px}
+    .wrap{display:inline-block;position:relative;margin:8px auto}
+    video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid #16f0a7;display:block}
+    .ghost{position:absolute;inset:0;width:100%;height:100%;opacity:.38;pointer-events:none}
+    .btns{margin:12px 0 20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    button{border:none;border-radius:9px;padding:.55em 1em;font-weight:700;cursor:pointer}
+    .cap{background:#38bdf8;color:#0b0f16}
+    .an{background:#16f0a7;color:#0b0f16}
+    .flip{background:#152235;color:#cfe9ff}
+    .legend{display:flex;gap:.6em;justify-content:center;flex-wrap:wrap;font-size:.95em}
+    .chip{background:#0e1726;border:1px solid #1f2c48;border-radius:999px;padding:.25em .6em;display:flex;gap:.45em;align-items:center}
+    .dot{width:12px;height:12px;border-radius:50%}
+    footer{color:#16f0a7;margin:22px 0 18px}
   </style>
 </head>
 <body>
   <h1>🖐️ Palmistry Overlay Analyzer</h1>
 
   <div class="wrap">
-    <video id="camera" autoplay playsinline muted></video>
-    <img src="https://i.ibb.co/1K7K0gF/palm-overlay-demo.png" class="overlay-img"/>
-    <canvas id="output"></canvas>
+    <video id="cam" autoplay playsinline muted></video>
+    <!-- transparent overlay (replace with your own PNG if needed) -->
+    <img class="ghost" src="https://i.ibb.co/1K7K0gF/palm-overlay-demo.png" alt="overlay"/>
+    <canvas id="cv"></canvas>
   </div>
 
-  <p>අත overlay එකට align කරලා <b>Capture ➝ Analyze</b> ඔබන්න</p>
+  <p>අත overlay එකට align කරලා <b>Capture → Analyze</b> ඔබන්න</p>
 
-  <button class="btn btn-cap" onclick="capture()">📸 Capture</button>
-  <button class="btn btn-an" onclick="analyze()">✨ Analyze</button>
+  <div class="btns">
+    <button class="flip" id="flipBtn">↔️ Flip</button>
+    <button class="cap"  id="capBtn">📸 Capture</button>
+    <button class="an"   id="anBtn" disabled>✨ Analyze</button>
+  </div>
 
-  <!-- Load OpenCV -->
-  <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onCvReady();" ></script>
+  <div class="legend">
+    <span class="chip"><span class="dot" style="background:#22d3ee"></span>Heart</span>
+    <span class="chip"><span class="dot" style="background:#a78bfa"></span>Head</span>
+    <span class="chip"><span class="dot" style="background:#f97316"></span>Life</span>
+    <span class="chip"><span class="dot" style="background:#34d399"></span>Fate</span>
+  </div>
+
+  <footer>© 2025 Lebetion · Sathyadarshana</footer>
+
+  <!-- OpenCV (use defer, not async) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js"></script>
 
   <script>
-    let video = document.getElementById('camera');
-    let canvas = document.getElementById('output');
-    let ctx = canvas.getContext('2d');
+    const video = document.getElementById('cam');
+    const canvas = document.getElementById('cv');
+    const ctx = canvas.getContext('2d');
+    const flipBtn = document.getElementById('flipBtn');
+    const capBtn  = document.getElementById('capBtn');
+    const anBtn   = document.getElementById('anBtn');
 
-    // camera preview
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => { video.srcObject = stream; });
+    let flipped = false, captured = false;
+
+    // camera
+    navigator.mediaDevices?.getUserMedia({ video: { facingMode: "environment" } })
+      .then(s => video.srcObject = s)
+      .catch(() => alert('📷 Camera permission/availability issue'));
+
+    function fit() {
+      const w = Math.min(420, Math.floor(window.innerWidth * 0.92));
+      const h = Math.floor(w * 4/3);
+      canvas.width = w; canvas.height = h;
     }
+    addEventListener('resize', fit, {passive:true}); fit();
 
-    function capture() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+    flipBtn.onclick = () => {
+      flipped = !flipped;
+      video.style.transform = flipped ? 'scaleX(-1)' : 'none';
+    };
+
+    capBtn.onclick = () => {
+      if (video.videoWidth === 0) return alert('Video not ready yet');
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.save();
+      if (flipped) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      alert("✅ Hand captured, now click Analyze!");
-    }
+      ctx.restore();
+      captured = true;
+      anBtn.disabled = false;
+    };
+
+    anBtn.onclick = () => {
+      if (!captured) return alert('Capture first!');
+      if (!window.cv || !cv.Mat) return alert('OpenCV.js not loaded yet. Try again.');
+      analyze();
+    };
 
     function analyze() {
-      if (!cv || !canvas.width) { alert("⚠️ OpenCV not ready!"); return; }
+      // read canvas to Mat
+      const src = cv.imread(canvas);
+      const work = new cv.Mat();
+      cv.cvtColor(src, work, cv.COLOR_RGBA2GRAY);
+      cv.equalizeHist(work, work);
+      cv.GaussianBlur(work, work, new cv.Size(5,5), 1.2, 1.2);
+      const edges = new cv.Mat();
+      cv.Canny(work, edges, 70, 150, 3, false);
 
-      let src = cv.imread(canvas);
-      let gray = new cv.Mat();
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+      // Hough segments
+      const lines = new cv.Mat();
+      cv.HoughLinesP(edges, lines, 1, Math.PI/180, 40, 50, 15);
 
-      // blur + edge detect
-      let blur = new cv.Mat();
-      cv.GaussianBlur(gray, blur, new cv.Size(5,5), 0,0, cv.BORDER_DEFAULT);
-      let edges = new cv.Mat();
-      cv.Canny(blur, edges, 80, 150);
+      // redraw original
+      cv.imshow(canvas, src);
+      // draw colored segments (heuristic classify by band/angle/region)
+      const W = canvas.width, H = canvas.height;
+      const topY = H*0.30, midY = H*0.48, lowY = H*0.72;
+      const leftX = W*0.18, rightX = W*0.82;
 
-      // draw edges (simulate palm lines)
-      cv.imshow(canvas, edges);
+      function pickColor(kind){
+        return kind==='heart' ? '#22d3ee'
+             : kind==='head'  ? '#a78bfa'
+             : kind==='life'  ? '#f97316'
+             : kind==='fate'  ? '#34d399'
+             : '#f43f5e';
+      }
+      function classify(s){
+        const {x1,y1,x2,y2} = s;
+        const ang = Math.atan2(y2-y1, x2-x1), ya = Math.min(y1,y2), yb = Math.max(y1,y2);
+        const xa = Math.min(x1,x2), xb = Math.max(x1,x2);
+        if (yb < topY && Math.abs(ang) > 0.3 && Math.abs(ang) < 1.25) return 'heart';
+        if (ya > topY && yb < midY+40 && Math.abs(ang) > 0.2 && Math.abs(ang) < 1.25) return 'head';
+        if (xa < leftX+50 && yb > midY && Math.abs(ang) > 0.6) return 'life';
+        if ((Math.abs(ang) > 1.35 || Math.abs(ang) < 0.2) && xa > W*0.30 && xb < W*0.70) return 'fate';
+        return 'other';
+      }
 
-      src.delete(); gray.delete(); blur.delete(); edges.delete();
-    }
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 4;
+      for (let i=0;i<lines.rows;i++){
+        const p = lines.intPtr(i);
+        const seg = {x1:p[0],y1:p[1],x2:p[2],y2:p[3]};
+        const kind = classify(seg);
+        ctx.strokeStyle = pickColor(kind);
+        ctx.beginPath(); ctx.moveTo(seg.x1,seg.y1); ctx.lineTo(seg.x2,seg.y2); ctx.stroke();
+      }
 
-    function onCvReady() {
-      console.log("✅ OpenCV.js loaded");
+      // cleanup
+      src.delete(); work.delete(); edges.delete(); lines.delete();
     }
   </script>
 </body>
