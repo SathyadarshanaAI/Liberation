@@ -1,62 +1,74 @@
 <!DOCTYPE html>
 <html lang="si">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry – 4K Capture + Fast Shutter</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Palmistry – AI Overlay (Stable + 4K Fallback)</title>
 <style>
 :root{--pri:#16f0a7;--sec:#38bdf8}
 *{box-sizing:border-box}
 body{margin:0;background:#0b0f16;color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial,sans-serif;text-align:center}
 h1{margin:16px 0 6px}
 .wrap{display:inline-block;position:relative;margin:10px auto}
-video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;background:#0e1625}
-.ghost{position:absolute;inset:0;width:100%;height:100%;opacity:.25;pointer-events:none}
-.badge{position:absolute;left:8px;top:8px;padding:.2rem .45rem;border-radius:8px;font-size:.75rem;background:#0008}
-.btns{margin:12px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-button{border:none;border-radius:10px;padding:.6em 1.0em;font-weight:700;cursor:pointer}
-.flip{background:#16243a;color:#cfe9ff}
-.flash{background:#f59e0b;color:#111827}
-.fast{background:#22c55e;color:#07121f}
+video,canvas{width:92vw;max-width:440px;border-radius:16px;border:2px solid var(--pri);display:block;background:#0e1625}
+.badge{position:absolute;left:10px;top:10px;padding:.28rem .5rem;border-radius:8px;font-size:.78rem;background:#0008}
+.btns{margin:12px 0 14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+button{border:none;border-radius:10px;padding:.6em 1.05em;font-weight:700;cursor:pointer}
+.wc{background:#16243a;color:#cfe9ff}   /* webcam */
+.sys{background:#0ea5e9;color:#07121f}  /* system camera */
 .cap{background:var(--sec);color:#07121f}
 .an{background:var(--pri);color:#07121f}
 .save{background:#fbbf24;color:#111827}
-.hint{color:#a6c8ff;margin:6px 0 10px}
+.flip{background:#334155;color:#e2e8f0}
+.hint{color:#a6c8ff;margin:8px 0 4px}
 .row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
 .chip{background:#0f172a;border:1px solid #1f2c48;border-radius:999px;padding:.25em .6em}
-.sl{width:180px}
-footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
+.sl{width:190px}
+footer{color:var(--pri);margin:16px 0 22px;font-size:.95em}
+.hidden{display:none}
 </style>
 
-<!-- OpenCV.js (primary + fallback) -->
+<!-- OpenCV.js with fallback -->
 <script>
-(function(){
-  const p=document.createElement('script');
-  p.src="https://docs.opencv.org/4.x/opencv.js"; p.async=true;
-  p.onerror=()=>{const f=document.createElement('script');f.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";f.async=true;document.head.appendChild(f);};
-  document.head.appendChild(p);
+(function loadCV(){
+  const s=document.createElement('script');
+  s.src="https://docs.opencv.org/4.x/opencv.js"; s.async=true;
+  s.onerror=()=>{
+    const f=document.createElement('script');
+    f.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";
+    f.async=true; document.head.appendChild(f);
+  };
+  document.head.appendChild(s);
 })();
 </script>
 </head>
 <body>
-  <h1>🖐️ Palmistry – 4K Capture + Fast Shutter</h1>
+  <h1>🖐️ Palmistry – AI Overlay</h1>
 
   <div class="wrap">
-    <video id="cam" autoplay playsinline muted></video>
-    <img class="ghost" src="https://i.ibb.co/1K7K0gF/palm-overlay-demo.png" alt="overlay" onerror="this.style.display='none'">
+    <video id="vid" autoplay playsinline muted></video>
     <canvas id="cv"></canvas>
-    <span id="status" class="badge">loading…</span>
+    <span id="status" class="badge">loading OpenCV…</span>
   </div>
 
-  <p class="hint">Background එකට ගැඹුරු/අඳුරු රෙදි දාලා අත overlay එකට align කරලා <b>4K Photo → Analyze</b> කරන්න.</p>
+  <p class="hint">
+    අත නියමට ලා ➜ <b>📸 Capture</b> → <b>✨ Analyze</b> කරන්න.  
+    WebCam slow නම් <b>System Camera (4K)</b> බටන් එක භාවිතා කර still फोटो එක ගන්න.
+  </p>
 
   <div class="btns">
-    <button class="flip"  id="flipBtn">↔️ Flip</button>
-    <button class="flash" id="flashBtn" disabled>⚡ Flash</button>
-    <button class="fast"  id="fastBtn"  disabled>🏃‍♂️ Fast Shutter</button>
-    <button class="cap"   id="cap4kBtn" disabled>📷 4K Photo</button>
-    <button class="an"    id="anBtn"    disabled>✨ Analyze</button>
-    <button class="save"  id="saveBtn"  disabled>💾 Save PNG</button>
+    <button class="wc"  id="btnWebcam">🎥 Start Webcam</button>
+    <button class="flip" id="btnFlip">↔️ Flip</button>
+    <button class="cap" id="btnCap" disabled>📸 Capture</button>
+    <button class="an"  id="btnAn"  disabled>✨ Analyze</button>
+    <button class="save" id="btnSave" disabled>💾 Save PNG</button>
+  </div>
+
+  <div class="btns" style="margin-top:-6px">
+    <button class="sys" id="btnSystem">📱 System Camera (4K)</button>
+    <input id="fileIn" type="file" accept="image/*" capture="environment" class="hidden" />
+    <button class="sys" id="btnTorch">🔦 Torch</button>
+    <button class="sys" id="btnTorchOff">🕯️ Torch Off</button>
   </div>
 
   <div class="row">
@@ -64,142 +76,152 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
     <span class="chip">Detail: <input id="gk" class="sl" type="range" min="7" max="23" step="2" value="15"> <small id="gkv">15</small></span>
   </div>
 
-  <footer>© 2025 Lebaretion · Sathyadarshana</footer>
+  <footer>© 2025 Lebaretion · Sathyadarshana – Palmistry AI Overlay</footer>
 
 <script>
-const v = document.getElementById('cam');
-const c = document.getElementById('cv');
-const x = c.getContext('2d');
-const statusE = document.getElementById('status');
+const vid = document.getElementById('vid');
+const cvs = document.getElementById('cv');
+const ctx = cvs.getContext('2d');
+const st  = document.getElementById('status');
 
-const btnFlip   = document.getElementById('flipBtn');
-const btnFlash  = document.getElementById('flashBtn');
-const btnFast   = document.getElementById('fastBtn');
-const btn4k     = document.getElementById('cap4kBtn');
-const btnAn     = document.getElementById('anBtn');
-const btnSave   = document.getElementById('saveBtn');
+const btnWebcam = document.getElementById('btnWebcam');
+const btnFlip   = document.getElementById('btnFlip');
+const btnCap    = document.getElementById('btnCap');
+const btnAn     = document.getElementById('btnAn');
+const btnSave   = document.getElementById('btnSave');
 
-const th1El = document.getElementById('th1'), gkEl = document.getElementById('gk');
-const th1v  = document.getElementById('th1v'), gkv  = document.getElementById('gkv');
+const btnSystem = document.getElementById('btnSystem');
+const fileIn    = document.getElementById('fileIn');
+const btnTorch  = document.getElementById('btnTorch');
+const btnTorchOff = document.getElementById('btnTorchOff');
+
+const th1El=document.getElementById('th1'), gkEl=document.getElementById('gk');
+const th1v=document.getElementById('th1v'), gkv=document.getElementById('gkv');
+
+let flipped=false, captured=false, stream=null, track=null, imageCapture=null;
+
+function fit(){ const w=Math.min(440, Math.floor(innerWidth*0.92)); const h=Math.floor(w*4/3); cvs.width=w; cvs.height=h; }
+addEventListener('resize', fit, {passive:true}); fit();
+
 th1El.oninput=()=>th1v.textContent=th1El.value;
-gkEl.oninput =()=>gkv.textContent =gkEl.value;
+gkEl.oninput =()=>gkv.textContent=gkEl.value;
 
-let track=null, stream=null, imageCapture=null;
-let flipped=false, captured=false, torchOn=false;
+btnFlip.onclick=()=>{ flipped=!flipped; vid.style.transform=flipped?'scaleX(-1)':'none'; };
 
-// fit canvas for preview
-function fit(){ const w=Math.min(420, Math.floor(innerWidth*0.92)); const h=Math.floor(w*4/3); c.width=w; c.height=h; }
-addEventListener('resize',fit,{passive:true}); fit();
-
-// start camera with high hints
-async function startStream(){
+btnWebcam.onclick=async()=>{
   try{
-    const constraints = {
-      video:{
-        facingMode:{ideal:'environment'},
-        width:{ideal:4096}, height:{ideal:2160},
-        frameRate:{ideal:60, max:120},
-        advanced:[{focusMode:'continuous'},{exposureMode:'continuous'}]
+    if(stream){ // stop
+      stream.getTracks().forEach(t=>t.stop()); stream=null; track=null; imageCapture=null;
+      vid.srcObject=null; btnWebcam.textContent='🎥 Start Webcam'; btnCap.disabled=true; return;
+    }
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: {ideal:'environment'},
+        width:  {ideal: 1920}, height: {ideal:1080}, frameRate:{ideal:30,max:60},
+        focusMode: 'continuous' // some browsers ignore
       }, audio:false
-    };
-    stream = await navigator.mediaDevices.getUserMedia(constraints);
-    v.srcObject = stream;
+    });
+    vid.srcObject = stream;
     track = stream.getVideoTracks()[0];
-
-    // capabilities
-    const caps = track.getCapabilities?.() || {};
-    if('torch' in caps){ btnFlash.disabled=false; }
-    if('exposureTime' in caps || 'exposureMode' in caps){ btnFast.disabled=false; }
     if('ImageCapture' in window){
       imageCapture = new ImageCapture(track);
-      btn4k.disabled = false;
+      try{
+        const caps = await imageCapture.getPhotoCapabilities();
+        // pick largest width if supported
+        const maxW = caps.imageWidth?.max || 0;
+        if(maxW>=3000){
+          await imageCapture.setOptions({imageWidth:maxW});
+        }
+      }catch(e){}
     }
-    statusE.textContent = 'camera ready';
+    btnWebcam.textContent='■ Stop Webcam';
+    btnCap.disabled=false;
+  }catch(e){ alert('📷 Camera permission blocked'); }
+};
+
+btnTorch.onclick = async ()=>{
+  try{
+    if(!track) return;
+    await track.applyConstraints({ advanced:[{torch:true}] });
+  }catch(e){ alert('Torch not supported on this device/browser'); }
+};
+btnTorchOff.onclick = async ()=>{
+  try{
+    if(!track) return;
+    await track.applyConstraints({ advanced:[{torch:false}] });
+  }catch(e){}
+};
+
+btnCap.onclick = async ()=>{
+  if(!stream){ alert('Start Webcam first'); return; }
+  try{
+    // Try real still photo (faster shutter) if ImageCapture exists
+    if(imageCapture && imageCapture.takePhoto){
+      const blob = await imageCapture.takePhoto();
+      await drawBlobToCanvas(blob);
+    }else{
+      // fallback: draw current video frame
+      if(!vid.videoWidth){ alert('Video not ready'); return; }
+      cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
+      ctx.save(); if(flipped){ ctx.translate(cvs.width,0); ctx.scale(-1,1); }
+      ctx.drawImage(vid,0,0,cvs.width,cvs.height); ctx.restore();
+    }
+    captured=true; btnAn.disabled=false; btnSave.disabled=false;
   }catch(e){
-    alert('📷 Camera unavailable or blocked'); console.error(e);
+    // fallback if takePhoto fails
+    if(!vid.videoWidth){ alert('Video not ready'); return; }
+    cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
+    ctx.save(); if(flipped){ ctx.translate(cvs.width,0); ctx.scale(-1,1); }
+    ctx.drawImage(vid,0,0,cvs.width,cvs.height); ctx.restore();
+    captured=true; btnAn.disabled=false; btnSave.disabled=false;
   }
+};
+
+// ---- System Camera (4K) ----
+btnSystem.onclick = ()=> fileIn.click();
+fileIn.onchange = async (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  await drawBlobToCanvas(file);
+  captured=true; btnAn.disabled=false; btnSave.disabled=false;
+};
+
+async function drawBlobToCanvas(blob){
+  const img = new Image();
+  img.src = URL.createObjectURL(blob);
+  await img.decode();
+  // Limit huge 4K to a safe working canvas (still high detail)
+  const maxW = 2048;
+  let w = img.naturalWidth, h = img.naturalHeight;
+  if(w>maxW){ const s=maxW/w; w=maxW; h=Math.round(h*s); }
+  cvs.width=w; cvs.height=h;
+  ctx.drawImage(img,0,0,w,h);
+  URL.revokeObjectURL(img.src);
 }
-startStream();
-
-// UI
-btnFlip.onclick = ()=>{ flipped=!flipped; v.style.transform = flipped?'scaleX(-1)':'none'; };
-
-btnFlash.onclick = async ()=>{
-  if(!track) return;
-  try{
-    torchOn = !torchOn;
-    await track.applyConstraints({advanced:[{torch:torchOn}]});
-    btnFlash.textContent = torchOn ? '⚡ Flash ON' : '⚡ Flash';
-  }catch(e){ console.warn('torch not supported', e); alert('Flash/torch not supported on this device'); }
-};
-
-btnFast.onclick = async ()=>{
-  if(!track) return;
-  try{
-    const caps = track.getCapabilities?.() || {};
-    const minExp = caps.exposureTime?.min ?? null;
-    const obj = { advanced:[{exposureMode:'manual'}] };
-    if(minExp!=null) obj.advanced[0].exposureTime = minExp; // shortest → fast shutter
-    await track.applyConstraints(obj).catch(()=>{});
-    if(imageCapture?.setOptions){
-      await imageCapture.setOptions({exposureMode:'manual', ...(minExp?{exposureTime:minExp}:{})}).catch(()=>{});
-    }
-    btnFast.textContent='🏃‍♂️ Fast Shutter ✔';
-  }catch(e){ console.warn('fast shutter not supported', e); alert('Manual shutter not supported'); }
-};
-
-// 4K Still photo (fallback to frame if needed)
-btn4k.onclick = async ()=>{
-  if(!imageCapture){ alert('Full-res capture not supported'); return; }
-  try{
-    const pc = imageCapture.getPhotoCapabilities ? await imageCapture.getPhotoCapabilities() : null;
-    const w  = pc?.imageWidth?.max  || 4032;
-    const h  = pc?.imageHeight?.max || 3024;
-    const settings = { imageWidth:w, imageHeight:h };
-    if(pc?.fillLightMode?.includes('flash')) settings.fillLightMode='flash';
-    const blob = await imageCapture.takePhoto(settings);
-    const bmp  = await createImageBitmap(blob);
-    c.width=bmp.width; c.height=bmp.height;
-    x.save(); if(flipped){ x.translate(c.width,0); x.scale(-1,1); }
-    x.drawImage(bmp,0,0); x.restore();
-    bmp.close?.();
-    captured=true; btnAn.disabled=false; btnSave.disabled=true;
-    statusE.textContent = `photo ${c.width}×${c.height}`;
-  }catch(e){
-    console.warn('takePhoto failed, fallback to frame', e);
-    // fallback: draw current video frame
-    if(v.videoWidth){
-      c.width=v.videoWidth; c.height=v.videoHeight;
-      x.save(); if(flipped){ x.translate(c.width,0); x.scale(-1,1); }
-      x.drawImage(v,0,0,c.width,c.height); x.restore();
-      captured=true; btnAn.disabled=false; btnSave.disabled=true;
-    } else {
-      alert('Video not ready');
-    }
-  }
-};
 
 // Save
 btnSave.onclick=()=>{
   const a=document.createElement('a');
-  a.href=c.toDataURL('image/png'); a.download='palm_4k_'+Date.now()+'.png'; a.click();
+  a.href=cvs.toDataURL('image/png');
+  a.download='palm_'+Date.now()+'.png';
+  a.click();
 };
 
-// OpenCV ready gate
+// OpenCV gate
 (function waitCV(){
-  const ready=()=>{btnAn.disabled=false; statusE.textContent='OpenCV ready';};
-  const poll=()=> (window.cv && cv.Mat) ? ready() : setTimeout(poll,200);
-  if(window.cv && cv.onRuntimeInitialized!==undefined){ cv.onRuntimeInitialized=ready; poll(); } else { poll(); }
+  const ok=()=>{ st.textContent='OpenCV ready'; };
+  const poll=()=> (window.cv && cv.Mat) ? ok() : setTimeout(poll,200);
+  if(window.cv && cv.onRuntimeInitialized!==undefined){ cv.onRuntimeInitialized=ok; poll(); }
+  else{ poll(); }
 })();
 
-// Analyze (Gabor + adaptive + skeleton + blend)
-btnAn.onclick=()=>{ if(!captured) return alert('මූලින් 4K Photo ගන්න'); if(!window.cv||!cv.Mat) return alert('OpenCV load වෙලා නෑ'); analyze(); btnSave.disabled=false; };
+// Analyze (Gabor + CLAHE + Skeleton) – clean overlay
+btnAn.onclick=()=>{ if(!captured) return; if(!(window.cv&&cv.Mat)) return alert('OpenCV not ready'); analyze(); };
 
 function analyze(){
-  const src = cv.imread(c);
-
-  const gray = new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-  const clahe = new cv.CLAHE(2.2, new cv.Size(8,8)); clahe.apply(gray,gray);
+  const src=cv.imread(cvs);
+  const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+  const clahe=new cv.CLAHE(2.2,new cv.Size(8,8)); clahe.apply(gray,gray);
 
   const ksize=(+gkEl.value)|0, sigma=4.0, lambd=10.0, gamma=0.5, psi=0;
   const degs=[0,20,40,60,80,100,120,140];
@@ -211,24 +233,32 @@ function analyze(){
   const g8=new cv.Mat(); cv.normalize(gSum,gSum,0,255,cv.NORM_MINMAX); gSum.convertTo(g8,cv.CV_8U);
 
   const bin=new cv.Mat(); cv.adaptiveThreshold(g8,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,21,-(+(th1El.value)));
-  const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3)); cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3); cv.dilate(bin,bin,k3);
+  const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+  cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3); cv.dilate(bin,bin,k3);
 
-  const skel = skeletonize(bin);
+  const skel=skeletonize(bin);
 
   const rgba=new cv.Mat(); cv.cvtColor(skel,rgba,cv.COLOR_GRAY2RGBA);
-  const tint=new cv.Mat(rgba.rows,rgba.cols,rgba.type(),[0,255,255,255]);
+  const tint = new cv.Mat(rgba.rows,rgba.cols,rgba.type(), [0,255,255,255]); // neon cyan
   cv.bitwise_and(tint,rgba,rgba);
 
-  const out = new cv.Mat(); cv.addWeighted(src,1.0,rgba,1.0,0,out);
-  cv.imshow(c,out);
+  const out=src.clone();
+  cv.addWeighted(out,1.0,rgba,1.0,0,out);
+  cv.imshow(cvs,out);
 
-  gray.delete(); clahe.delete(); gSum.delete(); resp.delete(); g8.delete(); bin.delete(); k3.delete(); skel.delete(); rgba.delete(); tint.delete(); out.delete(); src.delete();
+  // cleanup
+  gray.delete(); clahe.delete(); gSum.delete(); resp.delete(); g8.delete();
+  bin.delete(); k3.delete(); skel.delete(); rgba.delete(); tint.delete(); out.delete(); src.delete();
 }
 
 function skeletonize(bin){
   const el=cv.getStructuringElement(cv.MORPH_CROSS,new cv.Size(3,3));
   const sk=cv.Mat.zeros(bin.rows,bin.cols,cv.CV_8U), tmp=new cv.Mat(), er=new cv.Mat();
-  while(true){ cv.erode(bin,er,el); cv.dilate(er,tmp,el); cv.subtract(bin,tmp,tmp); cv.bitwise_or(sk,tmp,sk); er.copyTo(bin); if(cv.countNonZero(bin)===0) break; }
+  while(true){
+    cv.erode(bin,er,el); cv.dilate(er,tmp,el);
+    cv.subtract(bin,tmp,tmp); cv.bitwise_or(sk,tmp,sk);
+    er.copyTo(bin); if(cv.countNonZero(bin)===0) break;
+  }
   tmp.delete(); er.delete(); el.delete(); return sk;
 }
 </script>
