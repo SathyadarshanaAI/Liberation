@@ -78,7 +78,7 @@ const video=document.getElementById('cam');
 const canvas=document.getElementById('cv');
 const ctx=canvas.getContext('2d');
 const statusEl=document.getElementById('status');
-const flipBtn=flipBtn||document.getElementById('flipBtn');
+const flipBtn=document.getElementById('flipBtn');
 const capBtn=document.getElementById('capBtn');
 const anBtn=document.getElementById('anBtn');
 const saveBtn=document.getElementById('saveBtn');
@@ -152,36 +152,36 @@ function analyze(){
   const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3)); cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3); cv.dilate(bin,bin,k3);
   const skel=skeletonize(bin);
 
-  // Hand bounding by largest contour on bin
+  // Hand bounding box
   const contours=new cv.MatVector(), hier=new cv.Mat(); cv.findContours(bin,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
   let bb=new cv.Rect(0,0,src.cols,src.rows), maxA=0;
   for(let i=0;i<contours.size();i++){const a=cv.contourArea(contours.get(i)); if(a>maxA){maxA=a; bb=cv.boundingRect(contours.get(i));}}
   contours.delete(); hier.delete();
 
-  // ROIs heuristics (relative to bb)
+  // ROI definitions
   const R = (x,y,w,h)=> new cv.Rect(Math.max(bb.x+Math.floor(bb.width*x),0),
                                     Math.max(bb.y+Math.floor(bb.height*y),0),
                                     Math.max(Math.floor(bb.width*w),1),
                                     Math.max(Math.floor(bb.height*h),1));
   const roi = {
-    heart:   R(0.15,0.10,0.70,0.20),       // upper horizontal
-    head:    R(0.15,0.30,0.70,0.18),       // mid horizontal
-    life:    R(0.00,0.35,0.55,0.55),       // curved near thumb
-    fate:    R(0.40,0.15,0.20,0.70),       // vertical center
-    marriage:R(0.60,0.10,0.30,0.12),       // below little finger
-    sun:     R(0.55,0.20,0.25,0.45)        // vertical ring finger area
+    heart:   R(0.15,0.10,0.70,0.20),
+    head:    R(0.15,0.30,0.70,0.18),
+    life:    R(0.00,0.35,0.55,0.55),
+    fate:    R(0.40,0.15,0.20,0.70),
+    marriage:R(0.60,0.10,0.30,0.12),
+    sun:     R(0.55,0.20,0.25,0.45)
   };
 
-  // detect line helper (HoughP on ROI + filters)
-  function pickLine(rect, orient){ // orient: 'h'|'v'|'c'(any)
+  function pickLine(rect, orient){
     const m=skel.roi(rect), edges=new cv.Mat(); cv.Canny(m,edges,50,150,3,false);
     const lines=new cv.Mat(), minL=Math.floor(Math.min(rect.width,rect.height)*0.35);
     cv.HoughLinesP(edges,lines,1,Math.PI/180,12,minL,8);
     let best=null, bestLen=0;
     for(let i=0;i<lines.rows;i++){
-      const [x1,y1,x2,y2]=lines.intPtr(i); const dx=x2-x1, dy=y2-y1; const len=Math.hypot(dx,dy);
+      const [x1,y1,x2,y2]=lines.intPtr(i);
+      const dx=x2-x1, dy=y2-y1; const len=Math.hypot(dx,dy);
       const ang=Math.abs(Math.atan2(dy,dx)*(180/Math.PI));
-      const isH = ang<25, isV = ang>65, ok = orient==='h'?isH:orient==='v'?isV:true;
+      const isH=ang<25, isV=ang>65, ok=orient==='h'?isH:orient==='v'?isV:true;
       if(ok && len>bestLen){bestLen=len; best=[x1+rect.x,y1+rect.y,x2+rect.x,y2+rect.y];}
     }
     m.delete(); edges.delete(); lines.delete(); return best;
@@ -195,26 +195,25 @@ function analyze(){
     sun:     pickLine(roi.sun,'v')
   };
 
-  // life line: try many small segments inside ROI, take convex hull of near-vertical/curved path
   const lifeSeg = pickLine(roi.life,'c');
 
-  // draw overlay
+  // draw
   const out=src.clone();
   function drawLine(p,color,label){
     if(!p) return;
-    const [x1,y1,x2,y2]=p; cv.line(out,new cv.Point(x1,y1),new cv.Point(x2,y2),color,3,cv.LINE_AA);
+    const [x1,y1,x2,y2]=p;
+    cv.line(out,new cv.Point(x1,y1),new cv.Point(x2,y2),color,3,cv.LINE_AA);
     cv.putText(out,label,new cv.Point(Math.min(x1,x2)+6,Math.min(y1,y2)-8),cv.FONT_HERSHEY_SIMPLEX,0.6,color,2,cv.LINE_AA);
   }
-  drawLine(linesFound.heart,   new cv.Scalar(0x6b,0x6b,0xff,255), 'Heart');
-  drawLine(linesFound.head,    new cv.Scalar(0x66,0xd1,0xff,255), 'Head');
-  drawLine(lifeSeg,            new cv.Scalar(0xa0,0xe6,0x06,255), 'Life');
-  drawLine(linesFound.fate,    new cv.Scalar(0xb2,0x8a,0x11,255), 'Fate');
-  drawLine(linesFound.marriage,new cv.Scalar(0x6f,0x47,0xef,255), 'Marriage');
-  drawLine(linesFound.sun,     new cv.Scalar(0xff,0xe5,0x00,255), 'Sun');
+  drawLine(linesFound.heart,new cv.Scalar(0x6b,0x6b,0xff,255),'Heart');
+  drawLine(linesFound.head,new cv.Scalar(0x66,0xd1,0xff,255),'Head');
+  drawLine(lifeSeg,new cv.Scalar(0xa0,0xe6,0x06,255),'Life');
+  drawLine(linesFound.fate,new cv.Scalar(0xb2,0x8a,0x11,255),'Fate');
+  drawLine(linesFound.marriage,new cv.Scalar(0x6f,0x47,0xef,255),'Marriage');
+  drawLine(linesFound.sun,new cv.Scalar(0xff,0xe5,0x00,255),'Sun');
 
   cv.imshow(canvas,out);
 
-  // JSON summary
   lastJSON={
     bbox:{x:bb.x,y:bb.y,w:bb.width,h:bb.height},
     lines: Object.fromEntries(Object.entries({
@@ -224,7 +223,6 @@ function analyze(){
     params:{edge:+th1El.value, gabor:+gkEl.value}
   };
 
-  // cleanup
   gray.delete(); clahe.delete(); gSum.delete(); g8.delete(); bin.delete(); k3.delete(); skel.delete(); out.delete(); resp.delete(); src.delete();
 }
 
