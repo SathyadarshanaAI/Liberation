@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Palmistry – AI Overlay (Auto-Label)</title>
 <style>
 :root{--pri:#16f0a7;--sec:#38bdf8}
@@ -26,6 +26,8 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
 .legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}
 .legend span{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;background:#0f172a;border:1px solid #1f2c48;border-radius:999px;padding:.2em .6em}
 .dot{width:12px;height:12px;border-radius:999px;display:inline-block}
+.lang{display:flex;gap:8px;justify-content:center;align-items:center;margin:6px auto 0}
+select{background:#0f172a;color:#e6f0ff;border:1px solid #1f2c48;border-radius:10px;padding:.4em .6em}
 </style>
 
 <!-- OpenCV.js (primary + fallback) -->
@@ -44,44 +46,112 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
 </script>
 </head>
 <body>
-<h1>🖐️ Palmistry – AI Overlay</h1>
+<h1 data-i18n="title">🖐️ Palmistry – AI Overlay</h1>
 
 <div class="wrap">
-  <!-- autoplay ඉවත් (mobile autoplay block) -->
+  <!-- no autoplay (mobile may block) -->
   <video id="cam" playsinline></video>
   <img class="ghost" src="https://i.ibb.co/1K7K0gF/palm-overlay-demo.png" alt="overlay"
        onerror="this.style.display='none'">
   <canvas id="cv"></canvas>
-  <span id="status" class="badge">loading OpenCV…</span>
+  <span id="status" class="badge" data-i18n="loading">loading OpenCV…</span>
 </div>
 
 <div class="legend">
-  <span><i class="dot" style="background:#ff6b6b"></i>Heart</span>
-  <span><i class="dot" style="background:#ffd166"></i>Head</span>
-  <span><i class="dot" style="background:#06d6a0"></i>Life</span>
-  <span><i class="dot" style="background:#118ab2"></i>Fate</span>
-  <span><i class="dot" style="background:#ef476f"></i>Marriage</span>
-  <span><i class="dot" style="background:#00e5ff"></i>Sun</span>
+  <span><i class="dot" style="background:#ff6b6b"></i><span data-i18n="heart">Heart</span></span>
+  <span><i class="dot" style="background:#ffd166"></i><span data-i18n="head">Head</span></span>
+  <span><i class="dot" style="background:#06d6a0"></i><span data-i18n="life">Life</span></span>
+  <span><i class="dot" style="background:#118ab2"></i><span data-i18n="fate">Fate</span></span>
+  <span><i class="dot" style="background:#ef476f"></i><span data-i18n="marriage">Marriage</span></span>
+  <span><i class="dot" style="background:#00e5ff"></i><span data-i18n="sun">Sun</span></span>
 </div>
 
-<p class="hint">අත overlay එකට align කරලා <b>Capture</b> → <b>Analyze</b> කරන්න. Background එකට අඳුරු රෙදි/කඩදාසි දාගන්න.</p>
+<div class="lang">
+  <label for="langSel" data-i18n="langLabel">Language:</label>
+  <select id="langSel" aria-label="Language">
+    <option value="en">English</option>
+    <option value="si">සිංහල (Sinhala)</option>
+    <!-- Add more languages here by extending the i18n map -->
+  </select>
+</div>
+
+<p class="hint" data-i18n="hint">
+Align your palm with the overlay, then <b>Capture</b> → <b>Analyze</b>. Use a dark cloth/paper behind the hand for best contrast.
+</p>
 
 <div class="btns">
-  <button class="flip"  id="flipBtn">↔️ Flip</button>
-  <button class="cap"   id="capBtn">📸 Capture</button>
-  <button class="an"    id="anBtn" disabled>✨ Analyze</button>
-  <button class="save"  id="saveBtn" disabled>💾 Save PNG</button>
-  <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
+  <button class="flip"  id="flipBtn"  data-i18n="flip">↔️ Flip</button>
+  <button class="cap"   id="capBtn"   data-i18n="capture">📸 Capture</button>
+  <button class="an"    id="anBtn" disabled data-i18n="analyze">✨ Analyze</button>
+  <button class="save"  id="saveBtn" disabled data-i18n="save">💾 Save PNG</button>
+  <button class="torch" id="torchBtn" hidden data-i18n="torch">🔦 Torch</button>
 </div>
 
 <div class="btns" style="margin-top:-6px">
-  <span class="chip">Edge: <input id="th1" class="sl" type="range" min="20" max="120" value="60"> <small id="th1v">60</small></span>
-  <span class="chip">Detail: <input id="gk"  class="sl" type="range" min="7" max="23" step="2" value="15"> <small id="gkv">15</small></span>
+  <span class="chip"><span data-i18n="edge">Edge</span>:
+    <input id="th1" class="sl" type="range" min="20" max="120" value="60">
+    <small id="th1v">60</small></span>
+  <span class="chip"><span data-i18n="detail">Detail</span>:
+    <input id="gk" class="sl" type="range" min="7" max="23" step="2" value="15">
+    <small id="gkv">15</small></span>
 </div>
 
-<footer>© 2025 Lebaretion · Sathyadarshana – Palmistry AI Overlay</footer>
+<footer>
+  © 2025 Lebaretion · Sathyadarshana — <span data-i18n="footer">One world family through spiritual unity. Add any language via the translator below.</span>
+</footer>
 
 <script>
+/* ===================== i18n (extend freely) ===================== */
+const i18n = {
+  en: {
+    title: "🖐️ Palmistry – AI Overlay",
+    loading: "loading OpenCV…",
+    heart: "Heart", head: "Head", life: "Life", fate: "Fate", marriage: "Marriage", sun: "Sun",
+    langLabel: "Language:",
+    hint: "Align your palm with the overlay, then <b>Capture</b> → <b>Analyze</b>. Use a dark cloth/paper behind the hand for best contrast.",
+    flip: "↔️ Flip", capture: "📸 Capture", analyze: "✨ Analyze", save: "💾 Save PNG", torch:"🔦 Torch",
+    edge: "Edge", detail: "Detail",
+    footer: "One world family through spiritual unity. Add any language via the translator below.",
+    camBlocked: "Camera blocked: ",
+    notReady: "Video not ready",
+    mustCapture: "Capture first",
+    cvNotLoaded: "OpenCV not loaded",
+    torchNotSupported: "Torch not supported on this device",
+    ready: "OpenCV ready"
+  },
+  si: {
+    title:"🖐️ අත රේඛා – AI Overlay",
+    loading:"OpenCV ලෝඩ් වෙමින්…",
+    heart:"Heart", head:"Head", life:"Life", fate:"Fate", marriage:"Marriage", sun:"Sun",
+    langLabel:"භාෂාව:",
+    hint:"අත overlay එකට හොඳට align කරලා <b>Capture</b> → <b>Analyze</b> කරන්න. අත පසුපසට අඳුරු රෙදි/කඩදාසි දාන්න.",
+    flip:"↔️ Flip", capture:"📸 Capture", analyze:"✨ Analyze", save:"💾 Save PNG", torch:"🔦 Torch",
+    edge:"Edge", detail:"Detail",
+    footer:"සියළු ජාතීන් එකමුතුව ආත්මික වීම — පහළ i18n තුළ ඔබට ඉස්සරහට භාෂා එකතු කළ හැක.",
+    camBlocked:"කැමරා අහිමි: ",
+    notReady:"විඩියෝ සූදානම් නැහැ",
+    mustCapture:"පලමුව Capture කරන්න",
+    cvNotLoaded:"OpenCV load වී නෑ",
+    torchNotSupported:"මෙම උපාංගයේ Torch නැහැ",
+    ready:"OpenCV සූදානම්"
+  }
+};
+const $t = key => (i18n[window.appLang] && i18n[window.appLang][key]) || i18n.en[key] || key;
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const k=el.getAttribute("data-i18n");
+    el.innerHTML = $t(k);
+  });
+}
+window.appLang = (navigator.language||"en").slice(0,2) in i18n ? (navigator.language||"en").slice(0,2) : "en";
+document.getElementById("langSel").value = window.appLang;
+document.getElementById("langSel").addEventListener("change", e=>{
+  window.appLang = e.target.value;
+  applyI18n();
+});
+applyI18n();
+/* =============================================================== */
+
 const video=document.getElementById('cam');
 const canvas=document.getElementById('cv');
 const ctx=canvas.getContext('2d');
@@ -103,31 +173,25 @@ flipBtn.onclick=()=>{flipped=!flipped; video.style.transform=flipped?'scaleX(-1)
 th1El.oninput=()=>th1v.textContent=th1El.value;
 gkEl.oninput =()=>gkv.textContent=gkEl.value;
 
-/* ---------- Camera start ONLY when user clicks Capture ---------- */
+/* ---------- Start camera only on first Capture ---------- */
 async function ensureCamera(){
   if(stream) return;
   try{
     stream=await navigator.mediaDevices.getUserMedia({
       video:{
         facingMode:{ideal:'environment'},
-        width:{ideal:3840}, height:{ideal:2160},        // 4K try
-        frameRate:{ideal:15, max:30},                   // stable
-        focusMode: "continuous"                         // some browsers ignore
+        width:{ideal:3840}, height:{ideal:2160},   // request 4K if available
+        frameRate:{ideal:15, max:30},
+        focusMode:"continuous"
       },
       audio:false
     });
     video.srcObject=stream; await video.play();
-
-    // primary track
     track=stream.getVideoTracks()[0];
-
-    // try torch availability
     const caps=track.getCapabilities?.();
-    if(caps && caps.torch){
-      torchBtn.hidden=false;
-    }
+    if(caps && caps.torch){ torchBtn.hidden=false; }
   }catch(e){
-    alert('📷 Camera blocked: '+e.message);
+    alert($t("camBlocked")+e.message);
   }
 }
 
@@ -136,21 +200,17 @@ torchBtn.onclick=async()=>{
   try{
     torchOn=!torchOn;
     await track.applyConstraints({advanced:[{torch:torchOn}]});
-    torchBtn.textContent = torchOn?'🔦 Torch (ON)':'🔦 Torch';
-  }catch(e){ alert('Torch not supported on this device'); }
+    torchBtn.textContent = torchOn ? "🔦 Torch (ON)" : $t("torch");
+  }catch(e){ alert($t("torchNotSupported")); }
 };
 
 capBtn.onclick=async()=>{
-  // start camera if needed
   await ensureCamera();
-  if(!video.videoWidth){ alert('Video not ready'); return; }
-
-  // redraw canvas size to full camera frame
+  if(!video.videoWidth){ alert($t("notReady")); return; }
   canvas.width=video.videoWidth; canvas.height=video.videoHeight;
   ctx.save(); if(flipped){ctx.translate(canvas.width,0); ctx.scale(-1,1);}
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
   ctx.restore();
-
   captured=true; saveBtn.disabled=false; anBtn.disabled=false;
 };
 
@@ -161,18 +221,18 @@ saveBtn.onclick=()=>{
   a.click();
 };
 
-// OpenCV gate
+// OpenCV readiness
 (function waitCV(){
-  const ok=()=>{statusEl.textContent='OpenCV ready';};
+  const ok=()=>{statusEl.textContent=$t("ready");};
   const poll=()=> (window.cv && cv.Mat)? ok() : setTimeout(poll,200);
   if(window.cv && cv.onRuntimeInitialized!==undefined){cv.onRuntimeInitialized=ok; poll();}
   else {poll();}
 })();
 
-/* ------------------ Analyze (simple, fast) ------------------ */
+/* ------------------ Analyze (enhance + overlay) ------------------ */
 anBtn.onclick=()=>{
-  if(!captured){ alert('Capture first'); return; }
-  if(!window.cv||!cv.Mat){ alert('OpenCV not loaded'); return; }
+  if(!captured){ alert($t("mustCapture")); return; }
+  if(!window.cv||!cv.Mat){ alert($t("cvNotLoaded")); return; }
   analyze();
 };
 
@@ -183,7 +243,7 @@ function analyze(){
   const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(gray,gray);
 
-  // Gabor multi-orientation (detail slider controls kernel size)
+  // Gabor multi-orientation
   const ksize=(+gkEl.value)|0, sigma=4.0, lambd=10.0, gamma=0.5, psi=0;
   const degs=[0,20,40,60,80,100,120,140];
   const gSum=new cv.Mat.zeros(gray.rows,gray.cols,cv.CV_32F), resp=new cv.Mat();
@@ -214,7 +274,7 @@ function analyze(){
   [gray,clahe,gSum,g8,bin,k3,skel,rgba,tint,out,resp,src].forEach(m=>m.delete());
 }
 
-// morphological thinning
+// morphological thinning (skeleton)
 function skeletonize(bin){
   const el=cv.getStructuringElement(cv.MORPH_CROSS,new cv.Size(3,3));
   const sk=cv.Mat.zeros(bin.rows,bin.cols,cv.CV_8U), tmp=new cv.Mat(), er=new cv.Mat();
