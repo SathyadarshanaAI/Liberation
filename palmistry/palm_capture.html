@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8">
+  <title>Palmistry AI Result Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      text-align: center;
+      padding: 20px;
+    }
+    img {
+      max-width: 90%;
+      height: auto;
+      border: 3px solid #0ff;
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: 0 0 20px rgba(0,255,255,0.5);
+    }
+    pre {
+      text-align: left;
+      background: #222;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      max-width: 90%;
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🖐 Palmistry AI Result</h1>
+
+  <!-- Show overlay image -->
+  <h2>Detected Palm Lines</h2>
+  <img src="out.png" alt="Palmistry Overlay">
+
+  <!-- Show Sinhala report -->
+  <h2>සිංහල විස්තර Report</h2>
+  <pre>
+<?php
+// If using PHP-enabled server, embed directly
+echo htmlspecialchars(file_get_contents("report_si.txt"));
+?>
+  </pre>
+
+  <!-- If no PHP, you can copy-paste report_si.txt content manually here -->
+</body>
+</html>
