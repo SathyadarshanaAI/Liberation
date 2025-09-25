@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Capture Palm</title>
+<style>
+  video, canvas { width: 90%; max-width: 500px; margin: 10px; border: 2px solid cyan; }
+  button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+</style>
+</head>
+<body>
+  <h1>🖐 Palm Capture</h1>
+  <video id="video" autoplay playsinline></video><br>
+  <button onclick="capture()">📸 Capture</button>
+  <canvas id="canvas"></canvas>
+
+  <script>
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  async function startCam(){
+    const stream = await navigator.mediaDevices.getUserMedia({video:true});
+    video.srcObject = stream;
+  }
+  startCam();
+
+  function capture(){
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    // save to file
+    const link = document.createElement('a');
+    link.download = 'palm.jpg';
+    link.href = canvas.toDataURL('image/jpeg');
+    link.click();
+  }
+  </script>
+</body>
+</html>
