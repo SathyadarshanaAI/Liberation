@@ -1,88 +1,35 @@
-#!/usr/bin/env python3
-"""
-Palmistry Line Prototype v2
-- Detects palm ridges and extracts candidate lines
-- Outputs overlay image + JSON + Sinhala text report
-"""
+import cv2
+import numpy as np
+import argparse
 
-import argparse, os, cv2, numpy as np, json
+# CLI arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--input", required=True, help="Input hand image")
+parser.add_argument("-o", "--out", default="output.png", help="Output image")
+args = parser.parse_args()
 
-def apply_clahe(gray):
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-    return clahe.apply(gray)
+# Load image
+img = cv2.imread(args.input)
+if img is None:
+    raise FileNotFoundError(f"❌ Cannot read image: {args.input}")
 
-def enhance_ridges(gray):
-    thetas = [0, np.pi/6, np.pi/3, np.pi/2, 2*np.pi/3, 5*np.pi/6]
-    ksize, sigma, lambd, gamma, psi = 17, 4.0, 10.0, 0.5, 0
-    acc = np.zeros_like(gray, dtype=np.float32)
-    for th in thetas:
-        kern = cv2.getGaborKernel((ksize, ksize), sigma, th, lambd, gamma, psi, ktype=cv2.CV_32F)
-        resp = cv2.filter2D(gray, cv2.CV_32F, kern)
-        acc = np.maximum(acc, resp)
-    return cv2.normalize(acc, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+print("✅ Input image loaded:", args.input)
 
-def skeletonize(bin_img):
-    img, skel = bin_img.copy(), np.zeros(bin_img.shape, np.uint8)
-    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
-    while True:
-        eroded = cv2.erode(img, kernel)
-        opened = cv2.morphologyEx(eroded, cv2.MORPH_OPEN, kernel)
-        temp = cv2.subtract(eroded, opened)
-        skel = cv2.bitwise_or(skel, temp)
-        img = eroded.copy()
-        if cv2.countNonZero(img) == 0:
-            break
-    return skel
+# Convert to grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-def analyze_lines(skel):
-    # Fake demo analysis
-    return {
-        "life_line": {"status":"deep_continuous","confidence":0.92,"notes":"strong vitality"},
-        "head_line": {"type":"straight","confidence":0.81},
-        "heart_line": {"end":"between_index_middle","confidence":0.87},
-        "fate_line": {"status":"faint","confidence":0.45}
-    }
+# Detect edges
+edges = cv2.Canny(gray, 80, 200)
 
-def make_report_si(analysis):
-    return f"""🖐 පිරික්සුම:
+# Detect lines (Hough transform)
+lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=80, minLineLength=50, maxLineGap=10)
 
-➡️ ජීව රේඛාව: {analysis['life_line']['status']} (විශ්වාසය {analysis['life_line']['confidence']*100:.0f}%)
-➡️ සිත/තේරුම් රේඛාව: {analysis['head_line']['type']} (විශ්වාසය {analysis['head_line']['confidence']*100:.0f}%)
-➡️ හදවතේ රේඛාව: {analysis['heart_line']['end']} (විශ්වාසය {analysis['heart_line']['confidence']*100:.0f}%)
-➡️ විධි රේඛාව: {analysis['fate_line']['status']} (විශ්වාසය {analysis['fate_line']['confidence']*100:.0f}%)
-"""
+# Draw detected lines
+if lines is not None:
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-i","--input", required=True)
-    ap.add_argument("-o","--out", default="out.png")
-    ap.add_argument("--json", default="out.json")
-    ap.add_argument("--txt", default="report_si.txt")
-    ap.add_argument("--k", type=int, default=4)
-    args = ap.parse_args()
-
-    bgr = cv2.imread(args.input)
-    if bgr is None:
-        raise RuntimeError("Cannot read input image")
-
-    gray = apply_clahe(cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY))
-    ridges = enhance_ridges(gray)
-    th = cv2.adaptiveThreshold(ridges,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,31,7)
-    if cv2.countNonZero(th) > th.size*0.5:
-        th = cv2.bitwise_not(th)
-    skel = skeletonize(th)
-
-    # save overlay
-    overlay = cv2.cvtColor(skel, cv2.COLOR_GRAY2BGR)
-    cv2.imwrite(args.out, overlay)
-
-    # fake analysis
-    analysis = analyze_lines(skel)
-
-    with open(args.json,"w") as f: json.dump(analysis,f,indent=2,ensure_ascii=False)
-    with open(args.txt,"w") as f: f.write(make_report_si(analysis))
-
-    print(f"[OK] Saved {args.out}, {args.json}, {args.txt}")
-
-if __name__=="__main__":
-    main()
+# Save output image
+cv2.imwrite(args.out, img)
+print("✅ Process finished. Output saved as:", args.out)
