@@ -1,39 +1,43 @@
 <div style="margin:12px 0">
-  <label>Language: </label>
+  <label>Report: </label>
   <select id="lang">
     <option value="en">English</option>
-    <option value="si">සිංහල (Sinhala)</option>
+    <option value="si">සිංහල</option>
     <option value="ta">தமிழ் (Tamil)</option>
     <option value="hi">हिन्दी (Hindi)</option>
     <option value="ar">العربية (Arabic)</option>
     <option value="es">Español (Spanish)</option>
     <option value="fr">Français (French)</option>
     <option value="de">Deutsch (German)</option>
-    <option value="zh-CN">中文 (Chinese)</option>
+    <option value="zh-CN">中文(简体) Chinese</option>
     <option value="ja">日本語 (Japanese)</option>
   </select>
+  <button id="refresh">Refresh now</button>
 </div>
 
-<pre id="reportBox" style="white-space:pre-wrap;border:1px solid #ccc;padding:10px;border-radius:8px"></pre>
+<pre id="reportBox" style="white-space:pre-wrap;border:1px solid #ccc;padding:10px;border-radius:8px;min-height:240px"></pre>
 
 <script>
+const supported = ["en","si","ta","hi","ar","es","fr","de","zh-CN","ja"];
+
 async function loadReport(lang){
   const file = lang==='en' ? 'report_en.txt' : `report_${lang}.txt`;
+  const bust = `v=${Date.now()}`;              // cache-bust
   try{
-    const res = await fetch(file);
+    const res = await fetch(`${file}?${bust}`);
     if(!res.ok) throw new Error(res.status);
     document.getElementById('reportBox').textContent = await res.text();
   }catch(e){
     document.getElementById('reportBox').textContent =
-      `Report not found for "${lang}". Generate it first.\nLooking for: ${file}`;
+      `Report not found for "${lang}". Looking for: ${file}`;
   }
 }
+document.getElementById('lang').addEventListener('change', e=>loadReport(e.target.value));
+document.getElementById('refresh').addEventListener('click', ()=>loadReport(document.getElementById('lang').value));
 
-document.getElementById('lang').addEventListener('change', e => loadReport(e.target.value));
-
-const supported = ["en","si","ta","hi","ar","es","fr","de","zh-CN","ja"];
+// auto-pick browser language if supported
 const userLang = (navigator.language || navigator.userLanguage || "en");
-const defaultLang = supported.includes(userLang) ? userLang : "en";
-document.getElementById('lang').value = defaultLang;
-loadReport(defaultLang);
+const pick = supported.includes(userLang) ? userLang : "en";
+document.getElementById('lang').value = pick;
+loadReport(pick);
 </script>
