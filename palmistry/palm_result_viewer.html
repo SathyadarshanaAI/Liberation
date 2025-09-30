@@ -61,8 +61,9 @@
     }
   }
 
-  // change event
-  document.getElementById('lang').addEventListener('change', e => loadReport(e.target.value));
+  // when dropdown changes
+  document.getElementById('lang').addEventListener('change',
+    e => loadReport(e.target.value));
 
   // auto-detect browser language
   const supported = ["en","si","ta","hi","ar","es","fr","de","zh-CN"];
