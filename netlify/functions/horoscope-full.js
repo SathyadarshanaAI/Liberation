@@ -6,7 +6,6 @@ const SIG = [
 ];
 const pad = n => String(n).padStart(2,"0");
 const toUTC = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
-
 function degToSign(deg){ const idx = Math.floor(((deg%360)+360)%360/30); return SIG[idx]; }
 
 async function computeGeoLongitudes(utc, ayan){
@@ -54,13 +53,16 @@ function sectionText(planets){
   return { health, education, love, career, luck };
 }
 
-function composePreview(planets){
+function composeFull(planets){
   const sec = sectionText(planets);
-  const order = ["health","education","love","career","luck"];
-  let text = order.map(k=>sec[k]).join(" ");
-  const words = text.split(/\s+/);
-  if (words.length > 300) text = words.slice(0,300).join(" ") + "...";
-  return { text, words: Math.min(words.length, 300), sections: sec };
+  const cycles = "Next 30 days favor steady growth. Productive windows: days 5–8 and 18–21. Avoid impulsive spending near lunar squares.";
+  const remedies = "Remedies: early sunlight 10m daily, walking Tue/Thu, donate grains on Thursdays, keep gratitude journal.";
+  const text = [sec.health, sec.education, sec.love, sec.career, sec.luck, cycles, remedies].join(" ");
+  return { text, sections: sec, cycles, remedies, words: text.split(/\s+/).length };
+}
+
+function signHmac(secret, payload){
+  return crypto.createHmac("sha256", secret).update(payload).digest("hex");
 }
 
 exports.handler = async (event) => {
@@ -69,19 +71,19 @@ exports.handler = async (event) => {
     const utc = url.searchParams.get("utc") || toUTC(new Date());
     const ayanStr = url.searchParams.get("ayan");
     const ayan = ayanStr!=null ? parseFloat(ayanStr) : undefined;
-    const id  = url.searchParams.get("id") || "guest";
+    const id  = url.searchParams.get("id");
+    const token = url.searchParams.get("token");
+
+    if (!id || !token) return json(401,{error:"auth-required"});
+    const expected = signHmac(process.env.ASTRO_SECRET || "change-me-super-secret", `${id}:${utc}`);
+    if (token !== expected) return json(403,{error:"invalid-token"});
 
     const geo = await computeGeoLongitudes(utc, ayan);
-    const pr  = composePreview(geo.planets);
+    const full = composeFull(geo.planets);
 
-    return json(200, {
-      kind:"free-preview",
-      utc: geo.utc, center: geo.center, ref_plane: geo.ref_plane,
-      id_hash: hashId(id),
-      ...pr
-    });
-  }catch(e){ console.error(e); return json(500,{error:"free-failed"}); }
+    return json(200, { kind:"full-report", utc: geo.utc, center: geo.center, ref_plane: geo.ref_plane, id_hash: hashId(id), ...full });
+  }catch(e){ console.error(e); return json(500,{error:"full-failed"}); }
 };
 
-function hashId(id){ return require("crypto").createHash("sha256").update(String(id)).digest("hex").slice(0,24); }
+function hashId(id){ return crypto.createHash("sha256").update(String(id)).digest("hex").slice(0,24); }
 function json(s,b){ return { statusCode:s, headers:{ "Content-Type":"application/json" }, body: JSON.stringify(b) }; }
