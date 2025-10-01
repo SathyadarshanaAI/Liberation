@@ -1,0 +1,9 @@
+[build]
+  publish   = "public"
+  functions = "netlify/functions"
+
+# Optional cache headers for static
+[[headers]]
+  for = "/*"
+  [headers.values]
+  Cache-Control = "public, max-age=3600, s-maxage=3600, stale-while-revalidate=300"
