@@ -1,7 +1,7 @@
 [build]
   publish = "."
 
-# (optional) cache headers
+# Optional cache headers for static files
 [[headers]]
   for = "/*"
   [headers.values]
@@ -14,6 +14,16 @@
   status = 200
 
 [[redirects]]
+  from = "/palmistry/"
+  to   = "/palmistry/index.html"
+  status = 200
+
+[[redirects]]
   from = "/quamtsm"
+  to   = "/quamtsm/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/quamtsm/"
   to   = "/quamtsm/index.html"
   status = 200
