@@ -1,9 +1,19 @@
 [build]
-  publish   = "public"
-  functions = "netlify/functions"
+  publish = "."
 
-# Optional cache headers for static
+# (optional) cache headers
 [[headers]]
   for = "/*"
   [headers.values]
   Cache-Control = "public, max-age=3600, s-maxage=3600, stale-while-revalidate=300"
+
+# Pretty URLs for section homes
+[[redirects]]
+  from = "/palmistry"
+  to   = "/palmistry/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/quamtsm"
+  to   = "/quamtsm/index.html"
+  status = 200
