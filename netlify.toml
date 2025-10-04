@@ -1,22 +1,33 @@
 [build]
   publish = "."
 
+# 🔹 Root → palmistry folder
 [[redirects]]
   from = "/"
   to   = "/palmistry/"
   status = 301
 
+# 🔹 /palmistry → palmistry.html
 [[redirects]]
   from = "/palmistry"
-  to   = "/palmistry/index.html"
+  to   = "/palmistry/palmistry.html"
   status = 200
 
+# 🔹 /quamtem → kp-chart.html
 [[redirects]]
-  from = "/quamtsm"
-  to   = "/quamtsm/index.html"
+  from = "/quamtem"
+  to   = "/quamtem/kp-chart.html"
   status = 200
 
+# 🔹 Optional extra pretty alias (if you want direct /kp)
+[[redirects]]
+  from = "/kp"
+  to   = "/quamtem/kp-chart.html"
+  status = 200
+
+# 🔹 HTTP headers (cache + camera)
 [[headers]]
   for = "/*"
   [headers.values]
   Cache-Control = "public, max-age=0, s-maxage=300, must-revalidate"
+  Permissions-Policy = "camera=(self)"
