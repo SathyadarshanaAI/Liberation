@@ -24,7 +24,6 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
 .row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
 .chip{background:#0f172a;border:1px solid #1f2c48;border-radius:999px;padding:.25em .6em}
 .sl{width:180px}
-/* inline SVG overlay */
 .overlay{position:absolute;inset:0;pointer-events:none;opacity:.22;filter:drop-shadow(0 0 6px #00f5ff33)}
 </style>
 
@@ -44,9 +43,7 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
   <video id="cam" playsinline></video>
   <canvas id="cv"></canvas>
   <span id="cvStatus" class="badge">loading OpenCV…</span>
-
-  <!-- built-in SVG palm guide -->
-  <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice">
     <rect x="6" y="6" width="408" height="548" rx="16" ry="16" fill="none" stroke="#00e5ff" stroke-width="2"/>
     <path d="M145 485c-55-35-78-139-19-190 6-45 8-90 29-98 22-9 34 33 34 79 0-52 16-96 37-95 21 1 22 47 17 98 7-50 24-89 43-85 19 4 19 54 9 101 8-43 25-73 42-67 16 6 14 49 0 96 24 22 36 71 21 110-21 55-80 74-213 51z" fill="none" stroke="#00e5ff" stroke-width="2"/>
   </svg>
@@ -70,34 +67,21 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
 <footer>© 2025 Lebaretion · Sathyadarshana – Palmistry AI Overlay</footer>
 
 <script>
-const video=document.getElementById('cam');
-const canvas=document.getElementById('cv');
-const ctx=canvas.getContext('2d');
+const video=document.getElementById('cam'),canvas=document.getElementById('cv'),ctx=canvas.getContext('2d');
 const stat=document.getElementById('cvStatus');
-const flipBtn=document.getElementById('flipBtn');
-const capBtn=document.getElementById('capBtn');
-const anBtn=document.getElementById('anBtn');
-const saveBtn=document.getElementById('saveBtn');
-const torchBtn=document.getElementById('torchBtn');
-const edge=document.getElementById('edge'), edgev=document.getElementById('edgev');
-const gk  =document.getElementById('gk'),   gkv  =document.getElementById('gkv');
-
-edge.oninput=()=>edgev.textContent=edge.value;
-gk.oninput  =()=>gkv.textContent=gk.value;
-
-let flipped=false, captured=false, stream=null, track=null, torch=false;
-
-function fit(){const w=Math.min(420,Math.floor(innerWidth*0.92)),h=Math.floor(w*4/3);canvas.width=w;canvas.height=h;}
-addEventListener('resize',fit,{passive:true}); fit();
+const flipBtn=document.getElementById('flipBtn'),capBtn=document.getElementById('capBtn'),anBtn=document.getElementById('anBtn');
+const saveBtn=document.getElementById('saveBtn'),torchBtn=document.getElementById('torchBtn');
+const edge=document.getElementById('edge'),edgev=document.getElementById('edgev'),gk=document.getElementById('gk'),gkv=document.getElementById('gkv');
+edge.oninput=()=>edgev.textContent=edge.value; gk.oninput=()=>gkv.textContent=gk.value;
+let flipped=false,captured=false,stream=null,track=null,torch=false;
 
 flipBtn.onclick=()=>{flipped=!flipped; video.style.transform=flipped?'scaleX(-1)':'none';};
 
-// lazy-start camera when capturing (more reliable on mobile)
 async function ensureCamera(){
   if(stream) return;
   try{
     stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'}, width:{ideal:3840}, height:{ideal:2160}, frameRate:{ideal:15,max:30}},
+      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:15,max:30}},
       audio:false
     });
     video.srcObject=stream; await video.play();
@@ -106,76 +90,37 @@ async function ensureCamera(){
   }catch(e){ alert('Camera error: '+e.message); }
 }
 
-torchBtn.onclick=async()=>{
-  if(!track) return;
-  try{ torch=!torch; await track.applyConstraints({advanced:[{torch}]}); torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch'; }
-  catch{ alert('Torch not supported on this device'); }
-};
+torchBtn.onclick=async()=>{if(!track)return;try{torch=!torch;await track.applyConstraints({advanced:[{torch}]});torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch';}catch{alert('Torch not supported');}};
 
 capBtn.onclick=async()=>{
   await ensureCamera();
-  if(!video.videoWidth){ alert('Video not ready'); return; }
+  if(!video.videoWidth){alert('Video not ready');return;}
   canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-  ctx.save(); if(flipped){ctx.translate(canvas.width,0); ctx.scale(-1,1);} ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
+  ctx.save(); if(flipped){ctx.translate(canvas.width,0);ctx.scale(-1,1);} ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
   captured=true; saveBtn.disabled=false; anBtn.disabled=false;
 };
 
-saveBtn.onclick=()=>{const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click();};
+saveBtn.onclick=()=>{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='palm_'+Date.now()+'.png';a.click();};
 
-// OpenCV ready indicator
-(function waitCV(){
-  const ok=()=>{stat.textContent='OpenCV ready';};
-  const poll=()=> (window.cv && cv.Mat)? ok() : setTimeout(poll,200);
-  if(window.cv && cv.onRuntimeInitialized!==undefined){cv.onRuntimeInitialized=ok; poll();} else poll();
-})();
+(function waitCV(){const ok=()=>{stat.textContent='OpenCV ready';};const poll=()=> (window.cv&&cv.Mat)?ok():setTimeout(poll,200);if(window.cv&&cv.onRuntimeInitialized!==undefined){cv.onRuntimeInitialized=ok;poll();}else poll();})();
 
-anBtn.onclick=()=>{
-  if(!captured) return alert('Capture first');
-  if(!window.cv||!cv.Mat) return alert('OpenCV not loaded');
-  analyze();
-};
+anBtn.onclick=()=>{if(!captured)return alert('Capture first');if(!window.cv||!cv.Mat)return alert('OpenCV not loaded');analyze();};
 
-// ---- Analyze: enhance -> threshold -> contours (green) ----
 function analyze(){
   const src=cv.imread(canvas);
-
-  // grayscale + CLAHE
   const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(gray,gray);
-
-  // Gabor bank (detail slider controls kernel)
-  const ksize=(+gk.value)|0, sigma=4.0, lambd=10.0, gamma=0.5, psi=0;
-  const degs=[0,20,40,60,80,100,120,140];
-  const gSum=cv.Mat.zeros(gray.rows,gray.cols,cv.CV_32F), resp=new cv.Mat();
-  for(const d of degs){const th=d*Math.PI/180; const ker=cv.getGaborKernel(new cv.Size(ksize,ksize),sigma,th,lambd,gamma,psi,cv.CV_32F); cv.filter2D(gray,resp,cv.CV_32F,ker); cv.max(gSum,resp,gSum); ker.delete();}
+  const ksize=(+gk.value)|0,sigma=4.0,lambd=10.0,gamma=0.5,psi=0,degs=[0,20,40,60,80,100,120,140];
+  const gSum=cv.Mat.zeros(gray.rows,gray.cols,cv.CV_32F),resp=new cv.Mat();
+  for(const d of degs){const th=d*Math.PI/180;const ker=cv.getGaborKernel(new cv.Size(ksize,ksize),sigma,th,lambd,gamma,psi,cv.CV_32F);cv.filter2D(gray,resp,cv.CV_32F,ker);cv.max(gSum,resp,gSum);ker.delete();}
   const g8=new cv.Mat(); cv.normalize(gSum,gSum,0,255,cv.NORM_MINMAX); gSum.convertTo(g8,cv.CV_8U);
-
-  // threshold (edge slider shifts bias)
-  const bin=new cv.Mat();
-  cv.adaptiveThreshold(g8,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,21,-(+edge.value));
-
-  // clean up small specks
-  const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-  cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3);
-  cv.dilate(bin,bin,k3);
-
-  // --- NEW: contours ---
-  const contours=new cv.MatVector(), hierarchy=new cv.Mat();
-  cv.findContours(bin,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-
+  const bin=new cv.Mat(); cv.adaptiveThreshold(g8,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,21,-(+edge.value));
+  const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3)); cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3); cv.dilate(bin,bin,k3);
+  const contours=new cv.MatVector(),hierarchy=new cv.Mat(); cv.findContours(bin,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
   const out=src.clone();
-  for(let i=0;i<contours.size();i++){
-    // filter tiny contours
-    const area=cv.contourArea(contours.get(i));
-    if(area<120) continue;
-    cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2,cv.LINE_8,hierarchy,0);
-  }
-
+  for(let i=0;i<contours.size();i++){const area=cv.contourArea(contours.get(i));if(area<120) continue; cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);}
   cv.imshow(canvas,out);
-
-  // cleanup
-  gray.delete(); clahe.delete(); gSum.delete(); resp.delete(); g8.delete();
-  bin.delete(); k3.delete(); src.delete(); out.delete(); hierarchy.delete(); contours.delete();
+  gray.delete();clahe.delete();gSum.delete();resp.delete();g8.delete();bin.delete();k3.delete();src.delete();out.delete();hierarchy.delete();contours.delete();
 }
 </script>
 </body>
