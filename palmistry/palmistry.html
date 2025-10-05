@@ -3,21 +3,19 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sathyadarshana · Palmistry AI Overlay — FINAL DEBUG</title>
+<title>Sathyadarshana · Palmistry AI Overlay — FINAL v2</title>
 <style>
-  :root{
-    --bg:#0a0f1a; --ink:#e6f0ff; --cyan:#29e0ff;
-    --heart:#ff3b3b; --head:#ffa533; --life:#42ff6c;
-  }
+  :root{ --bg:#0a0f1a; --ink:#e6f0ff; --cyan:#29e0ff;
+         --heart:#ff3b3b; --head:#ffa533; --life:#42ff6c; }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial}
   header{padding:10px 14px;border-bottom:1px solid #19304e;background:linear-gradient(180deg,#0b1322,#0a0f1a)}
   h1{margin:0;font-size:16px}
   .wrap{max-width:900px;margin:10px auto;padding:10px}
   .stage{position:relative;border:2px solid #163255;border-radius:14px;overflow:hidden;background:#000}
-  /* ---- layer order ---- */
+  /* layers */
   #cam{position:relative;z-index:0;width:100%;height:auto;display:block}
-  #frame{position:absolute;inset:0;z-index:1;display:none}   /* locked photo */
+  #frame{position:absolute;inset:0;z-index:1;display:none}
   #overlay{position:absolute;inset:0;z-index:3;pointer-events:none}
   .grid{position:absolute;inset:8px;z-index:2;border:2px solid rgba(41,224,255,.5);border-radius:10px}
   .legend{position:absolute;left:10px;top:10px;z-index:4;display:flex;gap:8px}
@@ -35,12 +33,12 @@
 </style>
 </head>
 <body>
-<header><h1>✨ Palmistry AI Overlay — FINAL (Capture-Lock ▸ Edge ▸ Skeleton ▸ Curves)</h1></header>
+<header><h1>✨ Palmistry AI Overlay — FINAL v2 (Capture-Lock ▸ Edge ▸ Skeleton ▸ Curves)</h1></header>
 
 <div class="wrap">
   <div class="stage" id="stage">
     <video id="cam" playsinline muted></video>
-    <canvas id="frame"></canvas>   <!-- locked photo -->
+    <canvas id="frame"></canvas>
     <canvas id="overlay"></canvas>
     <div class="grid"></div>
     <div class="legend">
@@ -75,6 +73,11 @@ const video = $('#cam'), cv = $('#overlay'), ctx = cv.getContext('2d');
 const frameCanvas = $('#frame'), fctx = frameCanvas.getContext('2d');
 let stream, track, facing='environment', locked=false;
 
+/* --- crossOrigin (mobile security/tainting) --- */
+cv.crossOrigin = "anonymous";
+frameCanvas.crossOrigin = "anonymous";
+video.crossOrigin = "anonymous";
+
 /* -------- Camera -------- */
 async function startCam(){
   if(stream){ stream.getTracks().forEach(t=>t.stop()); }
@@ -101,6 +104,13 @@ async function startCam(){
 }
 startCam().catch(e=>alert('Camera error: '+e.message));
 
+/* -------- Visibility repaint (mobile freeze guard) -------- */
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible" && locked){
+    try{ drawGuide(); }catch(e){ console.warn("Repaint failed",e); }
+  }
+});
+
 /* -------- UI -------- */
 $('#flip').onclick = ()=>{ facing=(facing==='user'?'environment':'user'); startCam(); };
 $('#torch').onclick = async ()=>{
@@ -118,10 +128,10 @@ $('#detail').oninput = e=>$('#detv').textContent = e.target.value;
 $('#capture').onclick = ()=>{
   try{
     fctx.drawImage(video,0,0,frameCanvas.width,frameCanvas.height);
-    frameCanvas.style.display = 'block';  // show locked image
-    video.style.display = 'none';         // hide live feed
+    frameCanvas.style.display = 'block';
+    video.style.display = 'none';
     locked = true;
-    drawGuide(); // overlay repaint
+    drawGuide();
     alert("🖐️ Photo locked. දැන් 'Analyze' දබාන්න.");
   }catch(e){ alert('Capture failed: '+e.message); }
 };
@@ -150,7 +160,8 @@ $('#save').onclick = ()=>{
 
 /* ---- ANALYZE ---- */
 $('#analyze').onclick = ()=>{
-  try{ analyzeNow(); }catch(e){ alert('Analyze failed: '+e.message); console.error(e); }
+  try{ analyzeNow(); }
+  catch(e){ alert('Analyze failed: '+e.message); console.error(e); }
 };
 
 /* -------- Helpers -------- */
@@ -174,9 +185,9 @@ function claheLike(arr,w,h){
   const out=new Uint8ClampedArray(arr.length);
   for(let ty=0;ty<th;ty++)for(let tx=0;tx<tw;tx++){
     const x0=tx*tileW,y0=ty*tileH,x1=Math.min(w,(tx+1)*tileW),y1=Math.min(h,(ty+1)*tileH);
-    let min=255,max=0; for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){ const v=arr[y*w+x]; if(v<min)min=v; if(v>max)max=v; }
+    let min=255,max=0; for(let y=y0;y<y1;y++)for(let x=x0;x<x1++){ const v=arr[y*w+x]; if(v<min)min=v; if(v>max)max=v; }
     const range=Math.max(20,max-min);
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){ const v=arr[y*w+x]; out[y*w+x]=((v-min)*255)/range; }
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1){ const v=arr[y*w+x]; out[y*w+x]=((v-min)*255)/range; }
   } return out;
 }
 function blur3(arr,w,h,passes){ let a=Float32Array.from(arr); const k=[1,2,1,2,4,2,1,2,1],norm=16;
@@ -251,7 +262,8 @@ function drawPath(pts,color,wid){
 function analyzeNow(){
   const edgeThr = Number($('#edge').value)/100;   // 0.2..0.9
   const passes  = Number($('#detail').value);     // 1..5
-  const frame = getImageData();
+  const frame = locked ? fctx.getImageData(0,0,frameCanvas.width,frameCanvas.height)
+                       : (function(){const c=document.createElement('canvas');c.width=cv.width;c.height=cv.height;c.getContext('2d').drawImage(video,0,0,c.width,c.height);return c.getContext('2d').getImageData(0,0,c.width,c.height);}());
   const {w,h,g:gr0} = toGray(frame);
   const g1 = claheLike(gr0,w,h);
   const g2 = blur3(g1,w,h,passes);
