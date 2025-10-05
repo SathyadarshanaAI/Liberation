@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry Analyzer — Overlay FAB</title>
+<title>Palmistry Overlay + FAB Capture + Camera Fix</title>
 <style>
 :root{--pri:#16f0a7;--sec:#38bdf8}
 *{box-sizing:border-box}
@@ -27,20 +27,20 @@ button{border:none;border-radius:10px;padding:.7em 1.2em;font-weight:700;cursor:
 .chip{background:#0f172a;border:1px solid #1f2c48;border-radius:999px;padding:.25em .6em}
 .sl{width:180px}
 
-/* overlay with dark area + hand window */
+/* overlay with dark mask + hand-window */
 .overlay{position:absolute;inset:0;pointer-events:none;transition:transform .2s;opacity:.98}
 .overlay .g{stroke:#00e8ff;stroke-width:2.2;fill:none}
 .overlay text{fill:#7de9ff;font:16px system-ui}
 
-/* keep video hidden; we draw to canvas */
+/* hide video itself */
 video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 
-/* Countdown */
+/* countdown */
 .count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font:700 64px/1 system-ui;color:#eaffff;text-shadow:0 2px 14px #000c;pointer-events:none;opacity:0;transition:opacity .15s}
 .count.show{opacity:1}
 
-/* Floating capture button ON overlay */
+/* capture floating */
 .cap-fab{
   position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
   z-index:5; width:84px; height:84px; border-radius:999px;
@@ -52,32 +52,29 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 .cap-fab:active{ transform:translateX(-50%) scale(.98); }
 .cap-label{position:absolute; left:50%; bottom:108px; transform:translateX(-50%); z-index:5; color:#bfefff; font-size:12px; opacity:.9}
 
-/* lock page while using camera (disabled after capture) */
+/* lock scroll when live only */
 .lock-scroll{height:100vh;overflow:hidden}
 
 #thumbs img{width:96px;height:auto;border:1px solid #18d6ff;border-radius:8px;display:block}
 #thumbs .tag{font:12px/1.2 system-ui;color:#9fd;margin-top:4px}
 </style>
 
-<!-- OpenCV -->
 <script async src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js"></script>
 </head>
 <body>
 <h1>🖐️ Palmistry</h1>
-<p class="sub">Left = Past • Right = Present — align hand in the block → <b>Capture</b> → <b>Analyze</b></p>
+<p class="sub">Left = Past • Right = Present — align hand in block → Capture → Analyze</p>
 
 <div class="wrap" id="wrap">
   <video id="cam" playsinline></video>
   <canvas id="cv"></canvas>
   <span id="cvStatus" class="badge">loading OpenCV…</span>
 
-  <!-- OVERLAY with dark area + transparent hand window -->
   <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true" id="overlay">
     <defs>
       <mask id="handWindow">
         <rect width="420" height="560" fill="white"/>
-        <!-- hand shape hole -->
-        <path id="handPath" fill="black" d="
+        <path fill="black" d="
           M 92 470
           C 92 410, 85 345, 120 300
           C 125 245, 130 205, 150 195
@@ -91,13 +88,12 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
           C 353 360, 366 414, 350 458
           C 332 510, 280 525, 210 518
           C 150 511, 115 500, 92 470 Z"/>
-    </mask>
-    <!-- dark outside -->
+      </mask>
+    </defs>
+
     <rect width="420" height="560" fill="#000" opacity="0.55" mask="url(#handWindow)"/>
-    <!-- glow on window -->
     <use href="#handPath" fill="none" stroke="#00f5ff88" stroke-width="8"/>
     <use href="#handPath" fill="none" stroke="#00f5ffcc" stroke-width="2.2"/>
-    <!-- subtle guides -->
     <path class="g" opacity=".35" d="M145 230 q10 -55 33 -53 q23 2 20 66"/>
     <path class="g" opacity=".35" d="M192 224 q13 -60 36 -56 q23 4 14 78"/>
     <path class="g" opacity=".35" d="M238 232 q14 -54 34 -49 q20 5 11 73"/>
@@ -109,11 +105,9 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
     <text x="210" y="520" text-anchor="middle">Place palm inside the block</text>
   </svg>
 
-  <!-- floating capture -->
   <div id="capLabel" class="cap-label">Tap to Capture</div>
   <button id="capFab" class="cap-fab" aria-label="Capture">●</button>
 
-  <!-- countdown -->
   <div id="count" class="count">3</div>
 </div>
 
@@ -150,120 +144,183 @@ const countEl=document.getElementById('count');
 edge.oninput=()=>edgev.textContent=edge.value; gk.oninput=()=>gkv.textContent=gk.value;
 
 let hand='right', captured=false, stream=null, track=null, torch=false;
-// live preview loop control
 let live=false, rafId=0;
 
 function lockScroll(on){ document.body.classList.toggle('lock-scroll', !!on); }
 function applyHand(){
   overlaySvg.style.transform = (hand==='left')?'scaleX(-1)':'none';
-  handBtn.textContent=(hand==='left')?'🖐️ Left • Past':'🖐️ Right • Present';
-  statusTxt.textContent=(hand==='left')?'Align LEFT hand':'Align RIGHT hand';
+  handBtn.textContent = (hand==='left')?'🖐️ Left • Past':'🖐️ Right • Present';
+  statusTxt.textContent = (hand==='left')?'Align LEFT hand':'Align RIGHT hand';
 }
-handBtn.onclick=()=>{ hand=(hand==='right')?'left':'right'; applyHand(); }; applyHand();
+handBtn.onclick = () => { hand = (hand==='right') ? 'left' : 'right'; applyHand(); };
+applyHand();
 
 async function ensureCamera(){
-  if(stream) return;
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:15,max:30}},
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Camera not supported');
+    return;
+  }
+  if (stream) return;
+  try {
+    const constraints = {
+      video: {
+        facingMode: { ideal:'environment' },
+        width: { ideal:1280 },
+        height:{ ideal:720 },
+        frameRate:{ ideal:15, max:30 }
+      },
       audio:false
+    };
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.setAttribute('playsinline','');
+    video.muted = true;
+    video.srcObject = stream;
+    await new Promise(r => {
+      if (video.readyState >= 1) r();
+      else video.onloadedmetadata = r;
     });
-    video.srcObject=stream; await video.play();
-    track=stream.getVideoTracks()[0];
-    const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
-  }catch(e){ alert('Camera error: '+e.message); }
+    await video.play();
+    track = stream.getVideoTracks()[0];
+    const caps = track.getCapabilities?.();
+    if (caps && caps.torch) torchBtn.hidden = false;
+  } catch (e) {
+    alert(`Camera error: ${e.name} — ${e.message}. Enable camera permission.`);
+  }
 }
 
 function startLive(){
-  if(live || !stream) return;
-  live=true;
-  const loop=()=>{ if(!live) return;
-    canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||480;
+  if (live || !stream) return;
+  live = true;
+  const loop = () => {
+    if (!live) return;
+    canvas.width = video.videoWidth || 640;
+    canvas.height= video.videoHeight|| 480;
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    rafId=requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   };
   loop();
 }
-function stopLive(){ live=false; if(rafId) cancelAnimationFrame(rafId); }
+function stopLive(){
+  live = false;
+  if (rafId) cancelAnimationFrame(rafId);
+}
 
-torchBtn.onclick=async()=>{ if(!track) return; try{
-  torch=!torch; await track.applyConstraints({advanced:[{torch}]});
-  torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch';
-}catch{ alert('Torch not supported'); } };
+torchBtn.onclick = async ()=>{
+  if (!track) return;
+  try {
+    torch = !torch;
+    await track.applyConstraints({ advanced:[{torch}] });
+    torchBtn.textContent = torch ? '🔦 Torch (ON)' : '🔦 Torch';
+  } catch {
+    alert('Torch not supported');
+  }
+};
 
-startBtn.onclick=async()=>{ await ensureCamera(); lockScroll(true);
-  statusTxt.textContent='Camera live — align inside the block'; startLive(); };
+startBtn.onclick = async () => {
+  await ensureCamera();
+  if (!stream) return;
+  lockScroll(true);
+  statusTxt.textContent = 'Camera live — align inside the block';
+  startLive();
+};
 
 async function countdownCapture(){
-  await ensureCamera(); lockScroll(true);
-  if(!video.videoWidth){ await new Promise(r=> video.onloadedmetadata=r); }
-  const seq=['3','2','1','']; let i=0; countEl.classList.add('show');
+  await ensureCamera();
+  lockScroll(true);
+  if (!video.videoWidth) {
+    await new Promise(r => video.onloadedmetadata = r);
+  }
+  const seq = ['3','2','1','']; let i = 0;
+  countEl.classList.add('show');
   (function tick(){
-    countEl.textContent=seq[i++]; if(i<seq.length){ setTimeout(tick,400); }
-    else{
+    countEl.textContent = seq[i++];
+    if (i < seq.length) {
+      setTimeout(tick, 400);
+    } else {
       countEl.classList.remove('show');
-      stopLive(); // freeze live preview
-      canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+      stopLive();
+      canvas.width = video.videoWidth;
+      canvas.height= video.videoHeight;
       ctx.drawImage(video,0,0,canvas.width,canvas.height);
-      captured=true; anBtn.disabled=false; saveBtn.disabled=false;
-      statusTxt.textContent=`${hand.toUpperCase()} hand captured — Ready to Analyze`;
-      capLabel.textContent='Captured ✓'; setTimeout(()=>capLabel.textContent='Tap to Capture',1200);
+      captured = true;
+      anBtn.disabled = false;
+      saveBtn.disabled = false;
+      statusTxt.textContent = `${hand.toUpperCase()} hand captured — Ready to Analyze`;
+      capLabel.textContent = 'Captured ✓';
+      setTimeout(()=>capLabel.textContent = 'Tap to Capture', 1200);
 
-      // *** IMPORTANT: allow scrolling after capture ***
       lockScroll(false);
 
-      // thumbnail
-      const thumbs=document.getElementById('thumbs');
-      const img=new Image(); img.src=canvas.toDataURL('image/png');
-      const tag=document.createElement('div'); tag.className='tag'; tag.textContent=hand.toUpperCase();
-      const box=document.createElement('div'); box.append(img,tag); thumbs.appendChild(box);
+      const thumbs = document.getElementById('thumbs');
+      const img = new Image(); img.src = canvas.toDataURL('image/png');
+      const tag = document.createElement('div'); tag.className='tag'; tag.textContent = hand.toUpperCase();
+      const box = document.createElement('div'); box.append(img, tag); thumbs.appendChild(box);
     }
   })();
 }
 capFab.onclick = countdownCapture;
 
-saveBtn.onclick=()=>{ const a=document.createElement('a'); a.href=canvas.toDataURL('image/png');
-  a.download=`palm_${hand}_${Date.now()}.png`; a.click(); };
+saveBtn.onclick = () => {
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = `palm_${hand}_${Date.now()}.png`;
+  a.click();
+};
 
-(function waitCV(){ const ok=()=>{statBadge.textContent='OpenCV ready';};
-  const poll=()=> (window.cv && cv.Mat) ? ok() : setTimeout(poll,200);
-  if(window.cv && cv.onRuntimeInitialized!==undefined){ cv.onRuntimeInitialized=ok; poll(); } else poll(); })();
+(function waitCV(){
+  const ok = () => { statBadge.textContent = 'OpenCV ready'; };
+  const poll = () => (window.cv && cv.Mat) ? ok() : setTimeout(poll,200);
+  if (window.cv && cv.onRuntimeInitialized !== undefined) {
+    cv.onRuntimeInitialized = ok;
+    poll();
+  } else poll();
+})();
 
-anBtn.onclick=()=>{ if(!captured) return alert('Capture first'); if(!window.cv||!cv.Mat) return alert('OpenCV not loaded'); analyze(); };
+anBtn.onclick = () => {
+  if (!captured) {
+    alert('Capture first');
+    return;
+  }
+  if (!window.cv || !cv.Mat) {
+    alert('OpenCV not loaded yet');
+    return;
+  }
+  analyze();
+};
 
-// --- Analyze: grayscale->blur->adaptive threshold (inverse)->morph->contours ---
 function analyze(){
-  const src=cv.imread(canvas);
-  const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-  cv.GaussianBlur(gray,gray,new cv.Size(5,5),0);
+  const src = cv.imread(canvas);
+  const gray = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  cv.GaussianBlur(gray, gray, new cv.Size(5,5), 0);
 
-  const bin=new cv.Mat();
+  const bin = new cv.Mat();
   cv.adaptiveThreshold(
-    gray,bin,255,
+    gray, bin, 255,
     cv.ADAPTIVE_THRESH_GAUSSIAN_C,
     cv.THRESH_BINARY_INV,
     25,
-    5 - (+edge.value-50)/10
+    5 - (+edge.value - 50)/10
   );
 
-  const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-  cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3);
+  const k3 = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
+  cv.morphologyEx(bin, bin, cv.MORPH_OPEN, k3);
 
-  const contours=new cv.MatVector(), hierarchy=new cv.Mat();
-  cv.findContours(bin,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+  const contours = new cv.MatVector(), hierarchy = new cv.Mat();
+  cv.findContours(bin, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-  const out=src.clone(); let drawn=0;
-  for(let i=0;i<contours.size();i++){
-    const c=contours.get(i), area=cv.contourArea(c);
-    if(area<120) continue;
-    cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);
+  const out = src.clone(); let drawn = 0;
+  for (let i = 0; i < contours.size(); i++){
+    const c = contours.get(i), area = cv.contourArea(c);
+    if (area < 120) continue;
+    cv.drawContours(out, contours, i, new cv.Scalar(0,255,0,255), 2);
     drawn++;
   }
-  cv.imshow(canvas,out);
-  statusTxt.textContent=`Analyze: ${drawn} contours • ${hand==='left'?'LEFT (Past)':'RIGHT (Present)'}`;
+  cv.imshow(canvas, out);
+  statusTxt.textContent = `Analyze: ${drawn} contours • ${hand === 'left' ? 'LEFT (Past)' : 'RIGHT (Present)'}`;
 
   gray.delete(); bin.delete(); k3.delete(); contours.delete(); hierarchy.delete();
-  setTimeout(()=>{ src.delete(); out.delete(); },200);
+  setTimeout(()=>{ src.delete(); out.delete(); }, 200);
 }
 </script>
 </body>
