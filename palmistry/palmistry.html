@@ -3,22 +3,24 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sathyadarshana · Palmistry AI Overlay — FULL FIX</title>
+<title>Sathyadarshana · Palmistry AI Overlay — FINAL DEBUG</title>
 <style>
   :root{
-    --bg:#0a0f1a; --panel:#101826; --ink:#e6f0ff;
-    --cyan:#29e0ff; --heart:#ff3b3b; --head:#ffa533; --life:#42ff6c;
+    --bg:#0a0f1a; --ink:#e6f0ff; --cyan:#29e0ff;
+    --heart:#ff3b3b; --head:#ffa533; --life:#42ff6c;
   }
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial}
   header{padding:10px 14px;border-bottom:1px solid #19304e;background:linear-gradient(180deg,#0b1322,#0a0f1a)}
-  h1{margin:0;font-size:16px;letter-spacing:.3px}
-  .wrap{max-width:880px;margin:10px auto;padding:10px}qq
+  h1{margin:0;font-size:16px}
+  .wrap{max-width:900px;margin:10px auto;padding:10px}
   .stage{position:relative;border:2px solid #163255;border-radius:14px;overflow:hidden;background:#000}
-  /* ---- CRITICAL: layer order ---- */
-  #cam{position:relative; z-index:0; display:block; width:100%; height:auto;}
-  #overlay{position:absolute; inset:0; z-index:3; pointer-events:none;}
-  .grid{position:absolute; inset:8px; z-index:2; border:2px solid rgba(41,224,255,.5); border-radius:10px}
-  .legend{position:absolute; left:10px; top:10px; z-index:4; display:flex; gap:8px}
+  /* ---- layer order ---- */
+  #cam{position:relative;z-index:0;width:100%;height:auto;display:block}
+  #frame{position:absolute;inset:0;z-index:1;display:none}   /* locked photo */
+  #overlay{position:absolute;inset:0;z-index:3;pointer-events:none}
+  .grid{position:absolute;inset:8px;z-index:2;border:2px solid rgba(41,224,255,.5);border-radius:10px}
+  .legend{position:absolute;left:10px;top:10px;z-index:4;display:flex;gap:8px}
   .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid #25466b}
   .dot{width:12px;height:12px;border-radius:50%}
   .dot.h{background:var(--heart)} .dot.d{background:var(--head)} .dot.l{background:var(--life)}
@@ -33,11 +35,12 @@
 </style>
 </head>
 <body>
-<header><h1>✨ Palmistry AI Overlay — FULL (Edge ▸ Skeleton ▸ Curves)</h1></header>
+<header><h1>✨ Palmistry AI Overlay — FINAL (Capture-Lock ▸ Edge ▸ Skeleton ▸ Curves)</h1></header>
 
 <div class="wrap">
   <div class="stage" id="stage">
     <video id="cam" playsinline muted></video>
+    <canvas id="frame"></canvas>   <!-- locked photo -->
     <canvas id="overlay"></canvas>
     <div class="grid"></div>
     <div class="legend">
@@ -66,188 +69,172 @@
 </div>
 
 <script>
-/* ==========================================================
-   PALMISTRY FULL – camera + edge + skeleton + curve tracking
-   ========================================================== */
+/* ========================= CORE ========================= */
 const $ = s => document.querySelector(s);
 const video = $('#cam'), cv = $('#overlay'), ctx = cv.getContext('2d');
-let stream, track, facing = 'environment';
+const frameCanvas = $('#frame'), fctx = frameCanvas.getContext('2d');
+let stream, track, facing='environment', locked=false;
 
-// camera
+/* -------- Camera -------- */
 async function startCam(){
   if(stream){ stream.getTracks().forEach(t=>t.stop()); }
   stream = await navigator.mediaDevices.getUserMedia({
     video:{ facingMode:facing, width:{ideal:1280}, height:{ideal:720} }, audio:false
   });
-  video.srcObject = stream; video.play();
+  video.srcObject = stream;
+  video.setAttribute('playsinline', true);
+  video.setAttribute('autoplay', true);
+  video.setAttribute('muted', true);
+  video.style.transform = facing==='user' ? 'scaleX(-1)' : 'scaleX(1)';
   track = stream.getVideoTracks()[0];
   await new Promise(r=>video.onloadedmetadata=r);
-  // ---- size fallback (mobile sometimes 0x0) ----
-  cv.width = video.videoWidth || 1280;
-  cv.height = video.videoHeight || 720;
-  requestAnimationFrame(drawGuide); // first paint
-}
-startCam().catch(e=>alert(e.message));
 
-// UI
-$('#flip').onclick = ()=>{ facing = (facing==='user'?'environment':'user'); startCam(); };
+  const W = video.videoWidth  || window.innerWidth  || 1280;
+  const H = video.videoHeight || window.innerHeight || 720;
+  [cv.width, cv.height] = [W, H];
+  [frameCanvas.width, frameCanvas.height] = [W, H];
+
+  frameCanvas.style.display = 'none';
+  video.style.display = 'block';
+  locked = false;
+  requestAnimationFrame(drawGuide);
+}
+startCam().catch(e=>alert('Camera error: '+e.message));
+
+/* -------- UI -------- */
+$('#flip').onclick = ()=>{ facing=(facing==='user'?'environment':'user'); startCam(); };
 $('#torch').onclick = async ()=>{
   try{
     const caps = track?.getCapabilities?.();
-    if(caps && 'torch' in caps){
-      const st = track.getSettings();
+    if(caps && 'torch' in caps){ const st = track.getSettings();
       await track.applyConstraints({advanced:[{torch: !st.torch}]});
-    }else alert('Torch not supported on this device/browser.');
+    } else alert('Torch not supported on this device/browser.');
   }catch(e){ alert('Torch error: '+e.message); }
 };
 $('#edge').oninput = e=>$('#edgev').textContent = e.target.value;
 $('#detail').oninput = e=>$('#detv').textContent = e.target.value;
-$('#capture').onclick = ()=> drawGuide();
-$('#clear').onclick = ()=> { ctx.clearRect(0,0,cv.width,cv.height); drawGuide(); };
-$('#save').onclick = ()=> savePNG();
-$('#analyze').onclick = ()=> { try{ analyzeNow(); } catch(e){ alert('Analyze error: '+e.message); console.error(e); } };
 
-function savePNG(){
+/* ---- CAPTURE (Lock photo) ---- */
+$('#capture').onclick = ()=>{
+  try{
+    fctx.drawImage(video,0,0,frameCanvas.width,frameCanvas.height);
+    frameCanvas.style.display = 'block';  // show locked image
+    video.style.display = 'none';         // hide live feed
+    locked = true;
+    drawGuide(); // overlay repaint
+    alert("🖐️ Photo locked. දැන් 'Analyze' දබාන්න.");
+  }catch(e){ alert('Capture failed: '+e.message); }
+};
+
+/* ---- CLEAR (Back to live) ---- */
+$('#clear').onclick = ()=>{
+  locked=false;
+  frameCanvas.style.display = 'none';
+  video.style.display = 'block';
+  ctx.clearRect(0,0,cv.width,cv.height);
+  drawGuide();
+};
+
+/* ---- SAVE (PNG) ---- */
+$('#save').onclick = ()=>{
   const tmp = document.createElement('canvas');
   tmp.width = cv.width; tmp.height = cv.height;
   const tctx = tmp.getContext('2d');
-  tctx.drawImage(video,0,0,tmp.width,tmp.height);
+  if(locked) tctx.drawImage(frameCanvas,0,0);
+  else       tctx.drawImage(video,0,0,tmp.width,tmp.height);
   tctx.drawImage(cv,0,0);
   const a = document.createElement('a');
   a.download = 'palmistry_overlay.png';
-  a.href = tmp.toDataURL('image/png');
-  a.click();
+  a.href = tmp.toDataURL('image/png'); a.click();
+};
+
+/* ---- ANALYZE ---- */
+$('#analyze').onclick = ()=>{
+  try{ analyzeNow(); }catch(e){ alert('Analyze failed: '+e.message); console.error(e); }
+};
+
+/* -------- Helpers -------- */
+function getImageData(){
+  if(locked){
+    return fctx.getImageData(0,0,frameCanvas.width,frameCanvas.height);
+  }else{
+    const c = document.createElement('canvas');
+    c.width=cv.width; c.height=cv.height;
+    c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+    return c.getContext('2d').getImageData(0,0,c.width,c.height);
+  }
 }
 
-function getFrame(){
-  const c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height;
-  c.getContext('2d').drawImage(video,0,0,c.width,c.height);
-  return c.getContext('2d').getImageData(0,0,c.width,c.height);
-}
-
-// ---------- image ops ----------
-function toGray(img){
-  const {data,width:w,height:h}=img, g=new Uint8ClampedArray(w*h);
+/* ================== Image Ops (no libs) ================= */
+function toGray(img){ const {data,width:w,height:h}=img, g=new Uint8ClampedArray(w*h);
   for(let i=0,j=0;i<data.length;i+=4,j++) g[j]=data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114;
-  return {w,h,g};
-}
+  return {w,h,g}; }
 function claheLike(arr,w,h){
   const tw=8, th=8, tileW=Math.max(1,Math.floor(w/tw)), tileH=Math.max(1,Math.floor(h/th));
   const out=new Uint8ClampedArray(arr.length);
   for(let ty=0;ty<th;ty++)for(let tx=0;tx<tw;tx++){
-    const x0=tx*tileW, y0=ty*tileH, x1=Math.min(w,(tx+1)*tileW), y1=Math.min(h,(ty+1)*tileH);
-    let min=255,max=0;
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){ const v=arr[y*w+x]; if(v<min)min=v; if(v>max)max=v; }
+    const x0=tx*tileW,y0=ty*tileH,x1=Math.min(w,(tx+1)*tileW),y1=Math.min(h,(ty+1)*tileH);
+    let min=255,max=0; for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){ const v=arr[y*w+x]; if(v<min)min=v; if(v>max)max=v; }
     const range=Math.max(20,max-min);
     for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){ const v=arr[y*w+x]; out[y*w+x]=((v-min)*255)/range; }
-  }
-  return out;
+  } return out;
 }
-function blur3(arr,w,h,passes){
-  let a = Float32Array.from(arr);
-  const k=[1,2,1,2,4,2,1,2,1], norm=16;
-  for(let p=0;p<passes;p++){
-    const t=new Float32Array(w*h);
-    for(let y=1;y<h-1;y++){
-      for(let x=1;x<w-1;x++){
-        let s=0,i=0;
-        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ s+=a[(y+dy)*w+(x+dx)]*k[i++]; }
-        t[y*w+x]=s/norm;
-      }
-    }
-    a=t;
-  }
-  return Uint8ClampedArray.from(a);
+function blur3(arr,w,h,passes){ let a=Float32Array.from(arr); const k=[1,2,1,2,4,2,1,2,1],norm=16;
+  for(let p=0;p<passes;p++){ const t=new Float32Array(w*h);
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ let s=0,i=0;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++];
+      t[y*w+x]=s/norm; }
+    a=t; } return Uint8ClampedArray.from(a);
 }
-function sobelEdges(arr,w,h,thr){
-  const mag=new Float32Array(w*h); let max=1;
-  for(let y=1;y<h-1;y++){
-    for(let x=1;x<w-1;x++){
-      const i=y*w+x;
-      const gx = -arr[i-w-1]-2*arr[i-1]-arr[i+w-1] + arr[i-w+1]+2*arr[i+1]+arr[i+w+1];
-      const gy = -arr[i-w-1]-2*arr[i-w]-arr[i-w+1] + arr[i+w-1]+2*arr[i+w]+arr[i+w+1];
-      const m=Math.hypot(gx,gy); mag[i]=m; if(m>max)max=m;
-    }
-  }
+function sobelEdges(arr,w,h,thr){ const mag=new Float32Array(w*h); let max=1;
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;
+    const gx=-arr[i-w-1]-2*arr[i-1]-arr[i+w-1] + arr[i-w+1]+2*arr[i+1]+arr[i+w+1];
+    const gy=-arr[i-w-1]-2*arr[i-w]-arr[i-w+1] + arr[i+w-1]+2*arr[i+w]+arr[i+w+1];
+    const m=Math.hypot(gx,gy); mag[i]=m; if(m>max)max=m; }
   const T=thr*max, bin=new Uint8ClampedArray(w*h);
-  for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0;
-  return bin;
+  for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0; return bin;
 }
-function zhangSuenThin(bin,w,h){
-  const img = Uint8Array.from(bin);
-  let changed=true, pass=0;
-  const N=(x,y)=>(
-    img[(y-1)*w + x] + img[(y-1)*w + (x+1)] + img[y*w + (x+1)] +
-    img[(y+1)*w + (x+1)] + img[(y+1)*w + x] + img[(y+1)*w + (x-1)] +
-    img[y*w + (x-1)] + img[(y-1)*w + (x-1)]
-  );
-  const S=(x,y)=>{
-    const p=[img[(y-1)*w+x], img[(y-1)*w+(x+1)], img[y*w+(x+1)], img[(y+1)*w+(x+1)],
-             img[(y+1)*w+x], img[(y+1)*w+(x-1)], img[y*w+(x-1)], img[(y-1)*w+(x-1)]];
-    let t=0; for(let i=0;i<8;i++) if(p[i]==0 && p[(i+1)%8]==1) t++; return t;
-  };
-  while(changed && pass<30){
-    changed=false; const rem=[];
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-      const i=y*w+x; if(!img[i]) continue; const nn=N(x,y), s=S(x,y);
-      if(nn>=2 && nn<=6 && s==1 && (img[(y-1)*w+x]*img[y*w+(x+1)]*img[(y+1)*w+x]==0) &&
-                                   (img[y*w+(x+1)]*img[y*w+(x-1)]*img[(y-1)*w+x]==0)) rem.push(i);
-    }
-    rem.forEach(i=>img[i]=0); if(rem.length) changed=true; rem.length=0;
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-      const i=y*w+x; if(!img[i]) continue; const nn=N(x,y), s=S(x,y);
-      if(nn>=2 && nn<=6 && s==1 && (img[(y-1)*w+x]*img[y*w+(x-1)]*img[(y+1)*w+x]==0) &&
-                                   (img[(y-1)*w+x]*img[y*w+(x+1)]*img[y*w+(x-1)]==0)) rem.push(i);
-    }
-    rem.forEach(i=>img[i]=0); if(rem.length) changed=true; pass++;
-  }
+function zhangSuenThin(bin,w,h){ const img=Uint8Array.from(bin); let changed=true,pass=0;
+  const N=(x,y)=>img[(y-1)*w+x]+img[(y-1)*w+x+1]+img[y*w+x+1]+img[(y+1)*w+x+1]+img[(y+1)*w+x]+img[(y+1)*w+x-1]+img[y*w+x-1]+img[(y-1)*w+x-1];
+  const S=(x,y)=>{ const p=[img[(y-1)*w+x],img[(y-1)*w+x+1],img[y*w+x+1],img[(y+1)*w+x+1],img[(y+1)*w+x],img[(y+1)*w+x-1],img[y*w+x-1],img[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
+  while(changed&&pass<30){ changed=false; const rem=[];
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
+      if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x+1]*img[(y+1)*w+x]==0)&&(img[y*w+x+1]*img[y*w+x-1]*img[(y-1)*w+x]==0)) rem.push(i);}
+    rem.forEach(i=>img[i]=0); if(rem.length)changed=true; rem.length=0;
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
+      if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x-1]*img[(y+1)*w+x]==0)&&(img[(y-1)*w+x]*img[y*w+x+1]*img[y*w+x-1]==0)) rem.push(i);}
+    rem.forEach(i=>img[i]=0); if(rem.length)changed=true; pass++; }
   return img;
 }
 function pickLongestPath(skel,w,h,y0,y1){
-  const seen=new Uint8Array(w*h); let best=null;
-  const nbr=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-  function walk(sx,sy){
-    const stack=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
-    while(stack.length){
-      const [x,y]=stack.pop(); pts.push([x,y]);
-      for(const [dx,dy] of nbr){
-        const nx=x+dx, ny=y+dy, idx=ny*w+nx;
-        if(nx>0&&ny>y0&&nx<w-1&&ny<y1-1 && !seen[idx] && skel[idx]){ seen[idx]=1; stack.push([nx,ny]); }
-      }
-    }
-    return pts;
-  }
-  for(let y=y0+1;y<y1-1;y++)for(let x=1;x<w-1;x++){
-    const i=y*w+x; if(skel[i] && !seen[i]){ const pts=walk(x,y); if(!best || pts.length>best.length) best=pts; }
-  }
+  const seen=new Uint8Array(w*h); let best=null; const nb=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+  function walk(sx,sy){ const st=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
+    while(st.length){ const [x,y]=st.pop(); pts.push([x,y]);
+      for(const [dx,dy] of nb){ const nx=x+dx, ny=y+dy, id=ny*w+nx;
+        if(nx>0&&ny>y0&&nx<w-1&&ny<y1-1 && !seen[id] && skel[id]){ seen[id]=1; st.push([nx,ny]); } } }
+    return pts; }
+  for(let y=y0+1;y<y1-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;
+    if(skel[i]&&!seen[i]){ const pts=walk(x,y); if(!best||pts.length>best.length) best=pts; } }
   return best||[];
 }
 
-// guide + draw
+/* ------------- Draw ------------- */
 function drawGuide(){
   ctx.clearRect(0,0,cv.width,cv.height);
-  const w=cv.width, h=cv.height;
-  const yHeart=0, hHeart=Math.floor(h*0.30);
-  const yHead =hHeart, hHead =Math.floor(h*0.25);
-  const yLife =yHead+hHead, hLife =h-(yHead+hHead);
-
-  ctx.globalAlpha=.28; ctx.fillStyle='var(--heart)'; ctx.fillRect(0,yHeart,w,hHeart);
-  ctx.fillStyle='var(--head)'; ctx.fillRect(0,yHead,w,hHead);
-  ctx.fillStyle='var(--life)'; ctx.fillRect(0,yLife,w,hLife);
-  ctx.globalAlpha=1;
-
+  const w=cv.width,h=cv.height;
+  const yH=0,hH=Math.floor(h*0.30), yD=hH, hD=Math.floor(h*0.25), yL=yD+hD, hL=h-(yD+hD);
+  ctx.globalAlpha=.28; ctx.fillStyle='var(--heart)'; ctx.fillRect(0,yH,w,hH);
+  ctx.fillStyle='var(--head)'; ctx.fillRect(0,yD,w,hD);
+  ctx.fillStyle='var(--life)'; ctx.fillRect(0,yL,w,hL); ctx.globalAlpha=1;
   ctx.strokeStyle='rgba(41,224,255,.6)'; ctx.lineWidth=2; ctx.strokeRect(6,6,w-12,h-12);
-
   ctx.font='18px system-ui'; ctx.lineWidth=3; ctx.strokeStyle='#000'; ctx.fillStyle='#fff';
   ctx.strokeText('Heart',14,26); ctx.fillText('Heart',14,26);
-  ctx.strokeText('Head',14,yHead+26); ctx.fillText('Head',14,yHead+26);
-  ctx.strokeText('Life',14,yLife+26); ctx.fillText('Life',14,yLife+26);
+  ctx.strokeText('Head',14,yD+26); ctx.fillText('Head',14,yD+26);
+  ctx.strokeText('Life',14,yL+26); ctx.fillText('Life',14,yL+26);
 }
-
 function drawEdgesMask(bin,w,h){
   const img = ctx.createImageData(w,h);
-  for(let i=0,j=0;i<bin.length;i++,j+=4)
-    if(bin[i]){ img.data[j]=0; img.data[j+1]=255; img.data[j+2]=255; img.data[j+3]=140; }
+  for(let i=0,j=0;i<bin.length;i++,j+=4) if(bin[i]){ img.data[j]=0; img.data[j+1]=255; img.data[j+2]=255; img.data[j+3]=140; }
   ctx.putImageData(img,0,0);
 }
 function drawPath(pts,color,wid){
@@ -260,30 +247,27 @@ function drawPath(pts,color,wid){
   ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
 }
 
-// main analyze
+/* ------------- Analyze ------------- */
 function analyzeNow(){
   const edgeThr = Number($('#edge').value)/100;   // 0.2..0.9
   const passes  = Number($('#detail').value);     // 1..5
-  const frame = getFrame();
+  const frame = getImageData();
   const {w,h,g:gr0} = toGray(frame);
   const g1 = claheLike(gr0,w,h);
   const g2 = blur3(g1,w,h,passes);
   const bin = sobelEdges(g2,w,h,edgeThr);
   const skel = zhangSuenThin(bin,w,h);
 
-  const yHeart=0, hHeart=Math.floor(h*0.30);
-  const yHead =hHeart, hHead =Math.floor(h*0.25);
-  const yLife =yHead+hHead, hLife =h-(yHead+hHead);
-
-  const pHeart = pickLongestPath(skel,w,h,yHeart,yHeart+hHeart);
-  const pHead  = pickLongestPath(skel,w,h,yHead, yHead+hHead);
-  const pLife  = pickLongestPath(skel,w,h,yLife, yLife+hLife);
+  const yH=0,hH=Math.floor(h*0.30), yD=hH, hD=Math.floor(h*0.25), yL=yD+hD, hL=h-(yD+hD);
+  const pHeart = pickLongestPath(skel,w,h,yH, yH+hH);
+  const pHead  = pickLongestPath(skel,w,h,yD, yD+hD);
+  const pLife  = pickLongestPath(skel,w,h,yL, yL+hL);
 
   drawGuide();
   drawPath(pHeart,'var(--heart)',4);
   drawPath(pHead ,'var(--head)',4);
   drawPath(pLife ,'var(--life)',4);
-  drawEdgesMask(bin,w,h); // cyan context
+  drawEdgesMask(bin,w,h);
 }
 </script>
 </body>
