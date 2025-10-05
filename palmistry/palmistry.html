@@ -3,46 +3,57 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry Analyzer v2 — Dual Hand + Standard Guide</title>
+<title>Palmistry Analyzer — Dual Hand + Overlay FAB</title>
 <style>
 :root{--pri:#16f0a7;--sec:#38bdf8}
 *{box-sizing:border-box}
 body{margin:0;background:#0b0f16;color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial,sans-serif;text-align:center}
 h1{margin:16px 0 6px}
 .sub{color:#9cc7ff;margin:0 12px 10px}
-.wrap{display:inline-block;position:relative;margin:10px auto}
+
+.wrap{display:inline-block;position:relative;margin:10px auto;touch-action:none}
 video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;background:#0e1625}
 .badge{position:absolute;left:10px;top:10px;padding:.3rem .5rem;border-radius:8px;font-size:.75rem;background:#0008}
+
 .btns{margin:12px 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 button{border:none;border-radius:10px;padding:.7em 1.2em;font-weight:700;cursor:pointer}
 #handBtn{background:#16243a;color:#cfe9ff}
 #startBtn{background:#334155;color:#dbeafe}
-#capBtn,#bigCap{background:#3b82f6;color:#06121f}
 #anBtn{background:var(--pri);color:#07121f}
 #saveBtn{background:#fbbf24;color:#111827}
 #torchBtn{background:#22c55e;color:#052e16}
-.hint{color:#a6c8ff;margin:8px 0}
-footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
+
 .row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
 .chip{background:#0f172a;border:1px solid #1f2c48;border-radius:999px;padding:.25em .6em}
 .sl{width:180px}
 
-/* Overlay (standard guide) */
-.overlay{position:absolute;inset:0;pointer-events:none;opacity:.32;filter:drop-shadow(0 2px 10px #00f5ff33);transition:transform .2s}
+/* overlay with dark area + hand window */
+.overlay{position:absolute;inset:0;pointer-events:none;transition:transform .2s;opacity:.98}
 .overlay .g{stroke:#00e8ff;stroke-width:2.2;fill:none}
-.overlay .soft{fill:#00e5ff1f;stroke:#00e5ff66;stroke-width:2.5}
-.overlay text{fill:#00f6ffcc;font-size:16px;font-family:system-ui,Segoe UI,Inter}
+.overlay text{fill:#7de9ff;font:16px system-ui}
 
-/* single-window UX helpers */
-.lock-scroll{height:100vh;overflow:hidden}
-.wrap{touch-action:none}
-/* keep video alive but hidden when needed */
+/* keep video hidden offscreen; we draw to canvas */
 video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 
-/* countdown */
+/* Countdown */
 .count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font:700 64px/1 system-ui;color:#eaffff;text-shadow:0 2px 14px #000c;pointer-events:none;opacity:0;transition:opacity .15s}
 .count.show{opacity:1}
+
+/* Floating capture button ON overlay */
+.cap-fab{
+  position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+  z-index:5; width:84px; height:84px; border-radius:999px;
+  background:#3b82f6; color:#06121f; border:4px solid #e2f1ff22;
+  box-shadow:0 10px 24px #0006, 0 0 0 2px #00e5ff55 inset;
+  font-weight:800; font-size:16px; display:flex; align-items:center; justify-content:center;
+  user-select:none; -webkit-tap-highlight-color: transparent;
+}
+.cap-fab:active{ transform:translateX(-50%) scale(.98); }
+.cap-label{position:absolute; left:50%; bottom:108px; transform:translateX(-50%); z-index:5; color:#bfefff; font-size:12px; opacity:.9}
+
+/* lock page while using camera */
+.lock-scroll{height:100vh;overflow:hidden}
 
 #thumbs img{width:96px;height:auto;border:1px solid #18d6ff;border-radius:8px;display:block}
 #thumbs .tag{font:12px/1.2 system-ui;color:#9fd;margin-top:4px}
@@ -55,30 +66,52 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 <h1>🖐️ Palmistry</h1>
 <p class="sub">Left = පෙර භවය • Right = මෙය භවය — <b>block</b> එකට අත align කර <b>Capture → Analyze</b></p>
 
-<div class="wrap">
+<div class="wrap" id="wrap">
   <video id="cam" playsinline></video>
   <canvas id="cv"></canvas>
   <span id="cvStatus" class="badge">loading OpenCV…</span>
 
-  <!-- STANDARD OVERLAY -->
-  <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <!-- soft palm-shaped placement area -->
-    <path class="soft" d="M110,190 q-30,40 -30,90 q0,80 55,125 q55,45 145,35 q60,-7 90,-52 q30,-45 -1,-98 q15,-48 8,-84
-        q-10,-24 -30,-10 q-17,12 -25,55 q12,-78 -12,-88 q-25,-10 -43,88 q12,-98 -12,-106 q-24,-9 -38,102 q0,-94 -25,-100
-        q-24,-6 -32,96 z"/>
-    <!-- finger guide arcs -->
-    <path class="g" d="M150 220 q10 -60 35 -58 q25 2 22 74"/>
-    <path class="g" d="M200 214 q14 -66 38 -62 q24 4 16 86"/>
-    <path class="g" d="M248 222 q14 -60 36 -54 q22 6 12 82"/>
-    <path class="g" d="M292 244 q16 -44 34 -36 q17 8 6 70"/>
-    <!-- wrist -->
-    <path class="g" d="M115 430 q95 45 200 0"/>
-    <!-- center crosshair -->
-    <circle cx="210" cy="315" r="34" class="g" opacity=".25"/>
-    <line x1="176" y1="315" x2="244" y2="315" class="g" opacity=".25"/>
-    <line x1="210" y1="281" x2="210" y2="349" class="g" opacity=".25"/>
-    <text x="210" y="505" text-anchor="middle">Place palm inside the block</text>
+  <!-- OVERLAY with dark area + transparent hand window -->
+  <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true" id="overlay">
+    <defs>
+      <mask id="handWindow">
+        <rect width="420" height="560" fill="white"/>
+        <!-- hand shape = transparent hole (black) -->
+        <path id="handPath" fill="black" d="
+          M 92 470
+          C 92 410, 85 345, 120 300
+          C 125 245, 130 205, 150 195
+          C 170 187, 182 225, 184 270
+          C 184 232, 197 195, 214 195
+          C 232 196, 236 236, 232 282
+          C 240 232, 258 202, 274 206
+          C 290 211, 292 257, 284 300
+          C 292 264, 309 240, 324 247
+          C 338 255, 336 290, 325 328
+          C 353 360, 366 414, 350 458
+          C 332 510, 280 525, 210 518
+          C 150 511, 115 500, 92 470 Z"/>
+    </mask>
+    <!-- darken outside -->
+    <rect width="420" height="560" fill="#000" opacity="0.55" mask="url(#handWindow)"/>
+    <!-- glow on window -->
+    <use href="#handPath" fill="none" stroke="#00f5ff88" stroke-width="8"/>
+    <use href="#handPath" fill="none" stroke="#00f5ffcc" stroke-width="2.2"/>
+    <!-- subtle guides -->
+    <path class="g" opacity=".35" d="M145 230 q10 -55 33 -53 q23 2 20 66"/>
+    <path class="g" opacity=".35" d="M192 224 q13 -60 36 -56 q23 4 14 78"/>
+    <path class="g" opacity=".35" d="M238 232 q14 -54 34 -49 q20 5 11 73"/>
+    <path class="g" opacity=".35" d="M280 252 q16 -40 32 -32 q16 8 6 62"/>
+    <path class="g" d="M120 438 q90 42 190 2" opacity=".45"/>
+    <circle cx="210" cy="320" r="32" class="g" opacity=".18"/>
+    <line x1="178" y1="320" x2="242" y2="320" class="g" opacity=".18"/>
+    <line x1="210" y1="288" x2="210" y2="352" class="g" opacity=".18"/>
+    <text x="210" y="520" text-anchor="middle">Place palm inside the highlighted shape</text>
   </svg>
+
+  <!-- overlay-floating capture -->
+  <div id="capLabel" class="cap-label">Tap to Capture</div>
+  <button id="capFab" class="cap-fab" aria-label="Capture">●</button>
 
   <!-- countdown -->
   <div id="count" class="count">3</div>
@@ -87,7 +120,6 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 <div class="btns">
   <button id="handBtn">🖐️ Right • Present</button>
   <button id="startBtn">🎥 Start Camera</button>
-  <button id="bigCap">● Capture</button>
   <button id="anBtn" disabled>✨ Analyze</button>
   <button id="saveBtn" disabled>💾 Save PNG</button>
   <button id="torchBtn" hidden>🔦 Torch</button>
@@ -98,25 +130,32 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
   <span class="chip">Detail <input id="gk"   class="sl" type="range" min="7" max="23" step="2" value="13"> <small id="gkv">13</small></span>
 </div>
 
-<p class="hint" id="status">Ready</p>
+<p class="sub" id="status">Ready</p>
 <div id="thumbs" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0;"></div>
 
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-const video=document.getElementById('cam'), canvas=document.getElementById('cv'), ctx=canvas.getContext('2d');
+const video = document.getElementById('cam');
+const canvas= document.getElementById('cv');
+const ctx    = canvas.getContext('2d');
 const statBadge=document.getElementById('cvStatus'), statusTxt=document.getElementById('status');
-const handBtn=document.getElementById('handBtn'), startBtn=document.getElementById('startBtn'), bigCap=document.getElementById('bigCap');
-const anBtn=document.getElementById('anBtn'), saveBtn=document.getElementById('saveBtn'), torchBtn=document.getElementById('torchBtn');
+const handBtn=document.getElementById('handBtn'), startBtn=document.getElementById('startBtn');
+const anBtn  =document.getElementById('anBtn'), saveBtn=document.getElementById('saveBtn'), torchBtn=document.getElementById('torchBtn');
 const edge=document.getElementById('edge'), edgev=document.getElementById('edgev'), gk=document.getElementById('gk'), gkv=document.getElementById('gkv');
-const overlaySvg=document.querySelector('.overlay'), countEl=document.getElementById('count');
+const overlaySvg=document.getElementById('overlay');
+const capFab=document.getElementById('capFab'), capLabel=document.getElementById('capLabel');
+const countEl=document.getElementById('count');
+
 edge.oninput=()=>edgev.textContent=edge.value; gk.oninput=()=>gkv.textContent=gk.value;
 
-let hand='right', flipped=false, captured=false, stream=null, track=null, torch=false;
+let hand='right', captured=false, stream=null, track=null, torch=false;
 function lockScroll(on){ document.body.classList.toggle('lock-scroll', !!on); }
-function applyHand(){ overlaySvg.style.transform=(hand==='left')?'scaleX(-1)':'none';
+function applyHand(){
+  overlaySvg.style.transform = (hand==='left')?'scaleX(-1)':'none';
   handBtn.textContent=(hand==='left')?'🖐️ Left • Past':'🖐️ Right • Present';
-  statusTxt.textContent=(hand==='left')?'Align LEFT hand (පෙර භවය)':'Align RIGHT hand (මෙය භවය)'; }
+  statusTxt.textContent=(hand==='left')?'Align LEFT hand (පෙර භවය)':'Align RIGHT hand (මෙය භවය)';
+}
 handBtn.onclick=()=>{ hand=(hand==='right')?'left':'right'; applyHand(); }; applyHand();
 
 async function ensureCamera(){
@@ -132,8 +171,10 @@ async function ensureCamera(){
   }catch(e){ alert('Camera error: '+e.message); }
 }
 
-torchBtn.onclick=async()=>{ if(!track) return; try{ torch=!torch; await track.applyConstraints({advanced:[{torch}]});
-  torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch'; }catch{ alert('Torch not supported'); } };
+torchBtn.onclick=async()=>{ if(!track) return; try{
+  torch=!torch; await track.applyConstraints({advanced:[{torch}]});
+  torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch';
+}catch{ alert('Torch not supported'); } };
 
 startBtn.onclick=async()=>{
   await ensureCamera(); lockScroll(true);
@@ -147,12 +188,13 @@ async function countdownCapture(){
   const seq=['3','2','1','']; let i=0; countEl.classList.add('show');
   (function tick(){
     countEl.textContent=seq[i++]; if(i<seq.length){ setTimeout(tick,400); }
-    else{ countEl.classList.remove('show');
+    else{
+      countEl.classList.remove('show');
       canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-      ctx.save(); if(flipped){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
-      ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
       captured=true; anBtn.disabled=false; saveBtn.disabled=false;
       statusTxt.textContent=`${hand.toUpperCase()} hand captured • Ready to Analyze`;
+      capLabel.textContent='Captured ✓'; setTimeout(()=>capLabel.textContent='Tap to Capture',1200);
       // thumbnail
       const thumbs=document.getElementById('thumbs');
       const img=new Image(); img.src=canvas.toDataURL('image/png');
@@ -161,9 +203,10 @@ async function countdownCapture(){
     }
   })();
 }
-bigCap.onclick=countdownCapture;
+capFab.onclick = countdownCapture;
 
-saveBtn.onclick=()=>{ const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download=`palm_${hand}_${Date.now()}.png`; a.click(); lockScroll(false); };
+saveBtn.onclick=()=>{ const a=document.createElement('a'); a.href=canvas.toDataURL('image/png');
+  a.download=`palm_${hand}_${Date.now()}.png`; a.click(); lockScroll(false); };
 
 (function waitCV(){ const ok=()=>{statBadge.textContent='OpenCV ready';};
   const poll=()=> (window.cv && cv.Mat) ? ok() : setTimeout(poll,200);
@@ -171,14 +214,13 @@ saveBtn.onclick=()=>{ const a=document.createElement('a'); a.href=canvas.toDataU
 
 anBtn.onclick=()=>{ if(!captured) return alert('Capture first'); if(!window.cv||!cv.Mat) return alert('OpenCV not loaded'); analyze(); };
 
-// ---- Robust analyze: blur + adaptive threshold + contours ----
+// --- Analyze: grayscale->blur->adaptive threshold (inverse)->morph->contours ---
 function analyze(){
   const src=cv.imread(canvas);
   const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
   cv.GaussianBlur(gray,gray,new cv.Size(5,5),0);
 
   const bin=new cv.Mat();
-  // slider edge value fine-tunes bias (reduce/raise threshold)
   cv.adaptiveThreshold(gray,bin,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,cv.THRESH_BINARY_INV,25,5 - (+edge.value-50)/10);
 
   const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
