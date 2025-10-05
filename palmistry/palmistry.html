@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry Analyzer — Dual Hand + Overlay FAB</title>
+<title>Palmistry Analyzer — Overlay FAB</title>
 <style>
 :root{--pri:#16f0a7;--sec:#38bdf8}
 *{box-sizing:border-box}
@@ -32,7 +32,7 @@ button{border:none;border-radius:10px;padding:.7em 1.2em;font-weight:700;cursor:
 .overlay .g{stroke:#00e8ff;stroke-width:2.2;fill:none}
 .overlay text{fill:#7de9ff;font:16px system-ui}
 
-/* keep video hidden offscreen; we draw to canvas */
+/* keep video hidden; we draw to canvas */
 video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 
 /* Countdown */
@@ -76,7 +76,7 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
     <defs>
       <mask id="handWindow">
         <rect width="420" height="560" fill="white"/>
-        <!-- hand shape = transparent hole (black) -->
+        <!-- hand shape hole -->
         <path id="handPath" fill="black" d="
           M 92 470
           C 92 410, 85 345, 120 300
@@ -92,7 +92,7 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
           C 332 510, 280 525, 210 518
           C 150 511, 115 500, 92 470 Z"/>
     </mask>
-    <!-- darken outside -->
+    <!-- dark outside -->
     <rect width="420" height="560" fill="#000" opacity="0.55" mask="url(#handWindow)"/>
     <!-- glow on window -->
     <use href="#handPath" fill="none" stroke="#00f5ff88" stroke-width="8"/>
@@ -109,7 +109,7 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
     <text x="210" y="520" text-anchor="middle">Place palm inside the highlighted shape</text>
   </svg>
 
-  <!-- overlay-floating capture -->
+  <!-- floating capture -->
   <div id="capLabel" class="cap-label">Tap to Capture</div>
   <button id="capFab" class="cap-fab" aria-label="Capture">●</button>
 
@@ -150,6 +150,9 @@ const countEl=document.getElementById('count');
 edge.oninput=()=>edgev.textContent=edge.value; gk.oninput=()=>gkv.textContent=gk.value;
 
 let hand='right', captured=false, stream=null, track=null, torch=false;
+// live preview loop control
+let live=false, rafId=0;
+
 function lockScroll(on){ document.body.classList.toggle('lock-scroll', !!on); }
 function applyHand(){
   overlaySvg.style.transform = (hand==='left')?'scaleX(-1)':'none';
@@ -171,25 +174,35 @@ async function ensureCamera(){
   }catch(e){ alert('Camera error: '+e.message); }
 }
 
+function startLive(){
+  if(live || !stream) return;
+  live=true;
+  const loop=()=>{ if(!live) return;
+    canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||480;
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    rafId=requestAnimationFrame(loop);
+  };
+  loop();
+}
+function stopLive(){ live=false; if(rafId) cancelAnimationFrame(rafId); }
+
 torchBtn.onclick=async()=>{ if(!track) return; try{
   torch=!torch; await track.applyConstraints({advanced:[{torch}]});
   torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch';
 }catch{ alert('Torch not supported'); } };
 
-startBtn.onclick=async()=>{
-  await ensureCamera(); lockScroll(true);
-  statusTxt.textContent='Camera live • align palm inside the block';
-  (function loop(){ if(stream){ canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||480;
-    ctx.drawImage(video,0,0,canvas.width,canvas.height); requestAnimationFrame(loop);} })();
-};
+startBtn.onclick=async()=>{ await ensureCamera(); lockScroll(true);
+  statusTxt.textContent='Camera live • align palm inside the block'; startLive(); };
 
 async function countdownCapture(){
   await ensureCamera(); lockScroll(true);
+  if(!video.videoWidth){ await new Promise(r=> video.onloadedmetadata=r); }
   const seq=['3','2','1','']; let i=0; countEl.classList.add('show');
   (function tick(){
     countEl.textContent=seq[i++]; if(i<seq.length){ setTimeout(tick,400); }
     else{
       countEl.classList.remove('show');
+      stopLive(); // freeze live preview
       canvas.width=video.videoWidth; canvas.height=video.videoHeight;
       ctx.drawImage(video,0,0,canvas.width,canvas.height);
       captured=true; anBtn.disabled=false; saveBtn.disabled=false;
@@ -221,6 +234,7 @@ function analyze(){
   cv.GaussianBlur(gray,gray,new cv.Size(5,5),0);
 
   const bin=new cv.Mat();
+  // edge slider shifts bias a little
   cv.adaptiveThreshold(gray,bin,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,cv.THRESH_BINARY_INV,25,5 - (+edge.value-50)/10);
 
   const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
