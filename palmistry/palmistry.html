@@ -3,232 +3,171 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry — Realistic Hand Overlay</title>
+<title>Palmistry AI Overlay – Sathyadarshana</title>
 <style>
-:root{--pri:#16f0a7;--sec:#38bdf8}
+:root{
+  --pri:#16f0a7;--sec:#38bdf8;--bg:#0b0f16;--dim:0.8
+}
 *{box-sizing:border-box}
-body{margin:0;background:#0b0f16;color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial,sans-serif}
-h1{margin:16px 0 6px;text-align:center}
-.sub{color:#9cc7ff;text-align:center;margin:0 14px 10px}
-
-.wrap{position:relative;margin:10px auto;display:block;width:min(92vw,420px)}
-/* keep video tiny (we draw onto canvas) */
-#cam{position:fixed;inset:-9999px;width:1px;height:1px}
-#cv{width:100%;border-radius:16px;border:2px solid var(--pri);background:#0e1625;display:block}
-.badge{position:absolute;left:10px;top:10px;padding:.3rem .55rem;border-radius:8px;
-       font-size:.75rem;background:#0008;z-index:5}
-
-.overlay{position:absolute;inset:0;pointer-events:none;transition:transform .2s}
-.mask-dim{fill:#000;opacity:var(--dim, .55)} /* dimmer around the window */
-.path-glow{stroke:#00f5ffcc;stroke-width:2.2;fill:none;filter:drop-shadow(0 0 6px #00f5ff33)}
-.path-fat {stroke:#00f5ff66;stroke-width:8;fill:none}
-
-.cap-fab{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
-  z-index:6;width:84px;height:84px;border-radius:999px;background:#3b82f6;color:#06121f;
-  border:4px solid #e2f1ff22;box-shadow:0 10px 24px #0006, 0 0 0 2px #00e5ff55 inset;
-  font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}
-.cap-fab:active{transform:translateX(-50%) scale(.98)}
-.cap-hint{position:absolute;left:50%;bottom:108px;transform:translateX(-50%);z-index:6;
-  color:#bfefff;font-size:12px}
-
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial,sans-serif;text-align:center;overflow:auto}
+h1{margin:16px 0 8px}
+.wrap{display:inline-block;position:relative;margin:10px auto}
+video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;background:#0e1625}
+.badge{position:absolute;left:8px;top:8px;padding:.25rem .45rem;border-radius:8px;font-size:.75rem;background:#0008}
+.captureBtn{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  background:#2196f3;border:none;border-radius:50%;
+  width:90px;height:90px;display:flex;align-items:center;justify-content:center;
+  color:#000;font-weight:600;cursor:pointer;font-size:.9rem;box-shadow:0 0 15px #2196f333;
+}
+.captureBtn:active{transform:translateX(-50%) scale(.95)}
+.overlay{position:absolute;inset:0;pointer-events:none;opacity:.7}
+.mask-dim{fill:rgba(0,0,0,var(--dim))}
+.path-fat{fill:none;stroke:#00e5ff;stroke-width:4}
+.path-glow{fill:none;stroke:#00e5ff;stroke-width:2;filter:drop-shadow(0 0 6px #00f5ff66)}
 .btns{margin:12px 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-button{border:none;border-radius:10px;padding:.7em 1.2em;font-weight:700;cursor:pointer}
-#handBtn{background:#16243a;color:#cfe9ff}
-#startBtn{background:#334155;color:#dbeafe}
-#anBtn{background:var(--pri);color:#07121f}
-#saveBtn{background:#fbbf24;color:#111827}
-#torchBtn{background:#22c55e;color:#052e16}
-
-.row{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin:6px auto 0;max-width:620px}
-.chip{background:#0f172a;border:1px solid #1f2c48;border-radius:999px;padding:.25em .6em;color:#cfe9ff}
-.sl{width:160px}
+button{border:none;border-radius:10px;padding:.6em 1.1em;font-weight:700;cursor:pointer}
+.left{background:#16243a;color:#cfe9ff}
+.cap{background:#fbbf24;color:#111827}
+.an{background:var(--pri);color:#07121f}
+.torch{background:#22c55e;color:#052e16}
+.sliderRow{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+label{font-size:.9em}
+footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </style>
-<script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+<script>
+(function(){
+ const s=document.createElement('script');
+ s.src="https://docs.opencv.org/4.x/opencv.js"; s.async=true;
+ s.onerror=()=>{const f=document.createElement('script');
+ f.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";
+ f.async=true;document.head.appendChild(f);};
+ document.head.appendChild(s);
+})();
+</script>
 </head>
 <body>
 <h1>🖐️ Palmistry</h1>
-<p class="sub">Left=Past • Right=Present — align hand in block → Capture → Analyze</p>
+<p>Left = Past · Right = Present — align hand in block → Capture → Analyze</p>
 
-<div class="wrap" id="wrap">
+<div class="wrap">
   <video id="cam" playsinline></video>
   <canvas id="cv"></canvas>
-  <span id="cvStatus" class="badge">loading OpenCV…</span>
+  <span id="cvStatus" class="badge">loading OpenCV...</span>
 
-  <!-- Realistic overlay (mask + outline). Entire group is scaled & flipped in JS -->
+  <!-- Overlay realistic hand block -->
   <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice" id="overlay">
     <defs>
-      <!-- Human-hand silhouette path (right hand, natural proportions)  -->
       <path id="handSil"
-        d="M138,440
-           C118,410 110,362 126,326
-           C126,280 134,224 156,214
-           C175,207 190,240 192,290
-           C193,252 207,207 228,206
-           C248,206 255,247 251,298
-           C258,250 278,210 298,214
-           C316,218 320,268 311,315
-           C318,276 340,248 355,258
-           C368,268 368,310 356,355
-           C385,394 394,452 370,496
-           C345,544 284,555 210,547
-           C162,541 142,521 138,440 Z" />
-      <!-- Mask: dim everything except the silhouette area -->
+        d="M142,455C120,418 113,365 130,330C130,285 138,230 160,220C179,212 192,246 195,298
+        C196,258 212,215 232,214C251,214 258,254 254,304C261,258 281,220 301,224C318,228 322,275 314,320
+        C321,282 344,256 359,266C372,276 372,316 360,360C386,396 396,451 373,492C350,531 300,548 232,546
+        C172,545 152,523 142,455Z"/>
       <mask id="handMask">
         <rect width="420" height="560" fill="white"/>
         <use href="#handSil" fill="black"/>
       </mask>
     </defs>
-
-    <!-- Dimmed area outside hand -->
     <rect class="mask-dim" width="420" height="560" mask="url(#handMask)"/>
-    <!-- Pretty outline (double stroke) -->
     <use href="#handSil" class="path-fat"/>
     <use href="#handSil" class="path-glow"/>
-
-    <!-- subtle guide marks -->
     <g stroke="#00e5ff" stroke-width="2" opacity=".18">
       <circle cx="210" cy="320" r="30" fill="none"/>
       <line x1="180" y1="320" x2="240" y2="320"/>
       <line x1="210" y1="290" x2="210" y2="350"/>
     </g>
-    <text x="210" y="522" fill="#7de9ff" text-anchor="middle" style="font:16px system-ui">
+    <text x="210" y="520" fill="#7de9ff" text-anchor="middle" style="font:16px system-ui">
       Place palm inside the block
     </text>
   </svg>
 
-  <div class="cap-hint" id="capHint">Tap to Capture</div>
-  <button class="cap-fab" id="capBtn">●</button>
+  <button class="captureBtn" id="capBtn">Tap to Capture</button>
 </div>
 
 <div class="btns">
-  <button id="handBtn">🖐️ Right • Present</button>
-  <button id="startBtn">🎥 Start Camera</button>
-  <button id="anBtn" disabled>✨ Analyze</button>
-  <button id="saveBtn" disabled>💾 Save PNG</button>
-  <button id="torchBtn" hidden>🔦 Torch</button>
+  <button class="left" id="flipBtn">🖐 Left · Past</button>
+  <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
+  <button class="an" id="anBtn">✨ Analyze</button>
+  <button class="cap" id="saveBtn">💾 Save PNG</button>
 </div>
 
-<div class="row">
-  <span class="chip">Edge <input id="edge" class="sl" type="range" min="20" max="120" value="50"> <small id="edgev">50</small></span>
-  <span class="chip">Detail <input id="gk"   class="sl" type="range" min="7" max="23" step="2" value="13"> <small id="gkv">13</small></span>
-  <span class="chip">Overlay size <input id="scale" class="sl" type="range" min="80" max="120" value="100"> <small id="scalev">100%</small></span>
-  <span class="chip">Dim <input id="dim" class="sl" type="range" min="20" max="80" value="55"> <small id="dimv">55%</small></span>
+<div class="sliderRow">
+  <label>Edge <input id="edge" type="range" min="20" max="120" value="70"/></label>
+  <label>Detail <input id="gk" type="range" min="7" max="23" step="2" value="15"/></label>
 </div>
 
-<p class="sub" id="status">Ready</p>
+<footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-const video = document.getElementById('cam');
-const canvas= document.getElementById('cv');
-const ctx    = canvas.getContext('2d');
-const statBadge=document.getElementById('cvStatus'), statusTxt=document.getElementById('status');
+const video=document.getElementById('cam'),canvas=document.getElementById('cv'),ctx=canvas.getContext('2d');
+const stat=document.getElementById('cvStatus');
+const flipBtn=document.getElementById('flipBtn'),capBtn=document.getElementById('capBtn'),anBtn=document.getElementById('anBtn');
+const saveBtn=document.getElementById('saveBtn'),torchBtn=document.getElementById('torchBtn');
+const edge=document.getElementById('edge'),gk=document.getElementById('gk');
+let flipped=false,captured=false,stream=null,track=null,torch=false;
 
-const overlay = document.getElementById('overlay');
-const capBtn  = document.getElementById('capBtn');
-const capHint = document.getElementById('capHint');
-
-const handBtn = document.getElementById('handBtn');
-const startBtn= document.getElementById('startBtn');
-const anBtn   = document.getElementById('anBtn');
-const saveBtn = document.getElementById('saveBtn');
-const torchBtn= document.getElementById('torchBtn');
-
-const edge = document.getElementById('edge'), edgev=document.getElementById('edgev');
-const gk   = document.getElementById('gk'),   gkv =document.getElementById('gkv');
-const scale= document.getElementById('scale'),scalev=document.getElementById('scalev');
-const dim  = document.getElementById('dim'),  dimv=document.getElementById('dimv');
-
-edge.oninput = ()=> edgev.textContent = edge.value;
-gk.oninput   = ()=> gkv.textContent   = gk.value;
-scale.oninput= ()=> { scalev.textContent = scale.value+'%'; applyOverlay(); };
-dim.oninput  = ()=> { dimv.textContent   = dim.value+'%'; overlay.style.setProperty('--dim', (dim.value/100).toString()); };
-
-let hand='right', stream=null, track=null, live=false, captured=false;
-
-function applyOverlay(){
-  // scale and flip (group-level)
-  const s = scale.value/100;
-  overlay.style.transform = `translateZ(0) scale(${hand==='left'?-s:s}, ${s})`;
-  handBtn.textContent = (hand==='left')?'🖐️ Left • Past':'🖐️ Right • Present';
-}
-applyOverlay(); dim.oninput();
-
-handBtn.onclick = ()=>{ hand = (hand==='right')?'left':'right'; applyOverlay(); };
+flipBtn.onclick=()=>{flipped=!flipped;document.getElementById('overlay').style.transform=flipped?'scaleX(-1)':'none';};
 
 async function ensureCamera(){
-  if (stream) return;
+  if(stream) return;
   try{
-    stream = await navigator.mediaDevices.getUserMedia({
+    stream=await navigator.mediaDevices.getUserMedia({
       video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:15,max:30}},
-      audio:false
-    });
-    video.setAttribute('playsinline',''); video.muted = true;
-    video.srcObject = stream;
-    await new Promise(r => (video.readyState>=1)?r():video.onloadedmetadata=r);
-    await video.play();
-    track = stream.getVideoTracks()[0];
-    const caps = track.getCapabilities?.(); if (caps && caps.torch) torchBtn.hidden=false;
+      audio:false});
+    video.srcObject=stream; await video.play();
+    track=stream.getVideoTracks()[0];
+    const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
+    stat.textContent='Camera live';
   }catch(e){ alert('Camera error: '+e.message); }
 }
-function startLive(){
-  if (live) return; live=true;
-  const loop=()=>{ if(!live) return;
-    canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||480;
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    requestAnimationFrame(loop);
-  }; loop();
-}
-function stopLive(){ live=false; }
 
-startBtn.onclick = async ()=>{ await ensureCamera(); if(!stream) return; startLive(); statusTxt.textContent='Camera live — align inside the block'; };
+torchBtn.onclick=async()=>{if(!track)return;
+ try{torch=!torch;await track.applyConstraints({advanced:[{torch}]});
+ torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch';}catch{alert('Torch not supported');}};
 
-torchBtn.onclick = async ()=>{ try{ const t=!(torchBtn.dataset.on==='1'); await track.applyConstraints({advanced:[{torch:t}]}); torchBtn.dataset.on=t?'1':'0'; torchBtn.textContent=t?'🔦 Torch (ON)':'🔦 Torch'; }catch{} };
-
-capBtn.onclick = ()=>{
-  if(!video.videoWidth){ alert('Start camera first'); return; }
-  stopLive();
+capBtn.onclick=async()=>{
+  await ensureCamera();
+  if(!video.videoWidth){alert('Video not ready');return;}
   canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
-  captured=true; anBtn.disabled=false; saveBtn.disabled=false;
-  capHint.textContent='Captured ✓'; setTimeout(()=>capHint.textContent='Tap to Capture',1000);
-  statusTxt.textContent = `${hand.toUpperCase()} hand captured — ready to Analyze`;
+  ctx.save(); if(flipped){ctx.translate(canvas.width,0);ctx.scale(-1,1);} ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
+  captured=true;
 };
 
-saveBtn.onclick = ()=>{
-  const a=document.createElement('a'); a.href=canvas.toDataURL('image/png');
-  a.download=`palm_${hand}_${Date.now()}.png`; a.click();
-};
+saveBtn.onclick=()=>{if(!captured)return;const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='palm_'+Date.now()+'.png';a.click();};
 
 (function waitCV(){
-  const ok = ()=> statBadge.textContent='OpenCV ready';
+  const ok=()=>{stat.textContent='OpenCV ready';};
   const poll=()=> (window.cv&&cv.Mat)?ok():setTimeout(poll,200);
-  if(window.cv && cv.onRuntimeInitialized!==undefined){ cv.onRuntimeInitialized=ok; poll(); } else poll();
+  if(window.cv&&cv.onRuntimeInitialized!==undefined){cv.onRuntimeInitialized=ok;poll();}else poll();
 })();
 
-anBtn.onclick = ()=>{ if(!captured) return alert('Capture first'); if(!window.cv||!cv.Mat) return alert('OpenCV not loaded'); analyze(); };
+anBtn.onclick=()=>{if(!captured)return alert('Capture first');if(!window.cv||!cv.Mat)return alert('OpenCV not loaded');analyze();};
 
 function analyze(){
   const src=cv.imread(canvas);
   const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-  cv.GaussianBlur(gray,gray,new cv.Size(5,5),0);
-
-  const bin=new cv.Mat();
-  cv.adaptiveThreshold(gray,bin,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,cv.THRESH_BINARY_INV,25,5-(+edge.value-50)/10);
-
-  const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-  cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3);
-
-  const cnts=new cv.MatVector(), hier=new cv.Mat();
-  cv.findContours(bin,cnts,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-
-  const out=src.clone(); let n=0;
-  for(let i=0;i<cnts.size();i++){const c=cnts.get(i),a=cv.contourArea(c); if(a<120) continue;
-    cv.drawContours(out,cnts,i,new cv.Scalar(0,255,0,255),2); n++;
+  const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(gray,gray);
+  const ksize=(+gk.value)|0,sigma=4.0,lambd=10.0,gamma=0.5,psi=0,degs=[0,20,40,60,80,100,120,140];
+  const gSum=cv.Mat.zeros(gray.rows,gray.cols,cv.CV_32F),resp=new cv.Mat();
+  for(const d of degs){
+    const th=d*Math.PI/180;
+    const ker=cv.getGaborKernel(new cv.Size(ksize,ksize),sigma,th,lambd,gamma,psi,cv.CV_32F);
+    cv.filter2D(gray,resp,cv.CV_32F,ker);
+    cv.max(gSum,resp,gSum);
+    ker.delete();
+  }
+  const g8=new cv.Mat(); cv.normalize(gSum,gSum,0,255,cv.NORM_MINMAX); gSum.convertTo(g8,cv.CV_8U);
+  const bin=new cv.Mat(); cv.adaptiveThreshold(g8,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,21,-(+edge.value));
+  const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3)); cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3); cv.dilate(bin,bin,k3);
+  const contours=new cv.MatVector(),hierarchy=new cv.Mat(); cv.findContours(bin,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+  const out=src.clone();
+  for(let i=0;i<contours.size();i++){
+    const area=cv.contourArea(contours.get(i));
+    if(area<100) continue;
+    cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);
   }
   cv.imshow(canvas,out);
-  statusTxt.textContent=`Analyze: ${n} contours — ${hand==='left'?'LEFT (Past)':'RIGHT (Present)'}`;
-
-  gray.delete(); bin.delete(); k3.delete(); cnts.delete(); hier.delete(); setTimeout(()=>{src.delete(); out.delete();},100);
+  [gray,clahe,gSum,resp,g8,bin,k3,src,out,hierarchy,contours].forEach(m=>m.delete());
 }
 </script>
 </body>
