@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry — Left/Right + Block Overlay (One-Window)</title>
+<title>Palmistry Analyzer v2 — Dual Hand + Standard Guide</title>
 <style>
 :root{--pri:#16f0a7;--sec:#38bdf8}
 *{box-sizing:border-box}
@@ -14,9 +14,10 @@ h1{margin:16px 0 6px}
 video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;background:#0e1625}
 .badge{position:absolute;left:10px;top:10px;padding:.3rem .5rem;border-radius:8px;font-size:.75rem;background:#0008}
 .btns{margin:12px 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-button{border:none;border-radius:10px;padding:.6em 1.1em;font-weight:700;cursor:pointer}
+button{border:none;border-radius:10px;padding:.7em 1.2em;font-weight:700;cursor:pointer}
 #handBtn{background:#16243a;color:#cfe9ff}
-#capBtn{background:var(--sec);color:#07121f}
+#startBtn{background:#334155;color:#dbeafe}
+#capBtn,#bigCap{background:#3b82f6;color:#06121f}
 #anBtn{background:var(--pri);color:#07121f}
 #saveBtn{background:#fbbf24;color:#111827}
 #torchBtn{background:#22c55e;color:#052e16}
@@ -26,45 +27,67 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.95em}
 .chip{background:#0f172a;border:1px solid #1f2c48;border-radius:999px;padding:.25em .6em}
 .sl{width:180px}
 
-/* Overlay (guide block + outline) */
-.overlay{position:absolute;inset:0;pointer-events:none;opacity:.28;filter:drop-shadow(0 0 6px #00f5ff33);transition:transform .2s}
+/* Overlay (standard guide) */
+.overlay{position:absolute;inset:0;pointer-events:none;opacity:.32;filter:drop-shadow(0 2px 10px #00f5ff33);transition:transform .2s}
+.overlay .g{stroke:#00e8ff;stroke-width:2.2;fill:none}
+.overlay .soft{fill:#00e5ff1f;stroke:#00e5ff66;stroke-width:2.5}
+.overlay text{fill:#00f6ffcc;font-size:16px;font-family:system-ui,Segoe UI,Inter}
 
-/* one-window UX helpers */
+/* single-window UX helpers */
 .lock-scroll{height:100vh;overflow:hidden}
 .wrap{touch-action:none}
-/* keep video stream alive but hidden after capture */
+/* keep video alive but hidden when needed */
 video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
+
+/* countdown */
+.count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font:700 64px/1 system-ui;color:#eaffff;text-shadow:0 2px 14px #000c;pointer-events:none;opacity:0;transition:opacity .15s}
+.count.show{opacity:1}
+
 #thumbs img{width:96px;height:auto;border:1px solid #18d6ff;border-radius:8px;display:block}
 #thumbs .tag{font:12px/1.2 system-ui;color:#9fd;margin-top:4px}
 </style>
 
-<!-- OpenCV (techstark build) -->
+<!-- OpenCV -->
 <script async src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js"></script>
 </head>
 <body>
 <h1>🖐️ Palmistry</h1>
-<p class="sub">Left = පෙර භවය • Right = මෙය භවය — <b>block</b> එකට අත ගැලපෙන්න align කර Capture → Analyze</p>
+<p class="sub">Left = පෙර භවය • Right = මෙය භවය — <b>block</b> එකට අත align කර <b>Capture → Analyze</b></p>
 
 <div class="wrap">
   <video id="cam" playsinline></video>
   <canvas id="cv"></canvas>
   <span id="cvStatus" class="badge">loading OpenCV…</span>
 
-  <!-- ALIGNMENT OVERLAY (block + simple palm outline) -->
+  <!-- STANDARD OVERLAY -->
   <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <!-- glowing placement block -->
-    <rect x="90" y="170" width="240" height="260" rx="90" ry="90"
-          fill="#00f5ff22" stroke="#00f5ff66" stroke-width="3"/>
-    <!-- simple palm outline path (generic) -->
-    <path d="M145 485c-55-35-78-139-19-190 6-45 8-90 29-98 22-9 34 33 34 79 0-52 16-96 37-95 21 1 22 47 17 98 7-50 24-89 43-85 19 4 19 54 9 101 8-43 25-73 42-67 16 6 14 49 0 96 24 22 36 71 21 110-21 55-80 74-213 51z"
-          fill="none" stroke="#00e5ff" stroke-width="2"/>
-    <text x="210" y="455" fill="#00ffffaa" font-size="16" text-anchor="middle">Place palm inside the block</text>
+    <!-- soft palm-shaped placement area -->
+    <path class="soft" d="M110,190 q-30,40 -30,90 q0,80 55,125 q55,45 145,35 q60,-7 90,-52 q30,-45 -1,-98 q15,-48 8,-84
+        q-10,-24 -30,-10 q-17,12 -25,55 q12,-78 -12,-88 q-25,-10 -43,88 q12,-98 -12,-106 q-24,-9 -38,102 q0,-94 -25,-100
+        q-24,-6 -32,96 z"/>
+    <!-- finger guide arcs -->
+    <path class="g" d="M150 220 q10 -60 35 -58 q25 2 22 74"/>
+    <path class="g" d="M200 214 q14 -66 38 -62 q24 4 16 86"/>
+    <path class="g" d="M248 222 q14 -60 36 -54 q22 6 12 82"/>
+    <path class="g" d="M292 244 q16 -44 34 -36 q17 8 6 70"/>
+    <!-- wrist -->
+    <path class="g" d="M115 430 q95 45 200 0"/>
+    <!-- center crosshair -->
+    <circle cx="210" cy="315" r="34" class="g" opacity=".25"/>
+    <line x1="176" y1="315" x2="244" y2="315" class="g" opacity=".25"/>
+    <line x1="210" y1="281" x2="210" y2="349" class="g" opacity=".25"/>
+    <text x="210" y="505" text-anchor="middle">Place palm inside the block</text>
   </svg>
+
+  <!-- countdown -->
+  <div id="count" class="count">3</div>
 </div>
 
 <div class="btns">
   <button id="handBtn">🖐️ Right • Present</button>
-  <button id="capBtn">📸 Capture</button>
+  <button id="startBtn">🎥 Start Camera</button>
+  <button id="bigCap">● Capture</button>
   <button id="anBtn" disabled>✨ Analyze</button>
   <button id="saveBtn" disabled>💾 Save PNG</button>
   <button id="torchBtn" hidden>🔦 Torch</button>
@@ -81,140 +104,101 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-const video = document.getElementById('cam');
-const canvas = document.getElementById('cv');
-const ctx = canvas.getContext('2d');
-const statBadge = document.getElementById('cvStatus');
-const statusTxt = document.getElementById('status');
-
-const handBtn = document.getElementById('handBtn');
-const capBtn  = document.getElementById('capBtn');
-const anBtn   = document.getElementById('anBtn');
-const saveBtn = document.getElementById('saveBtn');
-const torchBtn= document.getElementById('torchBtn');
-
-const edge = document.getElementById('edge'), edgev=document.getElementById('edgev');
-const gk   = document.getElementById('gk'),   gkv=document.getElementById('gkv');
-edge.oninput=()=>edgev.textContent=edge.value;
-gk.oninput  =()=>gkv.textContent=gk.value;
-
-const overlaySvg = document.querySelector('.overlay');
+const video=document.getElementById('cam'), canvas=document.getElementById('cv'), ctx=canvas.getContext('2d');
+const statBadge=document.getElementById('cvStatus'), statusTxt=document.getElementById('status');
+const handBtn=document.getElementById('handBtn'), startBtn=document.getElementById('startBtn'), bigCap=document.getElementById('bigCap');
+const anBtn=document.getElementById('anBtn'), saveBtn=document.getElementById('saveBtn'), torchBtn=document.getElementById('torchBtn');
+const edge=document.getElementById('edge'), edgev=document.getElementById('edgev'), gk=document.getElementById('gk'), gkv=document.getElementById('gkv');
+const overlaySvg=document.querySelector('.overlay'), countEl=document.getElementById('count');
+edge.oninput=()=>edgev.textContent=edge.value; gk.oninput=()=>gkv.textContent=gk.value;
 
 let hand='right', flipped=false, captured=false, stream=null, track=null, torch=false;
-
 function lockScroll(on){ document.body.classList.toggle('lock-scroll', !!on); }
-
-function applyHand(){
-  overlaySvg.style.transform = (hand==='left') ? 'scaleX(-1)' : 'none';
-  handBtn.textContent = (hand==='left') ? '🖐️ Left • Past' : '🖐️ Right • Present';
-  statusTxt.textContent = (hand==='left') ? 'Align LEFT hand (පෙර භවය)' : 'Align RIGHT hand (මෙය භවය)';
-}
-handBtn.onclick=()=>{ hand=(hand==='right')?'left':'right'; applyHand(); };
-applyHand();
+function applyHand(){ overlaySvg.style.transform=(hand==='left')?'scaleX(-1)':'none';
+  handBtn.textContent=(hand==='left')?'🖐️ Left • Past':'🖐️ Right • Present';
+  statusTxt.textContent=(hand==='left')?'Align LEFT hand (පෙර භවය)':'Align RIGHT hand (මෙය භවය)'; }
+handBtn.onclick=()=>{ hand=(hand==='right')?'left':'right'; applyHand(); }; applyHand();
 
 async function ensureCamera(){
   if(stream) return;
   try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:15,max:30}},
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:15,max:30}},
       audio:false
     });
-    video.srcObject = stream; await video.play();
-    track = stream.getVideoTracks()[0];
-    const caps = track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
+    video.srcObject=stream; await video.play();
+    track=stream.getVideoTracks()[0];
+    const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
   }catch(e){ alert('Camera error: '+e.message); }
 }
 
-torchBtn.onclick=async()=>{
-  if(!track) return;
-  try{ torch=!torch; await track.applyConstraints({advanced:[{torch}]});
-    torchBtn.textContent = torch ? '🔦 Torch (ON)' : '🔦 Torch';
-  }catch{ alert('Torch not supported on this device'); }
+torchBtn.onclick=async()=>{ if(!track) return; try{ torch=!torch; await track.applyConstraints({advanced:[{torch}]});
+  torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch'; }catch{ alert('Torch not supported'); } };
+
+startBtn.onclick=async()=>{
+  await ensureCamera(); lockScroll(true);
+  statusTxt.textContent='Camera live • align palm inside the block';
+  (function loop(){ if(stream){ canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||480;
+    ctx.drawImage(video,0,0,canvas.width,canvas.height); requestAnimationFrame(loop);} })();
 };
 
-capBtn.onclick=async()=>{
-  lockScroll(true);
-  await ensureCamera();
-  if(!video.videoWidth){ alert('Video not ready'); return; }
-  // Draw into the SAME canvas (single-window UX)
-  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-  ctx.save();
-  if(flipped){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
-  ctx.restore();
-  captured=true; anBtn.disabled=false; saveBtn.disabled=false;
-  statBadge.textContent='OpenCV ready';
-  statusTxt.textContent=(hand.toUpperCase())+' hand captured • Ready to Analyze';
-  // add small thumbnail
-  setTimeout(()=>{
-    const thumbs=document.getElementById('thumbs');
-    const img=new Image(); img.src=canvas.toDataURL('image/png');
-    const tag=document.createElement('div'); tag.className='tag'; tag.textContent=hand.toUpperCase();
-    const box=document.createElement('div'); box.append(img,tag); thumbs.appendChild(box);
-  },50);
-};
+async function countdownCapture(){
+  await ensureCamera(); lockScroll(true);
+  const seq=['3','2','1','']; let i=0; countEl.classList.add('show');
+  (function tick(){
+    countEl.textContent=seq[i++]; if(i<seq.length){ setTimeout(tick,400); }
+    else{ countEl.classList.remove('show');
+      canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+      ctx.save(); if(flipped){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+      ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
+      captured=true; anBtn.disabled=false; saveBtn.disabled=false;
+      statusTxt.textContent=`${hand.toUpperCase()} hand captured • Ready to Analyze`;
+      // thumbnail
+      const thumbs=document.getElementById('thumbs');
+      const img=new Image(); img.src=canvas.toDataURL('image/png');
+      const tag=document.createElement('div'); tag.className='tag'; tag.textContent=hand.toUpperCase();
+      const box=document.createElement('div'); box.append(img,tag); thumbs.appendChild(box);
+    }
+  })();
+}
+bigCap.onclick=countdownCapture;
 
-saveBtn.onclick=()=>{
-  const a=document.createElement('a');
-  a.href=canvas.toDataURL('image/png');
-  a.download=`palm_${hand}_${Date.now()}.png`;
-  a.click();
-  lockScroll(false);
-};
+saveBtn.onclick=()=>{ const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download=`palm_${hand}_${Date.now()}.png`; a.click(); lockScroll(false); };
 
-// OpenCV ready indicator
-(function waitCV(){
-  const ok=()=>{ statBadge.textContent='OpenCV ready'; };
+(function waitCV(){ const ok=()=>{statBadge.textContent='OpenCV ready';};
   const poll=()=> (window.cv && cv.Mat) ? ok() : setTimeout(poll,200);
-  if(window.cv && cv.onRuntimeInitialized!==undefined){ cv.onRuntimeInitialized=ok; poll(); } else poll();
-})();
+  if(window.cv && cv.onRuntimeInitialized!==undefined){ cv.onRuntimeInitialized=ok; poll(); } else poll(); })();
 
-anBtn.onclick=()=>{
-  if(!captured) return alert('Capture first');
-  if(!window.cv||!cv.Mat) return alert('OpenCV not loaded yet');
-  analyze();
-};
+anBtn.onclick=()=>{ if(!captured) return alert('Capture first'); if(!window.cv||!cv.Mat) return alert('OpenCV not loaded'); analyze(); };
 
-// -------- Robust analyze (simple & stable) --------
+// ---- Robust analyze: blur + adaptive threshold + contours ----
 function analyze(){
-  const src = cv.imread(canvas);
+  const src=cv.imread(canvas);
+  const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+  cv.GaussianBlur(gray,gray,new cv.Size(5,5),0);
 
-  // grayscale + slight blur (stable on mobile)
-  const gray = new cv.Mat(); cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-  cv.GaussianBlur(gray, gray, new cv.Size(5,5), 0);
+  const bin=new cv.Mat();
+  // slider edge value fine-tunes bias (reduce/raise threshold)
+  cv.adaptiveThreshold(gray,bin,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,cv.THRESH_BINARY_INV,25,5 - (+edge.value-50)/10);
 
-  // adaptive threshold (invert for lines)
-  const bin = new cv.Mat();
-  cv.adaptiveThreshold(
-    gray, bin, 255,
-    cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV,
-    25, 5 - (+edge.value - 50)/10     // small bias from slider
-  );
-
-  // small speck cleanup
   const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
   cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3);
 
-  // contours
   const contours=new cv.MatVector(), hierarchy=new cv.Mat();
   cv.findContours(bin,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
 
-  const out = src.clone();
-  let drawn=0;
+  const out=src.clone(); let drawn=0;
   for(let i=0;i<contours.size();i++){
-    const c=contours.get(i);
-    const area=cv.contourArea(c);
+    const c=contours.get(i), area=cv.contourArea(c);
     if(area<120) continue;
     cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);
     drawn++;
   }
   cv.imshow(canvas,out);
+  statusTxt.textContent=`Analyze: ${drawn} contours • ${(hand==='left'?'LEFT (Past)':'RIGHT (Present)')} hand`;
 
-  statusTxt.textContent = `Analyze: ${drawn} contours drawn • ${(hand==='left'?'LEFT(Past)':'RIGHT(Present)')} hand`;
-  // cleanup
   gray.delete(); bin.delete(); k3.delete(); contours.delete(); hierarchy.delete();
-  // give imshow time before freeing
-  setTimeout(()=>{ src.delete(); out.delete(); }, 200);
+  setTimeout(()=>{ src.delete(); out.delete(); },200);
 }
 </script>
 </body>
