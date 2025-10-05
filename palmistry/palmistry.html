@@ -5,31 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Palmistry AI Overlay – Sathyadarshana</title>
 <style>
-:root{--pri:#16f0a7;--sec:#38bdf8;--bg:#0b0f16}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial,sans-serif;text-align:center}
-h1{margin:16px 0 8px}
-.wrap{display:inline-block;position:relative;margin:10px auto}
-video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;background:#0e1625}
-.badge{position:absolute;left:8px;top:8px;padding:.25rem .45rem;border-radius:8px;font-size:.75rem;background:#0008}
+:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+h1{margin:14px 0 6px}
+video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6}
 .captureBtn{
-  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
-  background:#2196f3;border:none;border-radius:50%;
-  width:90px;height:90px;display:flex;align-items:center;justify-content:center;
-  color:#000;font-weight:600;cursor:pointer;font-size:.9rem;
-  box-shadow:0 0 15px #2196f333;
+ position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+ width:85px;height:85px;border-radius:50%;
+ border:none;background:#2196f3;color:#000;font-weight:600;
+ box-shadow:0 0 15px #2196f333;cursor:pointer;
 }
-.captureBtn:active{transform:translateX(-50%) scale(.95)}
-.overlay{position:absolute;inset:0;pointer-events:none;opacity:.65}
-.path-glow{fill:none;stroke:#00e5ff;stroke-width:2;filter:drop-shadow(0 0 6px #00f5ff66)}
-.btns{margin:12px 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-button{border:none;border-radius:10px;padding:.6em 1.1em;font-weight:700;cursor:pointer}
+.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:pointer}
 .left{background:#16243a;color:#cfe9ff}
-.cap{background:#fbbf24;color:#111827}
-.an{background:var(--pri);color:#07121f}
-.torch{background:#22c55e;color:#052e16}
+.an{background:var(--pri);color:#000}
+.cap{background:#fbbf24;color:#111}
+.torch{background:#22c55e;color:#021}
 .sliderRow{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-label{font-size:.9em}
 footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </style>
 <script>
@@ -46,22 +39,17 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </head>
 <body>
 <h1>🖐️ Palmistry</h1>
-<p>Left = Past · Right = Present — align hand in block → Capture → Analyze</p>
+<p>Align palm → Capture → Analyze</p>
 
-<div class="wrap">
+<div class="wrap" style="position:relative;display:inline-block">
   <video id="cam" playsinline></video>
   <canvas id="cv"></canvas>
-  <span id="cvStatus" class="badge">loading OpenCV...</span>
   <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice">
-    <path class="path-glow"
-      d="M145 485c-55-35-78-139-19-190 6-45 8-90 29-98 22-9 34 33 34 79 
-         0-52 16-96 37-95 21 1 22 47 17 98 7-50 24-89 43-85 
-         19 4 19 54 9 101 8-43 25-73 42-67 16 6 14 49 0 96 
-         24 22 36 71 21 110-21 55-80 74-213 51z"/>
-    <circle cx="210" cy="300" r="35" stroke="#00e5ff" stroke-width="2" fill="none" opacity=".2"/>
-    <text x="210" y="520" fill="#7de9ff" text-anchor="middle" style="font:16px system-ui">
-      Place palm inside the block
-    </text>
+    <path d="M145 485c-55-35-78-139-19-190 6-45 8-90 29-98 
+             22-9 34 33 34 79 0-52 16-96 37-95 21 1 22 47 17 98 
+             7-50 24-89 43-85 19 4 19 54 9 101 8-43 25-73 42-67 
+             16 6 14 49 0 96 24 22 36 71 21 110-21 55-80 74-213 51z"
+          fill="none" stroke="var(--neon)" stroke-width="2" filter="drop-shadow(0 0 5px var(--neon))"/>
   </svg>
   <button class="captureBtn" id="capBtn">Tap to Capture</button>
 </div>
@@ -70,85 +58,68 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
   <button class="left" id="flipBtn">🖐 Left · Past</button>
   <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
   <button class="an" id="anBtn">✨ Analyze</button>
-  <button class="cap" id="saveBtn">💾 Save PNG</button>
+  <button class="cap" id="saveBtn">💾 Save</button>
 </div>
 
 <div class="sliderRow">
-  <label>Edge <input id="edge" type="range" min="20" max="120" value="70"/></label>
-  <label>Detail <input id="gk" type="range" min="7" max="23" step="2" value="15"/></label>
+  <label>Edge <input id="edge" type="range" min="30" max="120" value="70"/></label>
+  <label>Detail <input id="gk" type="range" min="3" max="15" step="2" value="9"/></label>
 </div>
 
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
 const video=document.getElementById('cam'),canvas=document.getElementById('cv'),ctx=canvas.getContext('2d');
-const stat=document.getElementById('cvStatus');
-const flipBtn=document.getElementById('flipBtn'),capBtn=document.getElementById('capBtn'),anBtn=document.getElementById('anBtn');
-const saveBtn=document.getElementById('saveBtn'),torchBtn=document.getElementById('torchBtn');
-const edge=document.getElementById('edge'),gk=document.getElementById('gk');
+const flipBtn=document.getElementById('flipBtn'),capBtn=document.getElementById('capBtn'),
+      anBtn=document.getElementById('anBtn'),saveBtn=document.getElementById('saveBtn'),torchBtn=document.getElementById('torchBtn');
 let flipped=false,captured=false,stream=null,track=null,torch=false;
 
 flipBtn.onclick=()=>{flipped=!flipped;video.style.transform=flipped?'scaleX(-1)':'none';};
 
 async function ensureCamera(){
-  if(stream) return;
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:15,max:30}},audio:false});
-    video.srcObject=stream; await video.play();
-    track=stream.getVideoTracks()[0];
-    const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
-    stat.textContent='Camera live';
-  }catch(e){ alert('Camera error: '+e.message); }
+ if(stream) return;
+ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+ video.srcObject=stream; await video.play();
+ track=stream.getVideoTracks()[0];
+ const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
 }
 
-torchBtn.onclick=async()=>{if(!track)return;
- try{torch=!torch;await track.applyConstraints({advanced:[{torch}]});
- torchBtn.textContent=torch?'🔦 Torch (ON)':'🔦 Torch';}catch{alert('Torch not supported');}};
+torchBtn.onclick=async()=>{if(!track)return;torch=!torch;
+ try{await track.applyConstraints({advanced:[{torch}]});}catch{}};
 
 capBtn.onclick=async()=>{
-  await ensureCamera();
-  if(!video.videoWidth){alert('Video not ready');return;}
-  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-  ctx.save(); if(flipped){ctx.translate(canvas.width,0);ctx.scale(-1,1);} ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
-  captured=true; stat.textContent='Captured!';
+ await ensureCamera();
+ canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+ ctx.save(); if(flipped){ctx.translate(canvas.width,0);ctx.scale(-1,1);} ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
+ captured=true;
 };
 
 saveBtn.onclick=()=>{if(!captured)return;const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='palm_'+Date.now()+'.png';a.click();};
 
-function waitForCV(){
-  if(window.cv && cv.Mat){stat.textContent='OpenCV ready';return true;}
-  setTimeout(waitForCV,200);
-}
-waitForCV();
-
-anBtn.onclick=()=>{if(!captured)return alert('Capture first');if(!window.cv||!cv.Mat)return alert('OpenCV not loaded yet');analyze();};
+anBtn.onclick=()=>{if(!captured)return alert('Capture first');if(!window.cv||!cv.Mat)return alert('OpenCV not ready');analyze();};
 
 function analyze(){
-  try{
-    const src=cv.imread(canvas);
-    const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-    const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(gray,gray);
-    const ksize=(+gk.value)|0,sigma=4.0,lambd=10.0,gamma=0.5,psi=0,degs=[0,20,40,60,80,100,120,140];
-    const gSum=cv.Mat.zeros(gray.rows,gray.cols,cv.CV_32F),resp=new cv.Mat();
-    for(const d of degs){
-      const th=d*Math.PI/180;
-      const ker=cv.getGaborKernel(new cv.Size(ksize,ksize),sigma,th,lambd,gamma,psi,cv.CV_32F);
-      cv.filter2D(gray,resp,cv.CV_32F,ker); cv.max(gSum,resp,gSum); ker.delete();
-    }
-    const g8=new cv.Mat(); cv.normalize(gSum,gSum,0,255,cv.NORM_MINMAX); gSum.convertTo(g8,cv.CV_8U);
-    const bin=new cv.Mat(); cv.adaptiveThreshold(g8,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,21,-(+edge.value));
-    const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3)); cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3); cv.dilate(bin,bin,k3);
-    const contours=new cv.MatVector(),hierarchy=new cv.Mat(); cv.findContours(bin,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-    const out=src.clone();
-    for(let i=0;i<contours.size();i++){
-      const area=cv.contourArea(contours.get(i)); if(area<100) continue;
-      cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);
-    }
-    cv.imshow(canvas,out);
-    [gray,clahe,gSum,resp,g8,bin,k3,src,out,hierarchy,contours].forEach(m=>m.delete());
-    stat.textContent='Analysis complete';
-  }catch(e){alert('Error during analysis: '+e.message);}
+ try{
+   const src=cv.imread(canvas);
+   const gray=new cv.Mat();cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8));clahe.apply(gray,gray);
+   const sobelX=new cv.Mat(),sobelY=new cv.Mat(),edges=new cv.Mat();
+   cv.Sobel(gray,sobelX,cv.CV_16S,1,0,3);cv.Sobel(gray,sobelY,cv.CV_16S,0,1,3);
+   cv.convertScaleAbs(sobelX,sobelX);cv.convertScaleAbs(sobelY,sobelY);
+   cv.addWeighted(sobelX,0.5,sobelY,0.5,0,edges);
+   const bin=new cv.Mat();cv.adaptiveThreshold(edges,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,11,2);
+   const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+   cv.morphologyEx(bin,bin,cv.MORPH_OPEN,kernel);cv.dilate(bin,bin,kernel);
+   const contours=new cv.MatVector(),hier=new cv.Mat();
+   cv.findContours(bin,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+   const out=src.clone();
+   for(let i=0;i<contours.size();i++){
+     const area=cv.contourArea(contours.get(i)); if(area<80)continue;
+     cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);
+   }
+   cv.imshow(canvas,out);
+   [src,gray,clahe,sobelX,sobelY,edges,bin,kernel,contours,hier,out].forEach(m=>m.delete());
+ }catch(e){alert('Error: '+e.message);}
 }
 </script>
 </body>
