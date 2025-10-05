@@ -52,7 +52,7 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 .cap-fab:active{ transform:translateX(-50%) scale(.98); }
 .cap-label{position:absolute; left:50%; bottom:108px; transform:translateX(-50%); z-index:5; color:#bfefff; font-size:12px; opacity:.9}
 
-/* lock page while using camera */
+/* lock page while using camera (disabled after capture) */
 .lock-scroll{height:100vh;overflow:hidden}
 
 #thumbs img{width:96px;height:auto;border:1px solid #18d6ff;border-radius:8px;display:block}
@@ -64,7 +64,7 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
 </head>
 <body>
 <h1>🖐️ Palmistry</h1>
-<p class="sub">Left = පෙර භවය • Right = මෙය භවය — <b>block</b> එකට අත align කර <b>Capture → Analyze</b></p>
+<p class="sub">Left = Past • Right = Present — align hand in the block → <b>Capture</b> → <b>Analyze</b></p>
 
 <div class="wrap" id="wrap">
   <video id="cam" playsinline></video>
@@ -106,7 +106,7 @@ video#cam{position:fixed;inset:-9999px;width:1px;height:1px}
     <circle cx="210" cy="320" r="32" class="g" opacity=".18"/>
     <line x1="178" y1="320" x2="242" y2="320" class="g" opacity=".18"/>
     <line x1="210" y1="288" x2="210" y2="352" class="g" opacity=".18"/>
-    <text x="210" y="520" text-anchor="middle">Place palm inside the highlighted shape</text>
+    <text x="210" y="520" text-anchor="middle">Place palm inside the block</text>
   </svg>
 
   <!-- floating capture -->
@@ -157,7 +157,7 @@ function lockScroll(on){ document.body.classList.toggle('lock-scroll', !!on); }
 function applyHand(){
   overlaySvg.style.transform = (hand==='left')?'scaleX(-1)':'none';
   handBtn.textContent=(hand==='left')?'🖐️ Left • Past':'🖐️ Right • Present';
-  statusTxt.textContent=(hand==='left')?'Align LEFT hand (පෙර භවය)':'Align RIGHT hand (මෙය භවය)';
+  statusTxt.textContent=(hand==='left')?'Align LEFT hand':'Align RIGHT hand';
 }
 handBtn.onclick=()=>{ hand=(hand==='right')?'left':'right'; applyHand(); }; applyHand();
 
@@ -192,7 +192,7 @@ torchBtn.onclick=async()=>{ if(!track) return; try{
 }catch{ alert('Torch not supported'); } };
 
 startBtn.onclick=async()=>{ await ensureCamera(); lockScroll(true);
-  statusTxt.textContent='Camera live • align palm inside the block'; startLive(); };
+  statusTxt.textContent='Camera live — align inside the block'; startLive(); };
 
 async function countdownCapture(){
   await ensureCamera(); lockScroll(true);
@@ -206,8 +206,12 @@ async function countdownCapture(){
       canvas.width=video.videoWidth; canvas.height=video.videoHeight;
       ctx.drawImage(video,0,0,canvas.width,canvas.height);
       captured=true; anBtn.disabled=false; saveBtn.disabled=false;
-      statusTxt.textContent=`${hand.toUpperCase()} hand captured • Ready to Analyze`;
+      statusTxt.textContent=`${hand.toUpperCase()} hand captured — Ready to Analyze`;
       capLabel.textContent='Captured ✓'; setTimeout(()=>capLabel.textContent='Tap to Capture',1200);
+
+      // *** IMPORTANT: allow scrolling after capture ***
+      lockScroll(false);
+
       // thumbnail
       const thumbs=document.getElementById('thumbs');
       const img=new Image(); img.src=canvas.toDataURL('image/png');
@@ -219,7 +223,7 @@ async function countdownCapture(){
 capFab.onclick = countdownCapture;
 
 saveBtn.onclick=()=>{ const a=document.createElement('a'); a.href=canvas.toDataURL('image/png');
-  a.download=`palm_${hand}_${Date.now()}.png`; a.click(); lockScroll(false); };
+  a.download=`palm_${hand}_${Date.now()}.png`; a.click(); };
 
 (function waitCV(){ const ok=()=>{statBadge.textContent='OpenCV ready';};
   const poll=()=> (window.cv && cv.Mat) ? ok() : setTimeout(poll,200);
@@ -234,8 +238,13 @@ function analyze(){
   cv.GaussianBlur(gray,gray,new cv.Size(5,5),0);
 
   const bin=new cv.Mat();
-  // edge slider shifts bias a little
-  cv.adaptiveThreshold(gray,bin,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,cv.THRESH_BINARY_INV,25,5 - (+edge.value-50)/10);
+  cv.adaptiveThreshold(
+    gray,bin,255,
+    cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+    cv.THRESH_BINARY_INV,
+    25,
+    5 - (+edge.value-50)/10
+  );
 
   const k3=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
   cv.morphologyEx(bin,bin,cv.MORPH_OPEN,k3);
@@ -251,7 +260,7 @@ function analyze(){
     drawn++;
   }
   cv.imshow(canvas,out);
-  statusTxt.textContent=`Analyze: ${drawn} contours • ${(hand==='left'?'LEFT (Past)':'RIGHT (Present)')} hand`;
+  statusTxt.textContent=`Analyze: ${drawn} contours • ${hand==='left'?'LEFT (Past)':'RIGHT (Present)'}`;
 
   gray.delete(); bin.delete(); k3.delete(); contours.delete(); hierarchy.delete();
   setTimeout(()=>{ src.delete(); out.delete(); },200);
