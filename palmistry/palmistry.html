@@ -3,16 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sathyadarshana · Palmistry AI Overlay — FINAL v2</title>
+<title>Sathyadarshana · Palmistry AI Overlay — FINAL v3</title>
 <style>
-  :root{ --bg:#0a0f1a; --ink:#e6f0ff; --cyan:#29e0ff;
-         --heart:#ff3b3b; --head:#ffa533; --life:#42ff6c; }
+  :root{ --bg:#0a0f1a; --ink:#e6f0ff; --cyan:#29e0ff; --heart:#ff3b3b; --head:#ffa533; --life:#42ff6c; }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial}
   header{padding:10px 14px;border-bottom:1px solid #19304e;background:linear-gradient(180deg,#0b1322,#0a0f1a)}
   h1{margin:0;font-size:16px}
   .wrap{max-width:900px;margin:10px auto;padding:10px}
-  .stage{position:relative;border:2px solid #163255;border-radius:14px;overflow:hidden;background:#000}
+  .stage{position:relative;border:2px solid #163255;border-radius:14px;overflow:hidden;background:#000;min-height:280px}
   /* layers */
   #cam{position:relative;z-index:0;width:100%;height:auto;display:block}
   #frame{position:absolute;inset:0;z-index:1;display:none}
@@ -29,11 +28,12 @@
   .badge{padding:3px 8px;border:1px solid #26486f;border-radius:999px;background:#0b1b2b;color:#9fceff}
   .sl{appearance:none;width:160px;height:6px;border-radius:8px;background:#1a2f4b;outline:none}
   .sl::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#2df3c2}
+  #status{margin:10px 0;padding:10px;border:1px dashed #355;border-radius:8px;color:#cfe;display:none}
   footer{opacity:.7;text-align:center;margin:12px 0}
 </style>
 </head>
 <body>
-<header><h1>✨ Palmistry AI Overlay — FINAL v2 (Capture-Lock ▸ Edge ▸ Skeleton ▸ Curves)</h1></header>
+<header><h1>✨ Palmistry AI Overlay — FINAL v3 (Start/Choose ▸ Capture-Lock ▸ Edge ▸ Skeleton ▸ Curves)</h1></header>
 
 <div class="wrap">
   <div class="stage" id="stage">
@@ -49,6 +49,8 @@
   </div>
 
   <div class="controls">
+    <button class="btn" id="start">▶️ Start Camera</button>
+    <input type="file" id="pick" accept="image/*" class="btn" />
     <button class="btn" id="flip">🖐️ Left ▸ Right</button>
     <button class="btn" id="torch">🔦 Torch</button>
     <button class="btn" id="capture">📸 Capture</button>
@@ -56,12 +58,15 @@
     <button class="btn" id="clear">🧹 Clear</button>
     <button class="btn" id="save">💾 Save</button>
   </div>
+
   <div class="pill">
     <span class="badge">Edge</span>
     <input type="range" id="edge" class="sl" min="20" max="90" value="55"><span id="edgev">55</span>
     <span class="badge">Detail</span>
     <input type="range" id="detail" class="sl" min="1" max="5" value="3"><span id="detv">3</span>
   </div>
+
+  <div id="status"></div>
 
   <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 </div>
@@ -71,12 +76,12 @@
 const $ = s => document.querySelector(s);
 const video = $('#cam'), cv = $('#overlay'), ctx = cv.getContext('2d');
 const frameCanvas = $('#frame'), fctx = frameCanvas.getContext('2d');
+const statusBox = $('#status');
 let stream, track, facing='environment', locked=false;
 
-/* --- crossOrigin (mobile security/tainting) --- */
-cv.crossOrigin = "anonymous";
-frameCanvas.crossOrigin = "anonymous";
-video.crossOrigin = "anonymous";
+// crossOrigin guards
+cv.crossOrigin = frameCanvas.crossOrigin = video.crossOrigin = "anonymous";
+function msg(t){ statusBox.textContent=t; statusBox.style.display='block'; }
 
 /* -------- Camera -------- */
 async function startCam(){
@@ -102,109 +107,106 @@ async function startCam(){
   locked = false;
   requestAnimationFrame(drawGuide);
 }
-startCam().catch(e=>alert('Camera error: '+e.message));
 
-/* -------- Visibility repaint (mobile freeze guard) -------- */
-document.addEventListener("visibilitychange",()=>{
-  if(document.visibilityState==="visible" && locked){
-    try{ drawGuide(); }catch(e){ console.warn("Repaint failed",e); }
-  }
-});
-
-/* -------- UI -------- */
-$('#flip').onclick = ()=>{ facing=(facing==='user'?'environment':'user'); startCam(); };
+/* ---- UI wiring ---- */
+$('#start').onclick = async ()=>{
+  try{ await startCam(); msg('✅ Camera started. 📸 Capture → ✨ Analyze කරන්න.'); }
+  catch(e){ msg('❌ Camera error: '+e.message+' — Site settings → Camera → Allow. හෝ “Choose Photo” භාවිතා කරන්න.'); }
+};
+$('#flip').onclick = ()=>{ facing=(facing==='user'?'environment':'user'); $('#start').click(); };
 $('#torch').onclick = async ()=>{
   try{
     const caps = track?.getCapabilities?.();
-    if(caps && 'torch' in caps){ const st = track.getSettings();
-      await track.applyConstraints({advanced:[{torch: !st.torch}]});
-    } else alert('Torch not supported on this device/browser.');
-  }catch(e){ alert('Torch error: '+e.message); }
+    if(caps && 'torch' in caps){ const st = track.getSettings(); await track.applyConstraints({advanced:[{torch: !st.torch}]}); }
+    else msg('ℹ️ Torch not supported on this device/browser.');
+  }catch(e){ msg('❌ Torch error: '+e.message); }
 };
 $('#edge').oninput = e=>$('#edgev').textContent = e.target.value;
 $('#detail').oninput = e=>$('#detv').textContent = e.target.value;
 
-/* ---- CAPTURE (Lock photo) ---- */
-$('#capture').onclick = ()=>{
-  try{
-    fctx.drawImage(video,0,0,frameCanvas.width,frameCanvas.height);
-    frameCanvas.style.display = 'block';
-    video.style.display = 'none';
-    locked = true;
-    drawGuide();
-    alert("🖐️ Photo locked. දැන් 'Analyze' දබාන්න.");
-  }catch(e){ alert('Capture failed: '+e.message); }
-};
-
-/* ---- CLEAR (Back to live) ---- */
-$('#clear').onclick = ()=>{
-  locked=false;
-  frameCanvas.style.display = 'none';
-  video.style.display = 'block';
-  ctx.clearRect(0,0,cv.width,cv.height);
-  drawGuide();
-};
-
-/* ---- SAVE (PNG) ---- */
-$('#save').onclick = ()=>{
-  const tmp = document.createElement('canvas');
-  tmp.width = cv.width; tmp.height = cv.height;
-  const tctx = tmp.getContext('2d');
-  if(locked) tctx.drawImage(frameCanvas,0,0);
-  else       tctx.drawImage(video,0,0,tmp.width,tmp.height);
-  tctx.drawImage(cv,0,0);
-  const a = document.createElement('a');
-  a.download = 'palmistry_overlay.png';
-  a.href = tmp.toDataURL('image/png'); a.click();
-};
-
-/* ---- ANALYZE ---- */
-$('#analyze').onclick = ()=>{
-  try{ analyzeNow(); }
-  catch(e){ alert('Analyze failed: '+e.message); console.error(e); }
-};
-
-/* -------- Helpers -------- */
-function getImageData(){
-  if(locked){
-    return fctx.getImageData(0,0,frameCanvas.width,frameCanvas.height);
-  }else{
-    const c = document.createElement('canvas');
-    c.width=cv.width; c.height=cv.height;
-    c.getContext('2d').drawImage(video,0,0,c.width,c.height);
-    return c.getContext('2d').getImageData(0,0,c.width,c.height);
+function ensureSize(){
+  if(!cv.width || !cv.height){
+    const W = video.videoWidth  || 1280, H = video.videoHeight || 720;
+    cv.width=W; cv.height=H; frameCanvas.width=W; frameCanvas.height=H;
   }
 }
 
+/* ---- File fallback ---- */
+$('#pick').onchange = e=>{
+  const file = e.target.files?.[0]; if(!file) return;
+  const img = new Image();
+  img.onload = ()=>{
+    cv.width = frameCanvas.width = img.naturalWidth;
+    cv.height= frameCanvas.height= img.naturalHeight;
+    fctx.drawImage(img,0,0,frameCanvas.width,frameCanvas.height);
+    frameCanvas.style.display='block'; video.style.display='none'; locked=true; drawGuide();
+    msg('🖼️ Photo loaded. දැන් ✨ Analyze ඔබන්න.');
+  };
+  img.onerror = ()=> msg('❌ Image load failed.');
+  img.src = URL.createObjectURL(file);
+};
+
+/* ---- Capture (lock) ---- */
+$('#capture').onclick = ()=>{
+  try{
+    ensureSize();
+    if(!stream){ msg('ℹ️ Start Camera first, or Choose Photo.'); return; }
+    fctx.drawImage(video,0,0,frameCanvas.width,frameCanvas.height);
+    frameCanvas.style.display='block'; video.style.display='none'; locked=true; drawGuide();
+    msg("🖐️ Photo locked. දැන් ✨ Analyze දාන්න.");
+  }catch(e){ msg('❌ Capture failed: '+e.message); }
+};
+
+/* ---- Clear ---- */
+$('#clear').onclick = ()=>{
+  locked=false; frameCanvas.style.display='none'; video.style.display='block';
+  ctx.clearRect(0,0,cv.width,cv.height); drawGuide(); msg('🧹 Cleared. Ready.');
+};
+
+/* ---- Save ---- */
+$('#save').onclick = ()=>{
+  const tmp = document.createElement('canvas'); tmp.width=cv.width; tmp.height=cv.height;
+  const tctx = tmp.getContext('2d');
+  if(locked) tctx.drawImage(frameCanvas,0,0); else tctx.drawImage(video,0,0,tmp.width,tmp.height);
+  tctx.drawImage(cv,0,0);
+  const a = document.createElement('a'); a.download='palmistry_overlay.png'; a.href=tmp.toDataURL('image/png'); a.click();
+};
+
+/* ---- Analyze ---- */
+$('#analyze').onclick = ()=>{
+  try{ ensureSize(); analyzeNow(); msg('✅ Analyze OK. Edge='+$('#edge').value+' · Detail='+$('#detail').value); }
+  catch(e){ msg('❌ Analyze failed: '+e.message); console.error(e); }
+};
+
+/* -------- Visibility repaint (mobile freeze guard) -------- */
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && locked){ try{ drawGuide(); }catch{} }});
+
 /* ================== Image Ops (no libs) ================= */
-function toGray(img){ const {data,width:w,height:h}=img, g=new Uint8ClampedArray(w*h);
-  for(let i=0,j=0;i<data.length;i+=4,j++) g[j]=data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114;
-  return {w,h,g}; }
-function claheLike(arr,w,h){
-  const tw=8, th=8, tileW=Math.max(1,Math.floor(w/tw)), tileH=Math.max(1,Math.floor(h/th));
-  const out=new Uint8ClampedArray(arr.length);
-  for(let ty=0;ty<th;ty++)for(let tx=0;tx<tw;tx++){
-    const x0=tx*tileW,y0=ty*tileH,x1=Math.min(w,(tx+1)*tileW),y1=Math.min(h,(ty+1)*tileH);
-    let min=255,max=0; for(let y=y0;y<y1;y++)for(let x=x0;x<x1++){ const v=arr[y*w+x]; if(v<min)min=v; if(v>max)max=v; }
-    const range=Math.max(20,max-min);
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1){ const v=arr[y*w+x]; out[y*w+x]=((v-min)*255)/range; }
-  } return out;
+function getImageData(){
+  if(locked){ return fctx.getImageData(0,0,frameCanvas.width,frameCanvas.height); }
+  const c=document.createElement('canvas'); c.width=cv.width; c.height=cv.height;
+  c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+  return c.getContext('2d').getImageData(0,0,c.width,c.height);
 }
+function toGray(img){ const {data,width:w,height:h}=img, g=new Uint8ClampedArray(w*h);
+  for(let i=0,j=0;i<data.length;i+=4,j++) g[j]=data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114; return {w,h,g}; }
+function claheLike(arr,w,h){ const tw=8, th=8, tileW=Math.max(1,Math.floor(w/tw)), tileH=Math.max(1,Math.floor(h/th));
+  const out=new Uint8ClampedArray(arr.length);
+  for(let ty=0;ty<th;ty++)for(let tx=0;tx<tw;tx++){ const x0=tx*tileW,y0=ty*tileH,x1=Math.min(w,(tx+1)*tileW),y1=Math.min(h,(ty+1)*tileH);
+    let min=255,max=0; for(let y=y0;y<y1;y++)for(let x=x0;x<x1){ const v=arr[y*w+x]; if(v<min)min=v; if(v>max)max=v; }
+    const range=Math.max(20,max-min);
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1){ const v=arr[y*w+x]; out[y*w+x]=((v-min)*255)/range; } }
+  return out; }
 function blur3(arr,w,h,passes){ let a=Float32Array.from(arr); const k=[1,2,1,2,4,2,1,2,1],norm=16;
   for(let p=0;p<passes;p++){ const t=new Float32Array(w*h);
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ let s=0,i=0;
-      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++];
-      t[y*w+x]=s/norm; }
-    a=t; } return Uint8ClampedArray.from(a);
-}
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ let s=0,i=0; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/norm; }
+    a=t; } return Uint8ClampedArray.from(a); }
 function sobelEdges(arr,w,h,thr){ const mag=new Float32Array(w*h); let max=1;
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;
     const gx=-arr[i-w-1]-2*arr[i-1]-arr[i+w-1] + arr[i-w+1]+2*arr[i+1]+arr[i+w+1];
     const gy=-arr[i-w-1]-2*arr[i-w]-arr[i-w+1] + arr[i+w-1]+2*arr[i+w]+arr[i+w+1];
     const m=Math.hypot(gx,gy); mag[i]=m; if(m>max)max=m; }
-  const T=thr*max, bin=new Uint8ClampedArray(w*h);
-  for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0; return bin;
-}
+  const T=thr*max, bin=new Uint8ClampedArray(w*h); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0; return bin; }
 function zhangSuenThin(bin,w,h){ const img=Uint8Array.from(bin); let changed=true,pass=0;
   const N=(x,y)=>img[(y-1)*w+x]+img[(y-1)*w+x+1]+img[y*w+x+1]+img[(y+1)*w+x+1]+img[(y+1)*w+x]+img[(y+1)*w+x-1]+img[y*w+x-1]+img[(y-1)*w+x-1];
   const S=(x,y)=>{ const p=[img[(y-1)*w+x],img[(y-1)*w+x+1],img[y*w+x+1],img[(y+1)*w+x+1],img[(y+1)*w+x],img[(y+1)*w+x-1],img[y*w+x-1],img[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
@@ -215,8 +217,7 @@ function zhangSuenThin(bin,w,h){ const img=Uint8Array.from(bin); let changed=tru
     for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
       if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x-1]*img[(y+1)*w+x]==0)&&(img[(y-1)*w+x]*img[y*w+x+1]*img[y*w+x-1]==0)) rem.push(i);}
     rem.forEach(i=>img[i]=0); if(rem.length)changed=true; pass++; }
-  return img;
-}
+  return img; }
 function pickLongestPath(skel,w,h,y0,y1){
   const seen=new Uint8Array(w*h); let best=null; const nb=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
   function walk(sx,sy){ const st=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
@@ -229,7 +230,7 @@ function pickLongestPath(skel,w,h,y0,y1){
   return best||[];
 }
 
-/* ------------- Draw ------------- */
+/* ------------- Draw & Analyze ------------- */
 function drawGuide(){
   ctx.clearRect(0,0,cv.width,cv.height);
   const w=cv.width,h=cv.height;
@@ -257,14 +258,11 @@ function drawPath(pts,color,wid){
   ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
   ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
 }
-
-/* ------------- Analyze ------------- */
 function analyzeNow(){
   const edgeThr = Number($('#edge').value)/100;   // 0.2..0.9
   const passes  = Number($('#detail').value);     // 1..5
-  const frame = locked ? fctx.getImageData(0,0,frameCanvas.width,frameCanvas.height)
-                       : (function(){const c=document.createElement('canvas');c.width=cv.width;c.height=cv.height;c.getContext('2d').drawImage(video,0,0,c.width,c.height);return c.getContext('2d').getImageData(0,0,c.width,c.height);}());
-  const {w,h,g:gr0} = toGray(frame);
+  const src = getImageData();
+  const {w,h,g:gr0} = toGray(src);
   const g1 = claheLike(gr0,w,h);
   const g2 = blur3(g1,w,h,passes);
   const bin = sobelEdges(g2,w,h,edgeThr);
