@@ -1,283 +1,283 @@
 <!DOCTYPE html>
 <html lang="si">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sathyadarshana · Palmistry AI Overlay — FINAL v3</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Palmistry AI Overlay — Sathyadarshana (FULL)</title>
 <style>
-  :root{ --bg:#0a0f1a; --ink:#e6f0ff; --cyan:#29e0ff; --heart:#ff3b3b; --head:#ffa533; --life:#42ff6c; }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial}
-  header{padding:10px 14px;border-bottom:1px solid #19304e;background:linear-gradient(180deg,#0b1322,#0a0f1a)}
-  h1{margin:0;font-size:16px}
-  .wrap{max-width:900px;margin:10px auto;padding:10px}
-  .stage{position:relative;border:2px solid #163255;border-radius:14px;overflow:hidden;background:#000;min-height:280px}
-  /* layers */
-  #cam{position:relative;z-index:0;width:100%;height:auto;display:block}
-  #frame{position:absolute;inset:0;z-index:1;display:none}
-  #overlay{position:absolute;inset:0;z-index:3;pointer-events:none}
-  .grid{position:absolute;inset:8px;z-index:2;border:2px solid rgba(41,224,255,.5);border-radius:10px}
-  .legend{position:absolute;left:10px;top:10px;z-index:4;display:flex;gap:8px}
-  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid #25466b}
-  .dot{width:12px;height:12px;border-radius:50%}
-  .dot.h{background:var(--heart)} .dot.d{background:var(--head)} .dot.l{background:var(--life)}
-  .controls{display:flex;flex-wrap:wrap;gap:10px;margin:12px 2px}
-  .btn{border:1px solid #284d78;background:#0f1b2d;color:#d9eeff;padding:9px 12px;border-radius:10px}
-  .btn:active{transform:scale(.98)}
-  .pill{padding:7px 10px;border-radius:999px;background:#0b1a2a;border:1px solid #1f3a5f;display:flex;gap:12px;align-items:center}
-  .badge{padding:3px 8px;border:1px solid #26486f;border-radius:999px;background:#0b1b2b;color:#9fceff}
-  .sl{appearance:none;width:160px;height:6px;border-radius:8px;background:#1a2f4b;outline:none}
-  .sl::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#2df3c2}
-  #status{margin:10px 0;padding:10px;border:1px dashed #355;border-radius:8px;color:#cfe;display:none}
-  footer{opacity:.7;text-align:center;margin:12px 0}
+:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+h1{margin:14px 0 6px}
+.wrap{position:relative;display:inline-block}
+video,canvas{width:92vw;max-width:440px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+svg.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6}
+.captureBtn{
+ position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+ width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;
+ font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer
+}
+.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
+.left{background:#16243a;color:#cfe9ff}
+.an{background:var(--pri);color:#002}
+.cap{background:#fbbf24;color:#111}
+.torch{background:#22c55e;color:#021}
+select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
+.sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
+.sliderRow label{display:flex;gap:8px;align-items:center}
+input[type=range]{accent-color:#16f0a7}
+#status{margin:10px auto;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:760px;display:none}
+footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </style>
+
+<!-- OpenCV loader + fallback -->
+<script>
+(function(){
+  let loaded=false;
+  function load(url, onload){
+    const s=document.createElement('script'); s.src=url; s.async=true;
+    s.onload=onload; s.onerror=()=>console.warn('Load failed:',url);
+    document.head.appendChild(s);
+  }
+  load("https://docs.opencv.org/4.x/opencv.js", ()=>{
+    if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; console.log('✅ OpenCV ready'); }; loaded=true; }
+  });
+  // fallback after 2s if not ready
+  setTimeout(()=>{
+    if(!loaded || !window.cv){
+      load("https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js", ()=>{
+        if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; console.log('✅ OpenCV fallback ready'); }; }
+      });
+    }
+  }, 2000);
+})();
+</script>
 </head>
 <body>
-<header><h1>✨ Palmistry AI Overlay — FINAL v3 (Start/Choose ▸ Capture-Lock ▸ Edge ▸ Skeleton ▸ Curves)</h1></header>
+<h1>🖐️ Palmistry AI Overlay</h1>
+<p>Align palm → <b>Start/Choose</b> → <b>Capture</b> → <b>Analyze</b></p>
 
 <div class="wrap">
-  <div class="stage" id="stage">
-    <video id="cam" playsinline muted></video>
-    <canvas id="frame"></canvas>
-    <canvas id="overlay"></canvas>
-    <div class="grid"></div>
-    <div class="legend">
-      <span class="chip"><span class="dot h"></span>Heart</span>
-      <span class="chip"><span class="dot d"></span>Head</span>
-      <span class="chip"><span class="dot l"></span>Life</span>
-    </div>
-  </div>
+  <video id="cam" playsinline muted></video>
+  <canvas id="cv"></canvas>
 
-  <div class="controls">
-    <button class="btn" id="start">▶️ Start Camera</button>
-    <input type="file" id="pick" accept="image/*" class="btn" />
-    <button class="btn" id="flip">🖐️ Left ▸ Right</button>
-    <button class="btn" id="torch">🔦 Torch</button>
-    <button class="btn" id="capture">📸 Capture</button>
-    <button class="btn" id="analyze">✨ Analyze</button>
-    <button class="btn" id="clear">🧹 Clear</button>
-    <button class="btn" id="save">💾 Save</button>
-  </div>
+  <!-- palm guide -->
+  <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice">
+    <path d="M145 485c-55-35-78-139-19-190 6-45 8-90 29-98 
+             22-9 34 33 34 79 0-52 16-96 37-95 21 1 22 47 17 98 
+             7-50 24-89 43-85 19 4 19 54 9 101 8-43 25-73 42-67 
+             16 6 14 49 0 96 24 22 36 71 21 110-21 55-80 74-213 51z"
+          fill="none" stroke="var(--neon)" stroke-width="2" filter="drop-shadow(0 0 5px var(--neon))"/>
+  </svg>
 
-  <div class="pill">
-    <span class="badge">Edge</span>
-    <input type="range" id="edge" class="sl" min="20" max="90" value="55"><span id="edgev">55</span>
-    <span class="badge">Detail</span>
-    <input type="range" id="detail" class="sl" min="1" max="5" value="3"><span id="detv">3</span>
-  </div>
-
-  <div id="status"></div>
-
-  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
+  <button class="captureBtn" id="capBtn">Capture</button>
 </div>
 
+<div class="btns">
+  <button class="btnLike" id="startBtn">▶️ Start Camera</button>
+  <select id="camsel" class="btnLike"></select>
+  <input id="pick" type="file" accept="image/*" class="btnLike"/>
+  <button class="left" id="flipBtn">🖐 Left · Right</button>
+  <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
+  <button class="an" id="anBtn">✨ Analyze</button>
+  <button class="cap" id="saveBtn">💾 Save</button>
+  <button class="btnLike" id="clearBtn">🧹 Clear</button>
+</div>
+
+<div class="sliderRow">
+  <label>Edge <input id="edge" type="range" min="30" max="120" value="70"></label>
+  <label>Detail <input id="gk" type="range" min="3" max="15" step="2" value="9"></label>
+</div>
+
+<div id="status"></div>
+
+<footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
+
 <script>
-/* ========================= CORE ========================= */
-const $ = s => document.querySelector(s);
-const video = $('#cam'), cv = $('#overlay'), ctx = cv.getContext('2d');
-const frameCanvas = $('#frame'), fctx = frameCanvas.getContext('2d');
-const statusBox = $('#status');
-let stream, track, facing='environment', locked=false;
+/* ========================= CORE VARS ========================= */
+const video = document.getElementById('cam'),
+      canvas = document.getElementById('cv'),
+      ctx    = canvas.getContext('2d');
+const startBtn = document.getElementById('startBtn'),
+      camsel   = document.getElementById('camsel'),
+      pick     = document.getElementById('pick'),
+      flipBtn  = document.getElementById('flipBtn'),
+      torchBtn = document.getElementById('torchBtn'),
+      capBtn   = document.getElementById('capBtn'),
+      anBtn    = document.getElementById('anBtn'),
+      saveBtn  = document.getElementById('saveBtn'),
+      clearBtn = document.getElementById('clearBtn');
+let stream=null, track=null, flipped=false, captured=false;
+window.cvReady=false;
+canvas.crossOrigin = video.crossOrigin = "anonymous";
 
-// crossOrigin guards
-cv.crossOrigin = frameCanvas.crossOrigin = video.crossOrigin = "anonymous";
-function msg(t){ statusBox.textContent=t; statusBox.style.display='block'; }
+function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; }
 
-/* -------- Camera -------- */
-async function startCam(){
+/* ======================= CAMERA HELPERS ====================== */
+async function listCams(){
+  try{
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const cams = devs.filter(d=>d.kind==='videoinput');
+    camsel.innerHTML='';
+    cams.forEach((c,i)=>{
+      const o=document.createElement('option');
+      o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`;
+      camsel.appendChild(o);
+    });
+  }catch(e){ msg('ℹ️ enumerateDevices failed: '+e.message); }
+}
+async function startCam(deviceId=null){
   if(stream){ stream.getTracks().forEach(t=>t.stop()); }
-  stream = await navigator.mediaDevices.getUserMedia({
-    video:{ facingMode:facing, width:{ideal:1280}, height:{ideal:720} }, audio:false
-  });
-  video.srcObject = stream;
-  video.setAttribute('playsinline', true);
-  video.setAttribute('autoplay', true);
-  video.setAttribute('muted', true);
-  video.style.transform = facing==='user' ? 'scaleX(-1)' : 'scaleX(1)';
+  const constraints = deviceId
+    ? {video:{deviceId:{exact:deviceId},width:{ideal:1280},height:{ideal:720}},audio:false}
+    : {video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false};
+
+  stream = await navigator.mediaDevices.getUserMedia(constraints);
+  video.srcObject = stream; await video.play();
   track = stream.getVideoTracks()[0];
-  await new Promise(r=>video.onloadedmetadata=r);
+  const caps = track.getCapabilities?.(); if(caps && 'torch' in caps) torchBtn.hidden=false;
 
-  const W = video.videoWidth  || window.innerWidth  || 1280;
-  const H = video.videoHeight || window.innerHeight || 720;
-  [cv.width, cv.height] = [W, H];
-  [frameCanvas.width, frameCanvas.height] = [W, H];
+  canvas.width  = video.videoWidth  || 1280;
+  canvas.height = video.videoHeight || 720;
 
-  frameCanvas.style.display = 'none';
-  video.style.display = 'block';
-  locked = false;
-  requestAnimationFrame(drawGuide);
+  msg('✅ Camera started. දැන් Capture → Analyze කරන්න.');
 }
-
-/* ---- UI wiring ---- */
-$('#start').onclick = async ()=>{
-  try{ await startCam(); msg('✅ Camera started. 📸 Capture → ✨ Analyze කරන්න.'); }
-  catch(e){ msg('❌ Camera error: '+e.message+' — Site settings → Camera → Allow. හෝ “Choose Photo” භාවිතා කරන්න.'); }
-};
-$('#flip').onclick = ()=>{ facing=(facing==='user'?'environment':'user'); $('#start').click(); };
-$('#torch').onclick = async ()=>{
-  try{
-    const caps = track?.getCapabilities?.();
-    if(caps && 'torch' in caps){ const st = track.getSettings(); await track.applyConstraints({advanced:[{torch: !st.torch}]}); }
-    else msg('ℹ️ Torch not supported on this device/browser.');
-  }catch(e){ msg('❌ Torch error: '+e.message); }
-};
-$('#edge').oninput = e=>$('#edgev').textContent = e.target.value;
-$('#detail').oninput = e=>$('#detv').textContent = e.target.value;
-
-function ensureSize(){
-  if(!cv.width || !cv.height){
-    const W = video.videoWidth  || 1280, H = video.videoHeight || 720;
-    cv.width=W; cv.height=H; frameCanvas.width=W; frameCanvas.height=H;
+startBtn.onclick = async ()=>{
+  try { await listCams(); const id=camsel.value||null; await startCam(id); }
+  catch(e){
+    if(e.name==='NotAllowedError') msg('❌ Permission blocked. Address bar 🔒 → Site settings → Camera → Allow.');
+    else if(e.name==='NotReadableError') msg('❌ Camera busy by another app. Close other apps using camera/flash.');
+    else msg('❌ Camera error: '+e.message);
   }
-}
-
-/* ---- File fallback ---- */
-$('#pick').onchange = e=>{
-  const file = e.target.files?.[0]; if(!file) return;
-  const img = new Image();
-  img.onload = ()=>{
-    cv.width = frameCanvas.width = img.naturalWidth;
-    cv.height= frameCanvas.height= img.naturalHeight;
-    fctx.drawImage(img,0,0,frameCanvas.width,frameCanvas.height);
-    frameCanvas.style.display='block'; video.style.display='none'; locked=true; drawGuide();
-    msg('🖼️ Photo loaded. දැන් ✨ Analyze ඔබන්න.');
-  };
-  img.onerror = ()=> msg('❌ Image load failed.');
-  img.src = URL.createObjectURL(file);
 };
 
-/* ---- Capture (lock) ---- */
-$('#capture').onclick = ()=>{
+flipBtn.onclick = ()=>{ flipped=!flipped; video.style.transform=flipped?'scaleX(-1)':'none'; };
+torchBtn.onclick = async()=>{
+  if(!track) return;
+  try {
+    const st = track.getSettings();
+    await track.applyConstraints({advanced:[{torch: !st.torch}]});
+  } catch(e) { msg('Torch error: '+e.message); }
+};
+
+/* ======================== CAPTURE / LOAD ===================== */
+capBtn.onclick = async ()=>{
   try{
-    ensureSize();
-    if(!stream){ msg('ℹ️ Start Camera first, or Choose Photo.'); return; }
-    fctx.drawImage(video,0,0,frameCanvas.width,frameCanvas.height);
-    frameCanvas.style.display='block'; video.style.display='none'; locked=true; drawGuide();
-    msg("🖐️ Photo locked. දැන් ✨ Analyze දාන්න.");
+    if(!stream){ msg('ℹ️ Start Camera first (හෝ Choose file).'); return; }
+    canvas.width  = video.videoWidth  || canvas.width || 1280;
+    canvas.height = video.videoHeight || canvas.height|| 720;
+    ctx.save(); if(flipped){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    ctx.restore(); captured=true;
+    msg('🖐️ Photo locked. ✨ Analyze කරන්න.');
   }catch(e){ msg('❌ Capture failed: '+e.message); }
 };
 
-/* ---- Clear ---- */
-$('#clear').onclick = ()=>{
-  locked=false; frameCanvas.style.display='none'; video.style.display='block';
-  ctx.clearRect(0,0,cv.width,cv.height); drawGuide(); msg('🧹 Cleared. Ready.');
+pick.onchange = e=>{
+  const file = e.target.files?.[0]; if(!file) return;
+  const img=new Image(); img.onload=()=>{
+    canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+    ctx.drawImage(img,0,0,canvas.width,canvas.height); captured=true;
+    msg('🖼️ Photo loaded. ✨ Analyze ඔබන්න.');
+  };
+  img.onerror=()=>msg('❌ Image load failed.');
+  img.src=URL.createObjectURL(file);
 };
 
-/* ---- Save ---- */
-$('#save').onclick = ()=>{
-  const tmp = document.createElement('canvas'); tmp.width=cv.width; tmp.height=cv.height;
-  const tctx = tmp.getContext('2d');
-  if(locked) tctx.drawImage(frameCanvas,0,0); else tctx.drawImage(video,0,0,tmp.width,tmp.height);
-  tctx.drawImage(cv,0,0);
-  const a = document.createElement('a'); a.download='palmistry_overlay.png'; a.href=tmp.toDataURL('image/png'); a.click();
+clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; msg('🧹 Cleared. Ready.'); };
+saveBtn.onclick  = ()=>{ if(!captured) return msg('Capture/Load first.');
+  const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click(); };
+
+/* =========================== ANALYZE ========================= */
+anBtn.onclick = ()=>{
+  if(!captured) return alert('Capture or Choose Photo first');
+  if(!window.cvReady) return alert('OpenCV is still loading…');
+  analyzeV2();
 };
 
-/* ---- Analyze ---- */
-$('#analyze').onclick = ()=>{
-  try{ ensureSize(); analyzeNow(); msg('✅ Analyze OK. Edge='+$('#edge').value+' · Detail='+$('#detail').value); }
-  catch(e){ msg('❌ Analyze failed: '+e.message); console.error(e); }
-};
+function analyzeV2(){
+  const edgeVal = parseInt(document.getElementById('edge').value, 10); // 30..120
+  const gk = parseInt(document.getElementById('gk').value, 10) | 1;    // odd 3..15
 
-/* -------- Visibility repaint (mobile freeze guard) -------- */
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && locked){ try{ drawGuide(); }catch{} }});
+  // 0) read canvas -> src
+  const src = cv.imread(canvas);
+  const h = src.rows, w = src.cols;
 
-/* ================== Image Ops (no libs) ================= */
-function getImageData(){
-  if(locked){ return fctx.getImageData(0,0,frameCanvas.width,frameCanvas.height); }
-  const c=document.createElement('canvas'); c.width=cv.width; c.height=cv.height;
-  c.getContext('2d').drawImage(video,0,0,c.width,c.height);
-  return c.getContext('2d').getImageData(0,0,c.width,c.height);
-}
-function toGray(img){ const {data,width:w,height:h}=img, g=new Uint8ClampedArray(w*h);
-  for(let i=0,j=0;i<data.length;i+=4,j++) g[j]=data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114; return {w,h,g}; }
-function claheLike(arr,w,h){ const tw=8, th=8, tileW=Math.max(1,Math.floor(w/tw)), tileH=Math.max(1,Math.floor(h/th));
-  const out=new Uint8ClampedArray(arr.length);
-  for(let ty=0;ty<th;ty++)for(let tx=0;tx<tw;tx++){ const x0=tx*tileW,y0=ty*tileH,x1=Math.min(w,(tx+1)*tileW),y1=Math.min(h,(ty+1)*tileH);
-    let min=255,max=0; for(let y=y0;y<y1;y++)for(let x=x0;x<x1){ const v=arr[y*w+x]; if(v<min)min=v; if(v>max)max=v; }
-    const range=Math.max(20,max-min);
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1){ const v=arr[y*w+x]; out[y*w+x]=((v-min)*255)/range; } }
-  return out; }
-function blur3(arr,w,h,passes){ let a=Float32Array.from(arr); const k=[1,2,1,2,4,2,1,2,1],norm=16;
-  for(let p=0;p<passes;p++){ const t=new Float32Array(w*h);
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ let s=0,i=0; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/norm; }
-    a=t; } return Uint8ClampedArray.from(a); }
-function sobelEdges(arr,w,h,thr){ const mag=new Float32Array(w*h); let max=1;
-  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;
-    const gx=-arr[i-w-1]-2*arr[i-1]-arr[i+w-1] + arr[i-w+1]+2*arr[i+1]+arr[i+w+1];
-    const gy=-arr[i-w-1]-2*arr[i-w]-arr[i-w+1] + arr[i+w-1]+2*arr[i+w]+arr[i+w+1];
-    const m=Math.hypot(gx,gy); mag[i]=m; if(m>max)max=m; }
-  const T=thr*max, bin=new Uint8ClampedArray(w*h); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0; return bin; }
-function zhangSuenThin(bin,w,h){ const img=Uint8Array.from(bin); let changed=true,pass=0;
-  const N=(x,y)=>img[(y-1)*w+x]+img[(y-1)*w+x+1]+img[y*w+x+1]+img[(y+1)*w+x+1]+img[(y+1)*w+x]+img[(y+1)*w+x-1]+img[y*w+x-1]+img[(y-1)*w+x-1];
-  const S=(x,y)=>{ const p=[img[(y-1)*w+x],img[(y-1)*w+x+1],img[y*w+x+1],img[(y+1)*w+x+1],img[(y+1)*w+x],img[(y+1)*w+x-1],img[y*w+x-1],img[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
-  while(changed&&pass<30){ changed=false; const rem=[];
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x+1]*img[(y+1)*w+x]==0)&&(img[y*w+x+1]*img[y*w+x-1]*img[(y-1)*w+x]==0)) rem.push(i);}
-    rem.forEach(i=>img[i]=0); if(rem.length)changed=true; rem.length=0;
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x-1]*img[(y+1)*w+x]==0)&&(img[(y-1)*w+x]*img[y*w+x+1]*img[y*w+x-1]==0)) rem.push(i);}
-    rem.forEach(i=>img[i]=0); if(rem.length)changed=true; pass++; }
-  return img; }
-function pickLongestPath(skel,w,h,y0,y1){
-  const seen=new Uint8Array(w*h); let best=null; const nb=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-  function walk(sx,sy){ const st=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
-    while(st.length){ const [x,y]=st.pop(); pts.push([x,y]);
-      for(const [dx,dy] of nb){ const nx=x+dx, ny=y+dy, id=ny*w+nx;
-        if(nx>0&&ny>y0&&nx<w-1&&ny<y1-1 && !seen[id] && skel[id]){ seen[id]=1; st.push([nx,ny]); } } }
-    return pts; }
-  for(let y=y0+1;y<y1-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;
-    if(skel[i]&&!seen[i]){ const pts=walk(x,y); if(!best||pts.length>best.length) best=pts; } }
-  return best||[];
-}
+  // 1) gray + CLAHE + blur
+  const gray = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  const clahe = new cv.CLAHE(2.0, new cv.Size(8,8));
+  clahe.apply(gray, gray);
+  cv.GaussianBlur(gray, gray, new cv.Size(gk, gk), 0, 0, cv.BORDER_DEFAULT);
 
-/* ------------- Draw & Analyze ------------- */
-function drawGuide(){
-  ctx.clearRect(0,0,cv.width,cv.height);
-  const w=cv.width,h=cv.height;
-  const yH=0,hH=Math.floor(h*0.30), yD=hH, hD=Math.floor(h*0.25), yL=yD+hD, hL=h-(yD+hD);
-  ctx.globalAlpha=.28; ctx.fillStyle='var(--heart)'; ctx.fillRect(0,yH,w,hH);
-  ctx.fillStyle='var(--head)'; ctx.fillRect(0,yD,w,hD);
-  ctx.fillStyle='var(--life)'; ctx.fillRect(0,yL,w,hL); ctx.globalAlpha=1;
-  ctx.strokeStyle='rgba(41,224,255,.6)'; ctx.lineWidth=2; ctx.strokeRect(6,6,w-12,h-12);
-  ctx.font='18px system-ui'; ctx.lineWidth=3; ctx.strokeStyle='#000'; ctx.fillStyle='#fff';
-  ctx.strokeText('Heart',14,26); ctx.fillText('Heart',14,26);
-  ctx.strokeText('Head',14,yD+26); ctx.fillText('Head',14,yD+26);
-  ctx.strokeText('Life',14,yL+26); ctx.fillText('Life',14,yL+26);
-}
-function drawEdgesMask(bin,w,h){
-  const img = ctx.createImageData(w,h);
-  for(let i=0,j=0;i<bin.length;i++,j+=4) if(bin[i]){ img.data[j]=0; img.data[j+1]=255; img.data[j+2]=255; img.data[j+3]=140; }
-  ctx.putImageData(img,0,0);
-}
-function drawPath(pts,color,wid){
-  if(!pts || pts.length<6) return;
-  pts.sort((a,b)=>a[1]-b[1] || a[0]-b[0]);
-  ctx.lineJoin='round'; ctx.lineCap='round';
-  ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath();
-  ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-  ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
-  ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-}
-function analyzeNow(){
-  const edgeThr = Number($('#edge').value)/100;   // 0.2..0.9
-  const passes  = Number($('#detail').value);     // 1..5
-  const src = getImageData();
-  const {w,h,g:gr0} = toGray(src);
-  const g1 = claheLike(gr0,w,h);
-  const g2 = blur3(g1,w,h,passes);
-  const bin = sobelEdges(g2,w,h,edgeThr);
-  const skel = zhangSuenThin(bin,w,h);
+  // 2) edges via Canny
+  const low = Math.max(10, edgeVal);
+  const high = Math.min(255, Math.round(edgeVal * 2));
+  const edges = new cv.Mat();
+  cv.Canny(gray, edges, low, high);
 
-  const yH=0,hH=Math.floor(h*0.30), yD=hH, hD=Math.floor(h*0.25), yL=yD+hD, hL=h-(yD+hD);
-  const pHeart = pickLongestPath(skel,w,h,yH, yH+hH);
-  const pHead  = pickLongestPath(skel,w,h,yD, yD+hD);
-  const pLife  = pickLongestPath(skel,w,h,yL, yL+hL);
+  // 3) bands: Heart 0-30%, Head 30-55%, Life 55-100%
+  const yHeart0 = 0,         yHeart1 = Math.round(h * 0.30);
+  const yHead0  = yHeart1,   yHead1  = Math.round(h * 0.55);
+  const yLife0  = yHead1,    yLife1  = h;
 
-  drawGuide();
-  drawPath(pHeart,'var(--heart)',4);
-  drawPath(pHead ,'var(--head)',4);
-  drawPath(pLife ,'var(--life)',4);
-  drawEdgesMask(bin,w,h);
+  function longestContour(y0, y1){
+    const roi = edges.roi(new cv.Rect(0, y0, w, y1 - y0));
+    const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
+    cv.morphologyEx(roi, roi, cv.MORPH_OPEN, kernel);
+    const contours = new cv.MatVector(), hier = new cv.Mat();
+    cv.findContours(roi, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE);
+
+    let best = null, bestLen = 0;
+    for (let i=0;i<contours.size();i++){
+      const c = contours.get(i), len = cv.arcLength(c,false);
+      if (len > bestLen && len > 40) { best=c; bestLen=len; }
+    }
+    const pts=[];
+    if(best){
+      const approx=new cv.Mat();
+      cv.approxPolyDP(best, approx, 2.0, false);
+      for(let i=0;i<approx.rows;i++){
+        const p=approx.intPtr(i);
+        pts.push([p[0], p[1]+y0]);
+      }
+      approx.delete();
+    }
+    contours.delete(); hier.delete(); roi.delete(); kernel.delete();
+    return pts;
+  }
+
+  const heartPts = longestContour(yHeart0,yHeart1);
+  const headPts  = longestContour(yHead0 ,yHead1 );
+  const lifePts  = longestContour(yLife0 ,yLife1 );
+
+  function drawPoly(pts, bgr){
+    if(!pts || pts.length<4) return;
+    const col = new cv.Scalar(bgr[0], bgr[1], bgr[2], 255);
+    for(let i=1;i<pts.length;i++){
+      cv.line(src, new cv.Point(pts[i-1][0], pts[i-1][1]),
+                   new cv.Point(pts[i][0],   pts[i][1]), col, 4, cv.LINE_AA);
+    }
+  }
+  drawPoly(heartPts,[ 60, 60,255]); // red-ish
+  drawPoly(headPts ,[ 60,180,255]); // orange-ish
+  drawPoly(lifePts ,[ 60,255,120]); // green-ish
+
+  // faint cyan edges overlay for context
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      if(edges.ucharPtr(y,x)[0]){
+        const px=src.ucharPtr(y,x);
+        px[0]=Math.min(255, (px[0]*0.6 + 255*0.4)); // B
+        px[1]=Math.min(255, (px[1]*0.6 + 255*0.4)); // G
+      }
+    }
+  }
+
+  cv.imshow(canvas, src);
+  [src, gray, clahe, edges].forEach(m=>m.delete());
+  msg('✅ Analyze complete. Edge='+edgeVal+' · Detail='+gk);
 }
 </script>
 </body>
