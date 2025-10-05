@@ -9,7 +9,7 @@
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
 video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
-.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6}
+.overlay{position:absolute;inset:0;pointer-events:none;opacity:.5}
 .captureBtn{
  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
  width:85px;height:85px;border-radius:50%;
@@ -62,7 +62,7 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </div>
 
 <div class="sliderRow">
-  <label>Edge <input id="edge" type="range" min="30" max="120" value="70"/></label>
+  <label>Edge <input id="edge" type="range" min="20" max="120" value="70"/></label>
   <label>Detail <input id="gk" type="range" min="3" max="15" step="2" value="9"/></label>
 </div>
 
@@ -89,36 +89,34 @@ torchBtn.onclick=async()=>{if(!track)return;torch=!torch;
 
 capBtn.onclick=async()=>{
  await ensureCamera();
+ if(video.videoWidth===0){alert("Camera not ready yet. Wait 2 seconds then tap again.");return;}
  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
  ctx.save(); if(flipped){ctx.translate(canvas.width,0);ctx.scale(-1,1);} ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
  captured=true;
 };
 
-saveBtn.onclick=()=>{if(!captured)return;const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='palm_'+Date.now()+'.png';a.click();};
+saveBtn.onclick=()=>{if(!captured)return alert('Capture first');
+ const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='palm_'+Date.now()+'.png';a.click();};
 
 anBtn.onclick=()=>{if(!captured)return alert('Capture first');if(!window.cv||!cv.Mat)return alert('OpenCV not ready');analyze();};
 
 function analyze(){
  try{
+   if(canvas.width===0) throw new Error("Canvas width 0 (no capture).");
    const src=cv.imread(canvas);
    const gray=new cv.Mat();cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8));clahe.apply(gray,gray);
-   const sobelX=new cv.Mat(),sobelY=new cv.Mat(),edges=new cv.Mat();
-   cv.Sobel(gray,sobelX,cv.CV_16S,1,0,3);cv.Sobel(gray,sobelY,cv.CV_16S,0,1,3);
-   cv.convertScaleAbs(sobelX,sobelX);cv.convertScaleAbs(sobelY,sobelY);
-   cv.addWeighted(sobelX,0.5,sobelY,0.5,0,edges);
-   const bin=new cv.Mat();cv.adaptiveThreshold(edges,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,11,2);
-   const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-   cv.morphologyEx(bin,bin,cv.MORPH_OPEN,kernel);cv.dilate(bin,bin,kernel);
+   cv.GaussianBlur(gray,gray,new cv.Size(3,3),0,0,cv.BORDER_DEFAULT);
+   const edges=new cv.Mat();cv.Canny(gray,edges,60,150);
    const contours=new cv.MatVector(),hier=new cv.Mat();
-   cv.findContours(bin,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+   cv.findContours(edges,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
    const out=src.clone();
    for(let i=0;i<contours.size();i++){
-     const area=cv.contourArea(contours.get(i)); if(area<80)continue;
-     cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);
+     const area=cv.contourArea(contours.get(i));
+     if(area<100)continue;
+     cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),1);
    }
    cv.imshow(canvas,out);
-   [src,gray,clahe,sobelX,sobelY,edges,bin,kernel,contours,hier,out].forEach(m=>m.delete());
+   [src,gray,edges,contours,hier,out].forEach(m=>m.delete());
  }catch(e){alert('Error: '+e.message);}
 }
 </script>
