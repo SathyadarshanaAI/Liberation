@@ -1,85 +1,49 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry AI Overlay — FINAL FULL</title>
+<title>Palmistry AI Overlay – Sathyadarshana</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
-*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
-.wrap{position:relative;display:inline-block}
-video,canvas{width:92vw;max-width:460px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
-svg.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6}
+video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6}
 .captureBtn{
  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
- width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;
- font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer
+ width:85px;height:85px;border-radius:50%;
+ border:none;background:#2196f3;color:#000;font-weight:600;
+ box-shadow:0 0 15px #2196f333;cursor:pointer;
 }
 .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
+button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:pointer}
 .left{background:#16243a;color:#cfe9ff}
-.an{background:var(--pri);color:#002}
+.an{background:var(--pri);color:#000}
 .cap{background:#fbbf24;color:#111}
 .torch{background:#22c55e;color:#021}
-select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
-.sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
-.sliderRow label{display:flex;gap:8px;align-items:center}
-input[type=range]{accent-color:#16f0a7}
-#status{margin:10px auto;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:820px;display:none}
+.sliderRow{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </style>
-
-<!-- OpenCV loader + fallback -->
 <script>
 (function(){
-  let loaded=false;
-  function load(url, onload){
-    const s=document.createElement('script'); s.src=url; s.async=true;
-    s.onload=onload; s.onerror=()=>console.warn('Load failed:',url);
-    document.head.appendChild(s);
-  }
-  load("https://docs.opencv.org/4.x/opencv.js", ()=>{
-    if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; console.log('✅ OpenCV ready'); }; loaded=true; }
-  });
-  setTimeout(()=>{
-    if(!loaded || !window.cv){
-      load("https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js", ()=>{
-        if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; console.log('✅ OpenCV fallback ready'); }; }
-      });
-    }
-  }, 2000);
+ const s=document.createElement('script');
+ s.src="https://docs.opencv.org/4.x/opencv.js"; s.async=true;
+ s.onload=()=>console.log("✅ OpenCV loaded");
+ s.onerror=()=>{const f=document.createElement('script');
+ f.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";
+ f.async=true;f.onload=()=>console.log("✅ Fallback OpenCV ready");document.head.appendChild(f);};
+ document.head.appendChild(s);
 })();
-</script>
-
-<!-- OpenCV READY PROMISE + slow-net hint -->
-<script>
-window.cvReady = false;
-let _cvResolve;
-window.cvReadyPromise = new Promise(r => (_cvResolve = r));
-function _markCvReady(){ if(!window.cvReady){ window.cvReady = true; _cvResolve(true); console.log('✅ OpenCV initialized'); } }
-Object.defineProperty(window, 'cv', {
-  set(v){ this._cv=v; try{ v.onRuntimeInitialized=_markCvReady; }catch{} },
-  get(){ return this._cv; }
-});
-setTimeout(()=>{
-  if(!window.cvReady){
-    const s=document.getElementById('status');
-    if(s){ s.textContent='⏳ OpenCV download වෙනවා… Wi-Fi / data බලන්න.'; s.style.display='block'; }
-  }
-}, 4000);
 </script>
 </head>
 <body>
-<h1>🖐️ Palmistry AI Overlay</h1>
-<p>Align palm → <b>Start/Choose</b> → <b>Capture</b> → <b>Analyze</b></p>
+<h1>🖐️ Palmistry</h1>
+<p>Align palm → Capture → Analyze</p>
 
-<div class="wrap">
-  <video id="cam" playsinline muted></video>
+<div class="wrap" style="position:relative;display:inline-block">
+  <video id="cam" playsinline></video>
   <canvas id="cv"></canvas>
-
-  <!-- palm guide -->
   <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice">
     <path d="M145 485c-55-35-78-139-19-190 6-45 8-90 29-98 
              22-9 34 33 34 79 0-52 16-96 37-95 21 1 22 47 17 98 
@@ -87,291 +51,75 @@ setTimeout(()=>{
              16 6 14 49 0 96 24 22 36 71 21 110-21 55-80 74-213 51z"
           fill="none" stroke="var(--neon)" stroke-width="2" filter="drop-shadow(0 0 5px var(--neon))"/>
   </svg>
-
-  <button class="captureBtn" id="capBtn">Capture</button>
+  <button class="captureBtn" id="capBtn">Tap to Capture</button>
 </div>
 
 <div class="btns">
-  <button class="btnLike" id="startBtn">▶️ Start Camera</button>
-  <select id="camsel" class="btnLike"></select>
-  <button class="btnLike" id="cycleBtn">🔁 Cycle Camera</button>
-  <input id="pick" type="file" accept="image/*" class="btnLike"/>
-  <button class="left" id="flipBtn">🖐 Left · Right</button>
+  <button class="left" id="flipBtn">🖐 Left · Past</button>
   <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
   <button class="an" id="anBtn">✨ Analyze</button>
   <button class="cap" id="saveBtn">💾 Save</button>
-  <button class="btnLike" id="clearBtn">🧹 Clear</button>
 </div>
 
 <div class="sliderRow">
-  <label>Edge <input id="edge" type="range" min="30" max="120" value="70"></label>
-  <label>Detail <input id="gk" type="range" min="3" max="15" step="2" value="9"></label>
+  <label>Edge <input id="edge" type="range" min="30" max="120" value="70"/></label>
+  <label>Detail <input id="gk" type="range" min="3" max="15" step="2" value="9"/></label>
 </div>
-
-<div id="status"></div>
 
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-/* ========================= CORE VARS ========================= */
-const video = document.getElementById('cam'),
-      canvas = document.getElementById('cv'),
-      ctx    = canvas.getContext('2d');
-const startBtn = document.getElementById('startBtn'),
-      camsel   = document.getElementById('camsel'),
-      cycleBtn = document.getElementById('cycleBtn'),
-      pick     = document.getElementById('pick'),
-      flipBtn  = document.getElementById('flipBtn'),
-      torchBtn = document.getElementById('torchBtn'),
-      capBtn   = document.getElementById('capBtn'),
-      anBtn    = document.getElementById('anBtn'),
-      saveBtn  = document.getElementById('saveBtn'),
-      clearBtn = document.getElementById('clearBtn');
-let stream=null, track=null, captured=false;
-let camList=[], camIndex=0;
-let isMirrored=false;          // mirror state (live & captured)
-canvas.crossOrigin = video.crossOrigin = "anonymous";
-function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; }
+const video=document.getElementById('cam'),canvas=document.getElementById('cv'),ctx=canvas.getContext('2d');
+const flipBtn=document.getElementById('flipBtn'),capBtn=document.getElementById('capBtn'),
+      anBtn=document.getElementById('anBtn'),saveBtn=document.getElementById('saveBtn'),torchBtn=document.getElementById('torchBtn');
+let flipped=false,captured=false,stream=null,track=null,torch=false;
 
-/* ======================= CAMERA HELPERS ====================== */
-async function listCams(){
-  const devs = await navigator.mediaDevices.enumerateDevices();
-  camList = devs.filter(d=>d.kind==='videoinput');
-  camList.sort((a,b)=>{ const ra=/back|rear|environment|wide/i.test(a.label); const rb=/back|rear|environment|wide/i.test(b.label); return ra===rb?0:(ra?-1:1); });
-  camsel.innerHTML=''; camList.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o); });
-  camIndex=0; camsel.selectedIndex=0;
-}
-async function startCam(deviceId=null){
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); }
-  let constraints = deviceId
-    ? { video:{ deviceId:{exact:deviceId}, width:{ideal:1280}, height:{ideal:720} }, audio:false }
-    : { video:{ facingMode:{exact:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false };
-  try{
-    stream = await navigator.mediaDevices.getUserMedia(constraints);
-  }catch(e){
-    if(!deviceId){
-      try{ stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false }); }
-      catch{ stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false }); }
-    }else{
-      const alt=camList.find(c=>c.deviceId!==deviceId);
-      if(alt){ stream=await navigator.mediaDevices.getUserMedia({ video:{ deviceId:{exact:alt.deviceId} }, audio:false }); camsel.value=alt.deviceId; }
-      else{ stream=await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); }
-    }
-  }
-  video.srcObject = stream; await video.play();
-  track = stream.getVideoTracks()[0];
-  const caps = track.getCapabilities?.(); if(caps && 'torch' in caps) torchBtn.hidden=false;
-  canvas.width  = video.videoWidth  || 1280;
-  canvas.height = video.videoHeight || 720;
+flipBtn.onclick=()=>{flipped=!flipped;video.style.transform=flipped?'scaleX(-1)':'none';};
 
-  // live mirror reflect UI state
-  video.style.transform = isMirrored ? 'scaleX(-1)' : 'none';
-
-  msg(`✅ Camera: ${track.label || 'Unknown'} — Capture → Analyze`);
-}
-/* Start / Cycle */
-startBtn.onclick = async ()=>{
-  try{ await listCams(); const id=camsel.value || (camList[0]?.deviceId ?? null); await startCam(id); }
-  catch(e){
-    if(e.name==='NotAllowedError') msg('❌ Permission blocked. Address bar 🔒 → Site settings → Camera → Allow.');
-    else if(e.name==='NotReadableError') msg('❌ Camera busy by another app. Close other camera/flash apps.');
-    else msg('❌ Camera error: '+e.message);
-  }
-};
-cycleBtn.onclick = async ()=>{
-  if(!camList.length) await listCams();
-  if(!camList.length) return msg('No cameras detected.');
-  camIndex = (camIndex + 1) % camList.length;
-  camsel.selectedIndex = camIndex;
-  await startCam(camList[camIndex].deviceId);
-};
-/* UI misc */
-flipBtn.onclick = ()=>{
-  isMirrored = !isMirrored;
-  if (stream && !captured) {
-    video.style.transform = isMirrored ? 'scaleX(-1)' : 'none';
-  } else if (captured) {
-    // mirror current canvas content
-    const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height;
-    const tctx=tmp.getContext('2d'); tctx.drawImage(canvas,0,0);
-    ctx.save(); ctx.setTransform(-1,0,0,1,canvas.width,0); ctx.drawImage(tmp,0,0); ctx.restore();
-  }
-};
-torchBtn.onclick = async()=>{ if(!track) return; try{ const st=track.getSettings(); await track.applyConstraints({advanced:[{torch:!st.torch}]}); }catch(e){ msg('Torch error: '+e.message); }};
-
-/* ======================== CAPTURE / LOAD ===================== */
-capBtn.onclick = async ()=>{
-  try{
-    if(!stream){ msg('ℹ️ Start Camera first (හෝ Choose file).'); return; }
-    if(!video.videoWidth || !video.videoHeight){ await new Promise(r=>setTimeout(r,120)); }
-    canvas.width  = video.videoWidth  || 1280;
-    canvas.height = video.videoHeight || 720;
-    ctx.save(); if(isMirrored){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    ctx.restore(); captured=true;
-    msg('🖐️ Photo locked. ✨ Analyze කරන්න.');
-  }catch(e){ msg('❌ Capture failed: '+e.message); }
-};
-pick.onchange = e=>{
-  const file=e.target.files?.[0]; if(!file) return;
-  const img=new Image(); img.onload=()=>{
-    canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
-    if (isMirrored){ const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height;
-      const tctx=tmp.getContext('2d'); tctx.drawImage(canvas,0,0);
-      ctx.save(); ctx.setTransform(-1,0,0,1,canvas.width,0); ctx.drawImage(tmp,0,0); ctx.restore();
-    }
-    captured=true; msg('🖼️ Photo loaded. ✨ Analyze ඔබන්න.');
-  };
-  img.onerror=()=>msg('❌ Image load failed.'); img.src=URL.createObjectURL(file);
-};
-clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; msg('🧹 Cleared. Ready.'); };
-
-/* =========================== SAVE ============================ */
-saveBtn.onclick = ()=>{
-  if(!captured){ msg('Capture/Load first.'); return; }
-  const ua = navigator.userAgent || '';
-  const inApp = /FBAN|FBAV|Instagram|Line\/|WeChat|MiuiBrowser/i.test(ua);
-  if (inApp) msg('ℹ️ In-app browser downloads block වෙන්න පුළුවන්. Chrome/Firefox වලින් open කරන්න.');
-
-  try{
-    if (canvas.toBlob){
-      canvas.toBlob((blob)=>{
-        if(!blob){ return fallback(); }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href=url; a.download='palm_'+Date.now()+'.png';
-        document.body.appendChild(a); a.click(); a.remove();
-        URL.revokeObjectURL(url);
-      }, 'image/png', 0.92);
-    }else{ fallback(); }
-  }catch(e){ console.error(e); msg('❌ Save failed: '+(e.message||e)); }
-
-  function fallback(){
-    try{
-      const a=document.createElement('a');
-      a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png';
-      document.body.appendChild(a); a.click(); a.remove();
-    }catch(e){ msg('❌ Save unsupported here. Long-press → “Save image” හෝ Chrome වලින් අරින්න.'); }
-  }
-};
-
-/* =========================== ANALYZE ========================= */
-anBtn.onclick = async ()=>{
-  if(!captured){ msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); return; }
-
-  // canvas size guard
-  if (!canvas.width || !canvas.height) {
-    if (video.videoWidth && video.videoHeight){ canvas.width=video.videoWidth; canvas.height=video.videoHeight; }
-    else { msg('❌ Canvas size 0×0. Start Camera → Capture නැවත කරන්න.'); return; }
-  }
-
-  // try OpenCV first
-  try{
-    await window.cvReadyPromise;
-    if (window.cv && cv.Mat) { analyzeV2(); return; }
-  }catch(e){ console.warn('OpenCV wait fail:', e); }
-
-  // fallback: pure JS
-  try{ analyzePureJS(); msg('✅ Analyze (Pure-JS fallback) complete.'); }
-  catch(e){ msg('❌ Analyze failed: '+(e?.message||e)); console.error(e); }
-};
-
-/* ===== OpenCV version (bands + longest contours) ===== */
-function analyzeV2(){
-  const edgeVal = parseInt(document.getElementById('edge').value, 10); // 30..120
-  const gk = parseInt(document.getElementById('gk').value, 10) | 1;    // odd 3..15
-  const src = cv.imread(canvas); const h=src.rows, w=src.cols;
-
-  const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-  const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(gray,gray);
-  cv.GaussianBlur(gray,gray,new cv.Size(gk,gk),0,0,cv.BORDER_DEFAULT);
-
-  const low=Math.max(10,edgeVal), high=Math.min(255,Math.round(edgeVal*2));
-  const edges=new cv.Mat(); cv.Canny(gray,edges,low,high);
-
-  const yH0=0, yH1=Math.round(h*0.30), yD0=yH1, yD1=Math.round(h*0.55), yL0=yD1, yL1=h;
-  function longestContour(y0,y1){
-    const roi=edges.roi(new cv.Rect(0,y0,w,y1-y0));
-    const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-    cv.morphologyEx(roi,roi,cv.MORPH_OPEN,kernel);
-    const cs=new cv.MatVector(), hr=new cv.Mat(); cv.findContours(roi,cs,hr,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE);
-    let best=null,lenBest=0; for(let i=0;i<cs.size();i++){ const c=cs.get(i), L=cv.arcLength(c,false); if(L>lenBest&&L>40){best=c;lenBest=L;} }
-    const pts=[]; if(best){ const ap=new cv.Mat(); cv.approxPolyDP(best,ap,2.0,false); for(let i=0;i<ap.rows;i++){ const p=ap.intPtr(i); pts.push([p[0],p[1]+y0]); } ap.delete(); }
-    cs.delete(); hr.delete(); roi.delete(); kernel.delete(); return pts;
-  }
-  const pHeart=longestContour(yH0,yH1), pHead=longestContour(yD0,yD1), pLife=longestContour(yL0,yL1);
-
-  function drawPoly(pts,bgr){ if(!pts||pts.length<4) return; const col=new cv.Scalar(bgr[0],bgr[1],bgr[2],255);
-    for(let i=1;i<pts.length;i++){ cv.line(src,new cv.Point(pts[i-1][0],pts[i-1][1]),new cv.Point(pts[i][0],pts[i][1]),col,4,cv.LINE_AA); } }
-  drawPoly(pHeart,[ 60, 60,255]); drawPoly(pHead,[ 60,180,255]); drawPoly(pLife,[ 60,255,120]);
-
-  for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ if(edges.ucharPtr(y,x)[0]){ const px=src.ucharPtr(y,x); px[0]=Math.min(255,(px[0]*0.6+255*0.4)); px[1]=Math.min(255,(px[1]*0.6+255*0.4)); } } }
-  cv.imshow(canvas,src); [src,gray,clahe,edges].forEach(m=>m.delete());
-  msg('✅ Analyze complete (OpenCV).');
+async function ensureCamera(){
+ if(stream) return;
+ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+ video.srcObject=stream; await video.play();
+ track=stream.getVideoTracks()[0];
+ const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
 }
 
-/* ===== PURE-JS FALLBACK (no OpenCV) ===== */
-function analyzePureJS(){
-  const edgeVal=parseInt(document.getElementById('edge').value,10);
-  const detail=parseInt(document.getElementById('gk').value,10);
+torchBtn.onclick=async()=>{if(!track)return;torch=!torch;
+ try{await track.applyConstraints({advanced:[{torch}]});}catch{}};
 
-  const w=canvas.width, h=canvas.height, src=ctx.getImageData(0,0,w,h);
-  function toGray(img){ const d=img.data,g=new Uint8ClampedArray(w*h); for(let i=0,j=0;i<d.length;i+=4,j++) g[j]=d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114; return g; }
-  function blur3(arr,passes){ let a=Float32Array.from(arr); const k=[1,2,1,2,4,2,1,2,1],norm=16;
-    for(let p=0;p<passes;p++){ const t=new Float32Array(w*h);
-      for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/norm; }
-      a=t; } return Uint8ClampedArray.from(a); }
-  function sobel(arr,thr){ const mag=new Float32Array(w*h); let max=1;
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
-      const gx=-arr[i-w-1]-2*arr[i-1]-arr[i+w-1]+arr[i-w+1]+2*arr[i+1]+arr[i+w+1];
-      const gy=-arr[i-w-1]-2*arr[i-w]-arr[i-w+1]+arr[i+w-1]+2*arr[i+w]+arr[i+w+1];
-      const m=Math.hypot(gx,gy); mag[i]=m; if(m>max)max=m; }
-    const T=thr*max, bin=new Uint8ClampedArray(w*h); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0; return bin; }
-  function thinZS(bin){ const img=Uint8Array.from(bin); let ch=true,pass=0;
-    const N=(x,y)=>img[(y-1)*w+x]+img[(y-1)*w+x+1]+img[y*w+x+1]+img[(y+1)*w+x+1]+img[(y+1)*w+x]+img[(y+1)*w+x-1]+img[y*w+x-1]+img[(y-1)*w+x-1];
-    const S=(x,y)=>{ const p=[img[(y-1)*w+x],img[(y-1)*w+x+1],img[y*w+x+1],img[(y+1)*w+x+1],img[(y+1)*w+x],img[(y+1)*w+x-1],img[y*w+x-1],img[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
-    while(ch&&pass<30){ ch=false; const rem=[];
-      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
-        if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x+1]*img[(y+1)*w+x]==0)&&(img[y*w+x+1]*img[y*w+x-1]*img[(y-1)*w+x]==0)) rem.push(i);}
-      rem.forEach(i=>img[i]=0); if(rem.length)ch=true; rem.length=0;
-      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
-        if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x-1]*img[(y+1)*w+x]==0)&&(img[(y-1)*w+x]*img[y*w+x+1]*img[y*w+x-1]==0)) rem.push(i);}
-      rem.forEach(i=>img[i]=0); if(rem.length)ch=true; pass++; }
-    return img; }
-  function pickLongest(skel,y0,y1){ const seen=new Uint8Array(w*h); let best=null;
-    const NB=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-    function walk(sx,sy){ const st=[[sx,sy]],pts=[]; seen[sy*w+sx]=1;
-      while(st.length){ const [x,y]=st.pop(); pts.push([x,y]);
-        for(const [dx,dy] of NB){ const nx=x+dx,ny=y+dy,id=ny*w+nx;
-          if(nx>0&&ny>y0&&nx<w-1&&ny<y1-1&&!seen[id]&&skel[id]){ seen[id]=1; st.push([nx,ny]); } } }
-      return pts; }
-    for(let y=y0+1;y<y1-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
-      if(skel[i]&&!seen[i]){ const pts=walk(x,y); if(!best||pts.length>best.length) best=pts; } }
-    return best||[]; }
-  function drawPoly(pts,color,wid){ if(pts.length<6) return;
-    ctx.lineJoin='round'; ctx.lineCap='round';
-    ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath();
-    ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-    ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
-    ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); }
+capBtn.onclick=async()=>{
+ await ensureCamera();
+ canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+ ctx.save(); if(flipped){ctx.translate(canvas.width,0);ctx.scale(-1,1);} ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
+ captured=true;
+};
 
-  const g0=toGray(src);
-  const passes=Math.max(1,Math.min(5,Math.round((detail-1)/2)));   // 3..15 -> ~1..5
-  const g1=blur3(g0,passes);
-  const thr=Math.max(0.15,Math.min(0.9,edgeVal/255));
-  const bin=sobel(g1,thr);
-  const sk=thinZS(bin);
+saveBtn.onclick=()=>{if(!captured)return;const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='palm_'+Date.now()+'.png';a.click();};
 
-  const yH0=0,yH1=Math.floor(h*0.30),yD0=yH1,yD1=Math.floor(h*0.55),yL0=yD1,yL1=h;
+anBtn.onclick=()=>{if(!captured)return alert('Capture first');if(!window.cv||!cv.Mat)return alert('OpenCV not ready');analyze();};
 
-  // faint edges
-  const overlay=ctx.createImageData(w,h);
-  for(let i=0,j=0;i<bin.length;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=110; }
-  ctx.putImageData(overlay,0,0);
-
-  const heart=pickLongest(sk,yH0,yH1), head=pickLongest(sk,yD0,yD1), life=pickLongest(sk,yL0,yL1);
-  drawPoly(heart,'#ff3b3b',4); drawPoly(head,'#ffa533',4); drawPoly(life,'#42ff6c',4);
+function analyze(){
+ try{
+   const src=cv.imread(canvas);
+   const gray=new cv.Mat();cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8));clahe.apply(gray,gray);
+   const sobelX=new cv.Mat(),sobelY=new cv.Mat(),edges=new cv.Mat();
+   cv.Sobel(gray,sobelX,cv.CV_16S,1,0,3);cv.Sobel(gray,sobelY,cv.CV_16S,0,1,3);
+   cv.convertScaleAbs(sobelX,sobelX);cv.convertScaleAbs(sobelY,sobelY);
+   cv.addWeighted(sobelX,0.5,sobelY,0.5,0,edges);
+   const bin=new cv.Mat();cv.adaptiveThreshold(edges,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,11,2);
+   const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+   cv.morphologyEx(bin,bin,cv.MORPH_OPEN,kernel);cv.dilate(bin,bin,kernel);
+   const contours=new cv.MatVector(),hier=new cv.Mat();
+   cv.findContours(bin,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+   const out=src.clone();
+   for(let i=0;i<contours.size();i++){
+     const area=cv.contourArea(contours.get(i)); if(area<80)continue;
+     cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);
+   }
+   cv.imshow(canvas,out);
+   [src,gray,clahe,sobelX,sobelY,edges,bin,kernel,contours,hier,out].forEach(m=>m.delete());
+ }catch(e){alert('Error: '+e.message);}
 }
 </script>
 </body>
