@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry AI Overlay — FULL (cv-wait + guards)</title>
+<title>Palmistry AI Overlay — FINAL FULL</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
@@ -127,8 +127,9 @@ const startBtn = document.getElementById('startBtn'),
       anBtn    = document.getElementById('anBtn'),
       saveBtn  = document.getElementById('saveBtn'),
       clearBtn = document.getElementById('clearBtn');
-let stream=null, track=null, flipped=false, captured=false;
+let stream=null, track=null, captured=false;
 let camList=[], camIndex=0;
+let isMirrored=false;          // mirror state (live & captured)
 canvas.crossOrigin = video.crossOrigin = "anonymous";
 function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; }
 
@@ -136,13 +137,8 @@ function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.s
 async function listCams(){
   const devs = await navigator.mediaDevices.enumerateDevices();
   camList = devs.filter(d=>d.kind==='videoinput');
-  camList.sort((a,b)=>{ // rear-first
-    const ra=/back|rear|environment|wide/i.test(a.label);
-    const rb=/back|rear|environment|wide/i.test(b.label);
-    return ra===rb?0:(ra?-1:1);
-  });
-  camsel.innerHTML='';
-  camList.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o); });
+  camList.sort((a,b)=>{ const ra=/back|rear|environment|wide/i.test(a.label); const rb=/back|rear|environment|wide/i.test(b.label); return ra===rb?0:(ra?-1:1); });
+  camsel.innerHTML=''; camList.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o); });
   camIndex=0; camsel.selectedIndex=0;
 }
 async function startCam(deviceId=null){
@@ -154,8 +150,8 @@ async function startCam(deviceId=null){
     stream = await navigator.mediaDevices.getUserMedia(constraints);
   }catch(e){
     if(!deviceId){
-      try{ stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false }); }
-      catch{ stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false }); }
+      try{ stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false }); }
+      catch{ stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false }); }
     }else{
       const alt=camList.find(c=>c.deviceId!==deviceId);
       if(alt){ stream=await navigator.mediaDevices.getUserMedia({ video:{ deviceId:{exact:alt.deviceId} }, audio:false }); camsel.value=alt.deviceId; }
@@ -167,10 +163,11 @@ async function startCam(deviceId=null){
   const caps = track.getCapabilities?.(); if(caps && 'torch' in caps) torchBtn.hidden=false;
   canvas.width  = video.videoWidth  || 1280;
   canvas.height = video.videoHeight || 720;
-  const label = track.label || '';
-  const isFront = /front|user|selfie/i.test(label);
-  video.style.transform = (isFront && !flipped) ? 'scaleX(-1)' : (flipped?'scaleX(-1)':'none');
-  msg(`✅ Camera: ${label||'Unknown'} — Capture → Analyze`);
+
+  // live mirror reflect UI state
+  video.style.transform = isMirrored ? 'scaleX(-1)' : 'none';
+
+  msg(`✅ Camera: ${track.label || 'Unknown'} — Capture → Analyze`);
 }
 /* Start / Cycle */
 startBtn.onclick = async ()=>{
@@ -189,7 +186,17 @@ cycleBtn.onclick = async ()=>{
   await startCam(camList[camIndex].deviceId);
 };
 /* UI misc */
-flipBtn.onclick = ()=>{ flipped=!flipped; video.style.transform=flipped?'scaleX(-1)':'none'; };
+flipBtn.onclick = ()=>{
+  isMirrored = !isMirrored;
+  if (stream && !captured) {
+    video.style.transform = isMirrored ? 'scaleX(-1)' : 'none';
+  } else if (captured) {
+    // mirror current canvas content
+    const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height;
+    const tctx=tmp.getContext('2d'); tctx.drawImage(canvas,0,0);
+    ctx.save(); ctx.setTransform(-1,0,0,1,canvas.width,0); ctx.drawImage(tmp,0,0); ctx.restore();
+  }
+};
 torchBtn.onclick = async()=>{ if(!track) return; try{ const st=track.getSettings(); await track.applyConstraints({advanced:[{torch:!st.torch}]}); }catch(e){ msg('Torch error: '+e.message); }};
 
 /* ======================== CAPTURE / LOAD ===================== */
@@ -199,7 +206,7 @@ capBtn.onclick = async ()=>{
     if(!video.videoWidth || !video.videoHeight){ await new Promise(r=>setTimeout(r,120)); }
     canvas.width  = video.videoWidth  || 1280;
     canvas.height = video.videoHeight || 720;
-    ctx.save(); if(flipped){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+    ctx.save(); if(isMirrored){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
     ctx.restore(); captured=true;
     msg('🖐️ Photo locked. ✨ Analyze කරන්න.');
@@ -207,43 +214,83 @@ capBtn.onclick = async ()=>{
 };
 pick.onchange = e=>{
   const file=e.target.files?.[0]; if(!file) return;
-  const img=new Image(); img.onload=()=>{ canvas.width=img.naturalWidth; canvas.height=img.naturalHeight; ctx.drawImage(img,0,0,canvas.width,canvas.height); captured=true; msg('🖼️ Photo loaded. ✨ Analyze ඔබන්න.'); };
+  const img=new Image(); img.onload=()=>{
+    canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    if (isMirrored){ const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height;
+      const tctx=tmp.getContext('2d'); tctx.drawImage(canvas,0,0);
+      ctx.save(); ctx.setTransform(-1,0,0,1,canvas.width,0); ctx.drawImage(tmp,0,0); ctx.restore();
+    }
+    captured=true; msg('🖼️ Photo loaded. ✨ Analyze ඔබන්න.');
+  };
   img.onerror=()=>msg('❌ Image load failed.'); img.src=URL.createObjectURL(file);
 };
 clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; msg('🧹 Cleared. Ready.'); };
-saveBtn.onclick  = ()=>{ if(!captured) return msg('Capture/Load first.'); const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click(); };
+
+/* =========================== SAVE ============================ */
+saveBtn.onclick = ()=>{
+  if(!captured){ msg('Capture/Load first.'); return; }
+  const ua = navigator.userAgent || '';
+  const inApp = /FBAN|FBAV|Instagram|Line\/|WeChat|MiuiBrowser/i.test(ua);
+  if (inApp) msg('ℹ️ In-app browser downloads block වෙන්න පුළුවන්. Chrome/Firefox වලින් open කරන්න.');
+
+  try{
+    if (canvas.toBlob){
+      canvas.toBlob((blob)=>{
+        if(!blob){ return fallback(); }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href=url; a.download='palm_'+Date.now()+'.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      }, 'image/png', 0.92);
+    }else{ fallback(); }
+  }catch(e){ console.error(e); msg('❌ Save failed: '+(e.message||e)); }
+
+  function fallback(){
+    try{
+      const a=document.createElement('a');
+      a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png';
+      document.body.appendChild(a); a.click(); a.remove();
+    }catch(e){ msg('❌ Save unsupported here. Long-press → “Save image” හෝ Chrome වලින් අරින්න.'); }
+  }
+};
 
 /* =========================== ANALYZE ========================= */
 anBtn.onclick = async ()=>{
   if(!captured){ msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); return; }
+
+  // canvas size guard
+  if (!canvas.width || !canvas.height) {
+    if (video.videoWidth && video.videoHeight){ canvas.width=video.videoWidth; canvas.height=video.videoHeight; }
+    else { msg('❌ Canvas size 0×0. Start Camera → Capture නැවත කරන්න.'); return; }
+  }
+
+  // try OpenCV first
   try{
     await window.cvReadyPromise;
-    if(!window.cv || !cv.Mat){ msg('❌ OpenCV not ready (cv.Mat missing).'); return; }
-    if(!canvas.width || !canvas.height){
-      if(video.videoWidth && video.videoHeight){ canvas.width=video.videoWidth; canvas.height=video.videoHeight; }
-      else { msg('❌ Canvas size 0×0. Start Camera → Capture නැවත කරන්න.'); return; }
-    }
-    analyzeV2();
-  }catch(e){ msg('❌ Analyze error: '+(e?.message||e)); console.error(e); }
+    if (window.cv && cv.Mat) { analyzeV2(); return; }
+  }catch(e){ console.warn('OpenCV wait fail:', e); }
+
+  // fallback: pure JS
+  try{ analyzePureJS(); msg('✅ Analyze (Pure-JS fallback) complete.'); }
+  catch(e){ msg('❌ Analyze failed: '+(e?.message||e)); console.error(e); }
 };
 
+/* ===== OpenCV version (bands + longest contours) ===== */
 function analyzeV2(){
   const edgeVal = parseInt(document.getElementById('edge').value, 10); // 30..120
   const gk = parseInt(document.getElementById('gk').value, 10) | 1;    // odd 3..15
   const src = cv.imread(canvas); const h=src.rows, w=src.cols;
 
-  // gray + CLAHE + blur
   const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(gray,gray);
   cv.GaussianBlur(gray,gray,new cv.Size(gk,gk),0,0,cv.BORDER_DEFAULT);
 
-  // edges
   const low=Math.max(10,edgeVal), high=Math.min(255,Math.round(edgeVal*2));
   const edges=new cv.Mat(); cv.Canny(gray,edges,low,high);
 
-  // bands
   const yH0=0, yH1=Math.round(h*0.30), yD0=yH1, yD1=Math.round(h*0.55), yL0=yD1, yL1=h;
-
   function longestContour(y0,y1){
     const roi=edges.roi(new cv.Rect(0,y0,w,y1-y0));
     const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
@@ -259,12 +306,72 @@ function analyzeV2(){
     for(let i=1;i<pts.length;i++){ cv.line(src,new cv.Point(pts[i-1][0],pts[i-1][1]),new cv.Point(pts[i][0],pts[i][1]),col,4,cv.LINE_AA); } }
   drawPoly(pHeart,[ 60, 60,255]); drawPoly(pHead,[ 60,180,255]); drawPoly(pLife,[ 60,255,120]);
 
-  // faint cyan edges overlay
   for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ if(edges.ucharPtr(y,x)[0]){ const px=src.ucharPtr(y,x); px[0]=Math.min(255,(px[0]*0.6+255*0.4)); px[1]=Math.min(255,(px[1]*0.6+255*0.4)); } } }
+  cv.imshow(canvas,src); [src,gray,clahe,edges].forEach(m=>m.delete());
+  msg('✅ Analyze complete (OpenCV).');
+}
 
-  cv.imshow(canvas,src);
-  [src,gray,clahe,edges].forEach(m=>m.delete());
-  msg('✅ Analyze complete. Edge='+edgeVal+' · Detail='+gk);
+/* ===== PURE-JS FALLBACK (no OpenCV) ===== */
+function analyzePureJS(){
+  const edgeVal=parseInt(document.getElementById('edge').value,10);
+  const detail=parseInt(document.getElementById('gk').value,10);
+
+  const w=canvas.width, h=canvas.height, src=ctx.getImageData(0,0,w,h);
+  function toGray(img){ const d=img.data,g=new Uint8ClampedArray(w*h); for(let i=0,j=0;i<d.length;i+=4,j++) g[j]=d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114; return g; }
+  function blur3(arr,passes){ let a=Float32Array.from(arr); const k=[1,2,1,2,4,2,1,2,1],norm=16;
+    for(let p=0;p<passes;p++){ const t=new Float32Array(w*h);
+      for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/norm; }
+      a=t; } return Uint8ClampedArray.from(a); }
+  function sobel(arr,thr){ const mag=new Float32Array(w*h); let max=1;
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
+      const gx=-arr[i-w-1]-2*arr[i-1]-arr[i+w-1]+arr[i-w+1]+2*arr[i+1]+arr[i+w+1];
+      const gy=-arr[i-w-1]-2*arr[i-w]-arr[i-w+1]+arr[i+w-1]+2*arr[i+w]+arr[i+w+1];
+      const m=Math.hypot(gx,gy); mag[i]=m; if(m>max)max=m; }
+    const T=thr*max, bin=new Uint8ClampedArray(w*h); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0; return bin; }
+  function thinZS(bin){ const img=Uint8Array.from(bin); let ch=true,pass=0;
+    const N=(x,y)=>img[(y-1)*w+x]+img[(y-1)*w+x+1]+img[y*w+x+1]+img[(y+1)*w+x+1]+img[(y+1)*w+x]+img[(y+1)*w+x-1]+img[y*w+x-1]+img[(y-1)*w+x-1];
+    const S=(x,y)=>{ const p=[img[(y-1)*w+x],img[(y-1)*w+x+1],img[y*w+x+1],img[(y+1)*w+x+1],img[(y+1)*w+x],img[(y+1)*w+x-1],img[y*w+x-1],img[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
+    while(ch&&pass<30){ ch=false; const rem=[];
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
+        if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x+1]*img[(y+1)*w+x]==0)&&(img[y*w+x+1]*img[y*w+x-1]*img[(y-1)*w+x]==0)) rem.push(i);}
+      rem.forEach(i=>img[i]=0); if(rem.length)ch=true; rem.length=0;
+      for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
+        if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x-1]*img[(y+1)*w+x]==0)&&(img[(y-1)*w+x]*img[y*w+x+1]*img[y*w+x-1]==0)) rem.push(i);}
+      rem.forEach(i=>img[i]=0); if(rem.length)ch=true; pass++; }
+    return img; }
+  function pickLongest(skel,y0,y1){ const seen=new Uint8Array(w*h); let best=null;
+    const NB=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+    function walk(sx,sy){ const st=[[sx,sy]],pts=[]; seen[sy*w+sx]=1;
+      while(st.length){ const [x,y]=st.pop(); pts.push([x,y]);
+        for(const [dx,dy] of NB){ const nx=x+dx,ny=y+dy,id=ny*w+nx;
+          if(nx>0&&ny>y0&&nx<w-1&&ny<y1-1&&!seen[id]&&skel[id]){ seen[id]=1; st.push([nx,ny]); } } }
+      return pts; }
+    for(let y=y0+1;y<y1-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
+      if(skel[i]&&!seen[i]){ const pts=walk(x,y); if(!best||pts.length>best.length) best=pts; } }
+    return best||[]; }
+  function drawPoly(pts,color,wid){ if(pts.length<6) return;
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath();
+    ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
+    ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
+    ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); }
+
+  const g0=toGray(src);
+  const passes=Math.max(1,Math.min(5,Math.round((detail-1)/2)));   // 3..15 -> ~1..5
+  const g1=blur3(g0,passes);
+  const thr=Math.max(0.15,Math.min(0.9,edgeVal/255));
+  const bin=sobel(g1,thr);
+  const sk=thinZS(bin);
+
+  const yH0=0,yH1=Math.floor(h*0.30),yD0=yH1,yD1=Math.floor(h*0.55),yL0=yD1,yL1=h;
+
+  // faint edges
+  const overlay=ctx.createImageData(w,h);
+  for(let i=0,j=0;i<bin.length;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=110; }
+  ctx.putImageData(overlay,0,0);
+
+  const heart=pickLongest(sk,yH0,yH1), head=pickLongest(sk,yD0,yD1), life=pickLongest(sk,yL0,yL1);
+  drawPoly(heart,'#ff3b3b',4); drawPoly(head,'#ffa533',4); drawPoly(life,'#42ff6c',4);
 }
 </script>
 </body>
