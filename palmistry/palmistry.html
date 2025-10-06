@@ -1,49 +1,85 @@
 <!DOCTYPE html>
 <html lang="si">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Palmistry AI Overlay</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Palmistry AI Overlay — FINAL FULL</title>
 <style>
-:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff;}
-body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center;}
-h1{margin:14px 0 6px;}
-.wrap{position:relative;display:inline-block;}
-video,canvas{width:92vw;max-width:460px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000;}
-svg.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6;}
+:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+h1{margin:14px 0 6px}
+.wrap{position:relative;display:inline-block}
+video,canvas{width:92vw;max-width:460px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+svg.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6}
 .captureBtn{
  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
  width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;
- font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer;
+ font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer
 }
-.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
-button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer;}
-.left{background:#16243a;color:#cfe9ff;}
-.an{background:var(--pri);color:#002;}
-.cap{background:#fbbf24;color:#111;}
-.torch{background:#22c55e;color:#021;}
-select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff;}
-.sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px;}
-.sliderRow label{display:flex;gap:8px;align-items:center;}
-input[type=range]{accent-color:#16f0a7;}
-#status{margin:10px auto;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:820px;display:none;transition:opacity .3s;}
-#status.loading{opacity:0.6;}
-footer{color:var(--pri);margin:18px 0 22px;font-size:.9em;}
-.langRow{display:flex;gap:10px;justify-content:center;align-items:center;margin-bottom:8px;}
-.undoBtn{background:#ea4;color:#222;border-radius:50%;font-size:1.2em;padding:0.3em 0.6em;}
+.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
+.left{background:#16243a;color:#cfe9ff}
+.an{background:var(--pri);color:#002}
+.cap{background:#fbbf24;color:#111}
+.torch{background:#22c55e;color:#021}
+select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
+.sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
+.sliderRow label{display:flex;gap:8px;align-items:center}
+input[type=range]{accent-color:#16f0a7}
+#status{margin:10px auto;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:820px;display:none}
+footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </style>
+
+<!-- OpenCV loader + fallback -->
+<script>
+(function(){
+  let loaded=false;
+  function load(url, onload){
+    const s=document.createElement('script'); s.src=url; s.async=true;
+    s.onload=onload; s.onerror=()=>console.warn('Load failed:',url);
+    document.head.appendChild(s);
+  }
+  load("https://docs.opencv.org/4.x/opencv.js", ()=>{
+    if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; console.log('✅ OpenCV ready'); }; loaded=true; }
+  });
+  setTimeout(()=>{
+    if(!loaded || !window.cv){
+      load("https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js", ()=>{
+        if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; console.log('✅ OpenCV fallback ready'); }; }
+      });
+    }
+  }, 2000);
+})();
+</script>
+
+<!-- OpenCV READY PROMISE + slow-net hint -->
+<script>
+window.cvReady = false;
+let _cvResolve;
+window.cvReadyPromise = new Promise(r => (_cvResolve = r));
+function _markCvReady(){ if(!window.cvReady){ window.cvReady = true; _cvResolve(true); console.log('✅ OpenCV initialized'); } }
+Object.defineProperty(window, 'cv', {
+  set(v){ this._cv=v; try{ v.onRuntimeInitialized=_markCvReady; }catch{} },
+  get(){ return this._cv; }
+});
+setTimeout(()=>{
+  if(!window.cvReady){
+    const s=document.getElementById('status');
+    if(s){ s.textContent='⏳ OpenCV download වෙනවා… Wi-Fi / data බලන්න.'; s.style.display='block'; }
+  }
+}, 4000);
+</script>
 </head>
 <body>
 <h1>🖐️ Palmistry AI Overlay</h1>
-<div class="langRow">
-  <label><input type="radio" name="lang" value="si" checked> සිංහල</label>
-  <label><input type="radio" name="lang" value="en"> English</label>
-</div>
-<p id="guide">Align palm → <b>Start/Choose</b> → <b>Capture</b> → <b>Analyze</b></p>
+<p>Align palm → <b>Start/Choose</b> → <b>Capture</b> → <b>Analyze</b></p>
 
 <div class="wrap">
   <video id="cam" playsinline muted></video>
   <canvas id="cv"></canvas>
+
+  <!-- palm guide -->
   <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice">
     <path d="M145 485c-55-35-78-139-19-190 6-45 8-90 29-98 
              22-9 34 33 34 79 0-52 16-96 37-95 21 1 22 47 17 98 
@@ -51,8 +87,8 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em;}
              16 6 14 49 0 96 24 22 36 71 21 110-21 55-80 74-213 51z"
           fill="none" stroke="var(--neon)" stroke-width="2" filter="drop-shadow(0 0 5px var(--neon))"/>
   </svg>
+
   <button class="captureBtn" id="capBtn">Capture</button>
-  <button class="undoBtn" id="undoBtn" title="Undo Mirror" style="display:none;">↩️</button>
 </div>
 
 <div class="btns">
@@ -73,72 +109,10 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em;}
 </div>
 
 <div id="status"></div>
+
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-/* ========================= LANGUAGE ========================= */
-const MSGS = {
-  si: {
-    guide: "අත align කරන්න → <b>Start/Choose</b> → <b>Capture</b> → <b>Analyze</b>",
-    camPerm: "❌ කැමරා අවසර අවශ්‍යයි. Address bar 🔒 → Site settings → Camera → Allow.",
-    camBusy: "❌ කැමරා එක busy. වෙනත් camera/flash app එකක් අඩු කරන්න.",
-    camError: "❌ කැමරා දෝෂයක්: ",
-    camNone: "❌ කැමරා device එකක් හමු නොවුණා.",
-    camReady: "✅ කැමරා සාර්ථකයි: ",
-    torchError: "Torch error: ",
-    photoLocked: "🖐️ Photo locked. ✨ Analyze කරන්න.",
-    photoLoaded: "🖼️ Photo loaded. ✨ Analyze ඔබන්න.",
-    cleared: "🧹 Cleared. Ready.",
-    opencvSlow: "⏳ OpenCV download වෙනවා… Wi-Fi / data බලන්න.",
-    opencvFail: "❌ OpenCV download fail. analyzePureJS fallback.",
-    analyzeJS: "✅ Analyze (Pure-JS fallback) සම්පූර්ණයි.",
-    analyzeDone: "✅ Analyze සම්පූර්ණයි (OpenCV).",
-    analyzeErr: "❌ Analyze අසාර්ථකයි: ",
-    captureFirst: "❗පළමුව Capture හෝ Choose Photo කරන්න.",
-    canvasErr: "❌ Canvas size 0×0. Start Camera → Capture නැවත කරන්න.",
-    imgErr: "❌ Image load failed.",
-    saveInapp: "ℹ️ In-app browser downloads block වෙන්න පුළුවන්. Chrome/Firefox වලින් open කරන්න.",
-    saveFail: "❌ Save failed: ",
-    saveUnsupported: "❌ Save unsupported. Long-press → “Save image” හෝ Chrome වලින් අරින්න.",
-    saveNo: "Capture/Load first.",
-    undoMirror: "↩️ Undo Mirror"
-  },
-  en: {
-    guide: "Align palm → <b>Start/Choose</b> → <b>Capture</b> → <b>Analyze</b>",
-    camPerm: "❌ Camera permission denied. Address bar 🔒 → Site settings → Camera → Allow.",
-    camBusy: "❌ Camera busy. Please close other camera/flash apps.",
-    camError: "❌ Camera error: ",
-    camNone: "❌ No camera device detected.",
-    camReady: "✅ Camera ready: ",
-    torchError: "Torch error: ",
-    photoLocked: "🖐️ Photo locked. ✨ Click Analyze.",
-    photoLoaded: "🖼️ Photo loaded. ✨ Click Analyze.",
-    cleared: "🧹 Cleared. Ready.",
-    opencvSlow: "⏳ Downloading OpenCV… Check Wi-Fi/data.",
-    opencvFail: "❌ OpenCV download failed. Using pure-JS fallback.",
-    analyzeJS: "✅ Analyze (Pure-JS fallback) complete.",
-    analyzeDone: "✅ Analyze complete (OpenCV).",
-    analyzeErr: "❌ Analyze failed: ",
-    captureFirst: "❗First Capture or Choose Photo.",
-    canvasErr: "❌ Canvas size 0×0. Start Camera → Capture again.",
-    imgErr: "❌ Image load failed.",
-    saveInapp: "ℹ️ In-app browser downloads may be blocked. Open in Chrome/Firefox.",
-    saveFail: "❌ Save failed: ",
-    saveUnsupported: "❌ Save unsupported. Long-press → “Save image” or use Chrome.",
-    saveNo: "Capture/Load first.",
-    undoMirror: "↩️ Undo Mirror"
-  }
-};
-let LANG = 'si';
-const guide = document.getElementById('guide');
-document.querySelectorAll('input[name="lang"]').forEach(radio=>{
-  radio.onchange = ()=>{
-    LANG = radio.value;
-    guide.innerHTML = MSGS[LANG].guide;
-    msg('', true); // clear status
-  };
-});
-
 /* ========================= CORE VARS ========================= */
 const video = document.getElementById('cam'),
       canvas = document.getElementById('cv'),
@@ -150,19 +124,14 @@ const startBtn = document.getElementById('startBtn'),
       flipBtn  = document.getElementById('flipBtn'),
       torchBtn = document.getElementById('torchBtn'),
       capBtn   = document.getElementById('capBtn'),
-      undoBtn  = document.getElementById('undoBtn'),
       anBtn    = document.getElementById('anBtn'),
       saveBtn  = document.getElementById('saveBtn'),
       clearBtn = document.getElementById('clearBtn');
-let stream=null, track=null, captured=false, origImg=null;
+let stream=null, track=null, captured=false;
 let camList=[], camIndex=0;
 let isMirrored=false;          // mirror state (live & captured)
 canvas.crossOrigin = video.crossOrigin = "anonymous";
-function msg(t,clear){ const s=document.getElementById('status');
-  if(clear||!t){ s.textContent=''; s.style.display='none'; s.classList.remove('loading'); return;}
-  s.textContent=t; s.style.display='block'; s.classList.remove('loading');
-}
-function loadingMsg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; s.classList.add('loading'); }
+function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; }
 
 /* ======================= CAMERA HELPERS ====================== */
 async function listCams(){
@@ -194,93 +163,77 @@ async function startCam(deviceId=null){
   const caps = track.getCapabilities?.(); if(caps && 'torch' in caps) torchBtn.hidden=false;
   canvas.width  = video.videoWidth  || 1280;
   canvas.height = video.videoHeight || 720;
+
+  // live mirror reflect UI state
   video.style.transform = isMirrored ? 'scaleX(-1)' : 'none';
-  msg(MSGS[LANG].camReady + (track.label || 'Unknown'));
+
+  msg(`✅ Camera: ${track.label || 'Unknown'} — Capture → Analyze`);
 }
+/* Start / Cycle */
 startBtn.onclick = async ()=>{
-  loadingMsg('...');
   try{ await listCams(); const id=camsel.value || (camList[0]?.deviceId ?? null); await startCam(id); }
   catch(e){
-    if(e.name==='NotAllowedError') msg(MSGS[LANG].camPerm);
-    else if(e.name==='NotReadableError') msg(MSGS[LANG].camBusy);
-    else msg(MSGS[LANG].camError + e.message);
+    if(e.name==='NotAllowedError') msg('❌ Permission blocked. Address bar 🔒 → Site settings → Camera → Allow.');
+    else if(e.name==='NotReadableError') msg('❌ Camera busy by another app. Close other camera/flash apps.');
+    else msg('❌ Camera error: '+e.message);
   }
 };
 cycleBtn.onclick = async ()=>{
   if(!camList.length) await listCams();
-  if(!camList.length) return msg(MSGS[LANG].camNone);
+  if(!camList.length) return msg('No cameras detected.');
   camIndex = (camIndex + 1) % camList.length;
   camsel.selectedIndex = camIndex;
   await startCam(camList[camIndex].deviceId);
 };
+/* UI misc */
 flipBtn.onclick = ()=>{
   isMirrored = !isMirrored;
   if (stream && !captured) {
     video.style.transform = isMirrored ? 'scaleX(-1)' : 'none';
-  } else if (captured && origImg) {
-    drawImage(origImg, true);
-    undoBtn.style.display='inline-block';
+  } else if (captured) {
+    // mirror current canvas content
+    const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height;
+    const tctx=tmp.getContext('2d'); tctx.drawImage(canvas,0,0);
+    ctx.save(); ctx.setTransform(-1,0,0,1,canvas.width,0); ctx.drawImage(tmp,0,0); ctx.restore();
   }
 };
-undoBtn.onclick = ()=>{
-  isMirrored = false;
-  if (captured && origImg) drawImage(origImg, false);
-  undoBtn.style.display='none';
-};
-torchBtn.onclick = async()=>{ if(!track) return; try{ const st=track.getSettings(); await track.applyConstraints({advanced:[{torch:!st.torch}]}); }catch(e){ msg(MSGS[LANG].torchError + e.message); }};
+torchBtn.onclick = async()=>{ if(!track) return; try{ const st=track.getSettings(); await track.applyConstraints({advanced:[{torch:!st.torch}]}); }catch(e){ msg('Torch error: '+e.message); }};
 
 /* ======================== CAPTURE / LOAD ===================== */
 capBtn.onclick = async ()=>{
   try{
-    if(!stream){ msg(MSGS[LANG].captureFirst); return; }
+    if(!stream){ msg('ℹ️ Start Camera first (හෝ Choose file).'); return; }
     if(!video.videoWidth || !video.videoHeight){ await new Promise(r=>setTimeout(r,120)); }
     canvas.width  = video.videoWidth  || 1280;
     canvas.height = video.videoHeight || 720;
-    origImg = captureImage();
-    drawImage(origImg, isMirrored);
-    captured=true;
-    undoBtn.style.display='none';
-    msg(MSGS[LANG].photoLocked);
-  }catch(e){ msg(MSGS[LANG].camError + e.message); }
+    ctx.save(); if(isMirrored){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    ctx.restore(); captured=true;
+    msg('🖐️ Photo locked. ✨ Analyze කරන්න.');
+  }catch(e){ msg('❌ Capture failed: '+e.message); }
 };
-function captureImage(){
-  const tmp=document.createElement('canvas');
-  tmp.width=canvas.width; tmp.height=canvas.height;
-  const tctx=tmp.getContext('2d');
-  tctx.drawImage(video,0,0,canvas.width,canvas.height);
-  return tmp;
-}
-function drawImage(img, mirror){
-  ctx.save();
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(mirror){
-    ctx.translate(canvas.width,0); ctx.scale(-1,1);
-  }
-  ctx.drawImage(img,0,0);
-  ctx.restore();
-}
 pick.onchange = e=>{
   const file=e.target.files?.[0]; if(!file) return;
   const img=new Image(); img.onload=()=>{
     canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
-    origImg = document.createElement('canvas');
-    origImg.width=canvas.width; origImg.height=canvas.height;
-    origImg.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-    drawImage(origImg, isMirrored);
-    captured=true;
-    undoBtn.style.display=isMirrored?'inline-block':'none';
-    msg(MSGS[LANG].photoLoaded);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    if (isMirrored){ const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height;
+      const tctx=tmp.getContext('2d'); tctx.drawImage(canvas,0,0);
+      ctx.save(); ctx.setTransform(-1,0,0,1,canvas.width,0); ctx.drawImage(tmp,0,0); ctx.restore();
+    }
+    captured=true; msg('🖼️ Photo loaded. ✨ Analyze ඔබන්න.');
   };
-  img.onerror=()=>msg(MSGS[LANG].imgErr); img.src=URL.createObjectURL(file);
+  img.onerror=()=>msg('❌ Image load failed.'); img.src=URL.createObjectURL(file);
 };
-clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; origImg=null; undoBtn.style.display='none'; msg(MSGS[LANG].cleared); };
+clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; msg('🧹 Cleared. Ready.'); };
 
 /* =========================== SAVE ============================ */
 saveBtn.onclick = ()=>{
-  if(!captured){ msg(MSGS[LANG].saveNo); return; }
+  if(!captured){ msg('Capture/Load first.'); return; }
   const ua = navigator.userAgent || '';
   const inApp = /FBAN|FBAV|Instagram|Line\/|WeChat|MiuiBrowser/i.test(ua);
-  if (inApp) msg(MSGS[LANG].saveInapp);
+  if (inApp) msg('ℹ️ In-app browser downloads block වෙන්න පුළුවන්. Chrome/Firefox වලින් open කරන්න.');
+
   try{
     if (canvas.toBlob){
       canvas.toBlob((blob)=>{
@@ -292,79 +245,44 @@ saveBtn.onclick = ()=>{
         URL.revokeObjectURL(url);
       }, 'image/png', 0.92);
     }else{ fallback(); }
-  }catch(e){ msg(MSGS[LANG].saveFail + (e.message||e)); }
+  }catch(e){ console.error(e); msg('❌ Save failed: '+(e.message||e)); }
+
   function fallback(){
     try{
       const a=document.createElement('a');
       a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png';
       document.body.appendChild(a); a.click(); a.remove();
-    }catch(e){ msg(MSGS[LANG].saveUnsupported); }
+    }catch(e){ msg('❌ Save unsupported here. Long-press → “Save image” හෝ Chrome වලින් අරින්න.'); }
   }
 };
-
-/* =================== OpenCV loader + fallback ================= */
-(function(){
-  let loaded=false, failTimeout;
-  function load(url, onload){
-    const s=document.createElement('script'); s.src=url; s.async=true;
-    s.onload=onload; s.onerror=()=>console.warn('Load failed:',url);
-    document.head.appendChild(s);
-  }
-  load("https://docs.opencv.org/4.x/opencv.js", ()=>{
-    if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; }; loaded=true; }
-  });
-  setTimeout(()=>{
-    if(!loaded || !window.cv){
-      load("https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js", ()=>{
-        if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; }; }
-      });
-    }
-  }, 2000);
-  failTimeout = setTimeout(()=>{
-    if(!window.cvReady){
-      msg(MSGS[LANG].opencvSlow);
-    }
-  }, 4000);
-  window.cvReady = false;
-  let _cvResolve;
-  window.cvReadyPromise = new Promise(r => (_cvResolve = r));
-  function _markCvReady(){ if(!window.cvReady){ window.cvReady = true; _cvResolve(true); clearTimeout(failTimeout); } }
-  Object.defineProperty(window, 'cv', {
-    set(v){ this._cv=v; try{ v.onRuntimeInitialized=_markCvReady; }catch{} },
-    get(){ return this._cv; }
-  });
-  setTimeout(()=>{
-    if(!window.cvReady){
-      msg(MSGS[LANG].opencvSlow);
-    }
-  }, 4000);
-})();
 
 /* =========================== ANALYZE ========================= */
 anBtn.onclick = async ()=>{
-  if(anBtn.disabled) return;
-  if(!captured){ msg(MSGS[LANG].captureFirst); return; }
+  if(!captured){ msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); return; }
+
+  // canvas size guard
   if (!canvas.width || !canvas.height) {
     if (video.videoWidth && video.videoHeight){ canvas.width=video.videoWidth; canvas.height=video.videoHeight; }
-    else { msg(MSGS[LANG].canvasErr); return; }
+    else { msg('❌ Canvas size 0×0. Start Camera → Capture නැවත කරන්න.'); return; }
   }
-  anBtn.disabled=true; loadingMsg('Analyzing...');
+
+  // try OpenCV first
   try{
     await window.cvReadyPromise;
-    if (window.cv && cv.Mat) { analyzeV2(); msg(MSGS[LANG].analyzeDone); }
-    else { msg(MSGS[LANG].opencvFail); analyzePureJS(); msg(MSGS[LANG].analyzeJS); }
-  }catch(e){
-    msg(MSGS[LANG].analyzeErr + (e?.message||e));
-    console.error(e);
-  }
-  anBtn.disabled=false;
+    if (window.cv && cv.Mat) { analyzeV2(); return; }
+  }catch(e){ console.warn('OpenCV wait fail:', e); }
+
+  // fallback: pure JS
+  try{ analyzePureJS(); msg('✅ Analyze (Pure-JS fallback) complete.'); }
+  catch(e){ msg('❌ Analyze failed: '+(e?.message||e)); console.error(e); }
 };
+
 /* ===== OpenCV version (bands + longest contours) ===== */
 function analyzeV2(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
   const edgeVal = parseInt(document.getElementById('edge').value, 10); // 30..120
   const gk = parseInt(document.getElementById('gk').value, 10) | 1;    // odd 3..15
   const src = cv.imread(canvas); const h=src.rows, w=src.cols;
+
   const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(gray,gray);
   cv.GaussianBlur(gray,gray,new cv.Size(gk,gk),0,0,cv.BORDER_DEFAULT);
@@ -382,17 +300,22 @@ function analyzeV2(){
     const pts=[]; if(best){ const ap=new cv.Mat(); cv.approxPolyDP(best,ap,2.0,false); for(let i=0;i<ap.rows;i++){ const p=ap.intPtr(i); pts.push([p[0],p[1]+y0]); } ap.delete(); }
     cs.delete(); hr.delete(); roi.delete(); kernel.delete(); return pts;
   }
-  const pHeart=longestContour(yH0,yH1),(bgr[0],bgr[1],bgr[2],255);
+  const pHeart=longestContour(yH0,yH1), pHead=longestContour(yD0,yD1), pLife=longestContour(yL0,yL1);
+
+  function drawPoly(pts,bgr){ if(!pts||pts.length<4) return; const col=new cv.Scalar(bgr[0],bgr[1],bgr[2],255);
     for(let i=1;i<pts.length;i++){ cv.line(src,new cv.Point(pts[i-1][0],pts[i-1][1]),new cv.Point(pts[i][0],pts[i][1]),col,4,cv.LINE_AA); } }
   drawPoly(pHeart,[ 60, 60,255]); drawPoly(pHead,[ 60,180,255]); drawPoly(pLife,[ 60,255,120]);
-  for(let y=0;y<h;y++){ for(let x=0;x<w(255,(]*0+255.4[1.min(px[0.255*4)); }
- src); [src,gray,clahe,edges].forEach(m=>m.delete());
+
+  for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ if(edges.ucharPtr(y,x)[0]){ const px=src.ucharPtr(y,x); px[0]=Math.min(255,(px[0]*0.6+255*0.4)); px[1]=Math.min(255,(px[1]*0.6+255*0.4)); } } }
+  cv.imshow(canvas,src); [src,gray,clahe,edges].forEach(m=>m.delete());
+  msg('✅ Analyze complete (OpenCV).');
 }
+
 /* ===== PURE-JS FALLBACK (no OpenCV) ===== */
 function analyzePureJS(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
   const edgeVal=parseInt(document.getElementById('edge').value,10);
   const detail=parseInt(document.getElementById('gk').value,10);
+
   const w=canvas.width, h=canvas.height, src=ctx.getImageData(0,0,w,h);
   function toGray(img){ const d=img.data,g=new Uint8ClampedArray(w*h); for(let i=0,j=0;i<d.length;i+=4,j++) g[j]=d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114; return g; }
   function blur3(arr,passes){ let a=Float32Array.from(arr); const k=[1,2,1,2,4,2,1,2,1],norm=16;
@@ -432,17 +355,21 @@ function analyzePureJS(){
     ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
     ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
     ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); }
+
   const g0=toGray(src);
   const passes=Math.max(1,Math.min(5,Math.round((detail-1)/2)));   // 3..15 -> ~1..5
   const g1=blur3(g0,passes);
   const thr=Math.max(0.15,Math.min(0.9,edgeVal/255));
   const bin=sobel(g1,thr);
   const sk=thinZS(bin);
+
   const yH0=0,yH1=Math.floor(h*0.30),yD0=yH1,yD1=Math.floor(h*0.55),yL0=yD1,yL1=h;
+
   // faint edges
   const overlay=ctx.createImageData(w,h);
   for(let i=0,j=0;i<bin.length;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=110; }
   ctx.putImageData(overlay,0,0);
+
   const heart=pickLongest(sk,yH0,yH1), head=pickLongest(sk,yD0,yD1), life=pickLongest(sk,yL0,yL1);
   drawPoly(heart,'#ff3b3b',4); drawPoly(head,'#ffa533',4); drawPoly(life,'#42ff6c',4);
 }
