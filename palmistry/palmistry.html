@@ -1,195 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry AI Overlay – Sathyadarshana</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Palmistry Universal · Sathyadarshana</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
-body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+body{margin:0;background:var(--bg);color:#e6f0ff;
+     font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
-.wrap{position:relative;display:inline-block}
-video,#photo,#lines{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
-#photo,#lines{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
-.hidden{display:none}
-.captureBtn{
- position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
- width:85px;height:85px;border:none;border-radius:50%;
- background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer;z-index:3
-}
-.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+video,canvas{width:92vw;max-width:420px;border-radius:16px;
+  border:2px solid var(--pri);display:block;margin:auto;background:#000}
+.captureBtn{position:absolute;bottom:18px;left:50%;
+ transform:translateX(-50%);width:85px;height:85px;border-radius:50%;
+ border:none;background:#2196f3;color:#000;font-weight:600;
+ box-shadow:0 0 15px #2196f333;cursor:pointer}
+.btns{margin:10px 0;display:flex;gap:8px;
+ justify-content:center;flex-wrap:wrap}
 button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:pointer}
 .left{background:#16243a;color:#cfe9ff}
 .an{background:var(--pri);color:#000}
 .cap{background:#fbbf24;color:#111}
 .torch{background:#22c55e;color:#021}
-.sliderRow{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.sliderRow{display:flex;gap:8px;justify-content:center;
+ align-items:center;flex-wrap:wrap;margin-bottom:10px}
 footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
-.badge{position:absolute;top:8px;left:8px;background:#0008;padding:4px 6px;border-radius:6px;font-size:12px;z-index:3}
+.msg{color:#29e0ff;margin-top:6px;font-size:.9em}
 </style>
-
-<!-- OpenCV + fallback -->
-<script>
-(function(){
-  window.cvReady = new Promise(resolve=>{
-    function ok(){ 
-      // wait until cv.Mat exists
-      const t = setInterval(()=>{ if(window.cv && cv.Mat){clearInterval(t); resolve();} },100);
-    }
-    const s=document.createElement('script');
-    s.src="https://docs.opencv.org/4.x/opencv.js"; s.async=true;
-    s.onload=ok;
-    s.onerror=()=>{const f=document.createElement('script');
-      f.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";
-      f.async=true; f.onload=ok; document.head.appendChild(f);
-    };
-    document.head.appendChild(s);
-  });
-})();
-</script>
 </head>
 <body>
-<h1>🖐️ Palmistry</h1>
+<h1>🖐 Palmistry Universal</h1>
 <p>Align palm → Capture → Analyze</p>
 
-<div class="wrap" id="stage">
-  <span class="badge">Live preview</span>
-  <video id="cam" playsinline autoplay muted></video>
-  <canvas id="photo" class="hidden"></canvas>
-  <canvas id="lines" class="hidden"></canvas>
-  <button class="captureBtn" id="capBtn">Tap to Capture</button>
+<div class="wrap" style="position:relative;display:inline-block">
+  <video id="cam" playsinline></video>
+  <canvas id="cv"></canvas>
+  <button class="captureBtn" id="capBtn">📸</button>
 </div>
 
 <div class="btns">
-  <button class="left" id="flipBtn">🖐 Left · Past</button>
+  <button class="left" id="flipBtn">↔️ Flip</button>
   <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
   <button class="an" id="anBtn">✨ Analyze</button>
   <button class="cap" id="saveBtn">💾 Save</button>
 </div>
 
 <div class="sliderRow">
-  <label>Edge <input id="edge" type="range" min="20" max="120" value="70"/></label>
-  <label>Detail <input id="gk" type="range" min="3" max="25" step="2" value="11"/></label>
+  <label>Edge <input id="edge" type="range" min="40" max="100" value="70"></label>
+  <label>Detail <input id="detail" type="range" min="1" max="5" value="3"></label>
 </div>
-
+<div id="status" class="msg"></div>
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-const video   = document.getElementById('cam');
-const canPhoto= document.getElementById('photo');
-const canLines= document.getElementById('lines');
-const pctx    = canPhoto.getContext('2d');
-const flipBtn = document.getElementById('flipBtn');
-const capBtn  = document.getElementById('capBtn');
-const anBtn   = document.getElementById('anBtn');
-const saveBtn = document.getElementById('saveBtn');
-const torchBtn= document.getElementById('torchBtn');
-const edgeSl  = document.getElementById('edge');
-const gkSl    = document.getElementById('gk');
-
+const video=document.getElementById('cam'),
+      canvas=document.getElementById('cv'),
+      ctx=canvas.getContext('2d');
+const flipBtn=document.getElementById('flipBtn'),
+      capBtn=document.getElementById('capBtn'),
+      anBtn=document.getElementById('anBtn'),
+      saveBtn=document.getElementById('saveBtn'),
+      torchBtn=document.getElementById('torchBtn');
 let flipped=false,captured=false,stream=null,track=null,torch=false;
+function msg(t){document.getElementById('status').innerText=t;console.log(t);}
 
-flipBtn.onclick=()=>{flipped=!flipped;video.style.transform=flipped?'scaleX(-1)':'none';};
+// CAMERA ------------------------------------------------------
+async function ensureCamera(){
+ try{
+   stream=await navigator.mediaDevices.getUserMedia({
+     video:{
+       facingMode:{ideal:flipped?'user':'environment'},
+       width:{ideal:1280},height:{ideal:720}},
+     audio:false});
+   video.srcObject=stream;await video.play();
+   track=stream.getVideoTracks()[0];
+   const caps=track.getCapabilities?.();
+   if(caps&&caps.torch)torchBtn.hidden=false;
+   msg('📷 Camera ready');
+ }catch(e){msg('❌ Camera error: '+e.message);}
+}
+ensureCamera();
 
-// start camera immediately
-(async function startCam(){
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    video.srcObject=stream; await video.play();
-    track=stream.getVideoTracks()[0];
-    const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
-  }catch(e){ alert('Please allow camera permission.'); }
-})();
+flipBtn.onclick=()=>{flipped=!flipped;ensureCamera();};
+torchBtn.onclick=async()=>{if(!track)return;
+ torch=!torch;try{await track.applyConstraints({advanced:[{torch}]});}catch{}};
 
-torchBtn.onclick=async()=>{ if(!track) return; torch=!torch;
-  try{ await track.applyConstraints({advanced:[{torch}]}); }catch{} };
-
-capBtn.onclick=()=>{
-  if(!stream){ alert('Enable camera first'); return; }
-  [canPhoto,canLines].forEach(c=>{ c.width=video.videoWidth; c.height=video.videoHeight; });
-  pctx.save(); if(flipped){ pctx.translate(canPhoto.width,0); pctx.scale(-1,1); }
-  pctx.drawImage(video,0,0,canPhoto.width,canPhoto.height); pctx.restore();
-  canPhoto.classList.remove('hidden');
-  canLines.classList.add('hidden');
-  captured=true;
+// CAPTURE ------------------------------------------------------
+capBtn.onclick=async()=>{
+ if(!stream)await ensureCamera();
+ canvas.width=video.videoWidth||480;canvas.height=video.videoHeight||640;
+ ctx.save();if(flipped){ctx.translate(canvas.width,0);ctx.scale(-1,1);}
+ ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.restore();
+ captured=true;msg('🖐 Captured. Tap Analyze.');
 };
 
+// SAVE ---------------------------------------------------------
 saveBtn.onclick=()=>{
-  if(!captured) return;
-  const tmp=document.createElement('canvas'); tmp.width=canPhoto.width; tmp.height=canPhoto.height;
-  const t=tmp.getContext('2d'); t.drawImage(canPhoto,0,0); t.drawImage(canLines,0,0);
-  const a=document.createElement('a'); a.href=tmp.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click();
+ if(!captured)return msg('Capture first');
+ const data=canvas.toDataURL('image/png');
+ if(/iPhone|iPad|Macintosh/.test(navigator.userAgent)){
+   const w=window.open();w.document.write('<img src="'+data+'" style="width:100%">');
+   msg('📷 Opened in new tab. Long-press → Save Image.');
+ }else{
+   const a=document.createElement('a');
+   a.href=data;a.download='palm_'+Date.now()+'.png';
+   a.click();msg('💾 Saved.');
+ }
 };
 
-anBtn.onclick=async()=>{
-  if(!captured) return alert('Capture first');
-  await window.cvReady;      // ensure OpenCV is ready
-  analyzeLines();
-  canLines.classList.remove('hidden');
+// ANALYZE ------------------------------------------------------
+anBtn.onclick=()=>{
+ if(!captured)return msg('Capture first');
+ try{analyzePureJS();msg('✨ Analyze done');}
+ catch(e){msg('❌ '+e.message);}
 };
 
-// --------- ANALYSIS (lines-only overlay; with safe fallbacks)
-function analyzeLines(){
-  try{
-    const src=cv.imread(canPhoto);
+// PURE-JS ANALYZE ---------------------------------------------
+function analyzePureJS(){
+ // downscale for speed
+ if(canvas.width>480){
+   const tmp=document.createElement('canvas');
+   const s=480/canvas.width;
+   tmp.width=480;tmp.height=canvas.height*s;
+   tmp.getContext('2d').drawImage(canvas,0,0,tmp.width,tmp.height);
+   canvas.width=tmp.width;canvas.height=tmp.height;
+   ctx.drawImage(tmp,0,0);
+ }
+ const w=canvas.width,h=canvas.height,src=ctx.getImageData(0,0,w,h);
+ const edgeVal=parseInt(edge.value)/255,passes=parseInt(detail.value);
+ const toGray=d=>{const g=new Uint8ClampedArray(w*h);
+  for(let i=0,j=0;i<d.data.length;i+=4,j++)
+    g[j]=d.data[i]*.299+d.data[i+1]*.587+d.data[i+2]*.114;return g;};
+ const blur=(a,p)=>{let b=Float32Array.from(a);
+  const k=[1,2,1,2,4,2,1,2,1],n=16;
+  for(let t=0;t<p;t++){const r=new Float32Array(w*h);
+   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+     let s=0,i=0;for(let dy=-1;dy<=1;dy++)
+       for(let dx=-1;dx<=1;dx++)s+=b[(y+dy)*w+(x+dx)]*k[i++];
+     r[y*w+x]=s/n;}b=r;}return Uint8ClampedArray.from(b);};
+ const sobel=(a,thr)=>{const m=new Float32Array(w*h);let mx=1;
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x;
+   const gx=-a[i-w-1]-2*a[i-1]-a[i+w-1]+a[i-w+1]+2*a[i+1]+a[i+w+1];
+   const gy=-a[i-w-1]-2*a[i-w]-a[i-w+1]+a[i+w-1]+2*a[i+w]+a[i+w+1];
+   const mg=Math.hypot(gx,gy);m[i]=mg;if(mg>mx)mx=mg;}
+  const T=thr*mx,bn=new Uint8ClampedArray(w*h);
+  for(let i=0;i<w*h;i++)bn[i]=m[i]>T?1:0;return bn;};
+ const thin=b=>{
+   const img=Uint8Array.from(b);let ch=true,p=0;
+   const N=(x,y)=>img[(y-1)*w+x]+img[(y-1)*w+x+1]+img[y*w+x+1]+img[(y+1)*w+x+1]+img[(y+1)*w+x]+img[(y+1)*w+x-1]+img[y*w+x-1]+img[(y-1)*w+x-1];
+   const S=(x,y)=>{const p=[img[(y-1)*w+x],img[(y-1)*w+x+1],img[y*w+x+1],img[(y+1)*w+x+1],img[(y+1)*w+x],img[(y+1)*w+x-1],img[y*w+x-1],img[(y-1)*w+x-1]];
+    let t=0;for(let i=0;i<8;i++)if(p[i]==0&&p[(i+1)%8]==1)t++;return t;};
+   while(ch&&p<25){ch=false;const rm=[];
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+     const i=y*w+x;if(!img[i])continue;const nn=N(x,y),s=S(x,y);
+     if(nn>=2&&nn<=6&&s==1&&(img[(y-1)*w+x]*img[y*w+x+1]*img[(y+1)*w+x]==0)&&(img[y*w+x+1]*img[y*w+x-1]*img[(y-1)*w+x]==0))rm.push(i);}
+    rm.forEach(i=>img[i]=0);if(rm.length)ch=true;p++;}
+   return img;};
+ const drawLine=(pts,color,wid)=>{
+   if(pts.length<6)return;
+   ctx.lineJoin='round';ctx.lineCap='round';
+   ctx.strokeStyle='#000';ctx.lineWidth=wid+2;
+   ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+   for(const [x,y] of pts)ctx.lineTo(x,y);ctx.stroke();
+   ctx.strokeStyle=color;ctx.lineWidth=wid;
+   ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+   for(const [x,y] of pts)ctx.lineTo(x,y);ctx.stroke();
+ };
 
-    // --- skin mask (HSV + YCrCb) and keep-largest
-    const hsv=new cv.Mat(); cv.cvtColor(src,hsv,cv.COLOR_RGBA2HSV);
-    const ycc=new cv.Mat(); cv.cvtColor(src,ycc,cv.COLOR_RGBA2YCrCb);
-    const low1=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[0,30,60]);
-    const up1 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[25,180,255]);
-    const low2=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[160,30,60]);
-    const up2 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[179,180,255]);
-    const m1=new cv.Mat(), m2=new cv.Mat();
-    cv.inRange(hsv,low1,up1,m1); cv.inRange(hsv,low2,up2,m2);
-    const hsvMask=new cv.Mat(); cv.bitwise_or(m1,m2,hsvMask);
-    const lowY=new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[0,133,77]);
-    const upY =new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[255,173,127]);
-    const yMask=new cv.Mat(); cv.inRange(ycc,lowY,upY,yMask);
-    const mask=new cv.Mat(); cv.bitwise_and(hsvMask,yMask,mask);
-    const k=cv.getStructuringElement(cv.MORPH_ELLIPSE,new cv.Size(11,11));
-    cv.morphologyEx(mask,mask,cv.MORPH_CLOSE,k); cv.GaussianBlur(mask,mask,new cv.Size(7,7),0);
-    const contours=new cv.MatVector(), hier=new cv.Mat();
-    cv.findContours(mask,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-    const clean=cv.Mat.zeros(mask.rows,mask.cols,cv.CV_8UC1);
-    let A=0,I=-1; for(let i=0;i<contours.size();i++){const a=cv.contourArea(contours.get(i)); if(a>A){A=a; I=i;}}
-    if(I>=0){const hull=new cv.Mat(); cv.convexHull(contours.get(I),hull,false,true); const hs=new cv.MatVector(); hs.push_back(hull); cv.drawContours(clean,hs,0,new cv.Scalar(255),-1); hull.delete(); hs.delete();}
-    [hsv,ycc,low1,up1,low2,up2,m1,m2,hsvMask,lowY,upY,yMask,mask,k,contours,hier].forEach(m=>m.delete());
-
-    // --- grayscale + keep hand pixels only
-    const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-    cv.GaussianBlur(gray,gray,new cv.Size(3,3),0);
-    const gMasked=new cv.Mat(); cv.bitwise_and(gray,gray,gMasked,clean);
-
-    // --- detail kernel (safe default)
-    const ksize = parseInt(gkSl?.value) || 11;
-    const se = cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(ksize,ksize));
-
-    // --- black-hat to lift lines
-    const blackhat=new cv.Mat(); cv.morphologyEx(gMasked,blackhat,cv.MORPH_BLACKHAT,se);
-    const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(blackhat,blackhat);
-
-    // --- edges (safe default)
-    const low = parseInt(edgeSl?.value) || 70;
-    const high = Math.round(low*2.5);
-    const edges=new cv.Mat(); cv.Canny(blackhat,edges,low,high);
-
-    // clean tiny specks & enforce hand-only
-    const k2=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-    cv.morphologyEx(edges,edges,cv.MORPH_OPEN,k2);
-    cv.bitwise_and(edges,edges,edges,clean);
-
-    // --- RGBA overlay (green only)
-    const zeros=new cv.Mat.zeros(edges.rows,edges.cols,cv.CV_8UC1);
-    const alpha=edges.clone();
-    const ch=new cv.MatVector(); ch.push_back(zeros); ch.push_back(edges); ch.push_back(zeros); ch.push_back(alpha);
-    const rgba=new cv.Mat(); cv.merge(ch,rgba);
-    cv.imshow(canLines,rgba);
-
-    [src,clean,gray,gMasked,se,blackhat,clahe,edges,k2,zeros,alpha,ch,rgba].forEach(m=>m.delete());
-  }catch(e){
-    alert('Analyze error: '+e.message);
-  }
+ const g0=toGray(src),g1=blur(g0,passes),bin=sobel(g1,edgeVal),sk=thin(bin);
+ const overlay=ctx.createImageData(w,h);
+ for(let i=0,j=0;i<bin.length;i++,j+=4)
+  if(bin[i]){overlay.data[j]=0;overlay.data[j+1]=255;overlay.data[j+2]=255;overlay.data[j+3]=90;}
+ ctx.putImageData(overlay,0,0);
+ ctx.font='18px system-ui';ctx.fillStyle='#fff';
+ ctx.fillText('Analyzed',14,24);
 }
 </script>
 </body>
