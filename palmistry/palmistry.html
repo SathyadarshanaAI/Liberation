@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry AI Overlay — Sathyadarshana (FULL rear/selfie)</title>
+<title>Palmistry AI Overlay — FULL (cv-wait + guards)</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
@@ -51,6 +51,24 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
     }
   }, 2000);
 })();
+</script>
+
+<!-- OpenCV READY PROMISE + slow-net hint -->
+<script>
+window.cvReady = false;
+let _cvResolve;
+window.cvReadyPromise = new Promise(r => (_cvResolve = r));
+function _markCvReady(){ if(!window.cvReady){ window.cvReady = true; _cvResolve(true); console.log('✅ OpenCV initialized'); } }
+Object.defineProperty(window, 'cv', {
+  set(v){ this._cv=v; try{ v.onRuntimeInitialized=_markCvReady; }catch{} },
+  get(){ return this._cv; }
+});
+setTimeout(()=>{
+  if(!window.cvReady){
+    const s=document.getElementById('status');
+    if(s){ s.textContent='⏳ OpenCV download වෙනවා… Wi-Fi / data බලන්න.'; s.style.display='block'; }
+  }
+}, 4000);
 </script>
 </head>
 <body>
@@ -111,7 +129,6 @@ const startBtn = document.getElementById('startBtn'),
       clearBtn = document.getElementById('clearBtn');
 let stream=null, track=null, flipped=false, captured=false;
 let camList=[], camIndex=0;
-window.cvReady=false;
 canvas.crossOrigin = video.crossOrigin = "anonymous";
 function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; }
 
@@ -119,30 +136,20 @@ function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.s
 async function listCams(){
   const devs = await navigator.mediaDevices.enumerateDevices();
   camList = devs.filter(d=>d.kind==='videoinput');
-
-  // rear-first order
-  camList.sort((a,b)=>{
-    const ra = /back|rear|environment|wide/i.test(a.label);
-    const rb = /back|rear|environment|wide/i.test(b.label);
-    if (ra && !rb) return -1; if (!ra && rb) return 1; return 0;
+  camList.sort((a,b)=>{ // rear-first
+    const ra=/back|rear|environment|wide/i.test(a.label);
+    const rb=/back|rear|environment|wide/i.test(b.label);
+    return ra===rb?0:(ra?-1:1);
   });
-
   camsel.innerHTML='';
-  camList.forEach((c,i)=>{
-    const o=document.createElement('option');
-    o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`;
-    camsel.appendChild(o);
-  });
+  camList.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o); });
   camIndex=0; camsel.selectedIndex=0;
 }
-
 async function startCam(deviceId=null){
   if(stream){ stream.getTracks().forEach(t=>t.stop()); }
-
   let constraints = deviceId
     ? { video:{ deviceId:{exact:deviceId}, width:{ideal:1280}, height:{ideal:720} }, audio:false }
     : { video:{ facingMode:{exact:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false };
-
   try{
     stream = await navigator.mediaDevices.getUserMedia(constraints);
   }catch(e){
@@ -150,34 +157,24 @@ async function startCam(deviceId=null){
       try{ stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false }); }
       catch{ stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false }); }
     }else{
-      const alt = camList.find(c=>c.deviceId!==deviceId);
-      if(alt){
-        stream = await navigator.mediaDevices.getUserMedia({ video:{ deviceId:{exact:alt.deviceId} }, audio:false });
-        camsel.value = alt.deviceId;
-      }else{
-        stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
-      }
+      const alt=camList.find(c=>c.deviceId!==deviceId);
+      if(alt){ stream=await navigator.mediaDevices.getUserMedia({ video:{ deviceId:{exact:alt.deviceId} }, audio:false }); camsel.value=alt.deviceId; }
+      else{ stream=await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); }
     }
   }
-
   video.srcObject = stream; await video.play();
   track = stream.getVideoTracks()[0];
   const caps = track.getCapabilities?.(); if(caps && 'torch' in caps) torchBtn.hidden=false;
-
   canvas.width  = video.videoWidth  || 1280;
   canvas.height = video.videoHeight || 720;
-
-  // mirror only for clear "front" labels (unless user forced flip)
   const label = track.label || '';
   const isFront = /front|user|selfie/i.test(label);
   video.style.transform = (isFront && !flipped) ? 'scaleX(-1)' : (flipped?'scaleX(-1)':'none');
-
   msg(`✅ Camera: ${label||'Unknown'} — Capture → Analyze`);
 }
-
-/* ---- Start / Cycle wiring ---- */
+/* Start / Cycle */
 startBtn.onclick = async ()=>{
-  try{ await listCams(); const id = camsel.value || (camList[0]?.deviceId ?? null); await startCam(id); }
+  try{ await listCams(); const id=camsel.value || (camList[0]?.deviceId ?? null); await startCam(id); }
   catch(e){
     if(e.name==='NotAllowedError') msg('❌ Permission blocked. Address bar 🔒 → Site settings → Camera → Allow.');
     else if(e.name==='NotReadableError') msg('❌ Camera busy by another app. Close other camera/flash apps.');
@@ -191,127 +188,82 @@ cycleBtn.onclick = async ()=>{
   camsel.selectedIndex = camIndex;
   await startCam(camList[camIndex].deviceId);
 };
-
-/* ---- UI misc ---- */
+/* UI misc */
 flipBtn.onclick = ()=>{ flipped=!flipped; video.style.transform=flipped?'scaleX(-1)':'none'; };
-torchBtn.onclick = async()=>{
-  if(!track) return;
-  try{ const st = track.getSettings(); await track.applyConstraints({advanced:[{torch: !st.torch}]}); }
-  catch(e){ msg('Torch error: '+e.message); }
-};
+torchBtn.onclick = async()=>{ if(!track) return; try{ const st=track.getSettings(); await track.applyConstraints({advanced:[{torch:!st.torch}]}); }catch(e){ msg('Torch error: '+e.message); }};
 
 /* ======================== CAPTURE / LOAD ===================== */
 capBtn.onclick = async ()=>{
   try{
     if(!stream){ msg('ℹ️ Start Camera first (හෝ Choose file).'); return; }
-    canvas.width  = video.videoWidth  || canvas.width || 1280;
-    canvas.height = video.videoHeight || canvas.height|| 720;
+    if(!video.videoWidth || !video.videoHeight){ await new Promise(r=>setTimeout(r,120)); }
+    canvas.width  = video.videoWidth  || 1280;
+    canvas.height = video.videoHeight || 720;
     ctx.save(); if(flipped){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
     ctx.drawImage(video,0,0,canvas.width,canvas.height);
     ctx.restore(); captured=true;
     msg('🖐️ Photo locked. ✨ Analyze කරන්න.');
   }catch(e){ msg('❌ Capture failed: '+e.message); }
 };
-
 pick.onchange = e=>{
-  const file = e.target.files?.[0]; if(!file) return;
-  const img=new Image(); img.onload=()=>{
-    canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
-    ctx.drawImage(img,0,0,canvas.width,canvas.height); captured=true;
-    msg('🖼️ Photo loaded. ✨ Analyze ඔබන්න.');
-  };
-  img.onerror=()=>msg('❌ Image load failed.');
-  img.src=URL.createObjectURL(file);
+  const file=e.target.files?.[0]; if(!file) return;
+  const img=new Image(); img.onload=()=>{ canvas.width=img.naturalWidth; canvas.height=img.naturalHeight; ctx.drawImage(img,0,0,canvas.width,canvas.height); captured=true; msg('🖼️ Photo loaded. ✨ Analyze ඔබන්න.'); };
+  img.onerror=()=>msg('❌ Image load failed.'); img.src=URL.createObjectURL(file);
 };
-
 clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; msg('🧹 Cleared. Ready.'); };
-saveBtn.onclick  = ()=>{ if(!captured) return msg('Capture/Load first.');
-  const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click(); };
+saveBtn.onclick  = ()=>{ if(!captured) return msg('Capture/Load first.'); const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click(); };
 
 /* =========================== ANALYZE ========================= */
-anBtn.onclick = ()=>{
-  if(!captured) return alert('Capture or Choose Photo first');
-  if(!window.cvReady) return alert('OpenCV is still loading…');
-  analyzeV2();
+anBtn.onclick = async ()=>{
+  if(!captured){ msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); return; }
+  try{
+    await window.cvReadyPromise;
+    if(!window.cv || !cv.Mat){ msg('❌ OpenCV not ready (cv.Mat missing).'); return; }
+    if(!canvas.width || !canvas.height){
+      if(video.videoWidth && video.videoHeight){ canvas.width=video.videoWidth; canvas.height=video.videoHeight; }
+      else { msg('❌ Canvas size 0×0. Start Camera → Capture නැවත කරන්න.'); return; }
+    }
+    analyzeV2();
+  }catch(e){ msg('❌ Analyze error: '+(e?.message||e)); console.error(e); }
 };
 
 function analyzeV2(){
   const edgeVal = parseInt(document.getElementById('edge').value, 10); // 30..120
   const gk = parseInt(document.getElementById('gk').value, 10) | 1;    // odd 3..15
-
-  const src = cv.imread(canvas);
-  const h = src.rows, w = src.cols;
+  const src = cv.imread(canvas); const h=src.rows, w=src.cols;
 
   // gray + CLAHE + blur
-  const gray = new cv.Mat();
-  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-  const clahe = new cv.CLAHE(2.0, new cv.Size(8,8));
-  clahe.apply(gray, gray);
-  cv.GaussianBlur(gray, gray, new cv.Size(gk, gk), 0, 0, cv.BORDER_DEFAULT);
+  const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+  const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(gray,gray);
+  cv.GaussianBlur(gray,gray,new cv.Size(gk,gk),0,0,cv.BORDER_DEFAULT);
 
-  // edges via Canny
-  const low = Math.max(10, edgeVal);
-  const high = Math.min(255, Math.round(edgeVal * 2));
-  const edges = new cv.Mat();
-  cv.Canny(gray, edges, low, high);
+  // edges
+  const low=Math.max(10,edgeVal), high=Math.min(255,Math.round(edgeVal*2));
+  const edges=new cv.Mat(); cv.Canny(gray,edges,low,high);
 
   // bands
-  const yHeart0 = 0,         yHeart1 = Math.round(h * 0.30);
-  const yHead0  = yHeart1,   yHead1  = Math.round(h * 0.55);
-  const yLife0  = yHead1,    yLife1  = h;
+  const yH0=0, yH1=Math.round(h*0.30), yD0=yH1, yD1=Math.round(h*0.55), yL0=yD1, yL1=h;
 
-  function longestContour(y0, y1){
-    const roi = edges.roi(new cv.Rect(0, y0, w, y1 - y0));
-    const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
-    cv.morphologyEx(roi, roi, cv.MORPH_OPEN, kernel);
-    const contours = new cv.MatVector(), hier = new cv.Mat();
-    cv.findContours(roi, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE);
-
-    let best=null, bestLen=0;
-    for(let i=0;i<contours.size();i++){
-      const c=contours.get(i), len=cv.arcLength(c,false);
-      if(len>bestLen && len>40){ best=c; bestLen=len; }
-    }
-    const pts=[];
-    if(best){
-      const approx=new cv.Mat();
-      cv.approxPolyDP(best, approx, 2.0, false);
-      for(let i=0;i<approx.rows;i++){ const p=approx.intPtr(i); pts.push([p[0], p[1]+y0]); }
-      approx.delete();
-    }
-    contours.delete(); hier.delete(); roi.delete(); kernel.delete();
-    return pts;
+  function longestContour(y0,y1){
+    const roi=edges.roi(new cv.Rect(0,y0,w,y1-y0));
+    const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+    cv.morphologyEx(roi,roi,cv.MORPH_OPEN,kernel);
+    const cs=new cv.MatVector(), hr=new cv.Mat(); cv.findContours(roi,cs,hr,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_NONE);
+    let best=null,lenBest=0; for(let i=0;i<cs.size();i++){ const c=cs.get(i), L=cv.arcLength(c,false); if(L>lenBest&&L>40){best=c;lenBest=L;} }
+    const pts=[]; if(best){ const ap=new cv.Mat(); cv.approxPolyDP(best,ap,2.0,false); for(let i=0;i<ap.rows;i++){ const p=ap.intPtr(i); pts.push([p[0],p[1]+y0]); } ap.delete(); }
+    cs.delete(); hr.delete(); roi.delete(); kernel.delete(); return pts;
   }
+  const pHeart=longestContour(yH0,yH1), pHead=longestContour(yD0,yD1), pLife=longestContour(yL0,yL1);
 
-  const heartPts = longestContour(yHeart0,yHeart1);
-  const headPts  = longestContour(yHead0 ,yHead1 );
-  const lifePts  = longestContour(yLife0 ,yLife1 );
-
-  function drawPoly(pts, bgr){
-    if(!pts || pts.length<4) return;
-    const col=new cv.Scalar(bgr[0],bgr[1],bgr[2],255);
-    for(let i=1;i<pts.length;i++){
-      cv.line(src,new cv.Point(pts[i-1][0],pts[i-1][1]),
-                  new cv.Point(pts[i][0],  pts[i][1]), col, 4, cv.LINE_AA);
-    }
-  }
-  drawPoly(heartPts,[ 60, 60,255]); // red-ish
-  drawPoly(headPts ,[ 60,180,255]); // orange-ish
-  drawPoly(lifePts ,[ 60,255,120]); // green-ish
+  function drawPoly(pts,bgr){ if(!pts||pts.length<4) return; const col=new cv.Scalar(bgr[0],bgr[1],bgr[2],255);
+    for(let i=1;i<pts.length;i++){ cv.line(src,new cv.Point(pts[i-1][0],pts[i-1][1]),new cv.Point(pts[i][0],pts[i][1]),col,4,cv.LINE_AA); } }
+  drawPoly(pHeart,[ 60, 60,255]); drawPoly(pHead,[ 60,180,255]); drawPoly(pLife,[ 60,255,120]);
 
   // faint cyan edges overlay
-  for(let y=0;y<h;y++){
-    for(let x=0;x<w;x++){
-      if(edges.ucharPtr(y,x)[0]){
-        const px=src.ucharPtr(y,x);
-        px[0]=Math.min(255, (px[0]*0.6 + 255*0.4)); // B
-        px[1]=Math.min(255, (px[1]*0.6 + 255*0.4)); // G
-      }
-    }
-  }
+  for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ if(edges.ucharPtr(y,x)[0]){ const px=src.ucharPtr(y,x); px[0]=Math.min(255,(px[0]*0.6+255*0.4)); px[1]=Math.min(255,(px[1]*0.6+255*0.4)); } } }
 
-  cv.imshow(canvas, src);
-  [src, gray, clahe, edges].forEach(m=>m.delete());
+  cv.imshow(canvas,src);
+  [src,gray,clahe,edges].forEach(m=>m.delete());
   msg('✅ Analyze complete. Edge='+edgeVal+' · Detail='+gk);
 }
 </script>
