@@ -11,11 +11,11 @@ h1{margin:14px 0 6px}
 .wrap{position:relative;display:inline-block}
 video,#photo,#lines{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
 #photo,#lines{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
-.hidden{display:none}            /* ← NEW: hide canvases until capture */
+.hidden{display:none}
 .captureBtn{
  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
- width:85px;height:85px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:600;
- box-shadow:0 0 15px #2196f333;cursor:pointer;z-index:3
+ width:85px;height:85px;border:none;border-radius:50%;
+ background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer;z-index:3
 }
 .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:pointer}
@@ -27,15 +27,24 @@ button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:poi
 footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 .badge{position:absolute;top:8px;left:8px;background:#0008;padding:4px 6px;border-radius:6px;font-size:12px;z-index:3}
 </style>
+
+<!-- OpenCV + fallback -->
 <script>
-(function(){ // OpenCV loader + fallback
- const s=document.createElement('script');
- s.src="https://docs.opencv.org/4.x/opencv.js"; s.async=true;
- s.onload=()=>console.log("✅ OpenCV loaded");
- s.onerror=()=>{const f=document.createElement('script');
- f.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";
- f.async=true;f.onload=()=>console.log("✅ Fallback OpenCV ready");document.head.appendChild(f);};
- document.head.appendChild(s);
+(function(){
+  window.cvReady = new Promise(resolve=>{
+    function ok(){ 
+      // wait until cv.Mat exists
+      const t = setInterval(()=>{ if(window.cv && cv.Mat){clearInterval(t); resolve();} },100);
+    }
+    const s=document.createElement('script');
+    s.src="https://docs.opencv.org/4.x/opencv.js"; s.async=true;
+    s.onload=ok;
+    s.onerror=()=>{const f=document.createElement('script');
+      f.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";
+      f.async=true; f.onload=ok; document.head.appendChild(f);
+    };
+    document.head.appendChild(s);
+  });
 })();
 </script>
 </head>
@@ -45,9 +54,9 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 
 <div class="wrap" id="stage">
   <span class="badge">Live preview</span>
-  <video id="cam" playsinline autoplay muted></video>   <!-- live camera -->
-  <canvas id="photo" class="hidden"></canvas>          <!-- hidden until capture -->
-  <canvas id="lines" class="hidden"></canvas>          <!-- hidden until analyze -->
+  <video id="cam" playsinline autoplay muted></video>
+  <canvas id="photo" class="hidden"></canvas>
+  <canvas id="lines" class="hidden"></canvas>
   <button class="captureBtn" id="capBtn">Tap to Capture</button>
 </div>
 
@@ -66,109 +75,121 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-const video=document.getElementById('cam');
-const canPhoto=document.getElementById('photo');
-const canLines=document.getElementById('lines');
-const pctx=canPhoto.getContext('2d');
-const flipBtn=document.getElementById('flipBtn');
-const capBtn=document.getElementById('capBtn');
-const anBtn=document.getElementById('anBtn');
-const saveBtn=document.getElementById('saveBtn');
-const torchBtn=document.getElementById('torchBtn');
-const edgeSl=document.getElementById('edge');
-const gkSl=document.getElementById('gk');
+const video   = document.getElementById('cam');
+const canPhoto= document.getElementById('photo');
+const canLines= document.getElementById('lines');
+const pctx    = canPhoto.getContext('2d');
+const flipBtn = document.getElementById('flipBtn');
+const capBtn  = document.getElementById('capBtn');
+const anBtn   = document.getElementById('anBtn');
+const saveBtn = document.getElementById('saveBtn');
+const torchBtn= document.getElementById('torchBtn');
+const edgeSl  = document.getElementById('edge');
+const gkSl    = document.getElementById('gk');
 
 let flipped=false,captured=false,stream=null,track=null,torch=false;
 
 flipBtn.onclick=()=>{flipped=!flipped;video.style.transform=flipped?'scaleX(-1)':'none';};
 
-(async function startCam(){ // start preview right away
- try{
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-  video.srcObject=stream; await video.play();
-  track=stream.getVideoTracks()[0];
-  const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
- }catch(e){
-  alert('Camera permission needed. Please allow camera.');
- }
+// start camera immediately
+(async function startCam(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    video.srcObject=stream; await video.play();
+    track=stream.getVideoTracks()[0];
+    const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
+  }catch(e){ alert('Please allow camera permission.'); }
 })();
 
-torchBtn.onclick=async()=>{if(!track)return;torch=!torch;
- try{await track.applyConstraints({advanced:[{torch}]});}catch{}};
+torchBtn.onclick=async()=>{ if(!track) return; torch=!torch;
+  try{ await track.applyConstraints({advanced:[{torch}]}); }catch{} };
 
 capBtn.onclick=()=>{
- if(!stream){return alert('Enable camera first');}
- [canPhoto,canLines].forEach(c=>{c.width=video.videoWidth; c.height=video.videoHeight;});
- pctx.save(); if(flipped){pctx.translate(canPhoto.width,0);pctx.scale(-1,1);}
- pctx.drawImage(video,0,0,canPhoto.width,canPhoto.height); pctx.restore();
- canPhoto.classList.remove('hidden');   // ← show the captured frame
- canLines.classList.add('hidden');      // hide lines until analyze
- captured=true;
+  if(!stream){ alert('Enable camera first'); return; }
+  [canPhoto,canLines].forEach(c=>{ c.width=video.videoWidth; c.height=video.videoHeight; });
+  pctx.save(); if(flipped){ pctx.translate(canPhoto.width,0); pctx.scale(-1,1); }
+  pctx.drawImage(video,0,0,canPhoto.width,canPhoto.height); pctx.restore();
+  canPhoto.classList.remove('hidden');
+  canLines.classList.add('hidden');
+  captured=true;
 };
 
 saveBtn.onclick=()=>{
- if(!captured) return;
- const tmp=document.createElement('canvas'); tmp.width=canPhoto.width; tmp.height=canPhoto.height;
- const t=tmp.getContext('2d'); t.drawImage(canPhoto,0,0); t.drawImage(canLines,0,0);
- const a=document.createElement('a'); a.href=tmp.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click();
+  if(!captured) return;
+  const tmp=document.createElement('canvas'); tmp.width=canPhoto.width; tmp.height=canPhoto.height;
+  const t=tmp.getContext('2d'); t.drawImage(canPhoto,0,0); t.drawImage(canLines,0,0);
+  const a=document.createElement('a'); a.href=tmp.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click();
 };
 
-anBtn.onclick=()=>{
- if(!captured) return alert('Capture first');
- if(!window.cv || !cv.Mat) return alert('OpenCV not ready yet');
- analyzeLines(); canLines.classList.remove('hidden');
+anBtn.onclick=async()=>{
+  if(!captured) return alert('Capture first');
+  await window.cvReady;      // ensure OpenCV is ready
+  analyzeLines();
+  canLines.classList.remove('hidden');
 };
 
-// ---------- analysis (unchanged core logic from previous answer)
+// --------- ANALYSIS (lines-only overlay; with safe fallbacks)
 function analyzeLines(){
- try{
-   const src=cv.imread(canPhoto);
-   const mask=makeSkinMask(src);
-   const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-   cv.GaussianBlur(gray,gray,new cv.Size(3,3),0);
-   const gMasked=new cv.Mat(); cv.bitwise_and(gray,gray,gMasked,mask);
-   const se=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(Number(gkSl.value),Number(gkSl.value)));
-   const blackhat=new cv.Mat(); cv.morphologyEx(gMasked,blackhat,cv.MORPH_BLACKHAT,SE=se);
-   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(blackhat,blackhat);
-   const low=Number(edgeSl.value), high=Math.round(low*2.5);
-   const edges=new cv.Mat(); cv.Canny(blackhat,edges,low,high);
-   const k2=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-   cv.morphologyEx(edges,edges,cv.MORPH_OPEN,k2);
-   cv.bitwise_and(edges,edges,edges,mask);
+  try{
+    const src=cv.imread(canPhoto);
 
-   const zeros=new cv.Mat.zeros(edges.rows,edges.cols,cv.CV_8UC1);
-   const alpha=edges.clone(); const ch=new cv.MatVector();
-   ch.push_back(zeros); ch.push_back(edges); ch.push_back(zeros); ch.push_back(alpha);
-   const rgba=new cv.Mat(); cv.merge(ch,rgba);
-   cv.imshow(canLines,rgba);
+    // --- skin mask (HSV + YCrCb) and keep-largest
+    const hsv=new cv.Mat(); cv.cvtColor(src,hsv,cv.COLOR_RGBA2HSV);
+    const ycc=new cv.Mat(); cv.cvtColor(src,ycc,cv.COLOR_RGBA2YCrCb);
+    const low1=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[0,30,60]);
+    const up1 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[25,180,255]);
+    const low2=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[160,30,60]);
+    const up2 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[179,180,255]);
+    const m1=new cv.Mat(), m2=new cv.Mat();
+    cv.inRange(hsv,low1,up1,m1); cv.inRange(hsv,low2,up2,m2);
+    const hsvMask=new cv.Mat(); cv.bitwise_or(m1,m2,hsvMask);
+    const lowY=new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[0,133,77]);
+    const upY =new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[255,173,127]);
+    const yMask=new cv.Mat(); cv.inRange(ycc,lowY,upY,yMask);
+    const mask=new cv.Mat(); cv.bitwise_and(hsvMask,yMask,mask);
+    const k=cv.getStructuringElement(cv.MORPH_ELLIPSE,new cv.Size(11,11));
+    cv.morphologyEx(mask,mask,cv.MORPH_CLOSE,k); cv.GaussianBlur(mask,mask,new cv.Size(7,7),0);
+    const contours=new cv.MatVector(), hier=new cv.Mat();
+    cv.findContours(mask,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+    const clean=cv.Mat.zeros(mask.rows,mask.cols,cv.CV_8UC1);
+    let A=0,I=-1; for(let i=0;i<contours.size();i++){const a=cv.contourArea(contours.get(i)); if(a>A){A=a; I=i;}}
+    if(I>=0){const hull=new cv.Mat(); cv.convexHull(contours.get(I),hull,false,true); const hs=new cv.MatVector(); hs.push_back(hull); cv.drawContours(clean,hs,0,new cv.Scalar(255),-1); hull.delete(); hs.delete();}
+    [hsv,ycc,low1,up1,low2,up2,m1,m2,hsvMask,lowY,upY,yMask,mask,k,contours,hier].forEach(m=>m.delete());
 
-   [src,mask,gray,gMasked,se,blackhat,clahe,edges,k2,zeros,alpha,ch,rgba].forEach(m=>m.delete());
- }catch(e){ alert('Analyze error: '+e.message); }
-}
+    // --- grayscale + keep hand pixels only
+    const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray,gray,new cv.Size(3,3),0);
+    const gMasked=new cv.Mat(); cv.bitwise_and(gray,gray,gMasked,clean);
 
-function makeSkinMask(src){
-  const hsv=new cv.Mat(); cv.cvtColor(src,hsv,cv.COLOR_RGBA2HSV);
-  const ycc=new cv.Mat(); cv.cvtColor(src,ycc,cv.COLOR_RGBA2YCrCb);
-  const low1=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[0,30,60]);
-  const up1 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[25,180,255]);
-  const low2=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[160,30,60]);
-  const up2 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[179,180,255]);
-  const m1=new cv.Mat(), m2=new cv.Mat();
-  cv.inRange(hsv,low1,up1,m1); cv.inRange(hsv,low2,up2,m2);
-  const hsvMask=new cv.Mat(); cv.bitwise_or(m1,m2,hsvMask);
-  const lowY=new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[0,133,77]);
-  const upY =new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[255,173,127]);
-  const yMask=new cv.Mat(); cv.inRange(ycc,lowY,upY,yMask);
-  const mask=new cv.Mat(); cv.bitwise_and(hsvMask,yMask,mask);
-  const k=cv.getStructuringElement(cv.MORPH_ELLIPSE,new cv.Size(11,11));
-  cv.morphologyEx(mask,mask,cv.MORPH_CLOSE,k); cv.GaussianBlur(mask,mask,new cv.Size(7,7),0);
-  const contours=new cv.MatVector(), hier=new cv.Mat();
-  cv.findContours(mask,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-  const clean=cv.Mat.zeros(mask.rows,mask.cols,cv.CV_8UC1);
-  let A=0,I=-1; for(let i=0;i<contours.size();i++){const a=cv.contourArea(contours.get(i)); if(a>A){A=a; I=i;}}
-  if(I>=0){const hull=new cv.Mat(); cv.convexHull(contours.get(I),hull,false,true); const hs=new cv.MatVector(); hs.push_back(hull); cv.drawContours(clean,hs,0,new cv.Scalar(255),-1); hull.delete(); hs.delete();}
-  [hsv,ycc,low1,up1,low2,up2,m1,m2,hsvMask,lowY,upY,yMask,mask,k,contours,hier].forEach(m=>m.delete());
-  return clean;
+    // --- detail kernel (safe default)
+    const ksize = parseInt(gkSl?.value) || 11;
+    const se = cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(ksize,ksize));
+
+    // --- black-hat to lift lines
+    const blackhat=new cv.Mat(); cv.morphologyEx(gMasked,blackhat,cv.MORPH_BLACKHAT,se);
+    const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(blackhat,blackhat);
+
+    // --- edges (safe default)
+    const low = parseInt(edgeSl?.value) || 70;
+    const high = Math.round(low*2.5);
+    const edges=new cv.Mat(); cv.Canny(blackhat,edges,low,high);
+
+    // clean tiny specks & enforce hand-only
+    const k2=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+    cv.morphologyEx(edges,edges,cv.MORPH_OPEN,k2);
+    cv.bitwise_and(edges,edges,edges,clean);
+
+    // --- RGBA overlay (green only)
+    const zeros=new cv.Mat.zeros(edges.rows,edges.cols,cv.CV_8UC1);
+    const alpha=edges.clone();
+    const ch=new cv.MatVector(); ch.push_back(zeros); ch.push_back(edges); ch.push_back(zeros); ch.push_back(alpha);
+    const rgba=new cv.Mat(); cv.merge(ch,rgba);
+    cv.imshow(canLines,rgba);
+
+    [src,clean,gray,gMasked,se,blackhat,clahe,edges,k2,zeros,alpha,ch,rgba].forEach(m=>m.delete());
+  }catch(e){
+    alert('Analyze error: '+e.message);
+  }
 }
 </script>
 </body>
