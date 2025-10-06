@@ -340,6 +340,74 @@ function explainEn(h,d,l){
   if(l==='weak') t.push('Prioritize rest, sleep and hydration.');
   return t.join(' ');
 }
-</script>
+</script>/* ---------- 1A. Skin mask + biggest contour (full palm outline) ---------- */
+function skinMaskRGBA(imgData, w, h){
+  const out=new Uint8ClampedArray(w*h); const d=imgData.data;
+  for(let i=0,j=0;i<d.length;i+=4,j++){
+    // RGB -> YCrCb (approx).   thresholds tuned for warm+cool skin tones
+    const R=d[i], G=d[i+1], B=d[i+2];
+    const Y =  0.299*R + 0.587*G + 0.114*B;
+    const Cr= (R-Y)*0.713 + 128;
+    const Cb= (B-Y)*0.565 + 128;
+    // skin range (robust for indoor light)
+    out[j] = (Cr>135 && Cr<180 && Cb>85 && Cb<135 && Y>40 && Y<245) ? 1 : 0;
+  }
+  // morphological closing (3x3) to fill pores
+  const k=[[0,1,0],[1,1,1],[0,1,0]];
+  const tmp=out.slice();
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+    let ok=0; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) if(k[dy+1][dx+1]) ok|=tmp[(y+dy)*w+(x+dx)];
+    out[y*w+x]=ok?1:0;
+  }
+  // small-hole fill
+  const tmp2=out.slice();
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+    let cnt=0; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++) cnt+=tmp2[(y+dy)*w+(x+dx)];
+    out[y*w+x]=cnt>=5?1:out[y*w+x];
+  }
+  return out;
+}
+
+/* ---------- 1B. Extract biggest blob as palm mask ---------- */
+function largestBlob(bin,w,h){
+  const seen=new Uint8Array(w*h); let best=[]; const NB=[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]];
+  function walk(sx,sy){ const q=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
+    while(q.length){ const [x,y]=q.pop(); pts.push([x,y]);
+      for(const [dx,dy] of NB){ const nx=x+dx, ny=y+dy, id=ny*w+nx;
+        if(nx>0&&ny>0&&nx<w-1&&ny<h-1 && !seen[id] && bin[id]){ seen[id]=1; q.push([nx,ny]); } } }
+    return pts; }
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++) if(bin[y*w+x]&&!seen[y*w+x]){ const pts=walk(x,y); if(pts.length>best.length) best=pts; }
+  const mask=new Uint8ClampedArray(w*h); best.forEach(([x,y])=>mask[y*w+x]=1); return mask;
+}
+
+/* ---------- 1C. Overlay: fill palm + draw all ridge lines ---------- */
+function drawPalmAndRidges(imgData, edges, mask, w, h){
+  // dark backdrop
+  ctx.clearRect(0,0,w,h);
+  ctx.putImageData(imgData,0,0);
+
+  // neon fill for palm
+  ctx.save();
+  const id=ctx.createImageData(w,h);
+  for(let i=0,j=0;i<mask.length;i++,j+=4){
+    if(mask[i]){ id.data[j]=0; id.data[j+1]=255; id.data[j+2]=180; id.data[j+3]=20; }
+  }
+  ctx.putImageData(id,0,0);
+
+  // faint cyan ridges everywhere
+  const id2=ctx.createImageData(w,h);
+  for(let i=0,j=0;i<edges.length;i++,j+=4){
+    if(edges[i]){ id2.data[j]=0; id2.data[j+1]=200; id2.data[j+2]=200; id2.data[j+3]=120; }
+  }
+  ctx.putImageData(id2,0,0);
+  ctx.restore();
+}
+
+/* ---------- 1D. Color every detected curve (Heart/Head/Life) ---------- */
+function strokeCurves(heart, head, life){
+  drawPath(heart, '#ff3b3b', 5);   // ❤️ Heart
+  drawPath(head , '#ffa533', 5);   // 🧡 Head
+  drawPath(life , '#42ff6c', 5);   // 💚 Life
+}
 </body>
 </html>
