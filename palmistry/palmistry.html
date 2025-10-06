@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry AI Overlay — Sathyadarshana (FULL)</title>
+<title>Palmistry AI Overlay — Sathyadarshana (FULL rear/selfie)</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
 .wrap{position:relative;display:inline-block}
-video,canvas{width:92vw;max-width:440px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+video,canvas{width:92vw;max-width:460px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
 svg.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6}
 .captureBtn{
  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
@@ -27,7 +27,7 @@ select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
 .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
 .sliderRow label{display:flex;gap:8px;align-items:center}
 input[type=range]{accent-color:#16f0a7}
-#status{margin:10px auto;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:760px;display:none}
+#status{margin:10px auto;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:820px;display:none}
 footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </style>
 
@@ -43,7 +43,6 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
   load("https://docs.opencv.org/4.x/opencv.js", ()=>{
     if(window.cv){ cv['onRuntimeInitialized']=()=>{ window.cvReady=true; console.log('✅ OpenCV ready'); }; loaded=true; }
   });
-  // fallback after 2s if not ready
   setTimeout(()=>{
     if(!loaded || !window.cv){
       load("https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js", ()=>{
@@ -77,6 +76,7 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 <div class="btns">
   <button class="btnLike" id="startBtn">▶️ Start Camera</button>
   <select id="camsel" class="btnLike"></select>
+  <button class="btnLike" id="cycleBtn">🔁 Cycle Camera</button>
   <input id="pick" type="file" accept="image/*" class="btnLike"/>
   <button class="left" id="flipBtn">🖐 Left · Right</button>
   <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
@@ -101,6 +101,7 @@ const video = document.getElementById('cam'),
       ctx    = canvas.getContext('2d');
 const startBtn = document.getElementById('startBtn'),
       camsel   = document.getElementById('camsel'),
+      cycleBtn = document.getElementById('cycleBtn'),
       pick     = document.getElementById('pick'),
       flipBtn  = document.getElementById('flipBtn'),
       torchBtn = document.getElementById('torchBtn'),
@@ -109,31 +110,56 @@ const startBtn = document.getElementById('startBtn'),
       saveBtn  = document.getElementById('saveBtn'),
       clearBtn = document.getElementById('clearBtn');
 let stream=null, track=null, flipped=false, captured=false;
+let camList=[], camIndex=0;
 window.cvReady=false;
 canvas.crossOrigin = video.crossOrigin = "anonymous";
-
 function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; }
 
 /* ======================= CAMERA HELPERS ====================== */
 async function listCams(){
-  try{
-    const devs = await navigator.mediaDevices.enumerateDevices();
-    const cams = devs.filter(d=>d.kind==='videoinput');
-    camsel.innerHTML='';
-    cams.forEach((c,i)=>{
-      const o=document.createElement('option');
-      o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`;
-      camsel.appendChild(o);
-    });
-  }catch(e){ msg('ℹ️ enumerateDevices failed: '+e.message); }
+  const devs = await navigator.mediaDevices.enumerateDevices();
+  camList = devs.filter(d=>d.kind==='videoinput');
+
+  // rear-first order
+  camList.sort((a,b)=>{
+    const ra = /back|rear|environment|wide/i.test(a.label);
+    const rb = /back|rear|environment|wide/i.test(b.label);
+    if (ra && !rb) return -1; if (!ra && rb) return 1; return 0;
+  });
+
+  camsel.innerHTML='';
+  camList.forEach((c,i)=>{
+    const o=document.createElement('option');
+    o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`;
+    camsel.appendChild(o);
+  });
+  camIndex=0; camsel.selectedIndex=0;
 }
+
 async function startCam(deviceId=null){
   if(stream){ stream.getTracks().forEach(t=>t.stop()); }
-  const constraints = deviceId
-    ? {video:{deviceId:{exact:deviceId},width:{ideal:1280},height:{ideal:720}},audio:false}
-    : {video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},audio:false};
 
-  stream = await navigator.mediaDevices.getUserMedia(constraints);
+  let constraints = deviceId
+    ? { video:{ deviceId:{exact:deviceId}, width:{ideal:1280}, height:{ideal:720} }, audio:false }
+    : { video:{ facingMode:{exact:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false };
+
+  try{
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+  }catch(e){
+    if(!deviceId){
+      try{ stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false }); }
+      catch{ stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false }); }
+    }else{
+      const alt = camList.find(c=>c.deviceId!==deviceId);
+      if(alt){
+        stream = await navigator.mediaDevices.getUserMedia({ video:{ deviceId:{exact:alt.deviceId} }, audio:false });
+        camsel.value = alt.deviceId;
+      }else{
+        stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+      }
+    }
+  }
+
   video.srcObject = stream; await video.play();
   track = stream.getVideoTracks()[0];
   const caps = track.getCapabilities?.(); if(caps && 'torch' in caps) torchBtn.hidden=false;
@@ -141,24 +167,37 @@ async function startCam(deviceId=null){
   canvas.width  = video.videoWidth  || 1280;
   canvas.height = video.videoHeight || 720;
 
-  msg('✅ Camera started. දැන් Capture → Analyze කරන්න.');
+  // mirror only for clear "front" labels (unless user forced flip)
+  const label = track.label || '';
+  const isFront = /front|user|selfie/i.test(label);
+  video.style.transform = (isFront && !flipped) ? 'scaleX(-1)' : (flipped?'scaleX(-1)':'none');
+
+  msg(`✅ Camera: ${label||'Unknown'} — Capture → Analyze`);
 }
+
+/* ---- Start / Cycle wiring ---- */
 startBtn.onclick = async ()=>{
-  try { await listCams(); const id=camsel.value||null; await startCam(id); }
+  try{ await listCams(); const id = camsel.value || (camList[0]?.deviceId ?? null); await startCam(id); }
   catch(e){
     if(e.name==='NotAllowedError') msg('❌ Permission blocked. Address bar 🔒 → Site settings → Camera → Allow.');
-    else if(e.name==='NotReadableError') msg('❌ Camera busy by another app. Close other apps using camera/flash.');
+    else if(e.name==='NotReadableError') msg('❌ Camera busy by another app. Close other camera/flash apps.');
     else msg('❌ Camera error: '+e.message);
   }
 };
+cycleBtn.onclick = async ()=>{
+  if(!camList.length) await listCams();
+  if(!camList.length) return msg('No cameras detected.');
+  camIndex = (camIndex + 1) % camList.length;
+  camsel.selectedIndex = camIndex;
+  await startCam(camList[camIndex].deviceId);
+};
 
+/* ---- UI misc ---- */
 flipBtn.onclick = ()=>{ flipped=!flipped; video.style.transform=flipped?'scaleX(-1)':'none'; };
 torchBtn.onclick = async()=>{
   if(!track) return;
-  try {
-    const st = track.getSettings();
-    await track.applyConstraints({advanced:[{torch: !st.torch}]});
-  } catch(e) { msg('Torch error: '+e.message); }
+  try{ const st = track.getSettings(); await track.applyConstraints({advanced:[{torch: !st.torch}]}); }
+  catch(e){ msg('Torch error: '+e.message); }
 };
 
 /* ======================== CAPTURE / LOAD ===================== */
@@ -200,24 +239,23 @@ function analyzeV2(){
   const edgeVal = parseInt(document.getElementById('edge').value, 10); // 30..120
   const gk = parseInt(document.getElementById('gk').value, 10) | 1;    // odd 3..15
 
-  // 0) read canvas -> src
   const src = cv.imread(canvas);
   const h = src.rows, w = src.cols;
 
-  // 1) gray + CLAHE + blur
+  // gray + CLAHE + blur
   const gray = new cv.Mat();
   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
   const clahe = new cv.CLAHE(2.0, new cv.Size(8,8));
   clahe.apply(gray, gray);
   cv.GaussianBlur(gray, gray, new cv.Size(gk, gk), 0, 0, cv.BORDER_DEFAULT);
 
-  // 2) edges via Canny
+  // edges via Canny
   const low = Math.max(10, edgeVal);
   const high = Math.min(255, Math.round(edgeVal * 2));
   const edges = new cv.Mat();
   cv.Canny(gray, edges, low, high);
 
-  // 3) bands: Heart 0-30%, Head 30-55%, Life 55-100%
+  // bands
   const yHeart0 = 0,         yHeart1 = Math.round(h * 0.30);
   const yHead0  = yHeart1,   yHead1  = Math.round(h * 0.55);
   const yLife0  = yHead1,    yLife1  = h;
@@ -229,19 +267,16 @@ function analyzeV2(){
     const contours = new cv.MatVector(), hier = new cv.Mat();
     cv.findContours(roi, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE);
 
-    let best = null, bestLen = 0;
-    for (let i=0;i<contours.size();i++){
-      const c = contours.get(i), len = cv.arcLength(c,false);
-      if (len > bestLen && len > 40) { best=c; bestLen=len; }
+    let best=null, bestLen=0;
+    for(let i=0;i<contours.size();i++){
+      const c=contours.get(i), len=cv.arcLength(c,false);
+      if(len>bestLen && len>40){ best=c; bestLen=len; }
     }
     const pts=[];
     if(best){
       const approx=new cv.Mat();
       cv.approxPolyDP(best, approx, 2.0, false);
-      for(let i=0;i<approx.rows;i++){
-        const p=approx.intPtr(i);
-        pts.push([p[0], p[1]+y0]);
-      }
+      for(let i=0;i<approx.rows;i++){ const p=approx.intPtr(i); pts.push([p[0], p[1]+y0]); }
       approx.delete();
     }
     contours.delete(); hier.delete(); roi.delete(); kernel.delete();
@@ -254,17 +289,17 @@ function analyzeV2(){
 
   function drawPoly(pts, bgr){
     if(!pts || pts.length<4) return;
-    const col = new cv.Scalar(bgr[0], bgr[1], bgr[2], 255);
+    const col=new cv.Scalar(bgr[0],bgr[1],bgr[2],255);
     for(let i=1;i<pts.length;i++){
-      cv.line(src, new cv.Point(pts[i-1][0], pts[i-1][1]),
-                   new cv.Point(pts[i][0],   pts[i][1]), col, 4, cv.LINE_AA);
+      cv.line(src,new cv.Point(pts[i-1][0],pts[i-1][1]),
+                  new cv.Point(pts[i][0],  pts[i][1]), col, 4, cv.LINE_AA);
     }
   }
   drawPoly(heartPts,[ 60, 60,255]); // red-ish
   drawPoly(headPts ,[ 60,180,255]); // orange-ish
   drawPoly(lifePts ,[ 60,255,120]); // green-ish
 
-  // faint cyan edges overlay for context
+  // faint cyan edges overlay
   for(let y=0;y<h;y++){
     for(let x=0;x<w;x++){
       if(edges.ucharPtr(y,x)[0]){
