@@ -10,11 +10,12 @@ body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-alig
 h1{margin:14px 0 6px}
 .wrap{position:relative;display:inline-block}
 video,#photo,#lines{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
-#photo,#lines{position:absolute;left:0;top:0}
+#photo,#lines{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
+.hidden{display:none}            /* ← NEW: hide canvases until capture */
 .captureBtn{
  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
  width:85px;height:85px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:600;
- box-shadow:0 0 15px #2196f333;cursor:pointer;
+ box-shadow:0 0 15px #2196f333;cursor:pointer;z-index:3
 }
 .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:pointer}
@@ -24,7 +25,7 @@ button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:poi
 .torch{background:#22c55e;color:#021}
 .sliderRow{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
-.badge{position:absolute;top:8px;left:8px;background:#0008;padding:4px 6px;border-radius:6px;font-size:12px}
+.badge{position:absolute;top:8px;left:8px;background:#0008;padding:4px 6px;border-radius:6px;font-size:12px;z-index:3}
 </style>
 <script>
 (function(){ // OpenCV loader + fallback
@@ -43,10 +44,10 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 <p>Align palm → Capture → Analyze</p>
 
 <div class="wrap" id="stage">
-  <span class="badge">Lines-only overlay</span>
-  <video id="cam" playsinline></video>
-  <canvas id="photo"></canvas>    <!-- captured photo -->
-  <canvas id="lines"></canvas>    <!-- transparent lines -->
+  <span class="badge">Live preview</span>
+  <video id="cam" playsinline autoplay muted></video>   <!-- live camera -->
+  <canvas id="photo" class="hidden"></canvas>          <!-- hidden until capture -->
+  <canvas id="lines" class="hidden"></canvas>          <!-- hidden until analyze -->
   <button class="captureBtn" id="capBtn">Tap to Capture</button>
 </div>
 
@@ -65,45 +66,48 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-const video = document.getElementById('cam');
-const canPhoto = document.getElementById('photo');
-const canLines = document.getElementById('lines');
-const pctx = canPhoto.getContext('2d');
-const flipBtn = document.getElementById('flipBtn');
-const capBtn  = document.getElementById('capBtn');
-const anBtn   = document.getElementById('anBtn');
-const saveBtn = document.getElementById('saveBtn');
-const torchBtn= document.getElementById('torchBtn');
-const edgeSl  = document.getElementById('edge');
-const gkSl    = document.getElementById('gk');
+const video=document.getElementById('cam');
+const canPhoto=document.getElementById('photo');
+const canLines=document.getElementById('lines');
+const pctx=canPhoto.getContext('2d');
+const flipBtn=document.getElementById('flipBtn');
+const capBtn=document.getElementById('capBtn');
+const anBtn=document.getElementById('anBtn');
+const saveBtn=document.getElementById('saveBtn');
+const torchBtn=document.getElementById('torchBtn');
+const edgeSl=document.getElementById('edge');
+const gkSl=document.getElementById('gk');
 
 let flipped=false,captured=false,stream=null,track=null,torch=false;
 
 flipBtn.onclick=()=>{flipped=!flipped;video.style.transform=flipped?'scaleX(-1)':'none';};
 
-async function ensureCamera(){
- if(stream) return;
- stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
- video.srcObject=stream; await video.play();
- track=stream.getVideoTracks()[0];
- const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
-}
+(async function startCam(){ // start preview right away
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  video.srcObject=stream; await video.play();
+  track=stream.getVideoTracks()[0];
+  const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
+ }catch(e){
+  alert('Camera permission needed. Please allow camera.');
+ }
+})();
 
 torchBtn.onclick=async()=>{if(!track)return;torch=!torch;
  try{await track.applyConstraints({advanced:[{torch}]});}catch{}};
 
-capBtn.onclick=async()=>{
- await ensureCamera();
+capBtn.onclick=()=>{
+ if(!stream){return alert('Enable camera first');}
  [canPhoto,canLines].forEach(c=>{c.width=video.videoWidth; c.height=video.videoHeight;});
  pctx.save(); if(flipped){pctx.translate(canPhoto.width,0);pctx.scale(-1,1);}
  pctx.drawImage(video,0,0,canPhoto.width,canPhoto.height); pctx.restore();
- canLines.getContext('2d').clearRect(0,0,canLines.width,canLines.height);
+ canPhoto.classList.remove('hidden');   // ← show the captured frame
+ canLines.classList.add('hidden');      // hide lines until analyze
  captured=true;
 };
 
 saveBtn.onclick=()=>{
  if(!captured) return;
- // merge photo + overlay into one PNG
  const tmp=document.createElement('canvas'); tmp.width=canPhoto.width; tmp.height=canPhoto.height;
  const t=tmp.getContext('2d'); t.drawImage(canPhoto,0,0); t.drawImage(canLines,0,0);
  const a=document.createElement('a'); a.href=tmp.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click();
@@ -112,108 +116,59 @@ saveBtn.onclick=()=>{
 anBtn.onclick=()=>{
  if(!captured) return alert('Capture first');
  if(!window.cv || !cv.Mat) return alert('OpenCV not ready yet');
- analyzeLines();
+ analyzeLines(); canLines.classList.remove('hidden');
 };
 
-// ---- image processing: skin-mask -> black-hat -> canny -> green transparent overlay
+// ---------- analysis (unchanged core logic from previous answer)
 function analyzeLines(){
  try{
-   // read photo
-   const src = cv.imread(canPhoto);
-   // build a palm mask (HSV + YCrCb)
-   const mask = makeSkinMask(src);
+   const src=cv.imread(canPhoto);
+   const mask=makeSkinMask(src);
+   const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+   cv.GaussianBlur(gray,gray,new cv.Size(3,3),0);
+   const gMasked=new cv.Mat(); cv.bitwise_and(gray,gray,gMasked,mask);
+   const se=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(Number(gkSl.value),Number(gkSl.value)));
+   const blackhat=new cv.Mat(); cv.morphologyEx(gMasked,blackhat,cv.MORPH_BLACKHAT,SE=se);
+   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(blackhat,blackhat);
+   const low=Number(edgeSl.value), high=Math.round(low*2.5);
+   const edges=new cv.Mat(); cv.Canny(blackhat,edges,low,high);
+   const k2=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
+   cv.morphologyEx(edges,edges,cv.MORPH_OPEN,k2);
+   cv.bitwise_and(edges,edges,edges,mask);
 
-   // gray + light smoothing
-   const gray = new cv.Mat();
-   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-   cv.GaussianBlur(gray, gray, new cv.Size(3,3), 0);
+   const zeros=new cv.Mat.zeros(edges.rows,edges.cols,cv.CV_8UC1);
+   const alpha=edges.clone(); const ch=new cv.MatVector();
+   ch.push_back(zeros); ch.push_back(edges); ch.push_back(zeros); ch.push_back(alpha);
+   const rgba=new cv.Mat(); cv.merge(ch,rgba);
+   cv.imshow(canLines,rgba);
 
-   // keep only hand region
-   const gMasked = new cv.Mat(); cv.bitwise_and(gray, gray, gMasked, mask);
-
-   // enhance dark ridges (lines) on bright skin using black-hat
-   const ksize = Number(gkSl.value); // detail slider controls kernel
-   const se = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(ksize, ksize));
-   const blackhat = new cv.Mat();
-   cv.morphologyEx(gMasked, blackhat, cv.MORPH_BLACKHAT, se);
-
-   // strong local contrast
-   const clahe = new cv.CLAHE(2.0, new cv.Size(8,8)); clahe.apply(blackhat, blackhat);
-
-   // edges
-   const low = Number(edgeSl.value), high = Math.round(low*2.5);
-   const edges = new cv.Mat(); cv.Canny(blackhat, edges, low, high);
-
-   // clean small specks
-   const k2 = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
-   cv.morphologyEx(edges, edges, cv.MORPH_OPEN, k2);
-   cv.bitwise_and(edges, edges, edges, mask); // enforce hand-only
-
-   // convert to RGBA: green lines with transparent background
-   const zeros = new cv.Mat.zeros(edges.rows, edges.cols, cv.CV_8UC1);
-   const alpha = edges.clone(); // opaque where line exists
-   const ch = new cv.MatVector();
-   ch.push_back(zeros);  // B
-   ch.push_back(edges);  // G
-   ch.push_back(zeros);  // R
-   ch.push_back(alpha);  // A
-   const rgba = new cv.Mat();
-   cv.merge(ch, rgba);
-
-   cv.imshow(canLines, rgba);
-
-   // cleanup
-   [src,mask,gray,gMasked,se,blackhat,clahe,edges,k2,zeros,alpha,ch,rgba].forEach(m=>{ try{ m.delete?.(); }catch{} });
- }catch(e){
-   console.error(e); alert('Analyze error: '+e.message);
- }
+   [src,mask,gray,gMasked,se,blackhat,clahe,edges,k2,zeros,alpha,ch,rgba].forEach(m=>m.delete());
+ }catch(e){ alert('Analyze error: '+e.message); }
 }
 
-// --- robust skin mask + largest region keep
 function makeSkinMask(src){
-  const hsv = new cv.Mat(); cv.cvtColor(src, hsv, cv.COLOR_RGBA2HSV);
-  const ycc = new cv.Mat(); cv.cvtColor(src, ycc, cv.COLOR_RGBA2YCrCb);
-
-  // HSV ranges (two lobes to cover red wrap-around)
-  const low1 = new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[0,30,60]);
-  const up1  = new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[25,180,255]);
-  const low2 = new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[160,30,60]);
-  const up2  = new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[179,180,255]);
-
+  const hsv=new cv.Mat(); cv.cvtColor(src,hsv,cv.COLOR_RGBA2HSV);
+  const ycc=new cv.Mat(); cv.cvtColor(src,ycc,cv.COLOR_RGBA2YCrCb);
+  const low1=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[0,30,60]);
+  const up1 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[25,180,255]);
+  const low2=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[160,30,60]);
+  const up2 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[179,180,255]);
   const m1=new cv.Mat(), m2=new cv.Mat();
-  cv.inRange(hsv, low1, up1, m1);
-  cv.inRange(hsv, low2, up2, m2);
+  cv.inRange(hsv,low1,up1,m1); cv.inRange(hsv,low2,up2,m2);
   const hsvMask=new cv.Mat(); cv.bitwise_or(m1,m2,hsvMask);
-
-  // YCrCb range (classic skin window)
-  const lowY = new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[0,133,77]);
-  const upY  = new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[255,173,127]);
-  const yMask=new cv.Mat(); cv.inRange(ycc, lowY, upY, yMask);
-
+  const lowY=new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[0,133,77]);
+  const upY =new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[255,173,127]);
+  const yMask=new cv.Mat(); cv.inRange(ycc,lowY,upY,yMask);
   const mask=new cv.Mat(); cv.bitwise_and(hsvMask,yMask,mask);
-
-  // morph close -> keep largest contour (palm)
-  const k = cv.getStructuringElement(cv.MORPH_ELLIPSE,new cv.Size(11,11));
-  cv.morphologyEx(mask, mask, cv.MORPH_CLOSE, k);
-  cv.GaussianBlur(mask, mask, new cv.Size(7,7), 0);
-
-  // largest contour fill
+  const k=cv.getStructuringElement(cv.MORPH_ELLIPSE,new cv.Size(11,11));
+  cv.morphologyEx(mask,mask,cv.MORPH_CLOSE,k); cv.GaussianBlur(mask,mask,new cv.Size(7,7),0);
   const contours=new cv.MatVector(), hier=new cv.Mat();
-  cv.findContours(mask, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-  const clean = cv.Mat.zeros(mask.rows, mask.cols, cv.CV_8UC1);
-  let maxA=0, maxi=-1;
-  for(let i=0;i<contours.size();i++){ const a=cv.contourArea(contours.get(i)); if(a>maxA){maxA=a; maxi=i;} }
-  if(maxi>=0){
-    const hull = new cv.Mat(); cv.convexHull(contours.get(maxi), hull, false, true);
-    const hulls = new cv.MatVector(); hulls.push_back(hull);
-    cv.drawContours(clean, hulls, 0, new cv.Scalar(255), -1);
-    hull.delete(); hulls.delete();
-  }
-
-  // dispose temps
-  [hsv,ycc,low1,up1,low2,up2,m1,m2,hsvMask,lowY,upY,yMask,mask,k,contours,hier].forEach(m=>{ try{ m.delete?.(); }catch{} });
-
-  return clean; // 255 = hand region
+  cv.findContours(mask,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+  const clean=cv.Mat.zeros(mask.rows,mask.cols,cv.CV_8UC1);
+  let A=0,I=-1; for(let i=0;i<contours.size();i++){const a=cv.contourArea(contours.get(i)); if(a>A){A=a; I=i;}}
+  if(I>=0){const hull=new cv.Mat(); cv.convexHull(contours.get(I),hull,false,true); const hs=new cv.MatVector(); hs.push_back(hull); cv.drawContours(clean,hs,0,new cv.Scalar(255),-1); hull.delete(); hs.delete();}
+  [hsv,ycc,low1,up1,low2,up2,m1,m2,hsvMask,lowY,upY,yMask,mask,k,contours,hier].forEach(m=>m.delete());
+  return clean;
 }
 </script>
 </body>
