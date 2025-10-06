@@ -8,12 +8,12 @@
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
-video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
-.overlay{position:absolute;inset:0;pointer-events:none;opacity:.6}
+.wrap{position:relative;display:inline-block}
+video,#photo,#lines{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+#photo,#lines{position:absolute;left:0;top:0}
 .captureBtn{
  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
- width:85px;height:85px;border-radius:50%;
- border:none;background:#2196f3;color:#000;font-weight:600;
+ width:85px;height:85px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:600;
  box-shadow:0 0 15px #2196f333;cursor:pointer;
 }
 .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
@@ -24,9 +24,10 @@ button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:poi
 .torch{background:#22c55e;color:#021}
 .sliderRow{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
+.badge{position:absolute;top:8px;left:8px;background:#0008;padding:4px 6px;border-radius:6px;font-size:12px}
 </style>
 <script>
-(function(){
+(function(){ // OpenCV loader + fallback
  const s=document.createElement('script');
  s.src="https://docs.opencv.org/4.x/opencv.js"; s.async=true;
  s.onload=()=>console.log("✅ OpenCV loaded");
@@ -41,16 +42,11 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 <h1>🖐️ Palmistry</h1>
 <p>Align palm → Capture → Analyze</p>
 
-<div class="wrap" style="position:relative;display:inline-block">
+<div class="wrap" id="stage">
+  <span class="badge">Lines-only overlay</span>
   <video id="cam" playsinline></video>
-  <canvas id="cv"></canvas>
-  <svg class="overlay" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice">
-    <path d="M145 485c-55-35-78-139-19-190 6-45 8-90 29-98 
-             22-9 34 33 34 79 0-52 16-96 37-95 21 1 22 47 17 98 
-             7-50 24-89 43-85 19 4 19 54 9 101 8-43 25-73 42-67 
-             16 6 14 49 0 96 24 22 36 71 21 110-21 55-80 74-213 51z"
-          fill="none" stroke="var(--neon)" stroke-width="2" filter="drop-shadow(0 0 5px var(--neon))"/>
-  </svg>
+  <canvas id="photo"></canvas>    <!-- captured photo -->
+  <canvas id="lines"></canvas>    <!-- transparent lines -->
   <button class="captureBtn" id="capBtn">Tap to Capture</button>
 </div>
 
@@ -62,16 +58,25 @@ footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
 </div>
 
 <div class="sliderRow">
-  <label>Edge <input id="edge" type="range" min="30" max="120" value="70"/></label>
-  <label>Detail <input id="gk" type="range" min="3" max="15" step="2" value="9"/></label>
+  <label>Edge <input id="edge" type="range" min="20" max="120" value="70"/></label>
+  <label>Detail <input id="gk" type="range" min="3" max="25" step="2" value="11"/></label>
 </div>
 
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-const video=document.getElementById('cam'),canvas=document.getElementById('cv'),ctx=canvas.getContext('2d');
-const flipBtn=document.getElementById('flipBtn'),capBtn=document.getElementById('capBtn'),
-      anBtn=document.getElementById('anBtn'),saveBtn=document.getElementById('saveBtn'),torchBtn=document.getElementById('torchBtn');
+const video = document.getElementById('cam');
+const canPhoto = document.getElementById('photo');
+const canLines = document.getElementById('lines');
+const pctx = canPhoto.getContext('2d');
+const flipBtn = document.getElementById('flipBtn');
+const capBtn  = document.getElementById('capBtn');
+const anBtn   = document.getElementById('anBtn');
+const saveBtn = document.getElementById('saveBtn');
+const torchBtn= document.getElementById('torchBtn');
+const edgeSl  = document.getElementById('edge');
+const gkSl    = document.getElementById('gk');
+
 let flipped=false,captured=false,stream=null,track=null,torch=false;
 
 flipBtn.onclick=()=>{flipped=!flipped;video.style.transform=flipped?'scaleX(-1)':'none';};
@@ -89,37 +94,126 @@ torchBtn.onclick=async()=>{if(!track)return;torch=!torch;
 
 capBtn.onclick=async()=>{
  await ensureCamera();
- canvas.width=video.videoWidth; canvas.height=video.videoHeight;
- ctx.save(); if(flipped){ctx.translate(canvas.width,0);ctx.scale(-1,1);} ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
+ [canPhoto,canLines].forEach(c=>{c.width=video.videoWidth; c.height=video.videoHeight;});
+ pctx.save(); if(flipped){pctx.translate(canPhoto.width,0);pctx.scale(-1,1);}
+ pctx.drawImage(video,0,0,canPhoto.width,canPhoto.height); pctx.restore();
+ canLines.getContext('2d').clearRect(0,0,canLines.width,canLines.height);
  captured=true;
 };
 
-saveBtn.onclick=()=>{if(!captured)return;const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='palm_'+Date.now()+'.png';a.click();};
+saveBtn.onclick=()=>{
+ if(!captured) return;
+ // merge photo + overlay into one PNG
+ const tmp=document.createElement('canvas'); tmp.width=canPhoto.width; tmp.height=canPhoto.height;
+ const t=tmp.getContext('2d'); t.drawImage(canPhoto,0,0); t.drawImage(canLines,0,0);
+ const a=document.createElement('a'); a.href=tmp.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click();
+};
 
-anBtn.onclick=()=>{if(!captured)return alert('Capture first');if(!window.cv||!cv.Mat)return alert('OpenCV not ready');analyze();};
+anBtn.onclick=()=>{
+ if(!captured) return alert('Capture first');
+ if(!window.cv || !cv.Mat) return alert('OpenCV not ready yet');
+ analyzeLines();
+};
 
-function analyze(){
+// ---- image processing: skin-mask -> black-hat -> canny -> green transparent overlay
+function analyzeLines(){
  try{
-   const src=cv.imread(canvas);
-   const gray=new cv.Mat();cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-   const clahe=new cv.CLAHE(2.0,new cv.Size(8,8));clahe.apply(gray,gray);
-   const sobelX=new cv.Mat(),sobelY=new cv.Mat(),edges=new cv.Mat();
-   cv.Sobel(gray,sobelX,cv.CV_16S,1,0,3);cv.Sobel(gray,sobelY,cv.CV_16S,0,1,3);
-   cv.convertScaleAbs(sobelX,sobelX);cv.convertScaleAbs(sobelY,sobelY);
-   cv.addWeighted(sobelX,0.5,sobelY,0.5,0,edges);
-   const bin=new cv.Mat();cv.adaptiveThreshold(edges,bin,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY,11,2);
-   const kernel=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-   cv.morphologyEx(bin,bin,cv.MORPH_OPEN,kernel);cv.dilate(bin,bin,kernel);
-   const contours=new cv.MatVector(),hier=new cv.Mat();
-   cv.findContours(bin,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-   const out=src.clone();
-   for(let i=0;i<contours.size();i++){
-     const area=cv.contourArea(contours.get(i)); if(area<80)continue;
-     cv.drawContours(out,contours,i,new cv.Scalar(0,255,0,255),2);
-   }
-   cv.imshow(canvas,out);
-   [src,gray,clahe,sobelX,sobelY,edges,bin,kernel,contours,hier,out].forEach(m=>m.delete());
- }catch(e){alert('Error: '+e.message);}
+   // read photo
+   const src = cv.imread(canPhoto);
+   // build a palm mask (HSV + YCrCb)
+   const mask = makeSkinMask(src);
+
+   // gray + light smoothing
+   const gray = new cv.Mat();
+   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+   cv.GaussianBlur(gray, gray, new cv.Size(3,3), 0);
+
+   // keep only hand region
+   const gMasked = new cv.Mat(); cv.bitwise_and(gray, gray, gMasked, mask);
+
+   // enhance dark ridges (lines) on bright skin using black-hat
+   const ksize = Number(gkSl.value); // detail slider controls kernel
+   const se = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(ksize, ksize));
+   const blackhat = new cv.Mat();
+   cv.morphologyEx(gMasked, blackhat, cv.MORPH_BLACKHAT, se);
+
+   // strong local contrast
+   const clahe = new cv.CLAHE(2.0, new cv.Size(8,8)); clahe.apply(blackhat, blackhat);
+
+   // edges
+   const low = Number(edgeSl.value), high = Math.round(low*2.5);
+   const edges = new cv.Mat(); cv.Canny(blackhat, edges, low, high);
+
+   // clean small specks
+   const k2 = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3,3));
+   cv.morphologyEx(edges, edges, cv.MORPH_OPEN, k2);
+   cv.bitwise_and(edges, edges, edges, mask); // enforce hand-only
+
+   // convert to RGBA: green lines with transparent background
+   const zeros = new cv.Mat.zeros(edges.rows, edges.cols, cv.CV_8UC1);
+   const alpha = edges.clone(); // opaque where line exists
+   const ch = new cv.MatVector();
+   ch.push_back(zeros);  // B
+   ch.push_back(edges);  // G
+   ch.push_back(zeros);  // R
+   ch.push_back(alpha);  // A
+   const rgba = new cv.Mat();
+   cv.merge(ch, rgba);
+
+   cv.imshow(canLines, rgba);
+
+   // cleanup
+   [src,mask,gray,gMasked,se,blackhat,clahe,edges,k2,zeros,alpha,ch,rgba].forEach(m=>{ try{ m.delete?.(); }catch{} });
+ }catch(e){
+   console.error(e); alert('Analyze error: '+e.message);
+ }
+}
+
+// --- robust skin mask + largest region keep
+function makeSkinMask(src){
+  const hsv = new cv.Mat(); cv.cvtColor(src, hsv, cv.COLOR_RGBA2HSV);
+  const ycc = new cv.Mat(); cv.cvtColor(src, ycc, cv.COLOR_RGBA2YCrCb);
+
+  // HSV ranges (two lobes to cover red wrap-around)
+  const low1 = new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[0,30,60]);
+  const up1  = new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[25,180,255]);
+  const low2 = new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[160,30,60]);
+  const up2  = new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[179,180,255]);
+
+  const m1=new cv.Mat(), m2=new cv.Mat();
+  cv.inRange(hsv, low1, up1, m1);
+  cv.inRange(hsv, low2, up2, m2);
+  const hsvMask=new cv.Mat(); cv.bitwise_or(m1,m2,hsvMask);
+
+  // YCrCb range (classic skin window)
+  const lowY = new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[0,133,77]);
+  const upY  = new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[255,173,127]);
+  const yMask=new cv.Mat(); cv.inRange(ycc, lowY, upY, yMask);
+
+  const mask=new cv.Mat(); cv.bitwise_and(hsvMask,yMask,mask);
+
+  // morph close -> keep largest contour (palm)
+  const k = cv.getStructuringElement(cv.MORPH_ELLIPSE,new cv.Size(11,11));
+  cv.morphologyEx(mask, mask, cv.MORPH_CLOSE, k);
+  cv.GaussianBlur(mask, mask, new cv.Size(7,7), 0);
+
+  // largest contour fill
+  const contours=new cv.MatVector(), hier=new cv.Mat();
+  cv.findContours(mask, contours, hier, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+  const clean = cv.Mat.zeros(mask.rows, mask.cols, cv.CV_8UC1);
+  let maxA=0, maxi=-1;
+  for(let i=0;i<contours.size();i++){ const a=cv.contourArea(contours.get(i)); if(a>maxA){maxA=a; maxi=i;} }
+  if(maxi>=0){
+    const hull = new cv.Mat(); cv.convexHull(contours.get(maxi), hull, false, true);
+    const hulls = new cv.MatVector(); hulls.push_back(hull);
+    cv.drawContours(clean, hulls, 0, new cv.Scalar(255), -1);
+    hull.delete(); hulls.delete();
+  }
+
+  // dispose temps
+  [hsv,ycc,low1,up1,low2,up2,m1,m2,hsvMask,lowY,upY,yMask,mask,k,contours,hier].forEach(m=>{ try{ m.delete?.(); }catch{} });
+
+  return clean; // 255 = hand region
 }
 </script>
 </body>
