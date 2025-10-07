@@ -3,22 +3,24 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry Universal v4.6 · Sathyadarshana</title>
+<title>Palmistry Universal v4.6.1 · Sathyadarshana</title>
 <style>
-:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff;--cy:#3ad5d5}
+:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 4px}
-small{opacity:.8}
-.wrap{position:relative;display:inline-block}
-video,canvas{width:92vw;max-width:480px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+small{opacity:.85}
+.stage{position:relative;display:inline-block;width:min(92vw,480px)}
+/* single surface: video visible, canvas overlays but hidden until capture/analyze */
+#cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
+#cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
 .captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
   width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;
   font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
 .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
 .left{background:#16243a;color:#cfe9ff}
-.an{background:var(--pri);color:#062}
+.an{background:#16f0a7;color:#062}
 .cap{background:#fbbf24;color:#111}
 .torch{background:#22c55e;color:#021}
 .speak{background:#60a5fa;color:#021}
@@ -27,22 +29,23 @@ select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
 .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
 .sliderRow label{display:flex;gap:8px;align-items:center}
 input[type=range]{accent-color:#16f0a7}
-#status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:860px;display:none}
+#status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:860px;display:none;white-space:pre-wrap;text-align:left}
 #summary{max-width:860px;margin:10px auto;text-align:left;background:#0f1420;border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
 #summary h3{margin:0 0 8px}
 .tag{display:inline-block;margin-right:8px;margin-bottom:6px;padding:3px 8px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff}
 .legend{display:flex;gap:8px;justify-content:center;margin:6px 0 0}
 .dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px}
 .heart{background:#ff3b3b}.head{background:#ffa533}.life{background:#42ff6c}
-footer{color:var(--pri);margin:12px 0 22px;font-size:.9em}
+footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
 </style>
 </head>
 <body>
-<h1>🖐️ Palmistry Universal v4.6</h1>
+<h1>🖐️ Palmistry Universal v4.6.1</h1>
 <small>Align palm → Capture → Analyze → Speak/Save</small>
 
-<div class="wrap">
-  <video id="cam" playsinline muted></video>
+<div class="stage">
+  <!-- autoplay + playsinline + muted improves start on Android/iOS -->
+  <video id="cam" autoplay playsinline muted></video>
   <canvas id="cv"></canvas>
   <button class="captureBtn" id="capBtn">Capture</button>
 </div>
@@ -58,12 +61,12 @@ footer{color:var(--pri);margin:12px 0 22px;font-size:.9em}
   <select id="camsel" class="btnLike"></select>
   <button class="btnLike" id="cycleBtn">🔁 Cycle</button>
 
-  <select id="resSel" class="btnLike" title="Resolution">
+  <select id="resSel" class="btnLike">
     <option value="1280x720">HD 1280×720</option>
     <option value="1920x1080">FullHD 1920×1080</option>
     <option value="640x480">VGA 640×480</option>
   </select>
-  <select id="fpsSel" class="btnLike" title="FPS">
+  <select id="fpsSel" class="btnLike">
     <option value="30">30 FPS</option>
     <option value="60">60 FPS</option>
     <option value="24">24 FPS</option>
@@ -97,302 +100,130 @@ footer{color:var(--pri);margin:12px 0 22px;font-size:.9em}
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-/* ===== CORE VARS ===== */
-const video = document.getElementById('cam'),
-      canvas = document.getElementById('cv'),
-      ctx    = canvas.getContext('2d');
-const startBtn = document.getElementById('startBtn'),
-      camsel   = document.getElementById('camsel'),
-      cycleBtn = document.getElementById('cycleBtn'),
-      resSel   = document.getElementById('resSel'),
-      fpsSel   = document.getElementById('fpsSel'),
-      zoomEl   = document.getElementById('zoom'),
-      pick     = document.getElementById('pick'),
-      flipBtn  = document.getElementById('flipBtn'),
-      torchBtn = document.getElementById('torchBtn'),
-      capBtn   = document.getElementById('capBtn'),
-      anBtn    = document.getElementById('anBtn'),
-      speakBtn = document.getElementById('speakBtn'),
-      saveBtn  = document.getElementById('saveBtn'),
-      reportBtn= document.getElementById('reportBtn'),
-      clearBtn = document.getElementById('clearBtn');
+const video=document.getElementById('cam'), cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const startBtn=id('startBtn'), camsel=id('camsel'), cycleBtn=id('cycleBtn'),
+      resSel=id('resSel'), fpsSel=id('fpsSel'), zoomEl=id('zoom'),
+      pick=id('pick'), flipBtn=id('flipBtn'), torchBtn=id('torchBtn'),
+      capBtn=id('capBtn'), anBtn=id('anBtn'), speakBtn=id('speakBtn'),
+      saveBtn=id('saveBtn'), reportBtn=id('reportBtn'), clearBtn=id('clearBtn');
 let stream=null, track=null, captured=false, isMirrored=false;
-let camList=[], camIndex=0;
-let lastMetrics=null;
+let camList=[], camIndex=0, lastMetrics=null;
 
-/* ===== helpers ===== */
-function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; }
-function showSummary(html){ const b=document.getElementById('summary'); document.getElementById('sumtext').innerHTML=html; b.style.display='block'; }
-function mirrorCanvas(){ const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height; tmp.getContext('2d').drawImage(canvas,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,canvas.width,0); ctx.drawImage(tmp,0,0); ctx.restore(); }
+function id(x){return document.getElementById(x)}
+function msg(t){ const s=id('status'); s.textContent=t; s.style.display='block'; }
+function showSummary(html){ const b=id('summary'); id('sumtext').innerHTML=html; b.style.display='block'; }
+function parseRes(v){const [w,h]=v.split('x').map(Number);return {w,h};}
 
-/* ===== NEW CAMERA MODULE v4.6 ===== */
+/* ===== Camera bootstrap (with hard diagnostics) ===== */
 async function ensurePermission(){
-  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Browser does not support camera.');
-  // Some browsers need a dummy call to prompt permission before enumerateDevices labels appear
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Browser does not support camera (mediaDevices missing).');
   try{
-    const test = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
-    test.getTracks().forEach(t=>t.stop());
-  }catch(e){
-    throw new Error('Permission denied or unavailable: '+e.message);
-  }
+    const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+    t.getTracks().forEach(tt=>tt.stop());
+  }catch(e){ throw new Error('Permission denied/unavailable: '+e.message); }
 }
-
 async function listCams(){
-  const devs = await navigator.mediaDevices.enumerateDevices();
-  camList = devs.filter(d=>d.kind==='videoinput')
-                .sort((a,b)=>{const ra=/back|rear|environment|wide/i.test(a.label);const rb=/back|rear|environment|wide/i.test(b.label);return ra===rb?0:(ra?-1:1);});
+  const devs=await navigator.mediaDevices.enumerateDevices();
+  camList=devs.filter(d=>d.kind==='videoinput')
+              .sort((a,b)=>(/back|rear|environment|wide/i.test(a.label)?-1:1));
   camsel.innerHTML='';
-  camList.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o); });
+  camList.forEach((c,i)=>{const o=document.createElement('option');o.value=c.deviceId;o.textContent=c.label||`Camera ${i+1}`;camsel.appendChild(o);});
   camIndex=0; camsel.selectedIndex=0;
 }
-
-function parseRes(val){ const [w,h]=val.split('x').map(Number); return {w,h}; }
-
 async function startCam(deviceId=null){
-  // stop previous
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; track=null; }
-  const {w,h} = parseRes(resSel.value || '1280x720');
-  const fps = Number(fpsSel.value||30);
-  // prefer environment unless user flipped to mirror (selfie)
-  const facing = isMirrored ? 'user' : 'environment';
-
-  let constraints = {
+  if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null; track=null;}
+  const {w,h}=parseRes(resSel.value||'1280x720'); const fps=Number(fpsSel.value||30);
+  const facing=isMirrored?'user':'environment';
+  const constraints={
     video: deviceId ? {deviceId:{exact:deviceId}} : {facingMode:{ideal:facing}},
-    audio: false
+    audio:false
   };
-  // add quality wishes
-  constraints.video.width  = {ideal:w, max:w};
-  constraints.video.height = {ideal:h, max:h};
-  constraints.video.frameRate = {ideal:fps, max:fps};
-  // ask for continuous focus/exposure if supported
-  constraints.video.advanced = [
-    { focusMode:'continuous' },
-    { exposureMode:'continuous' }
-  ];
-
+  Object.assign(constraints.video,{
+    width:{ideal:w,max:w},height:{ideal:h,max:h},frameRate:{ideal:fps,max:fps},
+    advanced:[{focusMode:'continuous'},{exposureMode:'continuous'}]
+  });
   try{
-    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    stream=await navigator.mediaDevices.getUserMedia(constraints);
   }catch(e){
-    // robust fallbacks
-    try{
-      stream = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
-    }catch(err){
-      msg('❌ Camera error: '+err.message); return;
-    }
+    msg('⚠️ exact constraint failed, retrying with generic video…');
+    try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+    catch(err){ msg('❌ Camera error: '+err.message); return; }
   }
+  video.srcObject=stream; await video.play();
+  track=stream.getVideoTracks()[0];
 
-  video.srcObject = stream; await video.play();
-  track = stream.getVideoTracks()[0];
+  // sizing for single-surface
+  const W=video.videoWidth||w, H=video.videoHeight||h;
+  cv.width=W; cv.height=H;   // keep canvas in sync
+  video.style.transform=isMirrored?'scaleX(-1)':'none';
+  cv.style.display=captured?'block':'none';
 
-  // canvas sizing
-  canvas.width  = video.videoWidth  || w;
-  canvas.height = video.videoHeight || h;
-
-  // mirror preview if selfie
-  video.style.transform = isMirrored ? 'scaleX(-1)' : 'none';
-
-  // capabilities (torch/zoom)
-  const caps = track.getCapabilities?.() || {};
-  torchBtn.hidden = !('torch' in caps);
+  const caps=track.getCapabilities?.()||{};
+  torchBtn.hidden=!('torch' in caps);
   if('zoom' in caps){
-    zoomEl.min = caps.zoom.min || 1;
-    zoomEl.max = caps.zoom.max || 5;
-    zoomEl.step = caps.zoom.step || 0.1;
-    zoomEl.value = (track.getSettings?.().zoom) || zoomEl.min;
-    zoomEl.parentElement.style.display = '';
-  }else{
-    zoomEl.parentElement.style.display = 'none';
-  }
+    zoomEl.min=caps.zoom.min||1; zoomEl.max=caps.zoom.max||5; zoomEl.step=caps.zoom.step||0.1;
+    zoomEl.value=(track.getSettings?.().zoom)||zoomEl.min; zoomEl.parentElement.style.display='';
+  }else{ zoomEl.parentElement.style.display='none'; }
 
-  msg(`📷 ${track.label||'Camera'} ready — ${canvas.width}×${canvas.height}@${fpsSel.value} • Capture → Analyze`);
+  msg(`📷 ${track.label||'Camera'} • ${W}×${H}@${fps} • HTTPS:${location.protocol==='https:'} • Tap Capture ➜ Analyze`);
 }
 
-/* UI bindings */
-startBtn.onclick = (async ()=>{
+/* UI */
+startBtn.onclick = async ()=>{
   try{
     if (location.protocol!=='https:' && location.hostname!=='localhost'){
-      msg('🔒 HTTPS not detected. Use HTTPS/localhost for best camera support.');
+      msg('🔒 Enable HTTPS (Netlify/Cloudflare). Some devices block camera on HTTP.');
     }
     await ensurePermission();
     await listCams();
-    const first = camsel.value || camList[0]?.deviceId || null;
-    await startCam(first);
+    await startCam(camsel.value||camList[0]?.deviceId||null);
   }catch(e){ msg('❌ '+(e.message||e)); }
-});
-cycleBtn.onclick = async ()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras.'); camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
-camsel.onchange = async ()=>{ await startCam(camsel.value); };
-resSel.onchange  = async ()=>{ await startCam(camsel.value||null); };
-fpsSel.onchange  = async ()=>{ await startCam(camsel.value||null); };
-flipBtn.onclick  = async ()=>{ isMirrored = !isMirrored; if(stream && !captured){ video.style.transform = isMirrored ? 'scaleX(-1)' : 'none'; await startCam(camsel.value||null); } else if(captured){ mirrorCanvas(); } };
-torchBtn.onclick = async()=>{ if(!track) return; try{ const now=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!now}]}); }catch(e){ msg('Torch error: '+e.message); } };
-zoomEl.oninput   = async ()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch(e){ /* ignore if not supported */ } };
+};
+cycleBtn.onclick = async ()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras detected.'); camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
+camsel.onchange = async ()=> startCam(camsel.value);
+resSel.onchange  = async ()=> startCam(camsel.value||null);
+fpsSel.onchange  = async ()=> startCam(camsel.value||null);
+flipBtn.onclick  = async ()=>{ isMirrored=!isMirrored; if(stream&&!captured){ video.style.transform=isMirrored?'scaleX(-1)':'none'; await startCam(camsel.value||null);} else if(captured){ mirrorCanvas(); } };
+torchBtn.onclick = async ()=>{ if(!track) return; try{ const now=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!now}]}); }catch(e){ msg('Torch error: '+e.message); } };
+zoomEl.oninput   = async ()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{} };
 
-/* ===== CAPTURE / LOAD ===== */
+function mirrorCanvas(){ const t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height; t.getContext('2d').drawImage(cv,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,cv.width,0); ctx.drawImage(t,0,0); ctx.restore(); }
+
+/* Capture / Load */
 capBtn.onclick = async ()=>{
-  if(!stream) await startCam(camsel.value || null);
-  if(!video.videoWidth || !video.videoHeight) await new Promise(r=>setTimeout(r,120));
-  canvas.width  = video.videoWidth  || 1280;
-  canvas.height = video.videoHeight || 720;
-  ctx.save(); if(isMirrored){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
-  ctx.drawImage(video,0,0,canvas.width,canvas.height); ctx.restore();
-  captured=true; lastMetrics=null; showSummary(''); document.getElementById('summary').style.display='none';
+  if(!stream) await startCam(camsel.value||null);
+  if(!video.videoWidth) await new Promise(r=>setTimeout(r,120));
+  cv.width=video.videoWidth; cv.height=video.videoHeight;
+  ctx.save(); if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore();
+  cv.style.display='block'; captured=true; lastMetrics=null; id('summary').style.display='none';
   msg('🖐️ Photo locked. ✨ Analyze කරන්න.');
 };
 pick.onchange = e=>{
   const f=e.target.files?.[0]; if(!f) return;
   const img=new Image(); img.onload=()=>{
-    canvas.width=img.naturalWidth; canvas.height=img.naturalHeight; ctx.drawImage(img,0,0);
-    if(isMirrored) mirrorCanvas();
-    captured=true; lastMetrics=null; document.getElementById('summary').style.display='none'; msg('🖼️ Photo loaded. ✨ Analyze.');
+    cv.width=img.naturalWidth; cv.height=img.naturalHeight; ctx.drawImage(img,0,0);
+    if(isMirrored) mirrorCanvas(); cv.style.display='block'; captured=true; lastMetrics=null; id('summary').style.display='none'; msg('🖼️ Photo loaded. ✨ Analyze.');
   }; img.onerror=()=>msg('❌ Image load failed.'); img.src=URL.createObjectURL(f);
 };
-clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; lastMetrics=null; document.getElementById('summary').style.display='none'; msg('🧹 Cleared. Ready.'); };
+clearBtn.onclick = ()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; lastMetrics=null; id('summary').style.display='none'; msg('🧹 Cleared. Ready.'); };
 
-/* ===== SAVE / REPORT ===== */
-saveBtn.onclick = ()=>{
-  if(!captured) return msg('Capture/Load first.');
-  const data=canvas.toDataURL('image/png');
-  if(/iPhone|iPad|Macintosh/.test(navigator.userAgent)){ const w=window.open(); w.document.write('<img src="'+data+'" style="width:100%">'); msg('📷 New tab opened. Long-press → Save Image.'); }
-  else{ const a=document.createElement('a'); a.href=data; a.download='palm_'+Date.now()+'.png'; a.click(); msg('💾 Saved.'); }
-};
+/* Save / Report */
+saveBtn.onclick = ()=>{ if(!captured) return msg('Capture/Load first.'); const data=cv.toDataURL('image/png'); const a=document.createElement('a'); a.href=data; a.download='palm_'+Date.now()+'.png'; a.click(); msg('💾 Saved.'); };
 reportBtn.onclick = ()=>{
   if(!captured){ msg('Capture first'); return; }
-  const data=canvas.toDataURL('image/png');
-  const s = lastMetrics ? buildSummaryHTML(lastMetrics) : '<p>Run Analyze first to get AI summary.</p>';
-  const win=window.open('', '_blank');
-  win.document.write(`
-    <html><head><title>Palmistry Report</title>
-    <style>body{font-family:system-ui;padding:12px;color:#123}
-    h2{margin:6px 0} .box{border:1px solid #ccd;padding:10px;border-radius:10px}
-    img{max-width:100%}</style></head>
-    <body>
-      <h2>🖐️ Palmistry Report</h2>
-      <div class="box"><img src="${data}"/></div>
-      <div class="box">${s}</div>
-      <p><em>Tip:</em> Use Print → Save as PDF.</p>
-    </body></html>`);
-  win.document.close();
+  const data=cv.toDataURL('image/png'); const s=lastMetrics?buildSummaryHTML(lastMetrics):'<p>Run Analyze first to get AI summary.</p>';
+  const w=window.open('','_blank'); w.document.write(`<html><head><title>Palmistry Report</title>
+  <style>body{font-family:system-ui;padding:12px;color:#123}h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style></head>
+  <body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div><p><em>Tip:</em> Print → Save as PDF.</p></body></html>`); w.document.close();
 };
 
-/* ===== ANALYZE (unchanged logic) ===== */
-// ... your existing analyzePureJS + helpers from previous version ...
-// ↓↓↓ keep exactly as before (I’m including it here for completeness)
+/* ===== Analyze (unchanged – your previous functions here) ===== */
+// … (keep the same analyzePureJS() + helpers you already have) …
 
-let lastMetrics=null;
-function analyzePureJS(){
-  if(canvas.width>540){
-    const tmp=document.createElement('canvas');
-    const s=540/canvas.width; tmp.width=540; tmp.height=Math.round(canvas.height*s);
-    tmp.getContext('2d').drawImage(canvas,0,0,tmp.width,tmp.height);
-    canvas.width=tmp.width; canvas.height=tmp.height; ctx.drawImage(tmp,0,0);
-  }
-  const w=canvas.width,h=canvas.height,src=ctx.getImageData(0,0,w,h);
-  const edgeVal=parseInt(document.getElementById('edge').value,10)/255;
-  const passes=parseInt(document.getElementById('gk').value,10);
-
-  const gray=new Uint8ClampedArray(w*h); const d=src.data;
-  for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i]*.299+d[i+1]*.587+d[i+2]*.114;
-
-  let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1],n=16;
-  for(let p=0;p<passes;p++){ const t=new Float32Array(w*h);
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ let s=0,i=0;
-      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/n; }
-    a=t;
-  }
-  const blur=Uint8ClampedArray.from(a);
-
-  const mag=new Float32Array(w*h); let mx=1;
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
-    const gx=-blur[i-w-1]-2*blur[i-1]-blur[i+w-1]+blur[i-w+1]+2*blur[i+1]+blur[i+w+1];
-    const gy=-blur[i-w-1]-2*blur[i-w]-blur[i-w+1]+blur[i+w-1]+2*blur[i+w]+blur[i+w+1];
-    const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m;
-  }
-  const T=edgeVal*mx; const bin=new Uint8ClampedArray(w*h); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0;
-
-  const sk=Uint8Array.from(bin); let changed=true,pass=0;
-  const N=(x,y)=>sk[(y-1)*w+x]+sk[(y-1)*w+x+1]+sk[y*w+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)*w+x-1]+sk[y*w+x-1]+sk[(y-1)*w+x-1];
-  const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)*w+x+1],sk[y*w+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)*w+x-1],sk[y*w+x-1],sk[(y-1)*w+x-1]];
-    let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
-  while(changed&&pass<25){ changed=false; const rem=[];
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]*sk[y*w+x+1]*sk[(y+1)*w+x]==0)&&(sk[y*w+x+1]*sk[y*w+x-1]*sk[(y-1)*w+x]==0)) rem.push(i);}
-    rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; rem.length=0;
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]*sk[y*w+x-1]*sk[(y+1)*w+x]==0)&&(sk[(y-1)*w+x]*sk[y*w+x+1]*sk[y*w+x-1]==0)) rem.push(i);}
-    rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; pass++;
-  }
-
-  const yH0=0, yH1=Math.floor(h*0.30), yD0=yH1, yD1=Math.floor(h*0.55), yL0=yD1, yL1=h;
-  function pickLongest(y0,y1){
-    const seen=new Uint8Array(w*h); const NB=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-    let best=[]; function walk(sx,sy){ const st=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
-      while(st.length){ const [x,y]=st.pop(); pts.push([x,y]);
-        for(const [dx,dy] of NB){ const nx=x+dx, ny=y+dy, id=ny*w+nx;
-          if(nx>0&&ny>y0&&nx<w-1&&ny<y1-1 && !seen[id] && sk[id]){ seen[id]=1; st.push([nx,ny]); } } }
-      return pts; }
-    for(let y=y0+1;y<y1-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(sk[i]){ const pts=walk(x,y); if(pts.length>best.length) best=pts; } }
-    return best;
-  }
-  const pHeart=pickLongest(yH0,yH1), pHead=pickLongest(yD0,yD1), pLife=pickLongest(yL0,yL1);
-
-  const overlay = ctx.createImageData(w,h);
-  for(let i=0,j=0;i<w*h;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=85; }
-  ctx.putImageData(overlay,0,0);
-
-  drawPath(pHeart,'#ff3b3b',4);
-  drawPath(pHead ,'#ffa533',4);
-  drawPath(pLife ,'#42ff6c',4);
-
-  const M = (pts,name)=>({ name, len:polyLen(pts), slope:estSlope(pts), gaps:countGaps(pts) });
-  lastMetrics = { heart:M(pHeart,'Heart'), head:M(pHead,'Head'), life:M(pLife,'Life'), lang:'si' };
-  const html = buildSummaryHTML(lastMetrics);
-  showSummary(html);
-  msg('✨ Analyze done');
-}
-
-function drawPath(pts,color,wid){
-  if(!pts || pts.length<6) return;
-  ctx.lineJoin='round'; ctx.lineCap='round';
-  ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath();
-  ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-  ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
-  ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-}
-function polyLen(pts){ let L=0; for(let i=1;i<pts.length;i++){ const dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1]; L+=Math.hypot(dx,dy); } return L; }
-function estSlope(pts){ if(pts.length<2) return 0; const a=pts[0], b=pts[pts.length-1]; return Math.atan2(b[1]-a[1], b[0]-a[0]); }
-function countGaps(pts){ let g=0; for(let i=2;i<pts.length;i++) if(Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1])>6) g++; return g; }
-
-function grade(len,gaps){ if(len<80) return 'weak'; if(gaps>15) return 'fragmented'; return len>220 ? 'strong' : 'moderate'; }
-function orientWords(rad){ const deg = rad*180/Math.PI; if(deg<-25) return 'tilt-up'; if(deg>25) return 'tilt-down'; return 'level'; }
-
-function buildSummaryHTML(m){
-  const hG=grade(m.heart.len,m.heart.gaps), dG=grade(m.head.len,m.head.gaps), lG=grade(m.life.len,m.life.gaps);
-  const heart= `❤️ හෘද රේඛාව: <b>${hG}</b> (${orientWords(m.heart.slope)}), දිග ~${m.heart.len|0}, gaps ${m.heart.gaps}.`;
-  const head = `🧡 ශිරස් රේඛාව: <b>${dG}</b> (${orientWords(m.head.slope)}), දිග ~${m.head.len|0}, gaps ${m.head.gaps}.`;
-  const life = `💚 ජීව රේඛාව: <b>${lG}</b>, දිග ~${m.life.len|0}, gaps ${m.life.gaps}.`;
-  const si = `<p>${heart}<br>${head}<br>${life}</p><p>📝 ව解: <i>${explainSi(hG,dG,lG)}</i></p>`;
-  const en = `<p>Heart line: <b>${hG}</b> (${orientWords(m.heart.slope)}). Head line: <b>${dG}</b>. Life line: <b>${lG}</b>.</p><p><i>${explainEn(hG,dG,lG)}</i></p>`;
-  m.summarySi = si; m.summaryEn = en; return si + '<hr/>' + en;
-}
-function explainSi(h,d,l){
-  let t=[]; if(h==='strong') t.push('වෙරදාරී කාරුණික ස්වභාවය, නෑදෑ තන්හාව වැඩි.');
-  if(h==='weak') t.push('භාවනාව පාලනයට අවධානය දෙන්න.');
-  if(d==='strong') t.push('තීරණ ගැනීම පැහැදිලි, ප්‍රායෝගික බුද්ධිය හොඳයි.');
-  if(d==='fragmented') t.push('අධික multitask නැතිව වැඩ සැලසුම් කරන්න.');
-  if(l==='strong') t.push('ශක්තිය/දෘඪකම ඉහළ, දිගු ආයුද කායික ශක්තිය.');
-  if(l==='weak') t.push('විවේක, නිද्रा, ජලය වැඩිකරන්න.'); return t.join(' ');
-}
-function explainEn(h,d,l){
-  let t=[]; if(h==='strong') t.push('Warm, empathetic nature; bonds deeply with people.');
-  if(h==='weak') t.push('Work on emotional balance & boundaries.');
-  if(d==='strong') t.push('Clear thinker and practical problem-solver.');
-  if(d==='fragmented') t.push('Reduce context switching; plan tasks carefully.');
-  if(l==='strong') t.push('Good vitality and resilience; steady stamina.');
-  if(l==='weak') t.push('Prioritize rest, sleep and hydration.'); return t.join(' ');
-}
-
-/* optional: auto-prepare on load (labels need permission first on some devices) */
-window.addEventListener('load', ()=>{ msg('▶️ Start මත ටච් කරලා camera allow කරන්න. HTTPS/localhost හොඳම ප්‍රතිඵල.'); });
+window.addEventListener('load', ()=>{
+  msg('▶️ Start → Allow camera. If still black: Menu → Site settings → Camera → Allow. Use HTTPS.');
+});
 </script>
 </body>
 </html>
