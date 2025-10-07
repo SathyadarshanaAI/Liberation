@@ -1,21 +1,18 @@
-<!DOCTYPE html>
-<html lang="si">
+<!DOCTYPE html><html lang="si">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry Universal v4.6.2 · Sathyadarshana</title>
+<title>Palmistry Universal v5.0 · Extended Lines</title>
 <style>
-:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
+:root{--pri:#16f0a7;--bg:#0b0f16}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 4px}
 small{opacity:.85}
-.stage{position:relative;display:inline-block;width:min(92vw,480px)}
+.stage{position:relative;display:inline-block;width:min(92vw,520px)}
 #cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
 #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
-.captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
-  width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;
-  font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
+.captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
 .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
 .left{background:#16243a;color:#cfe9ff}
@@ -28,38 +25,42 @@ select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
 .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
 .sliderRow label{display:flex;gap:8px;align-items:center}
 input[type=range]{accent-color:#16f0a7}
-#status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:860px;display:none;white-space:pre-wrap;text-align:left}
-#summary{max-width:860px;margin:10px auto;text-align:left;background:#0f1420;border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
+#status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
+#summary{max-width:900px;margin:10px auto;text-align:left;background:#0f1420;border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
 #summary h3{margin:0 0 8px}
-.tag{display:inline-block;margin-right:8px;margin-bottom:6px;padding:3px 8px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff}
-.legend{display:flex;gap:8px;justify-content:center;margin:6px 0 0}
-.dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px}
-.heart{background:#ff3b3b}.head{background:#ffa533}.life{background:#42ff6c}
+.legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
+.tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.dot.hrt{background:#ff3b3b}.dot.hd{background:#ffa533}.dot.life{background:#42ff6c}.dot.fate{background:#a1a1ff}.dot.sun{background:#ffd54a}.dot.marr{background:#ff8ab0}.dot.hlth{background:#5ad1ff}
+.toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
+.toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
 footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
 </style>
 </head>
 <body>
-<h1>🖐️ Palmistry Universal v4.6.2</h1>
-<small>Align palm → Capture → Analyze → Speak/Save</small>
-
-<div class="stage">
+<h1>🖐️ Palmistry Universal v5.0</h1>
+<small>Primary + Secondary Lines · Capture → Analyze → Report</small><div class="stage">
   <video id="cam" autoplay playsinline muted></video>
   <canvas id="cv"></canvas>
   <button class="captureBtn" id="capBtn">Capture</button>
-</div>
-
-<div class="legend">
-  <span class="tag"><span class="dot heart"></span>Heart</span>
-  <span class="tag"><span class="dot head"></span>Head</span>
+</div><div class="legend">
+  <span class="tag"><span class="dot hrt"></span>Heart</span>
+  <span class="tag"><span class="dot hd"></span>Head (Cheettha)</span>
   <span class="tag"><span class="dot life"></span>Life</span>
-</div>
-
-<div class="btns">
+  <span class="tag"><span class="dot fate"></span>IraNami / Fate</span>
+  <span class="tag"><span class="dot sun"></span>Sun</span>
+  <span class="tag"><span class="dot marr"></span>Marriage</span>
+  <span class="tag"><span class="dot hlth"></span>Health</span>
+</div><div class="toggles">
+  <label><input type="checkbox" id="tPrimary" checked> Primary (Heart/Head/Life)</label>
+  <label><input type="checkbox" id="tFate" checked> IraNami/Fate</label>
+  <label><input type="checkbox" id="tSun" checked> Sun</label>
+  <label><input type="checkbox" id="tMarr" checked> Marriage</label>
+  <label><input type="checkbox" id="tHealth" checked> Health</label>
+</div><div class="btns">
   <button class="btnLike" id="startBtn">▶️ Start</button>
   <select id="camsel" class="btnLike"></select>
-  <button class="btnLike" id="cycleBtn">🔁 Cycle</button>
-
-  <select id="resSel" class="btnLike">
+  <button class="btnLike" id="cycleBtn">🔁 Cycle</button>  <select id="resSel" class="btnLike">
     <option value="1280x720">HD 1280×720</option>
     <option value="1920x1080">FullHD 1920×1080</option>
     <option value="640x480">VGA 640×480</option>
@@ -68,303 +69,114 @@ footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
     <option value="30">30 FPS</option>
     <option value="60">60 FPS</option>
     <option value="24">24 FPS</option>
-  </select>
-
-  <input id="pick" type="file" accept="image/*" class="btnLike"/>
+  </select>  <input id="pick" type="file" accept="image/*" class="btnLike"/>
   <button class="left" id="flipBtn">↔️ Flip</button>
   <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
   <label class="btnLike" style="display:flex;align-items:center;gap:8px">
     Zoom <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
-  </label>
+  </label><button class="an" id="anBtn">✨ Analyze</button> <button class="report" id="reportBtn">📄 Report</button> <button class="btnLike" id="clearBtn">🧹 Clear</button>
 
-  <button class="an" id="anBtn">✨ Analyze</button>
-  <button class="speak" id="speakBtn">🎧 Speak</button>
-  <button class="cap" id="saveBtn">💾 Save</button>
-  <button class="report" id="reportBtn">📄 Open Report</button>
-  <button class="btnLike" id="clearBtn">🧹 Clear</button>
-</div>
-
-<div class="sliderRow">
+</div><div class="sliderRow">
   <label>Edge <input id="edge" type="range" min="40" max="110" value="75"></label>
   <label>Detail <input id="gk" type="range" min="1" max="5" value="3"></label>
-</div>
-
-<div id="status"></div>
+</div><div id="status"></div>
 <div id="summary">
   <h3>🔎 AI Summary</h3>
   <div id="sumtext"></div>
-</div>
-
-<footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
-
-<script>
+</div><footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.0</footer><script>
 /* ===== refs ===== */
-const video=document.getElementById('cam'), cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-const startBtn=id('startBtn'), camsel=id('camsel'), cycleBtn=id('cycleBtn'),
-      resSel=id('resSel'), fpsSel=id('fpsSel'), zoomEl=id('zoom'),
-      pick=id('pick'), flipBtn=id('flipBtn'), torchBtn=id('torchBtn'),
-      capBtn=id('capBtn'), anBtn=id('anBtn'), speakBtn=id('speakBtn'),
-      saveBtn=id('saveBtn'), reportBtn=id('reportBtn'), clearBtn=id('clearBtn');
-let stream=null, track=null, captured=false, isMirrored=false;
-let camList=[], camIndex=0, lastMetrics=null;
+const video=byId('cam'), cv=byId('cv'), ctx=cv.getContext('2d');
+const startBtn=byId('startBtn'), camsel=byId('camsel'), cycleBtn=byId('cycleBtn');
+const resSel=byId('resSel'), fpsSel=byId('fpsSel'), zoomEl=byId('zoom');
+const pick=byId('pick'), flipBtn=byId('flipBtn'), torchBtn=byId('torchBtn');
+const capBtn=byId('capBtn'), anBtn=byId('anBtn'), reportBtn=byId('reportBtn'), clearBtn=byId('clearBtn');
+const tPrimary=byId('tPrimary'), tFate=byId('tFate'), tSun=byId('tSun'), tMarr=byId('tMarr'), tHealth=byId('tHealth');
+let stream=null, track=null, captured=false, isMirrored=false, last= null;
+let camList=[], camIndex=0;
 
-function id(x){return document.getElementById(x)}
-function msg(t){ const s=id('status'); s.textContent=t; s.style.display='block'; }
-function showSummary(html){ const b=id('summary'); id('sumtext').innerHTML=html; b.style.display='block'; }
+function byId(x){return document.getElementById(x)}
+function msg(t){ const s=byId('status'); s.textContent=t; s.style.display='block'; }
+function showSummary(html){ const b=byId('summary'); byId('sumtext').innerHTML=html; b.style.display='block'; }
 function parseRes(v){const [w,h]=v.split('x').map(Number);return {w,h};}
 
-/* ===== NEW: performance guard for big photos (FullHD/4K) ===== */
-function normalizeForAnalysis(maxW=1280, maxPx=1_500_000) {
-  // keep aspect; clamp to <= ~1.5MP
-  const needShrink = () => (cv.width>maxW) || (cv.width*cv.height>maxPx);
-  if (!needShrink()) return;
-  const s = Math.min(maxW/cv.width, Math.sqrt(maxPx/(cv.width*cv.height)));
-  const w = Math.max( Math.round(cv.width * s), 540 );
-  const h = Math.round(cv.height * s);
-  const tmp = document.createElement('canvas');
-  tmp.width=w; tmp.height=h;
-  tmp.getContext('2d').drawImage(cv,0,0,w,h);
-  cv.width=w; cv.height=h;
-  ctx.drawImage(tmp,0,0);
+/* ===== normalize big photos for speed ===== */
+function norm(maxW=1280,maxPx=1_500_000){
+  if(cv.width<=0||cv.height<=0) return; const tooW=cv.width>maxW, tooPx=cv.width*cv.height>maxPx;
+  if(!(tooW||tooPx)) return; const s=Math.min(maxW/cv.width, Math.sqrt(maxPx/(cv.width*cv.height)));
+  const w=Math.max(Math.round(cv.width*s),540), h=Math.round(cv.height*s);
+  const t=document.createElement('canvas'); t.width=w; t.height=h; t.getContext('2d').drawImage(cv,0,0,w,h);
+  cv.width=w; cv.height=h; ctx.drawImage(t,0,0);
 }
 
 /* ===== camera core ===== */
-async function ensurePermission(){
-  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Browser does not support camera.');
-  try{ const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); t.getTracks().forEach(tt=>tt.stop()); }
-  catch(e){ throw new Error('Permission denied/unavailable: '+e.message); }
-}
-async function listCams(){
-  const devs=await navigator.mediaDevices.enumerateDevices();
-  camList=devs.filter(d=>d.kind==='videoinput')
-              .sort((a,b)=>(/back|rear|environment|wide/i.test(a.label)?-1:1));
-  camsel.innerHTML='';
-  camList.forEach((c,i)=>{const o=document.createElement('option');o.value=c.deviceId;o.textContent=c.label||`Camera ${i+1}`;camsel.appendChild(o);});
-  camIndex=0; camsel.selectedIndex=0;
-}
-async function startCam(deviceId=null){
-  if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null; track=null;}
-  const {w,h}=parseRes(resSel.value||'1280x720'); const fps=Number(fpsSel.value||30);
-  const facing=isMirrored?'user':'environment';
-  const constraints={ video: deviceId?{deviceId:{exact:deviceId}}:{facingMode:{ideal:facing}}, audio:false };
-  Object.assign(constraints.video,{
-    width:{ideal:w,max:w},height:{ideal:h,max:h},frameRate:{ideal:fps,max:fps},
-    advanced:[{focusMode:'continuous'},{exposureMode:'continuous'}]
-  });
-  try{ stream=await navigator.mediaDevices.getUserMedia(constraints); }
-  catch(e){
-    msg('⚠️ exact constraint failed, retrying with generic video…');
-    try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-    catch(err){ msg('❌ Camera error: '+err.message); return; }
-  }
-  video.srcObject=stream; await video.play();
-  track=stream.getVideoTracks()[0];
-
-  const W=video.videoWidth||w, H=video.videoHeight||h;
-  cv.width=W; cv.height=H;
-  video.style.transform=isMirrored?'scaleX(-1)':'none';
-  cv.style.display=captured?'block':'none';
-
-  const caps=track.getCapabilities?.()||{};
-  torchBtn.hidden=!('torch' in caps);
-  if('zoom' in caps){
-    zoomEl.min=caps.zoom.min||1; zoomEl.max=caps.zoom.max||5; zoomEl.step=caps.zoom.step||0.1;
-    zoomEl.value=(track.getSettings?.().zoom)||zoomEl.min; zoomEl.parentElement.style.display='';
-  }else{ zoomEl.parentElement.style.display='none'; }
-
-  msg(`📷 ${track.label||'Camera'} • ${W}×${H}@${fps} • Tap Capture → Analyze`);
+async function ensurePerm(){ if(!navigator.mediaDevices?.getUserMedia) throw new Error('No mediaDevices'); const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); t.getTracks().forEach(x=>x.stop()); }
+async function listCams(){ const devs=await navigator.mediaDevices.enumerateDevices(); camList=devs.filter(d=>d.kind==='videoinput').sort((a,b)=>(/back|rear|environment|wide/i.test(a.label)?-1:1)); camsel.innerHTML=''; camList.forEach((c,i)=>{const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o);}); camsel.selectedIndex=0; camIndex=0; }
+async function startCam(id=null){ if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null; track=null;}
+  const {w,h}=parseRes(resSel.value||'1280x720'); const fps=Number(fpsSel.value||30); const facing=isMirrored?'user':'environment';
+  const cons={video: id?{deviceId:{exact:id}}:{facingMode:{ideal:facing}}, audio:false}; Object.assign(cons.video,{width:{ideal:w,max:w},height:{ideal:h,max:h},frameRate:{ideal:fps,max:fps},advanced:[{focusMode:'continuous'},{exposureMode:'continuous'}]});
+  try{ stream=await navigator.mediaDevices.getUserMedia(cons);}catch(e){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }catch(err){ msg('❌ Camera error: '+err.message); return; }}
+  video.srcObject=stream; await video.play(); track=stream.getVideoTracks()[0];
+  const W=video.videoWidth||w, H=video.videoHeight||h; cv.width=W; cv.height=H; video.style.transform=isMirrored?'scaleX(-1)':'none'; cv.style.display=captured?'block':'none';
+  const caps=track.getCapabilities?.()||{}; torchBtn.hidden=!('torch' in caps); if('zoom' in caps){ zoomEl.min=caps.zoom.min||1; zoomEl.max=caps.zoom.max||5; zoomEl.step=caps.zoom.step||0.1; zoomEl.value=(track.getSettings?.().zoom)||zoomEl.min; zoomEl.parentElement.style.display=''; } else { zoomEl.parentElement.style.display='none'; }
+  msg(`📷 ${track.label||'Camera'} • ${W}×${H}@${fps}`);
 }
 
-/* ui */
-startBtn.onclick = async ()=>{
-  try{
-    if (location.protocol!=='https:' && location.hostname!=='localhost'){
-      msg('🔒 Enable HTTPS. Some devices block camera on HTTP.');
-    }
-    await ensurePermission(); await listCams();
-    await startCam(camsel.value||camList[0]?.deviceId||null);
-  }catch(e){ msg('❌ '+(e.message||e)); }
-};
-cycleBtn.onclick = async ()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras detected.'); camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
-camsel.onchange = async ()=> startCam(camsel.value);
-resSel.onchange  = async ()=> startCam(camsel.value||null);
-fpsSel.onchange  = async ()=> startCam(camsel.value||null);
-flipBtn.onclick  = async ()=>{ isMirrored=!isMirrored; if(stream&&!captured){ video.style.transform=isMirrored?'scaleX(-1)':'none'; await startCam(camsel.value||null);} else if(captured){ mirrorCanvas(); } };
-torchBtn.onclick = async ()=>{ if(!track) return; try{ const now=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!now}]}); }catch(e){ msg('Torch error: '+e.message); } };
-zoomEl.oninput   = async ()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{} };
+startBtn.onclick= async ()=>{ try{ if(location.protocol!=='https:' && location.hostname!=='localhost') msg('🔒 Use HTTPS for best camera support'); await ensurePerm(); await listCams(); await startCam(camsel.value||camList[0]?.deviceId||null);}catch(e){msg('❌ '+(e.message||e));}};
+cycleBtn.onclick= async ()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras'); camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
+camsel.onchange= async ()=> startCam(camsel.value);
+resSel.onchange = async ()=> startCam(camsel.value||null);
+fpsSel.onchange = async ()=> startCam(camsel.value||null);
+flipBtn.onclick = async ()=>{ isMirrored=!isMirrored; if(stream&&!captured){ video.style.transform=isMirrored?'scaleX(-1)':'none'; await startCam(camsel.value||null);} else if(captured){ mirrorCanvas(); } };
+torchBtn.onclick= async ()=>{ if(!track) return; try{ const on=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!on}]}); }catch(e){ msg('Torch error: '+e.message); } };
+zoomEl.oninput  = async ()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{} };
 
 function mirrorCanvas(){ const t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height; t.getContext('2d').drawImage(cv,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,cv.width,0); ctx.drawImage(t,0,0); ctx.restore(); }
 
 /* capture / file */
-capBtn.onclick = async ()=>{
-  if(!stream) await startCam(camsel.value||null);
-  if(!video.videoWidth) await new Promise(r=>setTimeout(r,120));
-  cv.width=video.videoWidth; cv.height=video.videoHeight;
-  ctx.save(); if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
-  ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore();
-  normalizeForAnalysis(1280, 1_500_000);
-  cv.style.display='block'; captured=true; lastMetrics=null; id('summary').style.display='none';
-  msg('🖐️ Photo locked. ✨ Analyze කරන්න.');
-};
-pick.onchange = e=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  const img=new Image(); img.onload=()=>{
-    cv.width=img.naturalWidth; cv.height=img.naturalHeight; ctx.drawImage(img,0,0);
-    if(isMirrored) mirrorCanvas();
-    normalizeForAnalysis(1280, 1_500_000);
-    cv.style.display='block'; captured=true; lastMetrics=null; id('summary').style.display='none';
-    msg('🖼️ Photo loaded. ✨ Analyze.');
-  }; img.onerror=()=>msg('❌ Image load failed.'); img.src=URL.createObjectURL(f);
-};
-clearBtn.onclick = ()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; lastMetrics=null; id('summary').style.display='none'; msg('🧹 Cleared. Ready.'); };
+capBtn.onclick = async ()=>{ if(!stream) await startCam(camsel.value||null); if(!video.videoWidth) await new Promise(r=>setTimeout(r,100)); cv.width=video.videoWidth; cv.height=video.videoHeight; ctx.save(); if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1);} ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore(); norm(1280,1_500_000); cv.style.display='block'; captured=true; last=null; byId('summary').style.display='none'; msg('🖐️ Photo locked. Analyze to detect lines.'); };
+pick.onchange = e=>{ const f=e.target.files?.[0]; if(!f) return; const img=new Image(); img.onload=()=>{ cv.width=img.naturalWidth; cv.height=img.naturalHeight; ctx.drawImage(img,0,0); if(isMirrored) mirrorCanvas(); norm(1280,1_500_000); cv.style.display='block'; captured=true; last=null; byId('summary').style.display='none'; msg('🖼️ Photo loaded. Analyze to detect lines.'); }; img.onerror=()=>msg('❌ Image load failed'); img.src=URL.createObjectURL(f); };
+clearBtn.onclick= ()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; byId('summary').style.display='none'; msg('🧹 Cleared. Ready.'); };
 
-/* save / report */
-saveBtn.onclick = ()=>{ if(!captured) return msg('Capture/Load first.'); const data=cv.toDataURL('image/png'); const a=document.createElement('a'); a.href=data; a.download='palm_'+Date.now()+'.png'; a.click(); msg('💾 Saved.'); };
-reportBtn.onclick = ()=>{
-  if(!captured){ msg('Capture first'); return; }
-  const data=cv.toDataURL('image/png'); const s=lastMetrics?buildSummaryHTML(lastMetrics):'<p>Run Analyze first to get AI summary.</p>';
-  const w=window.open('','_blank'); w.document.write(`<html><head><title>Palmistry Report</title>
-  <style>body{font-family:system-ui;padding:12px;color:#123}h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style></head>
-  <body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div><p><em>Tip:</em> Print → Save as PDF.</p></body></html>`); w.document.close();
-};
+/* report */
+reportBtn.onclick= ()=>{ if(!captured){ msg('Capture first'); return; } const data=cv.toDataURL('image/png'); const s=last?buildSummary(last):'<p>Run Analyze first.</p>'; const w=window.open('','_blank'); w.document.write(`<html><head><title>Palmistry Report</title><style>body{font-family:system-ui;padding:12px;color:#123}h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style></head><body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div></body></html>`); w.document.close(); };/* ===== ANALYZE v5.0 ===== */ anBtn.onclick= ()=>{ if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); msg('⏳ Analyzing…'); setTimeout(()=>{ try{ analyzeV5(); }catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } }, 50); };
 
-/* ===== Analyze with memory guards ===== */
-anBtn.onclick = ()=>{
-  if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.');
-  msg('⏳ Analyzing… (FullHD downscaled for speed)');
-  setTimeout(()=>{ try{ analyzePureJS(); } catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } }, 50);
-};
+function analyzeV5(){ if(!cv.width||!cv.height) return msg('No canvas'); norm(1024,1_000_000); let w=cv.width,h=cv.height; let src; for(let i=0;i<2;i++){ try{ src=ctx.getImageData(0,0,w,h); break; }catch(e){ const t=document.createElement('canvas'); t.width=Math.round(w0.8); t.height=Math.round(h0.8); t.getContext('2d').drawImage(cv,0,0,t.width,t.height); cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0); w=cv.width; h=cv.height; }}
 
-function analyzePureJS(){
-  if(!cv.width || !cv.height){ msg('⚠️ No image on canvas'); return; }
-  // extra guard: shrink again if needed
-  normalizeForAnalysis(1024, 1_000_000);
+const edgeVal=parseInt(byId('edge').value,10)/255; const passes=parseInt(byId('gk').value,10); // grayscale const d=src.data, gray=new Uint8ClampedArray(wh); for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i].299+d[i+1].587+d[i+2].114; // blur let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1], n=16; for(let p=0;p<passes;p++){ const t=new Float32Array(wh); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)w+(x+dx)]k[i++]; t[yw+x]=s/n; } a=t; } const blur=Uint8ClampedArray.from(a); // sobel const mag=new Float32Array(wh); let mx=1; for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=yw+x; const gx=-blur[i-w-1]-2blur[i-1]-blur[i+w-1]+blur[i-w+1]+2blur[i+1]+blur[i+w+1]; const gy=-blur[i-w-1]-2blur[i-w]-blur[i-w+1]+blur[i+w-1]+2blur[i+w]+blur[i+w+1]; const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m; } const T=edgeValmx; const bin=new Uint8ClampedArray(wh); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0; // skeleton const sk=Uint8Array.from(bin); let changed=true,pass=0; const N=(x,y)=>sk[(y-1)*w+x]+sk[(y-1)w+x+1]+sk[yw+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)w+x-1]+sk[yw+x-1]+sk[(y-1)*w+x-1]; const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)w+x+1],sk[yw+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)w+x-1],sk[yw+x-1],sk[(y-1)w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; }; while(changed&&pass<20){ changed=false; const rem=[]; for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=yw+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y); if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]sk[yw+x+1]*sk[(y+1)w+x]==0)&&(sk[yw+x+1]sk[yw+x-1]*sk[(y-1)w+x]==0)) rem.push(i);} rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; rem.length=0; for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=yw+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y); if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]sk[yw+x-1]*sk[(y+1)*w+x]==0)&&(sk[(y-1)*w+x]sk[yw+x+1]sk[yw+x-1]==0)) rem.push(i);} rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; pass++; }
 
-  let w=cv.width, h=cv.height;
-  let src;
-  for(let tries=0; tries<3; tries++){
-    try{ src = ctx.getImageData(0,0,w,h); break; }
-    catch(e){
-      const t=document.createElement('canvas');
-      t.width=Math.round(w*0.75); t.height=Math.round(h*0.75);
-      t.getContext('2d').drawImage(cv,0,0,t.width,t.height);
-      cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0);
-      w=cv.width; h=cv.height;
-      if(tries===2){ msg('❌ Analyze failed (memory). Try HD 1280×720 or lower.'); return; }
-    }
-  }
+// helper to walk components within a mask function pickLongestMasked(mask){ const seen=new Uint8Array(wh); const NB=[-1-w, -w, 1-w, -1, 1, -1+w, w, 1+w]; let best=[]; function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0 && j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; } for(let i=0;i<wh;i++){ / scan */ if(mask[i] && sk[i] && !seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } } }
 
-  const edgeVal=parseInt(id('edge').value,10)/255;
-  const passes=parseInt(id('gk').value,10);
+// region masks const maskAll=new Uint8Array(wh); for(let i=0;i<wh;i++) maskAll[i]=1; const yHeart0=0, yHeart1=Math.floor(h0.30); const yHead0=yHeart1, yHead1=Math.floor(h0.55); const yLife0=yHead1, yLife1=h;
 
-  // grayscale
-  const d=src.data, gray=new Uint8ClampedArray(w*h);
-  for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i]*.299+d[i+1]*.587+d[i+2]*.114;
+function band(y0,y1){ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[yw+x]=1; return m; } function rect(x0,y0,x1,y1){ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[yw+x]=1; return m; }
 
-  // blur 3x3
-  let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1],n=16;
-  for(let p=0;p<passes;p++){ const t=new Float32Array(w*h);
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ let s=0,i=0;
-      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/n; }
-    a=t;
-  }
-  const blur=Uint8ClampedArray.from(a);
+// primary lines via horizontal bands const pHeart = pickLongest(band(yHeart0,yHeart1)); const pHead  = pickLongest(band(yHead0,yHead1)); const pLife  = pickLongest(band(yLife0,yLife1));
 
-  // sobel
-  const mag=new Float32Array(w*h); let mx=1;
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
-    const gx=-blur[i-w-1]-2*blur[i-1]-blur[i+w-1]+blur[i-w+1]+2*blur[i+1]+blur[i+w+1];
-    const gy=-blur[i-w-1]-2*blur[i-w]-blur[i-w+1]+blur[i+w-1]+2*blur[i+w]+blur[i+w+1];
-    const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m;
-  }
-  const T=edgeVal*mx; const bin=new Uint8ClampedArray(w*h); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0;
+// secondary heuristics // Fate (IraNami): vertical near center, from base upward const xC0=Math.floor(w0.40), xC1=Math.floor(w0.60), yF0=Math.floor(h*0.35), yF1=h; const pFate = pickLongest(rect(xC0,yF0,xC1,yF1));
 
-  // skeletonize
-  const sk=Uint8Array.from(bin); let changed=true,pass=0;
-  const N=(x,y)=>sk[(y-1)*w+x]+sk[(y-1)*w+x+1]+sk[y*w+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)*w+x-1]+sk[y*w+x-1]+sk[(y-1)*w+x-1];
-  const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)*w+x+1],sk[y*w+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)*w+x-1],sk[y*w+x-1],sk[(y-1)*w+x-1]];
-    let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
-  while(changed&&pass<25){ changed=false; const rem=[];
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]*sk[y*w+x+1]*sk[(y+1)*w+x]==0)&&(sk[y*w+x+1]*sk[y*w+x-1]*sk[(y-1)*w+x]==0)) rem.push(i);}
-    rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; rem.length=0;
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]*sk[y*w+x-1]*sk[(y+1)*w+x]==0)&&(sk[(y-1)*w+x]*sk[y*w+x+1]*sk[y*w+x-1]==0)) rem.push(i);}
-    rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; pass++;
-  }
+// Sun line: below ring finger (between center and right), strong vertical const xS0=Math.floor(w0.60), xS1=Math.floor(w0.80), yS0=Math.floor(h*0.40), yS1=h; const pSun  = pickLongest(rect(xS0,yS0,xS1,yS1));
 
-  const yH0=0, yH1=Math.floor(h*0.30), yD0=yH1, yD1=Math.floor(h*0.55), yL0=yD1, yL1=h;
-  function pickLongest(y0,y1){
-    const seen=new Uint8Array(w*h); const NB=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-    let best=[]; function walk(sx,sy){ const st=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
-      while(st.length){ const [x,y]=st.pop(); pts.push([x,y]);
-        for(const [dx,dy] of NB){ const nx=x+dx, ny=y+dy, id=ny*w+nx;
-          if(nx>0&&ny>y0&&nx<w-1&&ny<y1-1 && !seen[id] && sk[id]){ seen[id]=1; st.push([nx,ny]); } } }
-      return pts; }
-    for(let y=y0+1;y<y1-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(sk[i]){ const pts=walk(x,y); if(pts.length>best.length) best=pts; } }
-    return best;
-  }
-  const pHeart=pickLongest(yH0,yH1), pHead=pickLongest(yD0,yD1), pLife=pickLongest(yL0,yL1);
+// Marriage lines: short horizontals at outer edge under little finger (top-right box) const xM0=Math.floor(w0.70), xM1=w, yM0=Math.floor(h0.10), yM1=Math.floor(h*0.25); const pMarriage = pickTopK(rect(xM0,yM0,xM1,yM1), 3, 40, 120, true); // top 3 small segments
 
-  // overlay edges faint
-  const overlay = ctx.createImageData(w,h);
-  for(let i=0,j=0;i<w*h;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=85; }
-  ctx.putImageData(overlay,0,0);
+// Health line: diagonal from base (wrist) towards little finger (right side) const xH0=Math.floor(w0.55), xH1=w, yH0=Math.floor(h0.55), yH1=h; const pHealth = pickLongest(rect(xH0,yH0,xH1,yH1));
 
-  drawPath(pHeart,'#ff3b3b',4);
-  drawPath(pHead ,'#ffa533',4);
-  drawPath(pLife ,'#42ff6c',4);
+// draw faint cyan edges const overlay=ctx.createImageData(w,h); for(let i=0,j=0;i<w*h;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=70; } ctx.putImageData(overlay,0,0);
 
-  const M = (pts,name)=>({ name, len:polyLen(pts), slope:estSlope(pts), gaps:countGaps(pts) });
-  lastMetrics = { heart:M(pHeart,'Heart'), head:M(pHead,'Head'), life:M(pLife,'Life'), lang:'si' };
-  const html = buildSummaryHTML(lastMetrics);
-  showSummary(html);
-  msg('✨ Analyze done');
-}
+// draw functions function drawPath(pts,color,wid){ if(!pts||pts.length<5) return; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); }
 
-/* helpers */
-function drawPath(pts,color,wid){
-  if(!pts || pts.length<6) return;
-  ctx.lineJoin='round'; ctx.lineCap='round';
-  ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath();
-  ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-  ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
-  ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-}
-function polyLen(pts){ let L=0; for(let i=1;i<pts.length;i++){ const dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1]; L+=Math.hypot(dx,dy); } return L; }
-function estSlope(pts){ if(pts.length<2) return 0; const a=pts[0], b=pts[pts.length-1]; return Math.atan2(b[1]-a[1], b[0]-a[0]); }
-function countGaps(pts){ let g=0; for(let i=2;i<pts.length;i++) if(Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1])>6) g++; return g; }
-function grade(len,gaps){ if(len<80) return 'weak'; if(gaps>15) return 'fragmented'; return len>220 ? 'strong' : 'moderate'; }
-function orientWords(rad){ const deg = rad*180/Math.PI; if(deg<-25) return 'tilt-up'; if(deg>25) return 'tilt-down'; return 'level'; }
-function buildSummaryHTML(m){
-  const hG=grade(m.heart.len,m.heart.gaps), dG=grade(m.head.len,m.head.gaps), lG=grade(m.life.len,m.life.gaps);
-  const heart= `❤️ හෘද රේඛාව: <b>${hG}</b> (${orientWords(m.heart.slope)}), දිග ~${m.heart.len|0}, gaps ${m.heart.gaps}.`;
-  const head = `🧡 ශිරස් රේඛාව: <b>${dG}</b> (${orientWords(m.head.slope)}), දිග ~${m.head.len|0}, gaps ${m.head.gaps}.`;
-  const life = `💚 ජීව රේඛාව: <b>${lG}</b>, දිග ~${m.life.len|0}, gaps ${m.life.gaps}.`;
-  const si = `<p>${heart}<br>${head}<br>${life}</p><p>📝 ව解: <i>${explainSi(hG,dG,lG)}</i></p>`;
-  const en = `<p>Heart line: <b>${hG}</b> (${orientWords(m.heart.slope)}). Head line: <b>${dG}</b>. Life line: <b>${lG}</b>.</p><p><i>${explainEn(hG,dG,lG)}</i></p>`;
-  m.summarySi = si; m.summaryEn = en; return si + '<hr/>' + en;
-}
-function explainSi(h,d,l){
-  let t=[]; if(h==='strong') t.push('වෙරදාරී කාරුණික ස්වභාවය, නෑදෑ තන්හාව වැඩි.');
-  if(h==='weak') t.push('භාවනාව පාලනයට අවධානය දෙන්න.');
-  if(d==='strong') t.push('තීරණ ගැනීම පැහැදිලි, ප්‍රායෝගික බුද්ධිය හොඳයි.');
-  if(d==='fragmented') t.push('අධික multitask නැතිව වැඩ සැලසුම් කරන්න.');
-  if(l==='strong') t.push('ශක්තිය/දෘඪකම ඉහළ, දිගු ආයුද කායික ශක්තිය.');
-  if(l==='weak') t.push('විවේක, නිද्रा, ජලය වැඩිකරන්න.'); return t.join(' ');
-}
-function explainEn(h,d,l){
-  let t=[]; if(h==='strong') t.push('Warm, empathetic nature; bonds deeply with people.');
-  if(h==='weak') t.push('Work on emotional balance & boundaries.');
-  if(d==='strong') t.push('Clear thinker and practical problem-solver.');
-  if(d==='fragmented') t.push('Reduce context switching; plan tasks carefully.');
-  if(l==='strong') t.push('Good vitality and resilience; steady stamina.');
-  if(l==='weak') t.push('Prioritize rest, sleep and hydration.'); return t.join(' ');
-}
+// metrics function polyLen(p){ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; } function orient(p){ if(p.length<2) return 0; const A=p[0], B=p[p.length-1]; return Math.atan2(B[1]-A[1], B[0]-A[0]); } function gaps(p){ let g=0; for(let i=2;i<p.length;i++) if(Math.hypot(p[i][0]-p[i-1][0], p[i][1]-p[i-1][1])>6) g++; return g; } const M=(p)=>({len:polyLen(p)|0, slope:orient(p), gaps:gaps(p)});
 
-window.addEventListener('load', ()=>{
-  msg('▶️ Start → Allow camera. If black: Menu → Site settings → Camera → Allow. Use HTTPS.');
-});
-</script>
+// render based on toggles ctx.globalAlpha=0.95; if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); } if(tFate.checked)   drawPath(pFate,'#a1a1ff',3.5); if(tSun.checked)    drawPath(pSun,'#ffd54a',3.5); if(tMarr.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3)); if(tHealth.checked) drawPath(pHealth,'#5ad1ff',3.5); ctx.globalAlpha=1; cv.style.display='block';
+
+// save for summary last={ heart:M(pHeart), head:M(pHead), life:M(pLife), fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth) }; showSummary(buildSummary(last)); msg('✨ Analyze done');
+
+// ------- helpers to pick paths ------- function pickLongest(mask){ const seen=new Uint8Array(wh); const NB=[-1-w, -w, 1-w, -1, 1, -1+w, w, 1+w]; let best=[]; function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; } for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i] && sk[i] && !seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } } return best; }
+
+// pick top-K short segments in a mask (for marriage lines) function pickTopK(mask, K=3, minLen=30, maxLen=140, preferHorizontal=true){ const seen=new Uint8Array(wh); const NB=[-1-w, -w, 1-w, -1, 1, -1+w, w, 1+w]; const segs=[]; function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; } for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); const L=polyLen(p); if(L>=minLen && L<=maxLen){ let ok=true; if(preferHorizontal){ const ang=Math.abs(orient(p)*180/Math.PI); ok = ang<25 || ang>155; } if(ok) segs.push(p); } } } segs.sort((a,b)=>polyLen(b)-polyLen(a)); return segs.slice(0,K); } }
+
+function buildSummary(m){ const gw=(L,G)=> (L<80?'weak':G>15?'fragmented':L>220?'strong':'moderate'); const ow=(r)=>{const d=r*180/Math.PI; return d<-25?'tilt-up':d>25?'tilt-down':'level'}; function line(name, m){ if(!m||!m.len) return ${name}: <i>n/a</i>; return ${name}: <b>${gw(m.len,m.gaps)}</b> (${ow(m.slope)}), ~${m.len}, gaps ${m.gaps}.; } const pri = ❤️ ${line('Heart',m.heart)}<br>🧡 ${line('Head',m.head)}<br>💚 ${line('Life',m.life)}; const sec = 🟪 IraNami/Fate: ${line('Fate',m.fate)}<br>🟨 Sun: ${line('Sun',m.sun)}<br>🩷 Marriage: ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>#${i+1} ~${x.len}).join(', '):'n/a'}<br>🩵 Health: ${line('Health',m.health)}; return <p>${pri}</p><hr/><p>${sec}</p>; }
+
+window.addEventListener('load', ()=>{ msg('▶️ Start → Allow camera. Capture/Upload → Analyze. Use toggles to show/hide lines.'); }); </script>
+
 </body>
 </html>
