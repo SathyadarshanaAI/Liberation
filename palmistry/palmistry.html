@@ -1,93 +1,97 @@
 <!DOCTYPE html><html lang="si">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry Universal v5.0 · Extended Lines</title>
-<style>
-:root{--pri:#16f0a7;--bg:#0b0f16}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
-h1{margin:14px 0 4px}
-small{opacity:.85}
-.stage{position:relative;display:inline-block;width:min(92vw,520px)}
-#cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
-#cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
-.captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
-.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
-.left{background:#16243a;color:#cfe9ff}
-.an{background:#16f0a7;color:#062}
-.cap{background:#fbbf24;color:#111}
-.torch{background:#22c55e;color:#021}
-.report{background:#a78bfa;color:#120}
-select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
-.sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
-.sliderRow label{display:flex;gap:8px;align-items:center}
-input[type=range]{accent-color:#16f0a7}
-#status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
-#summary{max-width:900px;margin:10px auto;text-align:left;background:#0f1420;border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
-#summary h3{margin:0 0 8px}
-.legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
-.tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
-.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
-.dot.hrt{background:#ff3b3b}.dot.hd{background:#ffa533}.dot.life{background:#42ff6c}.dot.fate{background:#a1a1ff}.dot.sun{background:#ffd54a}.dot.marr{background:#ff8ab0}.dot.hlth{background:#5ad1ff}
-.toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
-.toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
-footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
-nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
-nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
-nav a:hover{background:#0d1a2c}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Palmistry Universal v5.1 · Extended Lines</title>
+  <style>
+    :root{--pri:#16f0a7;--bg:#0b0f16}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+    h1{margin:14px 0 4px}
+    small{opacity:.85}
+    .stage{position:relative;display:inline-block;width:min(92vw,520px)}
+    #cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
+    #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
+    .captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
+    .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
+    .left{background:#16243a;color:#cfe9ff}
+    .an{background:#16f0a7;color:#062}
+    .cap{background:#fbbf24;color:#111}
+    .torch{background:#22c55e;color:#021}
+    .report{background:#a78bfa;color:#120}
+    select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
+    .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
+    .sliderRow label{display:flex;gap:8px;align-items:center}
+    input[type=range]{accent-color:#16f0a7}
+    #status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
+    #summary{max-width:900px;margin:10px auto;text-align:left;background:#0f1420;border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
+    #summary h3{margin:0 0 8px}
+    .legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
+    .tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
+    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+    .dot.hrt{background:#ff3b3b}.dot.hd{background:#ffa533}.dot.life{background:#42ff6c}.dot.fate{background:#a1a1ff}.dot.sun{background:#ffd54a}.dot.marr{background:#ff8ab0}.dot.hlth{background:#5ad1ff}
+    .toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
+    .toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
+    footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
+    nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
+    nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
+    nav a:hover{background:#0d1a2c}
+  </style>
 </head>
 <body>
-<h1>🖐️ Palmistry Universal v5.0</h1>
-<small>Primary + Secondary Lines · Capture → Analyze → Report</small><nav>
-  <a href="./index.html">← Back to Home</a>
-</nav><div class="stage">
-  <video id="cam" autoplay playsinline muted></video>
-  <canvas id="cv"></canvas>
-  <button class="captureBtn" id="capBtn">Capture</button>
-</div><div class="legend">
-  <span class="tag"><span class="dot hrt"></span>Heart</span>
-  <span class="tag"><span class="dot hd"></span>Head (Cheettha)</span>
-  <span class="tag"><span class="dot life"></span>Life</span>
-  <span class="tag"><span class="dot fate"></span>IraNami / Fate</span>
-  <span class="tag"><span class="dot sun"></span>Sun</span>
-  <span class="tag"><span class="dot marr"></span>Marriage</span>
-  <span class="tag"><span class="dot hlth"></span>Health</span>
-</div><div class="toggles">
-  <label><input type="checkbox" id="tPrimary" checked> Primary (Heart/Head/Life)</label>
-  <label><input type="checkbox" id="tFate" checked> IraNami/Fate</label>
-  <label><input type="checkbox" id="tSun" checked> Sun</label>
-  <label><input type="checkbox" id="tMarr" checked> Marriage</label>
-  <label><input type="checkbox" id="tHealth" checked> Health</label>
-</div><div class="btns">
-  <button class="btnLike" id="startBtn">▶️ Start</button>
-  <select id="camsel" class="btnLike"></select>
-  <button class="btnLike" id="cycleBtn">🔁 Cycle</button>  <select id="resSel" class="btnLike">
-    <option value="1280x720">HD 1280×720</option>
-    <option value="1920x1080">FullHD 1920×1080</option>
-    <option value="640x480">VGA 640×480</option>
-  </select>
-  <select id="fpsSel" class="btnLike">
-    <option value="30">30 FPS</option>
-    <option value="60">60 FPS</option>
-    <option value="24">24 FPS</option>
-  </select>  <input id="pick" type="file" accept="image/*" class="btnLike"/>
-  <button class="left" id="flipBtn">↔️ Flip</button>
-  <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
-  <label class="btnLike" style="display:flex;align-items:center;gap:8px">
-    Zoom <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
-  </label><button class="an" id="anBtn">✨ Analyze</button> <button class="report" id="reportBtn">📄 Report</button> <button class="btnLike" id="clearBtn">🧹 Clear</button>
+  <h1>🖐️ Palmistry Universal v5.1</h1>
+  <small>Primary + Secondary Lines · Capture → Analyze → Report</small>  <nav><a href="./index.html">← Back to Home</a></nav>  <div class="stage">
+    <video id="cam" autoplay playsinline muted></video>
+    <canvas id="cv"></canvas>
+    <button class="captureBtn" id="capBtn">Capture</button>
+  </div>  <div class="legend">
+    <span class="tag"><span class="dot hrt"></span>Heart</span>
+    <span class="tag"><span class="dot hd"></span>Head (Cheettha)</span>
+    <span class="tag"><span class="dot life"></span>Life</span>
+    <span class="tag"><span class="dot fate"></span>IraNami / Fate</span>
+    <span class="tag"><span class="dot sun"></span>Sun</span>
+    <span class="tag"><span class="dot marr"></span>Marriage</span>
+    <span class="tag"><span class="dot hlth"></span>Health</span>
+  </div>  <div class="toggles">
+    <label><input type="checkbox" id="tPrimary" checked> Primary (Heart/Head/Life)</label>
+    <label><input type="checkbox" id="tFate" checked> IraNami/Fate</label>
+    <label><input type="checkbox" id="tSun" checked> Sun</label>
+    <label><input type="checkbox" id="tMarr" checked> Marriage</label>
+    <label><input type="checkbox" id="tHealth" checked> Health</label>
+  </div>  <div class="btns">
+    <button class="btnLike" id="startBtn">▶️ Start</button>
+    <select id="camsel" class="btnLike"></select>
+    <button class="btnLike" id="cycleBtn">🔁 Cycle</button><select id="resSel" class="btnLike">
+  <option value="1280x720">HD 1280×720</option>
+  <option value="1920x1080">FullHD 1920×1080</option>
+  <option value="640x480">VGA 640×480</option>
+</select>
+<select id="fpsSel" class="btnLike">
+  <option value="30">30 FPS</option>
+  <option value="60">60 FPS</option>
+  <option value="24">24 FPS</option>
+</select>
 
-</div><div class="sliderRow">
-  <label>Edge <input id="edge" type="range" min="40" max="110" value="75"></label>
-  <label>Detail <input id="gk" type="range" min="1" max="5" value="3"></label>
-</div><div id="status"></div>
-<div id="summary">
-  <h3>🔎 AI Summary</h3>
-  <div id="sumtext"></div>
-</div><footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.0</footer><script>
+<input id="pick" type="file" accept="image/*" class="btnLike" />
+<button class="left" id="flipBtn">↔️ Flip</button>
+<button class="torch" id="torchBtn" hidden>🔦 Torch</button>
+<label class="btnLike" style="display:flex;align-items:center;gap:8px">
+  Zoom <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
+</label>
+
+<button class="an" id="anBtn">✨ Analyze</button>
+<button class="report" id="reportBtn">📄 Report</button>
+<button class="btnLike" id="clearBtn">🧹 Clear</button>
+
+  </div>  <div class="sliderRow">
+    <label>Edge <input id="edge" type="range" min="40" max="110" value="75"></label>
+    <label>Detail <input id="gk" type="range" min="1" max="5" value="3"></label>
+  </div>  <div id="status"></div>
+  <div id="summary">
+    <h3>🔎 AI Summary</h3>
+    <div id="sumtext"></div>
+  </div>  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.1</footer><script>
 /* ===== refs ===== */
 const video=byId('cam'), cv=byId('cv'), ctx=cv.getContext('2d');
 const startBtn=byId('startBtn'), camsel=byId('camsel'), cycleBtn=byId('cycleBtn');
@@ -142,7 +146,7 @@ pick.onchange = e=>{ const f=e.target.files?.[0]; if(!f) return; const img=new I
 clearBtn.onclick= ()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; byId('summary').style.display='none'; msg('🧹 Cleared. Ready.'); };
 
 /* report */
-reportBtn.onclick= ()=>{ if(!captured){ msg('Capture first'); return; } const data=cv.toDataURL('image/png'); const s=last?buildSummary(last):'<p>Run Analyze first.</p>'; const w=window.open('','_blank'); w.document.write(`<html><head><title>Palmistry Report</title><style>body{font-family:system-ui;padding:12px;color:#123}h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style></head><body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div></body></html>`); w.document.close(); };/* ===== ANALYZE v5.0 (fixed) ===== */ anBtn.onclick= ()=>{ if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); msg('⏳ Analyzing…'); setTimeout(()=>{ try{ analyzeV5(); }catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } }, 50); };
+reportBtn.onclick= ()=>{ if(!captured){ msg('Capture first'); return; } const data=cv.toDataURL('image/png'); const s=last?buildSummary(last):'<p>Run Analyze first.</p>'; const w=window.open('','_blank'); w.document.write(`<html><head><title>Palmistry Report</title><style>body{font-family:system-ui;padding:12px;color:#123}h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style></head><body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div></body></html>`); w.document.close(); };/* ===== ANALYZE v5.1 (syntax/logic fixed) ===== */ anBtn.onclick= ()=>{ if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); msg('⏳ Analyzing…'); setTimeout(()=>{ try{ analyzeV5(); }catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } }, 50); };
 
 function analyzeV5(){ if(!cv.width || !cv.height){ msg('No canvas'); return; } norm(1024, 1_000_000);
 
@@ -184,7 +188,7 @@ ctx.globalAlpha=0.95; if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPa
 
 last={ heart:M(pHeart), head:M(pHead), life:M(pLife), fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth) }; showSummary(buildSummary(last)); msg('✨ Analyze done'); }
 
-function buildSummary(m){ const grade=(L,G)=> (L<80?'weak': G>15?'fragmented': L>220?'strong':'moderate'); const ori=(r)=>{ const d=r*180/Math.PI; return d<-25?'tilt-up': d>25?'tilt-down':'level'; }; const line=(name,mm)=> !mm||!mm.len ? ${name}: n/a : ${name}: <b>${grade(mm.len,mm.gaps)}</b> (${ori(mm.slope)}), ~${mm.len}, gaps ${mm.gaps}.; const pri = ❤️ ${line('Heart',m.heart)}<br>🧡 ${line('Head',m.head)}<br>💚 ${line('Life',m.life)}; const sec = 🟪 IraNami/Fate: ${line('Fate',m.fate)}<br>🟨 Sun: ${line('Sun',m.sun)}<br>🩷 Marriage: ${ m.marriage&&m.marriage.length? m.marriage.map((x,i)=>#${i+1} ~${x.len}).join(', ') : 'n/a' }<br>🩵 Health: ${line('Health',m.health)}; return <p>${pri}</p><hr/><p>${sec}</p>; }
+function buildSummary(m){ const grade=(L,G)=> (L<80?'weak': G>15?'fragmented': L>220?'strong':'moderate'); const ori=(r)=>{ const d=r*180/Math.PI; return d<-25?'tilt-up': d>25?'tilt-down':'level'; }; const line=(name,mm)=> (!mm||!mm.len) ? ${name}: n/a : ${name}: <b>${grade(mm.len,mm.gaps)}</b> (${ori(mm.slope)}), ~${mm.len}, gaps ${mm.gaps}.; const pri = ❤️ ${line('Heart',m.heart)}<br>🧡 ${line('Head',m.head)}<br>💚 ${line('Life',m.life)}; const sec = 🟪 IraNami/Fate: ${line('Fate',m.fate)}<br>🟨 Sun: ${line('Sun',m.sun)}<br>🩷 Marriage: ${ m.marriage&&m.marriage.length? m.marriage.map((x,i)=>#${i+1} ~${x.len}).join(', ') : 'n/a' }<br>🩵 Health: ${line('Health',m.health)}; return <p>${pri}</p><hr/><p>${sec}</p>; }
 
 window.addEventListener('load', ()=>{ msg('▶️ Start → Allow camera. Capture/Upload → Analyze. Use toggles to show/hide lines.'); }); </script>
 
