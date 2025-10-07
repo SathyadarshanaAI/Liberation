@@ -1,34 +1,117 @@
-<!-- ===== CAMERA FRAME ===== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Camera Mini</title>
+<style>
+  :root{--pri:#16f0a7;--bg:#0b0f16}
+  body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+  .wrap{
+    position:relative; width:92vw; max-width:480px; margin:16px auto;
+    border:2px solid var(--pri); border-radius:16px; overflow:hidden;
+    aspect-ratio:3/4; background:#000;
+  }
+  video,canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:#000}
+  #cv{display:none}
+  .btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:10px 0}
+  button,select{border:none; padding:.6em 1em; border-radius:10px; font-weight:700}
+  #status{max-width:480px; margin:10px auto; padding:10px; border:1px dashed #355; border-radius:10px; display:block}
+</style>
+</head>
+<body>
+<h2>Camera Mini</h2>
+
 <div class="wrap">
-  <!-- live preview -->
   <video id="cam" playsinline muted autoplay></video>
-
-  <!-- captured still (analyze overlays draw here) -->
   <canvas id="cv"></canvas>
-
-  <!-- palm guide overlay -->
-  <canvas id="overlayGuide"></canvas>
-
-  <!-- shutter -->
-  <button class="captureBtn" id="capBtn">Capture</button>
 </div>
 
-<!-- ===== CAMERA CONTROLS ===== -->
 <div class="btns">
-  <button class="btnLike" id="startBtn">▶️ Start</button>
-
-  <!-- camera selector (populated after Start) -->
-  <select id="camsel" class="btnLike"></select>
-
-  <button class="btnLike" id="cycleBtn">🔁 Cycle</button>
-  <button class="left btnLike" id="flipBtn">↔️ Flip</button>
-
-  <!-- will auto-hide if not supported -->
-  <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
-  <button class="btnLike" id="focusBtn" hidden>🎯 Focus</button>
-
-  <button class="btnLike" id="rotateBtn">⤿ Rotate 90°</button>
+  <button id="startBtn">▶️ Start</button>
+  <select id="camsel"></select>
+  <button id="cycleBtn">🔁 Cycle</button>
+  <button id="flipBtn">↔️ Flip</button>
 </div>
 
-<!-- optional: status line for camera errors / permission state -->
-<div id="status"></div>
+<div id="status">Ready. Click Start and Allow camera.</div>
+
+<script>
+const video=document.getElementById('cam');
+const canvas=document.getElementById('cv');
+const startBtn=document.getElementById('startBtn');
+const camsel=document.getElementById('camsel');
+const cycleBtn=document.getElementById('cycleBtn');
+const flipBtn=document.getElementById('flipBtn');
+let stream=null, track=null, isMirrored=false, camList=[], camIndex=0;
+
+function msg(t){ document.getElementById('status').textContent=t; }
+function showLive(){ video.style.display='block'; canvas.style.display='none'; }
+
+async function listCams(){
+  const devs=await navigator.mediaDevices.enumerateDevices();
+  camList=devs.filter(d=>d.kind==='videoinput');
+  camsel.innerHTML='';
+  camList.forEach((c,i)=>{
+    const o=document.createElement('option');
+    o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`;
+    camsel.appendChild(o);
+  });
+  camIndex=0; camsel.selectedIndex=0;
+}
+
+async function startCam(deviceId=null){
+  try{ if(stream) stream.getTracks().forEach(t=>t.stop()); }catch{}
+  const base={width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}};
+  let constraints={video:{...base},audio:false};
+  if(deviceId && String(deviceId).length>0){
+    constraints.video.deviceId={exact:deviceId};
+  }else{
+    constraints.video.facingMode={ideal:isMirrored?'user':'environment'};
+  }
+
+  try{
+    stream=await navigator.mediaDevices.getUserMedia(constraints);
+  }catch(e){
+    msg('⚠️ gUM error: '+(e.name||'')+' '+(e.message||e)+' — trying fallback');
+    stream=await navigator.mediaDevices.getUserMedia({video:true});
+  }
+
+  video.srcObject=stream;
+  await video.play().catch(e=>msg('video.play blocked: '+(e.message||e)));
+  track=stream.getVideoTracks()[0];
+
+  await new Promise(r=>{ if(video.readyState>=1) r(); else video.onloadedmetadata=r; });
+  showLive();
+  video.style.transform=isMirrored?'scaleX(-1)':'none';
+  msg('📷 '+(track.label||'Camera')+' ready');
+}
+
+startBtn.onclick=async()=>{
+  try{
+    if(navigator.permissions?.query){
+      const st=await navigator.permissions.query({name:'camera'});
+      msg('Permission: '+st.state+' — press Allow if asked.');
+    }
+  }catch{}
+  try{ await startCam(null); }catch(e){ return; }
+  await listCams();
+  const sel=camsel.value||camList[0]?.deviceId||null;
+  if(sel) await startCam(sel);
+};
+
+camsel.onchange=()=> startCam(camsel.value||null);
+cycleBtn.onclick=async()=>{
+  if(!camList.length) await listCams();
+  if(!camList.length) return msg('No cameras found.');
+  camIndex=(camIndex+1)%camList.length;
+  camsel.selectedIndex=camIndex;
+  await startCam(camList[camIndex].deviceId);
+};
+flipBtn.onclick=()=>{ isMirrored=!isMirrored; video.style.transform=isMirrored?'scaleX(-1)':'none'; };
+
+// helpful: resume on iOS when app returns to foreground
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && video.srcObject && video.paused){ video.play().catch(()=>{}); }});
+</script>
+</body>
+</html>
