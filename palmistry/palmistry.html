@@ -3,24 +3,35 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>Palmistry Universal v4.3 · Sathyadarshana</title>
+<title>Palmistry Universal v4.5 · Sathyadarshana</title>
 <style>
-:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff;--cy:#3ad5d5}
+:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
-html,body{height:100%}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 4px}
 small{opacity:.85}
-.wrap{position:relative;display:inline-block;user-select:none;-webkit-user-select:none}
-video,canvas{width:92vw;max-width:480px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
-#overlayGuide{position:absolute;inset:0;pointer-events:none}
+
+/* ONE frame (no triple windows) */
+.wrap{
+  position:relative;
+  width:92vw;max-width:480px;margin:12px auto;
+  border:2px solid var(--pri);border-radius:16px;overflow:hidden;
+}
+#cam,#cv,#overlayGuide{
+  position:absolute;inset:0;width:100%;height:100%;display:block;background:#000
+}
+#cv{display:none}               /* live: show video; captured: show canvas */
+#overlayGuide{pointer-events:none}
+
+/* capture button */
 .captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
   width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;
   font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
+
 .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
 .left{background:#16243a;color:#cfe9ff}
-.an{background:var(--pri);color:#062}
+.an{background:#16f0a7;color:#062}
 .cap{background:#fbbf24;color:#111}
 .torch{background:#22c55e;color:#021}
 .speak{background:#60a5fa;color:#021}
@@ -36,14 +47,13 @@ input[type=range]{accent-color:#16f0a7}
 .legend{display:flex;gap:8px;justify-content:center;margin:6px 0 0}
 .dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px}
 .heart{background:#ff3b3b}.head{background:#ffa533}.life{background:#42ff6c}
-footer{color:var(--pri);margin:12px 0 22px;font-size:.9em}
-.kbd{font-family:ui-monospace,Menlo,monospace;background:#0e1a28;border:1px solid #1e3350;padding:2px 6px;border-radius:6px}
+footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
 .badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:6px;background:#14304f;color:#9fd6ff;border:1px solid #23507e}
 </style>
 </head>
 <body>
-<h1>🖐️ Palmistry Universal v4.3 <span class="badge" id="fps">FPS —</span></h1>
-<small>Align palm inside guide → Capture → Analyze → Speak/Save</small>
+<h1>🖐️ Palmistry Universal v4.5 <span class="badge" id="fps">FPS —</span></h1>
+<small>Align palm inside guide → Capture → Auto-Fix → Analyze</small>
 
 <div class="wrap">
   <video id="cam" playsinline muted></video>
@@ -66,6 +76,7 @@ footer{color:var(--pri);margin:12px 0 22px;font-size:.9em}
   <button class="left" id="flipBtn">↔️ Flip</button>
   <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
   <button class="btnLike" id="focusBtn" hidden>🎯 Focus</button>
+  <button class="btnLike" id="rotateBtn">⤿ Rotate 90°</button>
   <button class="an" id="anBtn">✨ Analyze</button>
   <button class="speak" id="speakBtn">🎧 Speak</button>
   <button class="cap" id="saveBtn">💾 Save</button>
@@ -86,7 +97,7 @@ footer{color:var(--pri);margin:12px 0 22px;font-size:.9em}
   <div id="sumtext"></div>
 </div>
 
-<footer>© 2025 Sathyadarshana · Palmistry AI Overlay · <span class="kbd">Tip:</span> Bright light + stable hand</footer>
+<footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
 /* ===== CORE VARS ===== */
@@ -112,33 +123,32 @@ const startBtn = document.getElementById('startBtn'),
       gkSl     = document.getElementById('gk'),
       ctrSl    = document.getElementById('contrast'),
       autoBox  = document.getElementById('autoTune'),
+      rotateBtn= document.getElementById('rotateBtn'),
       fpsBadge = document.getElementById('fps');
 let stream=null, track=null, captured=false, isMirrored=false, wakeLock=null;
 let camList=[], camIndex=0;
-let lastMetrics=null; // store AI metrics for summary/report
+let lastMetrics=null;
 let lastPaint=performance.now(), frameCount=0;
 
-/* ===== Helpers ===== */
+/* ===== UI helpers (single-frame toggle) ===== */
+function showLive(){ video.style.display='block'; canvas.style.display='none'; guide.style.display='block'; }
+function showStill(){ video.style.display='none'; canvas.style.display='block'; guide.style.display='block'; }
+
 function msg(t){ const s=document.getElementById('status'); s.textContent=t; s.style.display='block'; }
 function showSummary(html){ const b=document.getElementById('summary'); document.getElementById('sumtext').innerHTML=html; b.style.display='block'; }
 function savePrefs(){ localStorage.setItem('palm_prefs', JSON.stringify({edge:edgeSl.value, gk:gkSl.value, ctr:ctrSl.value, mirror:isMirrored, auto:autoBox.checked})); }
 function loadPrefs(){ try{ const p=JSON.parse(localStorage.getItem('palm_prefs')||'{}'); if(p.edge) edgeSl.value=p.edge; if(p.gk) gkSl.value=p.gk; if(p.ctr) ctrSl.value=p.ctr; if(typeof p.mirror==='boolean') isMirrored=p.mirror; if(typeof p.auto==='boolean') autoBox.checked=p.auto; }catch{} }
 loadPrefs();
 
-/* ===== Palm guide overlay ===== */
+/* ===== Guide ===== */
 function drawGuide(){
-  guide.width = canvas.width || video.videoWidth || 1280;
-  guide.height= canvas.height|| video.videoHeight|| 720;
+  guide.width = (canvas.width||video.videoWidth||1280);
+  guide.height= (canvas.height||video.videoHeight||720);
   const w=guide.width,h=guide.height;
   gctx.clearRect(0,0,w,h);
-  // outer rounded frame
   gctx.strokeStyle='rgba(0,229,255,.35)'; gctx.lineWidth=3; gctx.strokeRect(10,10,w-20,h-20);
-  // palm ellipse
-  gctx.beginPath();
-  const cx=w*0.5, cy=h*0.52, rx=w*0.32, ry=h*0.38;
-  gctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
-  gctx.strokeStyle='rgba(58,213,213,.55)'; gctx.lineWidth=2; gctx.stroke();
-  // bands (heart/head/life)
+  gctx.beginPath(); const cx=w*0.5, cy=h*0.52, rx=w*0.32, ry=h*0.38;
+  gctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); gctx.strokeStyle='rgba(58,213,213,.55)'; gctx.lineWidth=2; gctx.stroke();
   const yH=Math.floor(h*0.28), yD=Math.floor(h*0.5), yL=Math.floor(h*0.72);
   gctx.setLineDash([6,6]); gctx.strokeStyle='rgba(255,255,255,.25)';
   [yH,yD,yL].forEach(y=>{ gctx.beginPath(); gctx.moveTo(16,y); gctx.lineTo(w-16,y); gctx.stroke(); });
@@ -146,10 +156,7 @@ function drawGuide(){
 }
 
 /* ===== Wake Lock ===== */
-async function lockScreen(){
-  try{ if('wakeLock' in navigator) wakeLock=await navigator.wakeLock.request('screen'); }
-  catch{} 
-}
+async function lockScreen(){ try{ if('wakeLock' in navigator) wakeLock=await navigator.wakeLock.request('screen'); }catch{} }
 
 /* ===== CAMERA ===== */
 async function listCams(){
@@ -168,23 +175,17 @@ async function startCam(deviceId=null){
   try{
     stream = await navigator.mediaDevices.getUserMedia(constraints);
   }catch(e){
-    // fallback generic
     try{ stream=await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); }
     catch(err){ msg('❌ Camera error: '+err.message); return; }
   }
-  video.srcObject = stream;
-  await video.play().catch(()=>{}); // iOS needs user gesture (Start button handles)
+  video.srcObject = stream; await video.play().catch(()=>{});
   track = stream.getVideoTracks()[0];
   const caps=track.getCapabilities?.()||{};
-  torchBtn.hidden = !('torch' in caps);
-  focusBtn.hidden = !(caps.focusMode || caps.focusDistance);
+  torchBtn.hidden = !('torch' in caps); focusBtn.hidden = !(caps.focusMode || caps.focusDistance);
 
-  // canvas size follows video
-  const vw = video.videoWidth  || 1280;
-  const vh = video.videoHeight || 720;
-  canvas.width  = vw; canvas.height = vh;
-  drawGuide();
-
+  // size
+  const vw = video.videoWidth  || 1280, vh = video.videoHeight || 720;
+  canvas.width=vw; canvas.height=vh; drawGuide(); showLive();
   video.style.transform = isMirrored ? 'scaleX(-1)' : 'none';
   msg(`📷 ${track.label||'Camera'} ready — Capture → Analyze`);
   perfLoop();
@@ -194,30 +195,12 @@ function perfLoop(){
   if(now-lastPaint>1000){ fpsBadge.textContent='FPS ' + frameCount; lastPaint=now; frameCount=0; }
   frameCount++; requestAnimationFrame(perfLoop);
 }
-startBtn.onclick = async ()=>{
-  try{
-    await lockScreen();
-    await listCams();
-    await startCam(camsel.value || camList[0]?.deviceId || null);
-  }catch(e){ msg('❌ '+(e.message||e)); }
-};
-cycleBtn.onclick = async ()=>{
-  if(!camList.length) await listCams();
-  if(!camList.length) return msg('No cameras.');
-  camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId);
-};
+startBtn.onclick = async ()=>{ await lockScreen(); await listCams(); await startCam(camsel.value || camList[0]?.deviceId || null); };
+cycleBtn.onclick = async ()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras.'); camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
 camsel.onchange = ()=> startCam(camsel.value);
-flipBtn.onclick = ()=>{ isMirrored = !isMirrored; savePrefs(); if(stream && !captured){ video.style.transform = isMirrored ? 'scaleX(-1)' : 'none'; } else if(captured){ mirrorCanvas(); } };
+flipBtn.onclick = ()=>{ isMirrored = !isMirrored; localStorage.setItem('palm_mirror',isMirrored?'1':'0'); if(stream && !captured){ video.style.transform = isMirrored ? 'scaleX(-1)' : 'none'; } else if(captured){ mirrorCanvas(); } };
 torchBtn.onclick = async()=>{ if(!track) return; try{ const st=track.getSettings?.()||{}; await track.applyConstraints({advanced:[{torch:!st.torch}]}); }catch(e){ msg('Torch error: '+e.message); } };
-focusBtn.onclick = async()=>{ // best-effort
-  if(!track) return;
-  try{
-    const caps = track.getCapabilities?.()||{};
-    if(caps.focusMode && caps.focusMode.includes('continuous')) await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
-    else if(caps.focusMode && caps.focusMode.includes('single-shot')) await track.applyConstraints({advanced:[{focusMode:'single-shot'}]});
-    msg('🎯 Focus requested.');
-  }catch(e){ msg('Focus not supported on this device.'); }
-};
+focusBtn.onclick = async()=>{ if(!track) return; try{ const caps = track.getCapabilities?.()||{}; if(caps.focusMode && caps.focusMode.includes('continuous')) await track.applyConstraints({advanced:[{focusMode:'continuous'}]}); else if(caps.focusMode && caps.focusMode.includes('single-shot')) await track.applyConstraints({advanced:[{focusMode:'single-shot'}]}); msg('🎯 Focus requested.'); }catch(e){ msg('Focus not supported on this device.'); } };
 navigator.mediaDevices?.addEventListener?.('devicechange', async()=>{ await listCams(); });
 
 /* ===== CAPTURE / LOAD ===== */
@@ -227,12 +210,12 @@ capBtn.onclick = async ()=>{
   canvas.width  = video.videoWidth  || 1280;
   canvas.height = video.videoHeight || 720;
   ctx.save(); if(isMirrored){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
-  // optional contrast (pre-enhance)
-  const ctr = Number(ctrSl.value)/100; // 0–0.6
+  const ctr = Number(document.getElementById('contrast').value)/100;
   if(ctr>0){ ctx.filter = `contrast(${1+ctr}) saturate(${1+ctr*0.6}) brightness(${1+ctr*0.15})`; }
-  ctx.drawImage(video,0,0,canvas.width,canvas.height); 
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
   ctx.filter='none'; ctx.restore();
-  captured=true; lastMetrics=null; document.getElementById('summary').style.display='none';
+  captured=true; showStill();
+  detectOrientationAndFix(); // 🧭 auto correct + center zoom
   msg('🖐️ Photo locked. ✨ Analyze කරන්න.');
   drawGuide();
 };
@@ -241,95 +224,133 @@ pick.onchange = e=>{
   const img=new Image(); img.onload=()=>{
     canvas.width=img.naturalWidth; canvas.height=img.naturalHeight; ctx.drawImage(img,0,0);
     if(isMirrored) mirrorCanvas();
-    captured=true; lastMetrics=null; document.getElementById('summary').style.display='none'; msg('🖼️ Photo loaded. ✨ Analyze.');
-    drawGuide();
+    captured=true; showStill(); detectOrientationAndFix(); msg('🖼️ Photo loaded. ✨ Analyze.'); drawGuide();
   }; img.onerror=()=>msg('❌ Image load failed.'); img.src=URL.createObjectURL(f);
 };
-clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; lastMetrics=null; document.getElementById('summary').style.display='none'; msg('🧹 Cleared. Ready.'); drawGuide(); };
+clearBtn.onclick = ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); captured=false; lastMetrics=null; document.getElementById('summary').style.display='none'; showLive(); msg('🧹 Cleared. Ready.'); drawGuide(); };
 function mirrorCanvas(){ const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=canvas.height; tmp.getContext('2d').drawImage(canvas,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,canvas.width,0); ctx.drawImage(tmp,0,0); ctx.restore(); }
 
 /* ===== SAVE / REPORT ===== */
-saveBtn.onclick = ()=>{
-  if(!captured) return msg('Capture/Load first.');
-  const data=canvas.toDataURL('image/png');
-  if(/iPhone|iPad|Macintosh/.test(navigator.userAgent)){ const w=window.open(); w.document.write('<img src="'+data+'" style="width:100%">'); msg('📷 New tab opened. Long-press → Save Image.'); }
-  else{ const a=document.createElement('a'); a.href=data; a.download='palm_'+Date.now()+'.png'; a.click(); msg('💾 Saved.'); }
-};
-reportBtn.onclick = ()=>{
-  if(!captured){ msg('Capture first'); return; }
-  const data=canvas.toDataURL('image/png');
-  const s = lastMetrics ? buildSummaryHTML(lastMetrics) : '<p>Run Analyze first to get AI summary.</p>';
-  const win=window.open('', '_blank');
-  win.document.write(`
-    <html><head><title>Palmistry Report</title>
-    <style>body{font-family:system-ui;padding:12px;color:#123}
-    h2{margin:6px 0} .box{border:1px solid #ccd;padding:10px;border-radius:10px}
-    img{max-width:100%}</style></head>
-    <body>
-      <h2>🖐️ Palmistry Report</h2>
-      <div class="box"><img src="${data}"/></div>
-      <div class="box">${s}</div>
-      <p><em>Tip:</em> Use Print → Save as PDF.</p>
-    </body></html>`);
-  win.document.close();
+let reportWin=null;
+saveBtn.onclick = ()=>{ if(!captured) return msg('Capture/Load first.'); const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click(); msg('💾 Saved.'); };
+reportBtn.onclick = ()=>{ if(!captured){ msg('Capture first'); return; } const data=canvas.toDataURL('image/png'); const s = lastMetrics ? buildSummaryHTML(lastMetrics) : '<p>Run Analyze first to get AI summary.</p>'; if(!reportWin||reportWin.closed) reportWin=window.open('','_blank'); reportWin.document.open(); reportWin.document.write(`<html><head><title>Palmistry Report</title><style>body{font-family:system-ui;padding:12px;color:#123}h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style></head><body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div><p><em>Tip:</em> Print → Save as PDF.</p></body></html>`); reportWin.document.close(); reportWin.focus(); };
+
+/* ===== ROTATE button ===== */
+rotateBtn.onclick = () => {
+  if(!canvas.width || !canvas.height) return msg('Capture/Load first.');
+  const tmp = document.createElement('canvas');
+  tmp.width = canvas.width; tmp.height = canvas.height;
+  tmp.getContext('2d').drawImage(canvas,0,0);
+  const w = canvas.width, h = canvas.height;
+  canvas.width = h; canvas.height = w;
+  const c = canvas.getContext('2d');
+  c.save(); c.translate(canvas.width,0); c.rotate(Math.PI/2); c.drawImage(tmp,0,0); c.restore();
+  captured = true; lastMetrics = null; document.getElementById('summary').style.display='none'; drawGuide(); msg('🌀 Rotated 90°. Now Analyze.');
+  showStill();
 };
 
 /* ===== ANALYZE ===== */
-anBtn.onclick = ()=>{
-  if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.');
-  try{
-    analyzePureJS();
-  }catch(e){ console.error(e); msg('❌ Analyze failed: '+(e?.message||e)); }
-};
-speakBtn.onclick = ()=>{
-  if(!lastMetrics){ msg('Analyze first'); return; }
-  const {lang='si', summarySi, summaryEn} = lastMetrics;
-  const utt = new SpeechSynthesisUtterance((lang==='si'?summarySi:summaryEn).replace(/<[^>]+>/g,' '));
-  utt.lang = (lang==='si'?'si-LK':'en-US');
-  utt.rate = 1; utt.pitch = 1;
-  window.speechSynthesis.cancel(); window.speechSynthesis.speak(utt);
-};
+anBtn.onclick = ()=>{ if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); try{ analyzePureJS(); }catch(e){ console.error(e); msg('❌ Analyze failed: '+(e?.message||e)); } };
+speakBtn.onclick = ()=>{ if(!lastMetrics){ msg('Analyze first'); return; } const {lang='si', summarySi, summaryEn} = lastMetrics; const utt=new SpeechSynthesisUtterance((lang==='si'?summarySi:summaryEn).replace(/<[^>]+>/g,' ')); utt.lang=(lang==='si'?'si-LK':'en-US'); utt.rate=1; utt.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(utt); };
 
-/* ===== PURE-JS PIPELINE + AI-Lite (improved) ===== */
+/* ===== AUTO ORIENTATION + CENTER ZOOM ===== */
+function detectOrientationAndFix(){
+  if(!captured) return;
+  const w = canvas.width, h = canvas.height;
+  const frame = ctx.getImageData(0,0,w,h); const imgData=frame.data;
+
+  // brightness quadrants
+  let top=0,bottom=0,left=0,right=0; const step=10;
+  for(let y=0;y<h;y+=step){
+    for(let x=0;x<w;x+=step){
+      const i=(y*w+x)*4, lum=imgData[i]*.299+imgData[i+1]*.587+imgData[i+2]*.114;
+      if(y<h/2) top+=lum; else bottom+=lum;
+      if(x<w/2) left+=lum; else right+=lum;
+    }
+  }
+  const verticalDiff=(bottom-top), horizontalDiff=(right-left);
+  let rotated=false, mirrored=false;
+
+  if(Math.abs(verticalDiff)<Math.abs(horizontalDiff)){
+    // sideways → rotate 90 (direction by left/right)
+    const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h;
+    tmp.getContext('2d').drawImage(canvas,0,0);
+    canvas.width=h; canvas.height=w;
+    ctx.save();
+    if(right>left){ ctx.translate(0,canvas.height); ctx.rotate(-Math.PI/2); }
+    else{ ctx.translate(canvas.width,0); ctx.rotate(Math.PI/2); }
+    ctx.drawImage(tmp,0,0); ctx.restore();
+    rotated=true;
+  } else if(verticalDiff<0){
+    // upside down
+    const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h;
+    tmp.getContext('2d').drawImage(canvas,0,0);
+    ctx.save(); ctx.clearRect(0,0,w,h);
+    ctx.translate(canvas.width,canvas.height); ctx.rotate(Math.PI);
+    ctx.drawImage(tmp,0,0); ctx.restore();
+    rotated=true;
+  }
+
+  // mirror detect (center dark → likely mirrored wrong against light bg)
+  const mid = ((h>>1)*w+(w>>1))<<2;
+  const midLum = imgData[mid]*.299 + imgData[mid+1]*.587 + imgData[mid+2]*.114;
+  if(midLum < 60 && !isMirrored){ mirrorCanvas(); mirrored=true; }
+
+  // center zoom (skin sweep)
+  const zoomCtx = ctx;
+  const scan = zoomCtx.getImageData(0,0,canvas.width,canvas.height).data;
+  let minY=h, maxY=0;
+  for(let y=0;y<h;y+=5){
+    for(let x=0;x<w;x+=5){
+      const i=(y*w+x)*4, r=scan[i], g=scan[i+1], b=scan[i+2];
+      const skin = r>90 && g>60 && b<170 && r>g && r>b;
+      if(skin){ if(y<minY)minY=y; if(y>maxY)maxY=y; }
+    }
+  }
+  if(maxY-minY>50){
+    const newH=maxY-minY;
+    const tmp=document.createElement('canvas'); tmp.width=canvas.width; tmp.height=newH;
+    tmp.getContext('2d').drawImage(canvas,0,-minY);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(tmp,0,0,canvas.width,canvas.height);
+  }
+
+  if(rotated||mirrored) msg('🤖 Auto orientation adjusted!');
+  else msg('✅ Orientation already correct.');
+  drawGuide();
+}
+
+/* ===== PURE-JS ANALYZE (same as v4.3, minor safety) ===== */
 function analyzePureJS(){
-  // Keep an ORIGINAL copy for the report; process on a downscaled buffer only
-  const srcFull = document.createElement('canvas');
-  srcFull.width = canvas.width; srcFull.height = canvas.height;
-  srcFull.getContext('2d').drawImage(canvas,0,0);
+  // keep original
+  const srcFull=document.createElement('canvas'); srcFull.width=canvas.width; srcFull.height=canvas.height; srcFull.getContext('2d').drawImage(canvas,0,0);
 
-  // Auto tuning based on histogram
+  // auto tune
   if(autoBox.checked){
     const h = histogramLuma(canvas);
     const peak = h.indexOf(Math.max(...h));
-    // auto edge threshold around mid-high detail zones
     edgeSl.value = String(Math.min(120, Math.max(40, 60 + (peak-140)*0.25 )));
-    // auto detail pass: noisier images → more blur
     const noise = estimateNoise(h);
     gkSl.value = String(noise>0.055 ? 4 : noise>0.035 ? 3 : 2);
   }
   savePrefs();
 
-  // Work at <=540 width for speed
+  // work buffer
   const work=document.createElement('canvas');
   const scale = canvas.width>540 ? 540/canvas.width : 1;
-  work.width = Math.round(canvas.width*scale);
-  work.height= Math.round(canvas.height*scale);
+  work.width = Math.round(canvas.width*scale); work.height= Math.round(canvas.height*scale);
   const wctx=work.getContext('2d');
-  // pre-enhance: contrast
-  const ctr = Number(ctrSl.value)/100;
-  if(ctr>0){ wctx.filter = `contrast(${1+ctr}) saturate(${1+ctr*0.6}) brightness(${1+ctr*0.15})`; }
-  wctx.drawImage(canvas,0,0,work.width,work.height);
-  wctx.filter='none';
+  const ctr = Number(ctrSl.value)/100; if(ctr>0){ wctx.filter = `contrast(${1+ctr}) saturate(${1+ctr*0.6}) brightness(${1+ctr*0.15})`; }
+  wctx.drawImage(canvas,0,0,work.width,work.height); wctx.filter='none';
 
   const w=work.width,h=work.height,src=wctx.getImageData(0,0,w,h);
-  const edgeVal=parseInt(edgeSl.value,10)/255;
-  const passes=parseInt(gkSl.value,10);
+  const edgeVal=parseInt(edgeSl.value,10)/255, passes=parseInt(gkSl.value,10);
 
-  // grayscale
+  // gray
   const gray=new Uint8ClampedArray(w*h); const d=src.data;
   for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i]*.299+d[i+1]*.587+d[i+2]*.114;
 
-  // blur (3x3) passes
+  // blur
   let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1],n=16;
   for(let p=0;p<passes;p++){ const t=new Float32Array(w*h);
     for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ let s=0,i=0;
@@ -338,7 +359,7 @@ function analyzePureJS(){
   }
   const blur=Uint8ClampedArray.from(a);
 
-  // sobel edges -> binary
+  // sobel
   const mag=new Float32Array(w*h); let mx=1;
   for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
     const gx=-blur[i-w-1]-2*blur[i-1]-blur[i+w-1]+blur[i-w+1]+2*blur[i+1]+blur[i+w+1];
@@ -347,12 +368,11 @@ function analyzePureJS(){
   }
   const T=edgeVal*mx; const bin=new Uint8ClampedArray(w*h); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0;
 
-  // skeletonize (Zhang–Suen) with iteration cap
+  // skeleton
   const sk=Uint8Array.from(bin); let changed=true,pass=0;
   const N=(x,y)=>sk[(y-1)*w+x]+sk[(y-1)*w+x+1]+sk[y*w+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)*w+x-1]+sk[y*w+x-1]+sk[(y-1)*w+x-1];
-  const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)*w+x+1],sk[y*w+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)*w+x-1],sk[y*w+x-1],sk[(y-1)*w+x-1]];
-    let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
-  const MAX_ITERS = 30;
+  const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)*w+x+1],sk[y*w+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)*w+x-1],sk[y*w+x-1],sk[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
+  const MAX_ITERS=30;
   while(changed&&pass<MAX_ITERS){ changed=false; const rem=[];
     for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y);
       if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]*sk[y*w+x+1]*sk[(y+1)*w+x]==0)&&(sk[y*w+x+1]*sk[y*w+x-1]*sk[(y-1)*w+x]==0)) rem.push(i);}
@@ -362,12 +382,11 @@ function analyzePureJS(){
     rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; pass++;
   }
 
-  // choose region bands for Heart/Head/Life
+  // bands & paths
   const yH0=0, yH1=Math.floor(h*0.30), yD0=yH1, yD1=Math.floor(h*0.55), yL0=yD1, yL1=h;
   function pickLongest(y0,y1){
     const seen=new Uint8Array(w*h); const NB=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-    let best=[]; 
-    function walk(sx,sy){ const st=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
+    let best=[]; function walk(sx,sy){ const st=[[sx,sy]], pts=[]; seen[sy*w+sx]=1;
       while(st.length){ const [x,y]=st.pop(); pts.push([x,y]);
         for(const [dx,dy] of NB){ const nx=x+dx, ny=y+dy, id=ny*w+nx;
           if(nx>0&&ny>y0&&nx<w-1&&ny<y1-1 && !seen[id] && sk[id]){ seen[id]=1; st.push([nx,ny]); } } }
@@ -377,176 +396,38 @@ function analyzePureJS(){
   }
   const pHeart=pickLongest(yH0,yH1), pHead=pickLongest(yD0,yD1), pLife=pickLongest(yL0,yL1);
 
-  // re-draw overlay on ORIGINAL canvas (for crisp lines)
+  // draw overlay on original
   ctx.drawImage(srcFull,0,0);
-  const overlay = ctx.createImageData(canvas.width,canvas.height);
-  // scale coordinates back if we processed smaller
-  const sx = canvas.width / w, sy = canvas.height / h;
-
-  // faint edge mist (cyan)
-  for(let y=0;y<h;y++){
-    for(let x=0;x<w;x++){
-      const i=y*w+x, j=((y*sy)|0)*canvas.width + ((x*sx)|0);
-      if(sk[i]){ const idx=j*4; overlay.data[idx]=0; overlay.data[idx+1]=255; overlay.data[idx+2]=255; overlay.data[idx+3]=70; }
-    }
-  }
+  const sx=canvas.width/w, sy=canvas.height/h;
+  const overlay=ctx.createImageData(canvas.width,canvas.height);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const i=y*w+x, j=(((y*sy)|0)*canvas.width + ((x*sx)|0))*4; if(sk[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=70; } }
   ctx.putImageData(overlay,0,0);
-
-  // colored lines
   drawPathScaled(pHeart,'#ff3b3b',4,sx,sy);
   drawPathScaled(pHead ,'#ffa533',4,sx,sy);
   drawPathScaled(pLife ,'#42ff6c',4,sx,sy);
 
-  // metrics
-  const M = (pts,name)=>({ name, len:polyLen(pts)*((sx+sy)/2), slope:estSlope(pts), gaps:countGaps(pts) });
-  lastMetrics = { heart:M(pHeart,'Heart'), head:M(pHead,'Head'), life:M(pLife,'Life'), lang:'si' };
-  const html = buildSummaryHTML(lastMetrics);
-  showSummary(html);
+  const M=(pts,name)=>({name,len:polyLen(pts)*((sx+sy)/2),slope:estSlope(pts),gaps:countGaps(pts)});
+  lastMetrics={heart:M(pHeart,'Heart'),head:M(pHead,'Head'),life:M(pLife,'Life'),lang:'si'};
+  showSummary(buildSummaryHTML(lastMetrics));
   msg('✨ Analyze done');
   drawGuide();
 }
 
-/* ===== helpers (draw & metrics & summary) ===== */
-function drawPathScaled(pts,color,wid,sx,sy){
-  if(!pts || pts.length<6) return;
-  ctx.lineJoin='round'; ctx.lineCap='round';
-  ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath();
-  ctx.moveTo(pts[0][0]*sx,pts[0][1]*sy); for(const [x,y] of pts) ctx.lineTo(x*sx,y*sy); ctx.stroke();
-  ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
-  ctx.moveTo(pts[0][0]*sx,pts[0][1]*sy); for(const [x,y] of pts) ctx.lineTo(x*sx,y*sy); ctx.stroke();
-}
-function polyLen(pts){ let L=0; for(let i=1;i<pts.length;i++){ const dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1]; L+=Math.hypot(dx,dy); } return L; }
+/* helpers */
+function drawPathScaled(pts,color,wid,sx,sy){ if(!pts||pts.length<6)return; ctx.lineJoin='round';ctx.lineCap='round'; ctx.strokeStyle='#000';ctx.lineWidth=wid+2;ctx.beginPath();ctx.moveTo(pts[0][0]*sx,pts[0][1]*sy); for(const [x,y] of pts)ctx.lineTo(x*sx,y*sy);ctx.stroke(); ctx.strokeStyle=color;ctx.lineWidth=wid;ctx.beginPath();ctx.moveTo(pts[0][0]*sx,pts[0][1]*sy); for(const [x,y] of pts)ctx.lineTo(x*sx,y*sy);ctx.stroke(); }
+function polyLen(pts){ let L=0; for(let i=1;i<pts.length;i++){ const dx=pts[i][0]-pts[i-1][0], dy=pts[i][1]-pts[i-1][1]; L+=Math.hypot(dx,dy);} return L;}
 function estSlope(pts){ if(pts.length<2) return 0; const a=pts[0], b=pts[pts.length-1]; return Math.atan2(b[1]-a[1], b[0]-a[0]); }
 function countGaps(pts){ let g=0; for(let i=2;i<pts.length;i++) if(Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1])>6) g++; return g; }
-function grade(len,gaps){ if(len<80) return 'weak'; if(gaps>15) return 'fragmented'; return len>220 ? 'strong' : 'moderate'; }
-function orientWords(rad){ const deg = rad*180/Math.PI; if(deg<-25) return 'tilt-up'; if(deg>25) return 'tilt-down'; return 'level'; }
+function grade(len,gaps){ if(len<80) return 'weak'; if(gaps>15) return 'fragmented'; return len>220?'strong':'moderate'; }
+function orientWords(rad){ const deg=rad*180/Math.PI; if(deg<-25) return 'tilt-up'; if(deg>25) return 'tilt-down'; return 'level'; }
+function buildSummaryHTML(m){ const hG=grade(m.heart.len,m.heart.gaps), dG=grade(m.head.len,m.head.gaps), lG=grade(m.life.len,m.life.gaps); const heart=`❤️ හෘද රේඛාව: <b>${hG}</b> (${orientWords(m.heart.slope)}), දිග ~${m.heart.len|0}, gaps ${m.heart.gaps}.`; const head=`🧡 ශිරස් රේඛාව: <b>${dG}</b> (${orientWords(m.head.slope)}), දිග ~${m.head.len|0}, gaps ${m.head.gaps}.`; const life=`💚 ජීව රේඛාව: <b>${lG}</b>, දිග ~${m.life.len|0}, gaps ${m.life.gaps}.`; const si=`<p>${heart}<br>${head}<br>${life}</p><p>📝 ව解: <i>${explainSi(hG,dG,lG)}</i></p>`; const en=`<p>Heart line: <b>${hG}</b> (${orientWords(m.heart.slope)}). Head line: <b>${dG}</b>. Life line: <b>${lG}</b>.</p><p><i>${explainEn(hG,dG,lG)}</i></p>`; m.summarySi=si; m.summaryEn=en; return si+'<hr/>'+en;}
+function explainSi(h,d,l){ let t=[]; if(h==='strong')t.push('වෙරදාරී කාරුණික ස්වභාවය.'); if(h==='weak')t.push('භාවනාව පාලනයට අවධානය.'); if(d==='strong')t.push('ප්‍රායෝගික බුද්ධිය හොඳයි.'); if(d==='fragmented')t.push('multitask අඩු කරලා සැලසුම් කරාම.'); if(l==='strong')t.push('ශක්තිය/දෘඪකම ඉහළ.'); if(l==='weak')t.push('විවේකය, නිද्रा, ජලය වැඩි කරන්න.'); return t.join(' ');}
+function explainEn(h,d,l){ let t=[]; if(h==='strong')t.push('Warm, empathetic nature.'); if(h==='weak')t.push('Balance emotions & boundaries.'); if(d==='strong')t.push('Clear, practical thinking.'); if(d==='fragmented')t.push('Reduce context switching.'); if(l==='strong')t.push('Good vitality and resilience.'); if(l==='weak')t.push('Rest, sleep, hydrate.'); return t.join(' ');}
+function histogramLuma(cnv){ const w=cnv.width,h=cnv.height, data=cnv.getContext('2d').getImageData(0,0,w,h).data, hist=new Array(256).fill(0); for(let i=0;i<data.length;i+=4){ const y=(data[i]*.299+data[i+1]*.587+data[i+2]*.114)|0; hist[y]++; } return hist; }
+function estimateNoise(hist){ const total=hist.reduce((a,b)=>a+b,0)||1; let mean=0; hist.forEach((c,i)=> mean+=i*c); mean/=total; let varsum=0; hist.forEach((c,i)=>{ varsum += c*(i-mean)*(i-mean); }); return Math.min(0.1, Math.sqrt(varsum/total)/255); }
 
-function buildSummaryHTML(m){
-  const hG=grade(m.heart.len,m.heart.gaps), dG=grade(m.head.len,m.head.gaps), lG=grade(m.life.len,m.life.gaps);
-  const heart= `❤️ හෘද රේඛාව: <b>${hG}</b> (${orientWords(m.heart.slope)}), දිග ~${m.heart.len|0}, gaps ${m.heart.gaps}.`;
-  const head = `🧡 ශිරස් රේඛාව: <b>${dG}</b> (${orientWords(m.head.slope)}), දිග ~${m.head.len|0}, gaps ${m.head.gaps}.`;
-  const life = `💚 ජීව රේඛාව: <b>${lG}</b>, දිග ~${m.life.len|0}, gaps ${m.life.gaps}.`;
-  const si = `<p>${heart}<br>${head}<br>${life}</p><p>📝 ව解: <i>${explainSi(hG,dG,lG)}</i></p>`;
-  const en = `<p>Heart line: <b>${hG}</b> (${orientWords(m.heart.slope)}). Head line: <b>${dG}</b>. Life line: <b>${lG}</b>.</p><p><i>${explainEn(hG,dG,lG)}</i></p>`;
-  m.summarySi = si; m.summaryEn = en;
-  return si + '<hr/>' + en;
-}
-function explainSi(h,d,l){
-  let t=[];
-  if(h==='strong') t.push('වෙරදාරී කාරුණික ස්වභාවය, නෑදෑ තන්හාව වැඩි.');
-  if(h==='weak') t.push('භාවනාව පාලනයට අවධානය දෙන්න.');
-  if(d==='strong') t.push('තීරණ ගැනීම පැහැදිලි, ප්‍රායෝගික බුද්ධිය හොඳයි.');
-  if(d==='fragmented') t.push('අධික multitask නැතිව වැඩ සැලසුම් කරන්න.');
-  if(l==='strong') t.push('ශක්තිය/දෘඪකම ඉහළ, දිගු ආයුද කායික ශක්තිය.');
-  if(l==='weak') t.push('විවේකය, නිද्रा, ජලය වැඩිකරන්න.');
-  return t.join(' ');
-}
-function explainEn(h,d,l){
-  let t=[];
-  if(h==='strong') t.push('Warm, empathetic nature; bonds deeply with people.');
-  if(h==='weak') t.push('Work on emotional balance & boundaries.');
-  if(d==='strong') t.push('Clear thinker and practical problem-solver.');
-  if(d==='fragmented') t.push('Reduce context switching; plan tasks carefully.');
-  if(l==='strong') t.push('Good vitality and resilience; steady stamina.');
-  if(l==='weak') t.push('Prioritize rest, sleep and hydration.');
-  return t.join(' ');
-}
-
-/* ===== Basic image stats for auto-tune ===== */
-function histogramLuma(cnv){
-  const w=cnv.width,h=cnv.height, ctx2=cnv.getContext('2d');
-  const data=ctx2.getImageData(0,0,w,h).data, hist=new Array(256).fill(0);
-  for(let i=0;i<data.length;i+=4){ const y=(data[i]*.299+data[i+1]*.587+data[i+2]*.114)|0; hist[y]++; }
-  return hist;
-}
-function estimateNoise(hist){
-  const total = hist.reduce((a,b)=>a+b,0)||1;
-  let mean=0; hist.forEach((c,i)=> mean+=i*c); mean/=total;
-  let varsum=0; hist.forEach((c,i)=>{ varsum += c*(i-mean)*(i-mean); });
-  const varPop = varsum/total;
-  // crude noise proxy [0..1]
-  return Math.min(0.1, Math.sqrt(varPop)/255);
-}
-
-/* ===== iOS autoplay hint: start after first tap anyway ===== */
+/* ===== iOS resume ===== */
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && video.srcObject && video.paused){ video.play().catch(()=>{}); }});
-
-/* ===== Save prefs on change ===== */
-[edgeSl,gkSl,ctrSl,autoBox].forEach(el=> el.addEventListener('input', savePrefs));
-
-/* ===== initial ===== */
-drawGuide();
-</script>/* ===== AUTO ORIENTATION FIX ===== */
-function detectOrientationAndFix(){
-  if(!captured) return msg('Capture first.');
-  const w = canvas.width, h = canvas.height;
-  const imgData = ctx.getImageData(0,0,w,h).data;
-
-  // compute top vs bottom brightness
-  let top=0,bottom=0,left=0,right=0;
-  const step = 10;
-  for(let y=0;y<h;y+=step){
-    for(let x=0;x<w;x+=step){
-      const i=(y*w+x)*4;
-      const lum = imgData[i]*0.299 + imgData[i+1]*0.587 + imgData[i+2]*0.114;
-      if(y<h/2) top+=lum; else bottom+=lum;
-      if(x<w/2) left+=lum; else right+=lum;
-    }
-  }
-
-  const avgT = top/((w/step)*(h/(2*step)));
-  const avgB = bottom/((w/step)*(h/(2*step)));
-  const avgL = left/((w/(2*step))*(h/step));
-  const avgR = right/((w/(2*step))*(h/step));
-
-  // check if upside down or rotated
-  const verticalDiff = avgB - avgT;
-  const horizontalDiff = avgR - avgL;
-  let rotated=false, mirrored=false;
-
-  if(Math.abs(verticalDiff)<Math.abs(horizontalDiff)){
-    // sideways
-    const tmp = document.createElement('canvas');
-    tmp.width=w; tmp.height=h;
-    tmp.getContext('2d').drawImage(canvas,0,0);
-    canvas.width=h; canvas.height=w;
-    ctx.save();
-    if(avgR>avgL){
-      // rotate left
-      ctx.translate(0,canvas.height);
-      ctx.rotate(-Math.PI/2);
-    }else{
-      // rotate right
-      ctx.translate(canvas.width,0);
-      ctx.rotate(Math.PI/2);
-    }
-    ctx.drawImage(tmp,0,0);
-    ctx.restore();
-    rotated=true;
-  }
-  else if(verticalDiff<0){
-    // upside down
-    ctx.save();
-    ctx.translate(canvas.width,canvas.height);
-    ctx.rotate(Math.PI);
-    ctx.drawImage(canvas,0,0);
-    ctx.restore();
-    rotated=true;
-  }
-
-  // mirror auto-detect (skin brighter than background center)
-  const midLum = imgData[((h/2|0)*w+(w/2|0))*4]*0.299 + imgData[((h/2|0)*w+(w/2|0))*4+1]*0.587 + imgData[((h/2|0)*w+(w/2|0))*4+2]*0.114;
-  if(midLum < 60 && !isMirrored){
-    mirrorCanvas();
-    mirrored=true;
-  }
-
-  if(rotated || mirrored){
-    msg('🤖 Auto orientation adjusted!');
-    drawGuide();
-  } else {
-    msg('✅ Orientation already correct.');
-  }
-}
+</script>
 </body>
 </html>
