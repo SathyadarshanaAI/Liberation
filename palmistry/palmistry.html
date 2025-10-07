@@ -1,196 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Palmistry AI Overlay – Sathyadarshana</title>
 <style>
-:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
-body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
-h1{margin:14px 0 6px}
-.wrap{position:relative;display:inline-block}
-video,#photo,#lines{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
-#photo,#lines{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
-.hidden{display:none}
-.captureBtn{
- position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
- width:85px;height:85px;border:none;border-radius:50%;
- background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer;z-index:3
+:root{
+  --pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff;
 }
-.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-button{border:none;border-radius:8px;padding:.6em 1em;font-weight:700;cursor:pointer}
-.left{background:#16243a;color:#cfe9ff}
-.an{background:var(--pri);color:#000}
-.cap{background:#fbbf24;color:#111}
-.torch{background:#22c55e;color:#021}
-.sliderRow{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-footer{color:var(--pri);margin:18px 0 22px;font-size:.9em}
-.badge{position:absolute;top:8px;left:8px;background:#0008;padding:4px 6px;border-radius:6px;font-size:12px;z-index:3}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#e6f0ff;
+  font-family:system-ui;
+  text-align:center;
+}
+h1{margin:14px 0 6px}
+video,canvas{
+  width:92vw;
+  max-width:420px;
+  border-radius:16px;
+  border:2px solid var(--pri);
+  display:block;
+  margin:auto;
+  background:#000;
+}
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+button{
+  background:#111;
+  color:#fff;
+  border:1px solid var(--neon);
+  border-radius:8px;
+  padding:8px 16px;
+  font-size:15px;
+  cursor:pointer;
+}
+button:hover{background:var(--neon);color:#000}
+input[type=range]{
+  width:140px;
+}
+footer{
+  margin-top:14px;
+  font-size:13px;
+  opacity:.6;
+}
 </style>
-
-<!-- OpenCV + fallback -->
-<script>
-(function(){
-  window.cvReady = new Promise(resolve=>{
-    function ok(){ 
-      // wait until cv.Mat exists
-      const t = setInterval(()=>{ if(window.cv && cv.Mat){clearInterval(t); resolve();} },100);
-    }
-    const s=document.createElement('script');
-    s.src="https://docs.opencv.org/4.x/opencv.js"; s.async=true;
-    s.onload=ok;
-    s.onerror=()=>{const f=document.createElement('script');
-      f.src="https://cdn.jsdelivr.net/npm/@techstark/opencv-js@4.9.0-1/opencv.min.js";
-      f.async=true; f.onload=ok; document.head.appendChild(f);
-    };
-    document.head.appendChild(s);
-  });
-})();
-</script>
 </head>
 <body>
-<h1>🖐️ Palmistry</h1>
+<h1>✋ Palmistry</h1>
 <p>Align palm → Capture → Analyze</p>
 
-<div class="wrap" id="stage">
-  <span class="badge">Live preview</span>
-  <video id="cam" playsinline autoplay muted></video>
-  <canvas id="photo" class="hidden"></canvas>
-  <canvas id="lines" class="hidden"></canvas>
-  <button class="captureBtn" id="capBtn">Tap to Capture</button>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" width="420" height="320"></canvas>
+
+<div class="controls">
+  <button id="left">🖐 Left • Past</button>
+  <button id="torch">🔦 Torch</button>
+  <button id="capture">📸 Capture</button>
+  <button id="analyze">✨ Analyze</button>
+  <button id="save">💾 Save</button>
 </div>
 
-<div class="btns">
-  <button class="left" id="flipBtn">🖐 Left · Past</button>
-  <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
-  <button class="an" id="anBtn">✨ Analyze</button>
-  <button class="cap" id="saveBtn">💾 Save</button>
-</div>
-
-<div class="sliderRow">
-  <label>Edge <input id="edge" type="range" min="20" max="120" value="70"/></label>
-  <label>Detail <input id="gk" type="range" min="3" max="25" step="2" value="11"/></label>
+<div class="controls">
+  <label>Edge</label><input type="range" id="edge" min="0" max="10" value="3">
+  <label>Detail</label><input type="range" id="detail" min="1" max="10" value="5">
 </div>
 
 <footer>© 2025 Sathyadarshana · Palmistry AI Overlay</footer>
 
 <script>
-const video   = document.getElementById('cam');
-const canPhoto= document.getElementById('photo');
-const canLines= document.getElementById('lines');
-const pctx    = canPhoto.getContext('2d');
-const flipBtn = document.getElementById('flipBtn');
-const capBtn  = document.getElementById('capBtn');
-const anBtn   = document.getElementById('anBtn');
-const saveBtn = document.getElementById('saveBtn');
-const torchBtn= document.getElementById('torchBtn');
-const edgeSl  = document.getElementById('edge');
-const gkSl    = document.getElementById('gk');
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let stream;
+let torchOn = false;
 
-let flipped=false,captured=false,stream=null,track=null,torch=false;
-
-flipBtn.onclick=()=>{flipped=!flipped;video.style.transform=flipped?'scaleX(-1)':'none';};
-
-// start camera immediately
-(async function startCam(){
+async function initCamera(){
   try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    video.srcObject=stream; await video.play();
-    track=stream.getVideoTracks()[0];
-    const caps=track.getCapabilities?.(); if(caps && caps.torch) torchBtn.hidden=false;
-  }catch(e){ alert('Please allow camera permission.'); }
-})();
-
-torchBtn.onclick=async()=>{ if(!track) return; torch=!torch;
-  try{ await track.applyConstraints({advanced:[{torch}]}); }catch{} };
-
-capBtn.onclick=()=>{
-  if(!stream){ alert('Enable camera first'); return; }
-  [canPhoto,canLines].forEach(c=>{ c.width=video.videoWidth; c.height=video.videoHeight; });
-  pctx.save(); if(flipped){ pctx.translate(canPhoto.width,0); pctx.scale(-1,1); }
-  pctx.drawImage(video,0,0,canPhoto.width,canPhoto.height); pctx.restore();
-  canPhoto.classList.remove('hidden');
-  canLines.classList.add('hidden');
-  captured=true;
-};
-
-saveBtn.onclick=()=>{
-  if(!captured) return;
-  const tmp=document.createElement('canvas'); tmp.width=canPhoto.width; tmp.height=canPhoto.height;
-  const t=tmp.getContext('2d'); t.drawImage(canPhoto,0,0); t.drawImage(canLines,0,0);
-  const a=document.createElement('a'); a.href=tmp.toDataURL('image/png'); a.download='palm_'+Date.now()+'.png'; a.click();
-};
-
-anBtn.onclick=async()=>{
-  if(!captured) return alert('Capture first');
-  await window.cvReady;      // ensure OpenCV is ready
-  analyzeLines();
-  canLines.classList.remove('hidden');
-};
-
-// --------- ANALYSIS (lines-only overlay; with safe fallbacks)
-function analyzeLines(){
-  try{
-    const src=cv.imread(canPhoto);
-
-    // --- skin mask (HSV + YCrCb) and keep-largest
-    const hsv=new cv.Mat(); cv.cvtColor(src,hsv,cv.COLOR_RGBA2HSV);
-    const ycc=new cv.Mat(); cv.cvtColor(src,ycc,cv.COLOR_RGBA2YCrCb);
-    const low1=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[0,30,60]);
-    const up1 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[25,180,255]);
-    const low2=new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[160,30,60]);
-    const up2 =new cv.Mat(hsv.rows,hsv.cols,cv.CV_8UC3,[179,180,255]);
-    const m1=new cv.Mat(), m2=new cv.Mat();
-    cv.inRange(hsv,low1,up1,m1); cv.inRange(hsv,low2,up2,m2);
-    const hsvMask=new cv.Mat(); cv.bitwise_or(m1,m2,hsvMask);
-    const lowY=new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[0,133,77]);
-    const upY =new cv.Mat(ycc.rows,ycc.cols,cv.CV_8UC3,[255,173,127]);
-    const yMask=new cv.Mat(); cv.inRange(ycc,lowY,upY,yMask);
-    const mask=new cv.Mat(); cv.bitwise_and(hsvMask,yMask,mask);
-    const k=cv.getStructuringElement(cv.MORPH_ELLIPSE,new cv.Size(11,11));
-    cv.morphologyEx(mask,mask,cv.MORPH_CLOSE,k); cv.GaussianBlur(mask,mask,new cv.Size(7,7),0);
-    const contours=new cv.MatVector(), hier=new cv.Mat();
-    cv.findContours(mask,contours,hier,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-    const clean=cv.Mat.zeros(mask.rows,mask.cols,cv.CV_8UC1);
-    let A=0,I=-1; for(let i=0;i<contours.size();i++){const a=cv.contourArea(contours.get(i)); if(a>A){A=a; I=i;}}
-    if(I>=0){const hull=new cv.Mat(); cv.convexHull(contours.get(I),hull,false,true); const hs=new cv.MatVector(); hs.push_back(hull); cv.drawContours(clean,hs,0,new cv.Scalar(255),-1); hull.delete(); hs.delete();}
-    [hsv,ycc,low1,up1,low2,up2,m1,m2,hsvMask,lowY,upY,yMask,mask,k,contours,hier].forEach(m=>m.delete());
-
-    // --- grayscale + keep hand pixels only
-    const gray=new cv.Mat(); cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
-    cv.GaussianBlur(gray,gray,new cv.Size(3,3),0);
-    const gMasked=new cv.Mat(); cv.bitwise_and(gray,gray,gMasked,clean);
-
-    // --- detail kernel (safe default)
-    const ksize = parseInt(gkSl?.value) || 11;
-    const se = cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(ksize,ksize));
-
-    // --- black-hat to lift lines
-    const blackhat=new cv.Mat(); cv.morphologyEx(gMasked,blackhat,cv.MORPH_BLACKHAT,se);
-    const clahe=new cv.CLAHE(2.0,new cv.Size(8,8)); clahe.apply(blackhat,blackhat);
-
-    // --- edges (safe default)
-    const low = parseInt(edgeSl?.value) || 70;
-    const high = Math.round(low*2.5);
-    const edges=new cv.Mat(); cv.Canny(blackhat,edges,low,high);
-
-    // clean tiny specks & enforce hand-only
-    const k2=cv.getStructuringElement(cv.MORPH_RECT,new cv.Size(3,3));
-    cv.morphologyEx(edges,edges,cv.MORPH_OPEN,k2);
-    cv.bitwise_and(edges,edges,edges,clean);
-
-    // --- RGBA overlay (green only)
-    const zeros=new cv.Mat.zeros(edges.rows,edges.cols,cv.CV_8UC1);
-    const alpha=edges.clone();
-    const ch=new cv.MatVector(); ch.push_back(zeros); ch.push_back(edges); ch.push_back(zeros); ch.push_back(alpha);
-    const rgba=new cv.Mat(); cv.merge(ch,rgba);
-    cv.imshow(canLines,rgba);
-
-    [src,clean,gray,gMasked,se,blackhat,clahe,edges,k2,zeros,alpha,ch,rgba].forEach(m=>m.delete());
-  }catch(e){
-    alert('Analyze error: '+e.message);
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false
+    });
+    video.srcObject = stream;
+  }catch(err){
+    alert("Camera access denied: " + err.message);
   }
 }
+
+function capture(){
+  if(!video.videoWidth){
+    alert("Camera not ready! Please wait a second.");
+    return;
+  }
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  alert("Palm captured successfully!");
+}
+
+function analyze(){
+  try{
+    const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+    if(!img || !img.data){
+      alert("No image data! Capture first.");
+      return;
+    }
+
+    // Simple pixel intensity average (demo)
+    let sum=0;
+    for(let i=0;i<img.data.length;i+=4){
+      let avg = (img.data[i]+img.data[i+1]+img.data[i+2])/3;
+      sum+=avg;
+    }
+    let mean = sum/(img.data.length/4);
+    mean = Math.round(mean);
+
+    alert("Palm intensity score: " + mean);
+
+  }catch(e){
+    alert("Analyze error: " + e.message);
+  }
+}
+
+function saveImage(){
+  const a = document.createElement('a');
+  a.download = 'palmistry-capture.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+function toggleTorch(){
+  try{
+    const track = stream.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
+    if(!capabilities.torch){
+      alert("Torch not supported on this device.");
+      return;
+    }
+    torchOn = !torchOn;
+    track.applyConstraints({advanced: [{torch: torchOn}]});
+  }catch(e){
+    alert("Torch error: " + e.message);
+  }
+}
+
+document.getElementById('capture').onclick = capture;
+document.getElementById('analyze').onclick = analyze;
+document.getElementById('save').onclick = saveImage;
+document.getElementById('torch').onclick = toggleTorch;
+
+initCamera();
 </script>
 </body>
 </html>
