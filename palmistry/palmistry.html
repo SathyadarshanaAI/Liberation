@@ -19,7 +19,6 @@ button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;
 .an{background:#16f0a7;color:#062}
 .cap{background:#fbbf24;color:#111}
 .torch{background:#22c55e;color:#021}
-.speak{background:#60a5fa;color:#021}
 .report{background:#a78bfa;color:#120}
 select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
 .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
@@ -35,11 +34,16 @@ input[type=range]{accent-color:#16f0a7}
 .toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
 .toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
 footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
+nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
+nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
+nav a:hover{background:#0d1a2c}
 </style>
 </head>
 <body>
 <h1>🖐️ Palmistry Universal v5.0</h1>
-<small>Primary + Secondary Lines · Capture → Analyze → Report</small><div class="stage">
+<small>Primary + Secondary Lines · Capture → Analyze → Report</small><nav>
+  <a href="./index.html">← Back to Home</a>
+</nav><div class="stage">
   <video id="cam" autoplay playsinline muted></video>
   <canvas id="cv"></canvas>
   <button class="captureBtn" id="capBtn">Capture</button>
@@ -91,7 +95,7 @@ const resSel=byId('resSel'), fpsSel=byId('fpsSel'), zoomEl=byId('zoom');
 const pick=byId('pick'), flipBtn=byId('flipBtn'), torchBtn=byId('torchBtn');
 const capBtn=byId('capBtn'), anBtn=byId('anBtn'), reportBtn=byId('reportBtn'), clearBtn=byId('clearBtn');
 const tPrimary=byId('tPrimary'), tFate=byId('tFate'), tSun=byId('tSun'), tMarr=byId('tMarr'), tHealth=byId('tHealth');
-let stream=null, track=null, captured=false, isMirrored=false, last= null;
+let stream=null, track=null, captured=false, isMirrored=false, last=null;
 let camList=[], camIndex=0;
 
 function byId(x){return document.getElementById(x)}
@@ -138,43 +142,49 @@ pick.onchange = e=>{ const f=e.target.files?.[0]; if(!f) return; const img=new I
 clearBtn.onclick= ()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; byId('summary').style.display='none'; msg('🧹 Cleared. Ready.'); };
 
 /* report */
-reportBtn.onclick= ()=>{ if(!captured){ msg('Capture first'); return; } const data=cv.toDataURL('image/png'); const s=last?buildSummary(last):'<p>Run Analyze first.</p>'; const w=window.open('','_blank'); w.document.write(`<html><head><title>Palmistry Report</title><style>body{font-family:system-ui;padding:12px;color:#123}h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style></head><body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div></body></html>`); w.document.close(); };/* ===== ANALYZE v5.0 ===== */ anBtn.onclick= ()=>{ if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); msg('⏳ Analyzing…'); setTimeout(()=>{ try{ analyzeV5(); }catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } }, 50); };
+reportBtn.onclick= ()=>{ if(!captured){ msg('Capture first'); return; } const data=cv.toDataURL('image/png'); const s=last?buildSummary(last):'<p>Run Analyze first.</p>'; const w=window.open('','_blank'); w.document.write(`<html><head><title>Palmistry Report</title><style>body{font-family:system-ui;padding:12px;color:#123}h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style></head><body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div></body></html>`); w.document.close(); };/* ===== ANALYZE v5.0 (fixed) ===== */ anBtn.onclick= ()=>{ if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.'); msg('⏳ Analyzing…'); setTimeout(()=>{ try{ analyzeV5(); }catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } }, 50); };
 
-function analyzeV5(){ if(!cv.width||!cv.height) return msg('No canvas'); norm(1024,1_000_000); let w=cv.width,h=cv.height; let src; for(let i=0;i<2;i++){ try{ src=ctx.getImageData(0,0,w,h); break; }catch(e){ const t=document.createElement('canvas'); t.width=Math.round(w0.8); t.height=Math.round(h0.8); t.getContext('2d').drawImage(cv,0,0,t.width,t.height); cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0); w=cv.width; h=cv.height; }}
+function analyzeV5(){ if(!cv.width || !cv.height){ msg('No canvas'); return; } norm(1024, 1_000_000);
 
-const edgeVal=parseInt(byId('edge').value,10)/255; const passes=parseInt(byId('gk').value,10); // grayscale const d=src.data, gray=new Uint8ClampedArray(wh); for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i].299+d[i+1].587+d[i+2].114; // blur let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1], n=16; for(let p=0;p<passes;p++){ const t=new Float32Array(wh); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)w+(x+dx)]k[i++]; t[yw+x]=s/n; } a=t; } const blur=Uint8ClampedArray.from(a); // sobel const mag=new Float32Array(wh); let mx=1; for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=yw+x; const gx=-blur[i-w-1]-2blur[i-1]-blur[i+w-1]+blur[i-w+1]+2blur[i+1]+blur[i+w+1]; const gy=-blur[i-w-1]-2blur[i-w]-blur[i-w+1]+blur[i+w-1]+2blur[i+w]+blur[i+w+1]; const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m; } const T=edgeValmx; const bin=new Uint8ClampedArray(wh); for(let i=0;i<w*h;i++) bin[i]=mag[i]>T?1:0; // skeleton const sk=Uint8Array.from(bin); let changed=true,pass=0; const N=(x,y)=>sk[(y-1)*w+x]+sk[(y-1)w+x+1]+sk[yw+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)w+x-1]+sk[yw+x-1]+sk[(y-1)*w+x-1]; const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)w+x+1],sk[yw+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)w+x-1],sk[yw+x-1],sk[(y-1)w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; }; while(changed&&pass<20){ changed=false; const rem=[]; for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=yw+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y); if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]sk[yw+x+1]*sk[(y+1)w+x]==0)&&(sk[yw+x+1]sk[yw+x-1]*sk[(y-1)w+x]==0)) rem.push(i);} rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; rem.length=0; for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=yw+x;if(!sk[i])continue;const nn=N(x,y),s=S(x,y); if(nn>=2&&nn<=6&&s==1&&(sk[(y-1)*w+x]sk[yw+x-1]*sk[(y+1)*w+x]==0)&&(sk[(y-1)*w+x]sk[yw+x+1]sk[yw+x-1]==0)) rem.push(i);} rem.forEach(i=>sk[i]=0); if(rem.length)changed=true; pass++; }
+let w=cv.width, h=cv.height, src; // Safe getImageData with downscale on failure for(let i=0;i<2;i++){ try{ src = ctx.getImageData(0,0,w,h); break; } catch(e){ const t=document.createElement('canvas'); t.width=Math.round(w0.8); t.height=Math.round(h0.8); t.getContext('2d').drawImage(cv,0,0,t.width,t.height); cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0); w=cv.width; h=cv.height; } }
 
-// helper to walk components within a mask function pickLongestMasked(mask){ const seen=new Uint8Array(wh); const NB=[-1-w, -w, 1-w, -1, 1, -1+w, w, 1+w]; let best=[]; function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0 && j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; } for(let i=0;i<wh;i++){ / scan */ if(mask[i] && sk[i] && !seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } } }
+const wh=w*h; const edgeVal=parseInt(byId('edge').value,10)/255; const passes =parseInt(byId('gk').value,10);
 
-// region masks const maskAll=new Uint8Array(wh); for(let i=0;i<wh;i++) maskAll[i]=1; const yHeart0=0, yHeart1=Math.floor(h0.30); const yHead0=yHeart1, yHead1=Math.floor(h0.55); const yLife0=yHead1, yLife1=h;
+// grayscale const d=src.data; const gray=new Uint8ClampedArray(wh); for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]= d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
 
-function band(y0,y1){ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[yw+x]=1; return m; } function rect(x0,y0,x1,y1){ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[yw+x]=1; return m; }
+// blur 3x3 let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1], kn=16; for(let p=0;p<passes;p++){ const t=new Float32Array(wh); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s += a[(y+dy)w+(x+dx)] * k[i++]; t[yw+x]=s/kn; } a=t; } const blur=Uint8ClampedArray.from(a);
 
-// primary lines via horizontal bands const pHeart = pickLongest(band(yHeart0,yHeart1)); const pHead  = pickLongest(band(yHead0,yHead1)); const pLife  = pickLongest(band(yLife0,yLife1));
+// sobel const mag=new Float32Array(wh); let mx=1; for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=yw+x; const gx=-blur[i-w-1]-2blur[i-1]-blur[i+w-1] + blur[i-w+1]+2blur[i+1]+blur[i+w+1]; const gy=-blur[i-w-1]-2blur[i-w]-blur[i-w+1] + blur[i+w-1]+2blur[i+w]+blur[i+w+1]; const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m; } const T=edgeValmx; const bin=new Uint8ClampedArray(wh); for(let i=0;i<wh;i++) bin[i]= mag[i]>T ? 1:0;
 
-// secondary heuristics // Fate (IraNami): vertical near center, from base upward const xC0=Math.floor(w0.40), xC1=Math.floor(w0.60), yF0=Math.floor(h*0.35), yF1=h; const pFate = pickLongest(rect(xC0,yF0,xC1,yF1));
+// skeletonize (Zhang–Suen) const sk=Uint8Array.from(bin); let changed=true,pass=0; const N=(x,y)=> sk[(y-1)*w+x]+sk[(y-1)w+x+1]+sk[yw+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)w+x-1]+sk[yw+x-1]+sk[(y-1)*w+x-1]; const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)w+x+1],sk[yw+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)w+x-1],sk[yw+x-1],sk[(y-1)w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; }; while(changed&&pass<20){ changed=false; let rem=[]; for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=yw+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y); if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]sk[yw+x+1]*sk[(y+1)w+x]==0) && (sk[yw+x+1]sk[yw+x-1]*sk[(y-1)w+x]==0)) rem.push(i); } rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; rem=[]; for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=yw+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y); if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]sk[yw+x-1]*sk[(y+1)*w+x]==0) && (sk[(y-1)*w+x]sk[yw+x+1]sk[yw+x-1]==0)) rem.push(i); } rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; pass++; }
 
-// Sun line: below ring finger (between center and right), strong vertical const xS0=Math.floor(w0.60), xS1=Math.floor(w0.80), yS0=Math.floor(h*0.40), yS1=h; const pSun  = pickLongest(rect(xS0,yS0,xS1,yS1));
+// region helpers function band(y0,y1){ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[yw+x]=1; return m; } function rect(x0,y0,x1,y1){ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[yw+x]=1; return m; }
 
-// Marriage lines: short horizontals at outer edge under little finger (top-right box) const xM0=Math.floor(w0.70), xM1=w, yM0=Math.floor(h0.10), yM1=Math.floor(h*0.25); const pMarriage = pickTopK(rect(xM0,yM0,xM1,yM1), 3, 40, 120, true); // top 3 small segments
+// component walker function pickLongest(mask){ const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; let best=[]; function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; } for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } } return best; }
 
-// Health line: diagonal from base (wrist) towards little finger (right side) const xH0=Math.floor(w0.55), xH1=w, yH0=Math.floor(h0.55), yH1=h; const pHealth = pickLongest(rect(xH0,yH0,xH1,yH1));
+function pickTopK(mask, K=3, minLen=30, maxLen=140, preferHorizontal=true){ const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; const segs=[]; function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; } function polyLen(p){ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; } function orient(p){ if(p.length<2) return 0; const A=p[0], B=p[p.length-1]; return Math.atan2(B[1]-A[1], B[0]-A[0]); } for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); const L=polyLen(p); if(L>=minLen && L<=maxLen){ let ok=true; if(preferHorizontal){ const ang=Math.abs(orient(p)*180/Math.PI); ok = (ang<25 || ang>155); } if(ok) segs.push(p); } } } segs.sort((a,b)=>polyLen(b)-polyLen(a)); return segs.slice(0,K); }
 
-// draw faint cyan edges const overlay=ctx.createImageData(w,h); for(let i=0,j=0;i<w*h;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=70; } ctx.putImageData(overlay,0,0);
+// bands const yHeart0=0, yHeart1=Math.floor(h0.30); const yHead0=yHeart1, yHead1=Math.floor(h0.55); const yLife0=yHead1,  yLife1=h;
 
-// draw functions function drawPath(pts,color,wid){ if(!pts||pts.length<5) return; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); }
+// primary const pHeart=pickLongest(band(yHeart0,yHeart1)); const pHead =pickLongest(band(yHead0,yHead1)); const pLife =pickLongest(band(yLife0,yLife1));
 
-// metrics function polyLen(p){ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; } function orient(p){ if(p.length<2) return 0; const A=p[0], B=p[p.length-1]; return Math.atan2(B[1]-A[1], B[0]-A[0]); } function gaps(p){ let g=0; for(let i=2;i<p.length;i++) if(Math.hypot(p[i][0]-p[i-1][0], p[i][1]-p[i-1][1])>6) g++; return g; } const M=(p)=>({len:polyLen(p)|0, slope:orient(p), gaps:gaps(p)});
+// secondary heuristics const xC0=Math.floor(w0.40), xC1=Math.floor(w0.60), yF0=Math.floor(h*0.35), yF1=h; const pFate=pickLongest(rect(xC0,yF0,xC1,yF1));
 
-// render based on toggles ctx.globalAlpha=0.95; if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); } if(tFate.checked)   drawPath(pFate,'#a1a1ff',3.5); if(tSun.checked)    drawPath(pSun,'#ffd54a',3.5); if(tMarr.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3)); if(tHealth.checked) drawPath(pHealth,'#5ad1ff',3.5); ctx.globalAlpha=1; cv.style.display='block';
+const xS0=Math.floor(w0.60), xS1=Math.floor(w0.80), yS0=Math.floor(h*0.40), yS1=h; const pSun =pickLongest(rect(xS0,yS0,xS1,yS1));
 
-// save for summary last={ heart:M(pHeart), head:M(pHead), life:M(pLife), fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth) }; showSummary(buildSummary(last)); msg('✨ Analyze done');
+const xM0=Math.floor(w0.70), xM1=w, yM0=Math.floor(h0.10), yM1=Math.floor(h*0.25); const pMarriage=pickTopK(rect(xM0,yM0,xM1,yM1), 3, 40, 120, true);
 
-// ------- helpers to pick paths ------- function pickLongest(mask){ const seen=new Uint8Array(wh); const NB=[-1-w, -w, 1-w, -1, 1, -1+w, w, 1+w]; let best=[]; function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; } for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i] && sk[i] && !seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } } return best; }
+const xH0=Math.floor(w0.55), xH1=w, yH0=Math.floor(h0.55), yH1=h; const pHealth=pickLongest(rect(xH0,yH0,xH1,yH1));
 
-// pick top-K short segments in a mask (for marriage lines) function pickTopK(mask, K=3, minLen=30, maxLen=140, preferHorizontal=true){ const seen=new Uint8Array(wh); const NB=[-1-w, -w, 1-w, -1, 1, -1+w, w, 1+w]; const segs=[]; function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; } for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); const L=polyLen(p); if(L>=minLen && L<=maxLen){ let ok=true; if(preferHorizontal){ const ang=Math.abs(orient(p)*180/Math.PI); ok = ang<25 || ang>155; } if(ok) segs.push(p); } } } segs.sort((a,b)=>polyLen(b)-polyLen(a)); return segs.slice(0,K); } }
+// faint edges const overlay=ctx.createImageData(w,h); for(let i=0,j=0;i<wh;i++,j+=4){ if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=70; } } ctx.putImageData(overlay,0,0);
 
-function buildSummary(m){ const gw=(L,G)=> (L<80?'weak':G>15?'fragmented':L>220?'strong':'moderate'); const ow=(r)=>{const d=r*180/Math.PI; return d<-25?'tilt-up':d>25?'tilt-down':'level'}; function line(name, m){ if(!m||!m.len) return ${name}: <i>n/a</i>; return ${name}: <b>${gw(m.len,m.gaps)}</b> (${ow(m.slope)}), ~${m.len}, gaps ${m.gaps}.; } const pri = ❤️ ${line('Heart',m.heart)}<br>🧡 ${line('Head',m.head)}<br>💚 ${line('Life',m.life)}; const sec = 🟪 IraNami/Fate: ${line('Fate',m.fate)}<br>🟨 Sun: ${line('Sun',m.sun)}<br>🩷 Marriage: ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>#${i+1} ~${x.len}).join(', '):'n/a'}<br>🩵 Health: ${line('Health',m.health)}; return <p>${pri}</p><hr/><p>${sec}</p>; }
+// draw paths function drawPath(pts,color,wid){ if(!pts||pts.length<5) return; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke(); } const M=(p)=>{ function polyLen(p){ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; } function orient(p){ if(p.length<2) return 0; const A=p[0], B=p[p.length-1]; return Math.atan2(B[1]-A[1], B[0]-A[0]); } function gaps(p){ let g=0; for(let i=2;i<p.length;i++) if(Math.hypot(p[i][0]-p[i-1][0], p[i][1]-p[i-1][1])>6) g++; return g; } return {len:polyLen(p)|0, slope:orient(p), gaps:gaps(p)}; };
+
+ctx.globalAlpha=0.95; if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); } if(tFate.checked)   drawPath(pFate,'#a1a1ff',3.5); if(tSun.checked)    drawPath(pSun,'#ffd54a',3.5); if(tMarr.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3)); if(tHealth.checked) drawPath(pHealth,'#5ad1ff',3.5); ctx.globalAlpha=1; cv.style.display='block';
+
+last={ heart:M(pHeart), head:M(pHead), life:M(pLife), fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth) }; showSummary(buildSummary(last)); msg('✨ Analyze done'); }
+
+function buildSummary(m){ const grade=(L,G)=> (L<80?'weak': G>15?'fragmented': L>220?'strong':'moderate'); const ori=(r)=>{ const d=r*180/Math.PI; return d<-25?'tilt-up': d>25?'tilt-down':'level'; }; const line=(name,mm)=> !mm||!mm.len ? ${name}: n/a : ${name}: <b>${grade(mm.len,mm.gaps)}</b> (${ori(mm.slope)}), ~${mm.len}, gaps ${mm.gaps}.; const pri = ❤️ ${line('Heart',m.heart)}<br>🧡 ${line('Head',m.head)}<br>💚 ${line('Life',m.life)}; const sec = 🟪 IraNami/Fate: ${line('Fate',m.fate)}<br>🟨 Sun: ${line('Sun',m.sun)}<br>🩷 Marriage: ${ m.marriage&&m.marriage.length? m.marriage.map((x,i)=>#${i+1} ~${x.len}).join(', ') : 'n/a' }<br>🩵 Health: ${line('Health',m.health)}; return <p>${pri}</p><hr/><p>${sec}</p>; }
 
 window.addEventListener('load', ()=>{ msg('▶️ Start → Allow camera. Capture/Upload → Analyze. Use toggles to show/hide lines.'); }); </script>
 
