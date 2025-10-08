@@ -477,47 +477,7 @@ pick.onchange=e=>{
     if(isMirrored) mirrorCanvas(); norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
     byId('summary').style.display='none'; msg(tpath('msg.photo_loaded')); };
   img.onerror=()=>msg('❌ Image load failed'); img.src=URL.createObjectURL(f);
-};
-clearBtn.onclick=()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; lastOverlay=null; byId('summary').style.display='none'; msg(tpath('msg.cleared')); };
-
-/* ---------- REPORT (overlay + long text) ---------- */
-reportBtn.onclick=()=>{
-  if(!captured){ msg(tpath('msg.need_capture')); return; }
-  if(!last){ msg(tpath('msg.need_analyze')); return; }
-  const imgData = cv.toDataURL('image/png');
-  const details = buildDetailedReading(last);
-
-  const R = I18N[LANG].report, isRTL = !!I18N[LANG].rtl;
-  const w = window.open('', '_blank');
-  w.document.write(`
-  <html ${isRTL?'dir="rtl"':''}><head><title>${R.title}</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <style>
-    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:12px;color:#123;background:#f7f9fc;${isRTL?'direction:rtl;':''}}
-    h2{margin:6px 0 12px}
-    .row{display:flex;gap:16px;flex-wrap:wrap}
-    .box{border:1px solid #ccd; background:#fff; padding:10px; border-radius:10px}
-    .imgWrap{max-width:min(92vw,700px)}
-    img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
-    .legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-    .tag{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:999px;border:1px solid #cfe;background:#eef6ff;color:#134}
-    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
-    .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
-    .muted{opacity:.8}
-    .btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-    button{padding:.5em 1em;border-radius:10px;border:1px solid #aac;background:#fff;cursor:pointer}
-  </style></head><body>
-  <h2>${R.title}</h2>
-  <div class="row">
-    <div class="imgWrap box"><img src="${imgData}" alt="Palmistry Overlay"/></div>
-    <div class="box" style="flex:1;min-width:260px">
-      <h3>${R.legend}</h3>
-      <div class="legend">
-        <span class="tag"><span class="dot hrt"></span>${I18N[LANG].legend.heart}</span>
-        <span class="tag"><span class="dot hd"></span>${I18N[LANG].legend.head}</span>
-        <span class="tag"><span class="dot life"></span>${I18N[LANG].legend.life}</span>
-        <span class="tag"><span class="dot fate"></span>${I18N[LANG].legend.fate}</span>
-        <span class="tag"><span class="dot sun"></span>${I18N[LANG].legend.sun}</span>
+}
         <span class="tag"><span class="dot marr"></span>${I18N[LANG].legend.marriage}</span>
         <span class="tag"><span class="dot hlth"></span>${I18N[LANG].legend.health}</span>
       </div>
