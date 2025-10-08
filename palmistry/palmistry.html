@@ -4,48 +4,36 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Palmistry Universal v5.3 · Sathyadarshana</title>
-<meta name="description" content="Palmistry AI Overlay v5.3 — Multilingual palm reading with Heart, Head, Life, Fate, Sun, Marriage, Health lines.">
+<meta name="description" content="Palmistry AI Overlay v5.3 — Multilingual palm reading (Heart, Head, Life, Fate, Sun, Marriage, Health) with overlay + printable report.">
 <style>
-:root {
-  --pri:#16f0a7; --bg:#0b0f16; --card:#0f1420; --ink:#e6f0ff;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:var(--bg); color:var(--ink);
-  font-family:system-ui,Segoe UI,Arial; text-align:center; min-height:100vh;
-}
-h1{margin:18px 0 4px}
-small{opacity:.85}
-.stage{position:relative;display:inline-block;width:min(92vw,520px)}
-#cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
-#cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
-.captureBtn{
-  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
-  width:86px;height:86px;border-radius:50%;border:none;
-  background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer;
-}
-.legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
-.tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;
-     border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
-.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
-.hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}
-.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
-.toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
-.toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
-.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
-.left{background:#16243a;color:#cfe9ff}.an{background:#16f0a7;color:#062}.report{background:#a78bfa;color:#120}
-select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
-.sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
-.sliderRow label{display:flex;gap:8px;align-items:center}
-input[type=range]{accent-color:#16f0a7}
-#status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
-#summary{max-width:900px;margin:10px auto;text-align:left;background:var(--card);border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
-#summary h3{margin:0 0 8px}
-nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
-nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
-nav a:hover{background:#0d1a2c}
-footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
+  :root{--pri:#16f0a7;--bg:#0b0f16;--card:#0f1420;--ink:#e6f0ff}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Arial;text-align:center;min-height:100vh}
+  h1{margin:18px 0 4px} small{opacity:.85}
+  .stage{position:relative;display:inline-block;width:min(92vw,520px)}
+  #cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
+  #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
+  .captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
+  .legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
+  .tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}
+  .fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
+  .toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
+  .toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
+  .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
+  .left{background:#16243a;color:#cfe9ff}.an{background:#16f0a7;color:#062}.report{background:#a78bfa;color:#120}
+  select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
+  .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
+  .sliderRow label{display:flex;gap:8px;align-items:center}
+  input[type=range]{accent-color:#16f0a7}
+  #status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
+  #summary{max-width:900px;margin:10px auto;text-align:left;background:var(--card);border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
+  #summary h3{margin:0 0 8px}
+  nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
+  nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
+  nav a:hover{background:#0d1a2c}
+  footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
 </style>
 </head>
 <body>
@@ -60,21 +48,21 @@ footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
   </div>
 
   <div class="legend">
-    <span class="tag"><span class="dot hrt"></span>Heart</span>
-    <span class="tag"><span class="dot hd"></span>Head</span>
-    <span class="tag"><span class="dot life"></span>Life</span>
-    <span class="tag"><span class="dot fate"></span>Fate</span>
-    <span class="tag"><span class="dot sun"></span>Sun</span>
-    <span class="tag"><span class="dot marr"></span>Marriage</span>
-    <span class="tag"><span class="dot hlth"></span>Health</span>
+    <span class="tag"><span class="dot hrt"></span><span id="L_heart">Heart</span></span>
+    <span class="tag"><span class="dot hd"></span><span id="L_head">Head</span></span>
+    <span class="tag"><span class="dot life"></span><span id="L_life">Life</span></span>
+    <span class="tag"><span class="dot fate"></span><span id="L_fate">Fate</span></span>
+    <span class="tag"><span class="dot sun"></span><span id="L_sun">Sun</span></span>
+    <span class="tag"><span class="dot marr"></span><span id="L_marriage">Marriage</span></span>
+    <span class="tag"><span class="dot hlth"></span><span id="L_health">Health</span></span>
   </div>
 
   <div class="toggles">
-    <label><input type="checkbox" id="tPrimary" checked>Primary (Heart/Head/Life)</label>
-    <label><input type="checkbox" id="tFate" checked>Fate</label>
-    <label><input type="checkbox" id="tSun" checked>Sun</label>
-    <label><input type="checkbox" id="tMarr" checked>Marriage</label>
-    <label><input type="checkbox" id="tHealth" checked>Health</label>
+    <label><input type="checkbox" id="T_primary" checked><span id="T_primary_label">Primary (Heart/Head/Life)</span></label>
+    <label><input type="checkbox" id="T_fate" checked><span id="T_fate_label">Fate</span></label>
+    <label><input type="checkbox" id="T_sun" checked><span id="T_sun_label">Sun</span></label>
+    <label><input type="checkbox" id="T_marriage" checked><span id="T_marriage_label">Marriage</span></label>
+    <label><input type="checkbox" id="T_health" checked><span id="T_health_label">Health</span></label>
   </div>
 
   <div class="btns">
@@ -92,8 +80,8 @@ footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
     <input id="pick" type="file" accept="image/*" class="btnLike"/>
     <button class="left" id="flipBtn">↔️ Flip</button>
     <button class="btnLike" id="torchBtn" hidden>🔦 Torch</button>
-    <label class="btnLike" style="display:flex;align-items:center;gap:8px">
-      Zoom <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
+    <label class="btnLike" style="display:flex;align-items:center;gap:8px">Zoom
+      <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
     </label>
     <button class="an" id="anBtn">✨ Analyze</button>
     <button class="report" id="reportBtn">📄 Report</button>
@@ -101,75 +89,46 @@ footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
   </div>
 
   <div class="sliderRow">
-    <label>Edge <input id="edge" type="range" min="40" max="110" value="75"></label>
-    <label>Detail <input id="gk" type="range" min="1" max="5" value="3"></label>
+    <label id="edgeLab">Edge <input id="edge" type="range" min="40" max="110" value="75"></label>
+    <label id="detLab">Detail <input id="gk" type="range" min="1" max="5" value="3"></label>
   </div>
 
   <div id="status"></div>
-  <div id="summary"><h3>🔎 AI Summary</h3><div id="sumtext"></div></div>
-  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.3</footer><script>
-/* =========================
-   Palmistry Universal v5.3
-   - Camera + Analyze + Report
-   - Multilingual (EN, SI, AR) with auto-detect & URL override
-   ========================= */
 
-/* ---------- i18n ---------- */
+  <div id="summary">
+    <h3>🔎 AI Summary</h3>
+    <div id="sumtext"></div>
+  </div>
+
+  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.3</footer>
+
+<script>
+/* ---------------- i18n (EN, SI, AR) ---------------- */
 const I18N = {
-  en: {
-    title: "Palmistry Universal v5.3",
-    subtitle: "Multilingual · Capture → Analyze → Report",
-    back: "← Back to Home",
-    legend: {heart:"Heart", head:"Head", life:"Life", fate:"Fate", sun:"Sun", marriage:"Marriage", health:"Health"},
-    toggles: {
-      primary:"Primary (Heart/Head/Life)", fate:"Fate", sun:"Sun", marriage:"Marriage", health:"Health"
-    },
-    ui: {
-      start:"▶️ Start", cycle:"🔁 Cycle", flip:"↔️ Flip", zoom:"Zoom",
-      analyze:"✨ Analyze", report:"📄 Report", clear:"🧹 Clear",
-      res_hd:"HD 1280×720", res_fhd:"FullHD 1920×1080", res_vga:"VGA 640×480",
-      fps30:"30 FPS", fps60:"60 FPS", fps24:"24 FPS",
-      edge:"Edge", detail:"Detail",
-      pick_placeholder:"Choose image…"
-    },
-    msg: {
-      start_hint:"▶️ Start → Allow camera. Capture/Upload → Analyze. Report shows overlay + long reading.",
-      https:"🔒 Use HTTPS for best camera support",
-      cam_err:"❌ Camera error: ",
-      torch_err:"Torch error: ",
-      need_capture:"Capture first",
-      need_analyze:"Run Analyze first.",
-      photo_locked:"🖐️ Photo locked. Analyze to detect lines.",
-      photo_loaded:"🖼️ Photo loaded. Analyze to detect lines.",
-      cleared:"🧹 Cleared. Ready.",
-      analyzing:"⏳ Analyzing…",
-      analyze_fail:"❌ Analyze failed: ",
-      need_choose:"❗First Capture or Choose Photo."
-    },
-    report: {
-      title:"🖐️ Palmistry Report",
-      legend:"Legend",
-      save:"⬇️ Save Image",
-      print:"🖨️ Print / Save PDF",
-      copyright:"© Sathyadarshana · Palmistry AI Overlay v5.3",
-      detailed:"AI Summary (Detailed)",
-      notes:"Notes: This reading is educational and not medical advice."
-    },
-    lines: {
-      heart:"❤️ Heart line",
-      head:"🧡 Head (Cheettha) line",
-      life:"💚 Life line",
-      fate:"🟪 Fate (IraNami) line",
-      sun:"🟨 Sun line",
-      marriage:"🩷 Marriage lines",
-      health:"🩵 Health line"
-    },
-    meanings: {
+  en:{title:"Palmistry Universal v5.3",subtitle:"Multilingual · Capture → Analyze → Report",
+    back:"Back to Home",
+    legend:{heart:"Heart",head:"Head",life:"Life",fate:"Fate",sun:"Sun",marriage:"Marriage",health:"Health"},
+    toggles:{primary:"Primary (Heart/Head/Life)",fate:"Fate",sun:"Sun",marriage:"Marriage",health:"Health"},
+    ui:{start:"▶️ Start",cycle:"🔁 Cycle",flip:"↔️ Flip",zoom:"Zoom",analyze:"✨ Analyze",report:"📄 Report",clear:"🧹 Clear",
+        res_hd:"HD 1280×720",res_fhd:"FullHD 1920×1080",res_vga:"VGA 640×480",
+        fps30:"30 FPS",fps60:"60 FPS",fps24:"24 FPS",pick_placeholder:"Choose image…"},
+    msg:{start_hint:"▶️ Start → Allow camera. Capture/Upload → Analyze. Report shows overlay + long reading.",
+         https:"🔒 Use HTTPS for best camera support.",
+         cam_err:"❌ Camera error: ",torch_err:"Torch error.",need_capture:"First Capture or Choose Photo.",
+         need_analyze:"Run Analyze first.",photo_locked:"🖐️ Photo locked. Analyze to detect lines.",
+         photo_loaded:"🖼️ Photo loaded. Analyze.",cleared:"🧹 Cleared. Ready.",
+         analyzing:"⏳ Analyzing…",analyze_fail:"❌ Analyze failed: "},
+    report:{title:"🖐️ Palmistry Report",legend:"Legend",save:"Save Image",print:"Print / Save PDF",
+            copyright:"© Sathyadarshana · Palmistry AI v5.3",detailed:"AI Summary (Detailed)",
+            notes:"Notes: This reading is educational and not medical advice."},
+    lines:{heart:"❤️ Heart line",head:"🧡 Head (Cheettha) line",life:"💚 Life line",fate:"🟪 Fate (IraNami) line",
+           sun:"🟨 Sun line",marriage:"🩷 Marriage lines",health:"🩵 Health line"},
+    meanings:{
       heartStrong:"Warm, empathetic nature; bonds deeply with people. Emotions expressed with control; relationships benefit from stability.",
       heartWeak:"Emotional energy appears sensitive; practice boundaries and self-care.",
       headStrong:"Clear thinker with practical problem-solving; learns by doing.",
       headWeak:"Focus may diffuse; use checklists and single-tasking.",
-      lifeStrong:"Good vitality and resilience; steady stamina; adaptable to change.",
+      lifeStrong:"Good vitality and resilience; steady stamina; adaptable.",
       lifeWeak:"Energy may fluctuate; prioritize sleep, hydration, and morning light.",
       fateStrong:"Purpose grows through consistent effort; career path clarifies with age.",
       fateWeak:"External factors influence direction; keep optionality and upskill.",
@@ -178,215 +137,118 @@ const I18N = {
       healthStrong:"Recovery is good; keep posture and breath work.",
       healthWeak:"Watch workload/posture; take micro-breaks and stretch."
     },
-    grades: {weak:"weak", fragmented:"fragmented", strong:"strong", moderate:"moderate"},
-    orient: {up:"tilt-up", down:"tilt-down", level:"level"},
-    na:"n/a"
+    grades:{weak:"weak",fragmented:"fragmented",strong:"strong",moderate:"moderate"},
+    orient:{up:"tilt-up",down:"tilt-down",level:"level"}, rtl:false
   },
-
-  si: {
-    title:"Palmistry Universal v5.3",
-    subtitle:"බහුභාෂා · පිටපත්ගන්න → විශ්ලේෂණය → රිපෝට්",
-    back:"← මුල් පිටුවට",
-    legend:{heart:"Heart", head:"Head (Cheettha)", life:"Life", fate:"IraNami / Fate", sun:"Sun", marriage:"Marriage", health:"Health"},
-    toggles:{
-      primary:"ප්‍රාථමික (Heart/Head/Life)", fate:"IraNami/Fate", sun:"Sun", marriage:"Marriage", health:"Health"
-    },
-    ui:{
-      start:"▶️ Start", cycle:"🔁 Cycle", flip:"↔️ Flip", zoom:"Zoom",
-      analyze:"✨ Analyze", report:"📄 Report", clear:"🧹 Clear",
-      res_hd:"HD 1280×720", res_fhd:"FullHD 1920×1080", res_vga:"VGA 640×480",
-      fps30:"30 FPS", fps60:"60 FPS", fps24:"24 FPS",
-      edge:"Edge", detail:"Detail",
-      pick_placeholder:"රූපයක් තෝරන්න…"
-    },
-    msg:{
-      start_hint:"▶️ Start → Camera allow කරන්න. Capture/Upload → Analyze. Report එක overlay + දිගු විස්තර.",
-      https:"🔒 Camera සඳහා HTTPS භාවිතා කරන්න",
-      cam_err:"❌ Camera error: ",
-      torch_err:"Torch error: ",
-      need_capture:"පළමුව Capture කරන්න",
-      need_analyze:"පළමුව Analyze ක්‍රියාත්මක කරන්න.",
-      photo_locked:"🖐️ Photo locked. Analyze කරන්න.",
-      photo_loaded:"🖼️ Photo loaded. Analyze කරන්න.",
-      cleared:"🧹 සූදානම්.",
-      analyzing:"⏳ Analyzing…",
-      analyze_fail:"❌ Analyze failed: ",
-      need_choose:"❗පළමුව Capture හෝ රූපයක් තෝරන්න."
-    },
-    report:{
-      title:"🖐️ Palmistry Report",
-      legend:"Legend",
-      save:"⬇️ රූපය සුරකින්න",
-      print:"🖨️ Print / PDF",
-      copyright:"© Sathyadarshana · Palmistry AI Overlay v5.3",
-      detailed:"AI සාරාංශය (දිගු)",
-      notes:"සටහන: මෙය අධ්‍යාපනික අර්ථකථනයකි; වෛද්‍ය උපදෙස් නොවේ."
-    },
-    lines:{
-      heart:"❤️ Heart line", head:"🧡 Head (Cheettha) line", life:"💚 Life line",
-      fate:"🟪 Fate (IraNami) line", sun:"🟨 Sun line", marriage:"🩷 Marriage lines", health:"🩵 Health line"
-    },
-    meanings:{
-      heartStrong:"ආදාරය සහ හුරුබුහුටි බව. සංවේදන පාලනය මත පදනම්ව නිසි සම්බන්ධතා.",
-      heartWeak:"සංවේදී බව වැඩි; සීමා පවත්වාගෙන යන්න.",
-      headStrong:"ප්‍රායෝගික සිත; කරමින් ඉගෙනීම.",
-      headWeak:"අනේක ව්‍යාපාරය; ලැයිස්තු/Single-tasking උදව් වේ.",
-      lifeStrong:"ජීව ශක්තිය වර්ධිත; වෙනස්කම්ಗಳಿಗೆ හුරුපුරුදු.",
-      lifeWeak:"ශක්තිය ලච්ච; නින්ද/ ජල සේවනය ප්‍රමුඛ.",
-      fateStrong:"ඉටුකරීම සදාචාරය මත; වෘත්තියේ පැහැදිලිභාවය වැඩේ.",
-      fateWeak:"බාහිර බලපෑම්; විකල්ප තබා ගන්න/කෞශල්ය වැඩි කරන්න.",
-      sunStrong:"සෘජු කාර්යයෙන් ප්‍රසිද්ධිය වර්ධනය වේ.",
-      sunWeak:"ප්‍රසිද්ධිය අඩු; කුඩා කාර්ය පළ කරන්න.",
-      healthStrong:"ප්‍රතිසාධනය හොඳයි; කම්මැලි භාව/ඇඳහිටීම පාලනය කරන්න.",
-      healthWeak:"බර වැඩ/අනතුරු ඇඟවීම; විවේක ගන්න/දිග හැරීම් කරන්න."
-    },
-    grades:{weak:"දුර්වල", fragmented:"කැබලි වී", strong:"ශක්තිමත්", moderate:"මධ්‍යස්ථ"},
-    orient:{up:"ඉහළට වංගුව", down:"පාන්දර වංගුව", level:"සමතා",
-    },
-    na:"n/a"
+  si:{title:"Palmistry Universal v5.3",subtitle:"බහුභාෂා · සටහන් → විශ්ලේෂණය → වාර්තාව",
+    back:"මුල් පිටුවට",
+    legend:{heart:"හෘදය",head:"සිත්තම් (Head)",life:"ජීවිතය",fate:"ඉරණාමි / විධි",sun:"සූර්ය",marriage:"වාහය",health:"සෞඛ්‍යය"},
+    toggles:{primary:"ප්‍රාථමික (Heart/Head/Life)",fate:"ඉරණාමි/Fate",sun:"Sun",marriage:"Marriage",health:"Health"},
+    ui:{start:"▶️ ආරම්භ",cycle:"🔁 Cycle",flip:"↔️ Flip",zoom:"Zoom",analyze:"✨ විශ්ලේෂණය",report:"📄 වාර්තාව",clear:"🧹 Clear",
+        res_hd:"HD 1280×720",res_fhd:"FullHD 1920×1080",res_vga:"VGA 640×480",
+        fps30:"30 FPS",fps60:"60 FPS",fps24:"24 FPS",pick_placeholder:"රූපයක් තෝරන්න…"},
+    msg:{start_hint:"▶️ Start → කැමරා අයිතිය දී Capture/Upload → Analyze → Report.",
+         https:"🔒 HTTPS භාවිතා කරන්න.",cam_err:"❌ කැමරා දෝෂය: ",torch_err:"Torch දෝෂය.",
+         need_capture:"පළමුව Capture හෝ Photo තෝරන්න.",need_analyze:"Analyze පළමුව ධාවනය කරන්න.",
+         photo_locked:"🖐️ Photo locked. Analyze කරන්න.",photo_loaded:"🖼️ Photo loaded.",cleared:"🧹 හිස් කළා.",
+         analyzing:"⏳ විශ්ලේෂණය වෙමින්…",analyze_fail:"❌ Analyze failed: "},
+    report:{title:"🖐️ Palmistry Report",legend:"Legend",save:"රූපය සුරකින්න",print:"Print / PDF",
+            copyright:"© Sathyadarshana · Palmistry AI v5.3",detailed:"AI සාරාංශය (විස්තරාත්මක)",
+            notes:"සටහන: මෙය අධ්‍යාපන කාර්‍යය සඳහා පමණි."},
+    lines:{heart:"❤️ හෘදය",head:"🧡 සිත්තම්",life:"💚 ජීවිතය",fate:"🟪 ඉරණාමි",sun:"🟨 සූර්ය",marriage:"🩷 වාහය",health:"🩵 සෞඛ්‍යය"},
+    meanings:{heartStrong:"අනුකම්පාවත්; ස්ථිර සබඳතා.",heartWeak:"අතිසංවේදී; සීමා අභ්‍යාස කරගන්න.",
+      headStrong:"පැහැදිලි සිත; ක්‍රියාමය විසඳුම්.",headWeak:"කේන්ද්‍රීකරණය විහිදෙයි; ලැයිස්තුවක්/Single-tasking.",
+      lifeStrong:"ආත්ම ශක්තිමත්; පරිකල්පිත.",lifeWeak:"ශක්තිය වෙනස් විය හැක; නින්ද/දෙහිදීම/උදේ ආලෝකය.",
+      fateStrong:"පියවරෙන්-පියවර වෘත්තීය පැහැදිලි වෙයි.",fateWeak:"පිටත බලපෑම්; තේරීම් විවෘතව තබාගන්න.",
+      sunStrong:"ප්‍රවීණතා/ප්‍රසිද්ධිය වැඩේ සමග ඉහළට.",sunWeak:"දැන් අඩු; කුඩා කෘති නිතර ප්‍රකාශනය කරන්න.",
+      healthStrong:"පුරුෂාරථය/භාවනාව හොඳයි.",healthWeak:"වැඩභාර/姿勢 මතක තබා ඕනෑ විරාම."},
+    grades:{weak:"අඩු",fragmented:"කැබලි-වූ",strong:"ඉහළ",moderate:"මධ්‍යස්ථ"},
+    orient:{up:"උඩට නමී",down:"පහළට නමී",level:"සම"}, rtl:false
   },
-
-  ar: {
-    title:"قارئ الكف v5.3",
-    subtitle:"متعدد اللغات · التقط → حلّل → تقرير",
-    back:"← العودة إلى الرئيسية",
-    legend:{heart:"القلب", head:"العقل", life:"الحياة", fate:"القدر", sun:"الشمس", marriage:"الزواج", health:"الصحة"},
-    toggles:{
-      primary:"أساسي (القلب/العقل/الحياة)", fate:"القدر", sun:"الشمس", marriage:"الزواج", health:"الصحة"
-    },
-    ui:{
-      start:"▶️ بدء", cycle:"🔁 تبديل", flip:"↔️ قلب", zoom:"تكبير",
-      analyze:"✨ تحليل", report:"📄 تقرير", clear:"🧹 مسح",
-      res_hd:"HD 1280×720", res_fhd:"FullHD 1920×1080", res_vga:"VGA 640×480",
-      fps30:"30 إطار/ث", fps60:"60 إطار/ث", fps24:"24 إطار/ث",
-      edge:"الحافة", detail:"التفاصيل",
-      pick_placeholder:"اختر صورة…"
-    },
-    msg:{
-      start_hint:"▶️ ابدأ → اسمح للكاميرا. التقط/حمّل → حلّل. التقرير يعرض الطبقات + قراءة مفصلة.",
-      https:"🔒 استخدم HTTPS لدعم الكاميرا",
-      cam_err:"❌ خطأ الكاميرا: ",
-      torch_err:"خطأ المصباح: ",
-      need_capture:"التقط أولًا",
-      need_analyze:"شغّل التحليل أولًا.",
-      photo_locked:"🖐️ تم تثبيت الصورة. ابدأ التحليل.",
-      photo_loaded:"🖼️ تم تحميل الصورة. ابدأ التحليل.",
-      cleared:"🧹 تم المسح. جاهز.",
-      analyzing:"⏳ جارٍ التحليل…",
-      analyze_fail:"❌ فشل التحليل: ",
-      need_choose:"❗التقط أو اختر صورة أولًا."
-    },
-    report:{
-      title:"🖐️ تقرير قراءة الكف",
-      legend:"الدليل",
-      save:"⬇️ حفظ الصورة",
-      print:"🖨️ طباعة / PDF",
-      copyright:"© Sathyadarshana · Palmistry AI v5.3",
-      detailed:"ملخص الذكاء الاصطناعي (مفصل)",
-      notes:"ملاحظة: هذه قراءة تعليمية وليست نصيحة طبية."
-    },
-    lines:{
-      heart:"❤️ خط القلب", head:"🧡 خط العقل", life:"💚 خط الحياة",
-      fate:"🟪 خط القدر", sun:"🟨 خط الشمس", marriage:"🩷 خطوط الزواج", health:"🩵 خط الصحة"
-    },
-    meanings:{
-      heartStrong:"تعاطف ودفء؛ علاقات مستقرة.",
-      heartWeak:"حساسية عالية؛ احمِ حدودك.",
-      headStrong:"تفكير عملي وحل مشكلات واضح.",
-      headWeak:"تشتت الانتباه؛ استخدم قوائم قصيرة.",
-      lifeStrong:"مرونة وحيوية جيدة.",
-      lifeWeak:"تذبذب الطاقة؛ أولِ النوم والماء.",
-      fateStrong:"الغاية تتضح بالعمل المتواصل.",
-      fateWeak:"العوامل الخارجية مؤثرة؛ زد مهاراتك.",
-      sunStrong:"السمعة والإبداع ينموان بالممارسة.",
-      sunWeak:"الظهور منخفض الآن؛ انشر أعمالًا صغيرة.",
-      healthStrong:"تعافٍ جيد؛ انتبه للوضعية والتنفس.",
-      healthWeak:"خفف الحمل وخذ فواصل وتمارين تمدد."
-    },
-    grades:{weak:"ضعيف", fragmented:"متقطع", strong:"قوي", moderate:"متوسط"},
-    orient:{up:"مائل للأعلى", down:"مائل للأسفل", level:"مستوي"},
-    na:"غير متاح",
+  ar:{title:"‏Palmistry v5.3",subtitle:"متعدد اللغات · التقط → حلّل → تقرير",
+    back:"العودة",legend:{heart:"القلب",head:"العقل",life:"الحياة",fate:"القدر",sun:"الشمس",marriage:"الزواج",health:"الصحة"},
+    toggles:{primary:"أساسي (قلب/عقل/حياة)",fate:"القدر",sun:"الشمس",marriage:"الزواج",health:"الصحة"},
+    ui:{start:"▶️ ابدأ",cycle:"🔁 تبديل",flip:"↔️ عكس",zoom:"تكبير",analyze:"✨ تحليل",report:"📄 تقرير",clear:"🧹 مسح",
+        res_hd:"HD 1280×720",res_fhd:"FullHD 1920×1080",res_vga:"VGA 640×480",
+        fps30:"30 إطار/ث",fps60:"60 إطار/ث",fps24:"24 إطار/ث",pick_placeholder:"اختر صورة…"},
+    msg:{start_hint:"▶️ ابدأ ثم اسمح للكاميرا…",https:"🔒 استخدم HTTPS",
+         cam_err:"❌ خطأ الكاميرا: ",torch_err:"خطأ المصباح.",need_capture:"التقط أو اختر صورة أولاً.",
+         need_analyze:"شغّل التحليل أولاً.",photo_locked:"🖐️ تم التثبيت. حلّل الآن.",
+         photo_loaded:"🖼️ تم التحميل. حلّل.",cleared:"🧹 تم المسح.",
+         analyzing:"⏳ جارٍ التحليل…",analyze_fail:"❌ فشل التحليل: "},
+    report:{title:"🖐️ تقرير قراءة الكف",legend:"الدليل",save:"حفظ الصورة",print:"طباعة / PDF",
+            copyright:"© Sathyadarshana · Palmistry AI v5.3",detailed:"ملخص الذكاء التفصيلي",
+            notes:"ملاحظة: قراءة تعليمية وليست طبية."},
+    lines:{heart:"❤️ خط القلب",head:"🧡 خط العقل",life:"💚 خط الحياة",fate:"🟪 خط القدر",sun:"🟨 خط الشمس",marriage:"🩷 خطوط الزواج",health:"🩵 خط الصحة"},
+    meanings:{heartStrong:"عاطفة دافئة وروابط ثابتة.",heartWeak:"حساسية عاطفية؛ اعتنِ بالحدود.",
+      headStrong:"تفكير واضح وحلول عملية.",headWeak:"تشتت التركيز؛ قوائم ومهمة واحدة.",
+      lifeStrong:"حيوية جيدة ومرونة.",lifeWeak:"تقلّبات الطاقة؛ نوم وماء وضوء صباحي.",
+      fateStrong:"يتضح المسار مع الجهد المتواصل.",fateWeak:"عوامل خارجية تؤثر؛ وسّع الخيارات.",
+      sunStrong:"تنمو السمعة بالإنتاج المستمر.",sunWeak:"إبراز قليل الآن؛ انشر أعمالاً صغيرة.",
+      healthStrong:"تعافٍ جيد؛ وضع وتنفس.",healthWeak:"خفف العبء وخذ فواصل."},
+    grades:{weak:"ضعيف",fragmented:"مجزأ",strong:"قوي",moderate:"متوسط"},
+    orient:{up:"مائل للأعلى",down:"مائل للأسفل",level:"مستوي"},
     rtl:true
   }
 };
 
-// Pick language: URL ?lang=xx > localStorage > navigator.language
+/* ---------- pick language & apply ---------- */
 function getLang(){
-  const url = new URL(location.href);
-  const q = (url.searchParams.get('lang')||'').toLowerCase();
-  const stored = localStorage.getItem('palm_lang')||'';
-  const nav = (navigator.language||'en').slice(0,2).toLowerCase();
-  const prefer = q || stored || nav;
-  if (I18N[prefer]) return prefer;
-  if (prefer.startsWith('si')) return 'si';
-  if (prefer.startsWith('ar')) return 'ar';
+  const q=new URL(location.href).searchParams.get('lang')||'';
+  const stored=localStorage.getItem('palm_lang')||'';
+  const nav=(navigator.language||'en').slice(0,2).toLowerCase();
+  const prefer=(q||stored||nav);
+  if(I18N[prefer]) return prefer;
+  if(prefer.startsWith('si')) return 'si';
+  if(prefer.startsWith('ar')) return 'ar';
   return 'en';
 }
-let LANG = getLang();
-localStorage.setItem('palm_lang', LANG);
-
-// apply i18n to UI (best effort without data-i18n attrs)
-function tpath(path, fallback=""){ // e.g. tpath("ui.start")
-  const seg=path.split('.'); let o=I18N[LANG];
-  for(const s of seg){ if(o && s in o) o=o[s]; else return fallback; }
-  return (typeof o==="string")?o:fallback;
+let LANG=getLang();
+localStorage.setItem('palm_lang',LANG);
+function tpath(path,fallback=""){const seg=path.split('.'); let o=I18N[LANG];
+  for(const k of seg){ if(!o) return fallback; o=o[k]; }
+  return (typeof o==="string")?o:(o||fallback);
 }
 function applyI18n(){
-  document.title = `${tpath('title','Palmistry v5.3')} · Sathyadarshana`;
-  document.querySelector('h1')?.replaceChildren(document.createTextNode(tpath('title','Palmistry Universal v5.3')));
-  document.querySelector('small')?.replaceChildren(document.createTextNode(tpath('subtitle','Multilingual · Capture → Analyze → Report')));
-  const navA = document.querySelector('nav a'); if(navA) navA.textContent = tpath('back','← Back to Home');
+  document.title = tpath('title')+' · Sathyadarshana';
+  document.querySelector('h1').textContent = '🖐️ '+tpath('title');
+  document.querySelector('small').textContent = tpath('subtitle');
+  document.querySelector('nav a').textContent = '← '+tpath('back');
 
-  // Legend labels (order fixed from Part A)
-  const leg = document.querySelectorAll('.legend .tag');
   const L = I18N[LANG].legend;
+  const ids = ['L_heart','L_head','L_life','L_fate','L_sun','L_marriage','L_health'];
   const names = [L.heart,L.head,L.life,L.fate,L.sun,L.marriage,L.health];
-  leg.forEach((el,i)=>{ if(names[i]) el.lastChild.textContent = names[i]; });
+  ids.forEach((id,i)=>document.getElementById(id).textContent=names[i]);
 
-  // Toggles
-  const labs = document.querySelectorAll('.toggles label');
   const T = I18N[LANG].toggles;
-  const tnames = [T.primary,T.fate,T.sun,T.marriage,T.health];
-  labs.forEach((el,i)=>{ if(tnames[i]) el.lastChild.textContent = ' '+tnames[i]; });
+  document.getElementById('T_primary_label').textContent=T.primary;
+  document.getElementById('T_fate_label').textContent=T.fate;
+  document.getElementById('T_sun_label').textContent=T.sun;
+  document.getElementById('T_marriage_label').textContent=T.marriage;
+  document.getElementById('T_health_label').textContent=T.health;
 
-  // Buttons/selects
-  byId('startBtn').textContent = tpath('ui.start');
-  byId('cycleBtn').textContent = tpath('ui.cycle');
-  byId('flipBtn').textContent = tpath('ui.flip');
-  byId('anBtn').textContent = tpath('ui.analyze');
-  byId('reportBtn').textContent = tpath('ui.report');
-  byId('clearBtn').textContent = tpath('ui.clear');
-  // selects (rebuild for translated options)
-  const resSel = byId('resSel');
-  resSel.options[0].text = tpath('ui.res_hd');
-  resSel.options[1].text = tpath('ui.res_fhd');
-  resSel.options[2].text = tpath('ui.res_vga');
-  const fpsSel = byId('fpsSel');
-  fpsSel.options[0].text = tpath('ui.fps30');
-  fpsSel.options[1].text = tpath('ui.fps60');
-  fpsSel.options[2].text = tpath('ui.fps24');
-  // sliders
-  document.querySelectorAll('.sliderRow label')[0].childNodes[0].textContent = tpath('ui.edge')+' ';
-  document.querySelectorAll('.sliderRow label')[1].childNodes[0].textContent = tpath('ui.detail')+' ';
-  // pick placeholder
-  byId('pick').setAttribute('title', tpath('ui.pick_placeholder'));
+  const U = I18N[LANG].ui;
+  byId('startBtn').textContent=U.start; byId('cycleBtn').textContent=U.cycle;
+  byId('flipBtn').textContent=U.flip; byId('anBtn').textContent=U.analyze;
+  byId('reportBtn').textContent=U.report; byId('clearBtn').textContent=U.clear;
+  byId('fpsSel').innerHTML=`<option value="30">${U.fps30}</option><option value="60">${U.fps60}</option><option value="24">${U.fps24}</option>`;
+  byId('resSel').innerHTML=`<option value="1280x720">${U.res_hd}</option><option value="1920x1080">${U.res_fhd}</option><option value="640x480">${U.res_vga}</option>`;
+  byId('pick').setAttribute('title',U.pick_placeholder);
 
-  // Summary title
-  document.querySelector('#summary h3').textContent = '🔎 ' + (I18N[LANG].report.detailed || 'AI Summary (Detailed)');
+  document.querySelector('#summary h3').textContent = '🔎 '+(tpath('report.detailed')||'AI Summary (Detailed)');
 
-  // RTL support (Arabic)
   const isRTL = !!I18N[LANG].rtl;
-  document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-  document.body.style.direction = isRTL ? 'rtl' : 'ltr';
+  document.documentElement.dir = isRTL?'rtl':'ltr';
+  document.body.style.direction = isRTL?'rtl':'ltr';
 }
 
-/* ---------- refs ---------- */
+/* ---------------- refs ---------------- */
 const video=byId('cam'), cv=byId('cv'), ctx=cv.getContext('2d');
 const startBtn=byId('startBtn'), camsel=byId('camsel'), cycleBtn=byId('cycleBtn');
 const resSel=byId('resSel'), fpsSel=byId('fpsSel'), zoomEl=byId('zoom');
 const pick=byId('pick'), flipBtn=byId('flipBtn'), torchBtn=byId('torchBtn');
 const capBtn=byId('capBtn'), anBtn=byId('anBtn'), reportBtn=byId('reportBtn'), clearBtn=byId('clearBtn');
-const tPrimary=byId('tPrimary'), tFate=byId('tFate'), tSun=byId('tSun'), tMarr=byId('tMarr'), tHealth=byId('tHealth');
+const T_primary=byId('T_primary'), T_fate=byId('T_fate'), T_sun=byId('T_sun'), T_marriage=byId('T_marriage'), T_health=byId('T_health');
 
 let stream=null, track=null, captured=false, isMirrored=false;
 let last=null;          // metrics
@@ -396,8 +258,6 @@ function byId(x){return document.getElementById(x)}
 function msg(t){ const s=byId('status'); s.textContent=t; s.style.display='block'; }
 function showSummary(html){ const b=byId('summary'); byId('sumtext').innerHTML=html; b.style.display='block'; }
 function parseRes(v){ const [w,h]=v.split('x').map(Number); return {w,h}; }
-
-/* ---------- utils ---------- */
 function norm(maxW=1280,maxPx=1500000){
   if(cv.width<=0||cv.height<=0) return;
   const tooW=cv.width>maxW, tooPx=cv.width*cv.height>maxPx;
@@ -408,21 +268,16 @@ function norm(maxW=1280,maxPx=1500000){
   t.getContext('2d').drawImage(cv,0,0,w,h); cv.width=w; cv.height=h; ctx.drawImage(t,0,0);
 }
 
-/* ---------- camera ---------- */
+/* ---------------- camera ---------------- */
 async function ensurePerm(){
   if(!navigator.mediaDevices?.getUserMedia) throw new Error('No mediaDevices');
-  const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
-  t.getTracks().forEach(x=>x.stop());
+  const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); t.getTracks().forEach(x=>x.stop());
 }
 let camList=[], camIndex=0;
 async function listCams(){
   const devs=await navigator.mediaDevices.enumerateDevices();
   camList=devs.filter(d=>d.kind==='videoinput');
-  camsel.innerHTML='';
-  camList.forEach((c,i)=>{
-    const o=document.createElement('option');
-    o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o);
-  });
+  camsel.innerHTML=''; camList.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o); });
   camsel.selectedIndex=0; camIndex=0;
 }
 async function startCam(id=null){
@@ -452,15 +307,14 @@ camsel.onchange=async()=>startCam(camsel.value);
 resSel.onchange=async()=>startCam(camsel.value||null);
 fpsSel.onchange=async()=>startCam(camsel.value||null);
 flipBtn.onclick=async()=>{ isMirrored=!isMirrored; if(stream && !captured){ video.style.transform=isMirrored?'scaleX(-1)':'none'; await startCam(camsel.value||null); } else if(captured){ mirrorCanvas(); } };
-torchBtn.onclick=async()=>{ if(!track) return; try{ const on=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!on}]}); } catch(e){ msg(tpath('msg.torch_err')+e.message); } };
+torchBtn.onclick=async()=>{ if(!track) return; try{ const on=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!on}]}); } catch(e){ msg(tpath('msg.torch_err')); } };
 zoomEl.oninput=async()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{} };
-
 function mirrorCanvas(){
   const t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height;
   t.getContext('2d').drawImage(cv,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,cv.width,0); ctx.drawImage(t,0,0); ctx.restore();
 }
 
-/* ---------- capture & file ---------- */
+/* ---------------- capture & file ---------------- */
 capBtn.onclick=async()=>{
   if(!stream) await startCam(camsel.value||null);
   if(!video.videoWidth) await new Promise(r=>setTimeout(r,100));
@@ -468,8 +322,7 @@ capBtn.onclick=async()=>{
   if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
   ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore();
   norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
-  byId('summary').style.display='none';
-  msg(tpath('msg.photo_locked'));
+  byId('summary').style.display='none'; msg(tpath('msg.photo_locked'));
 };
 pick.onchange=e=>{
   const f=e.target.files?.[0]; if(!f) return;
@@ -477,9 +330,45 @@ pick.onchange=e=>{
     if(isMirrored) mirrorCanvas(); norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
     byId('summary').style.display='none'; msg(tpath('msg.photo_loaded')); };
   img.onerror=()=>msg('❌ Image load failed'); img.src=URL.createObjectURL(f);
-}
-        <span class="tag"><span class="dot marr"></span>${I18N[LANG].legend.marriage}</span>
-        <span class="tag"><span class="dot hlth"></span>${I18N[LANG].legend.health}</span>
+};
+clearBtn.onclick=()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; lastOverlay=null; byId('summary').style.display='none'; msg(tpath('msg.cleared')); };
+
+/* ---------------- REPORT (overlay + text) ---------------- */
+reportBtn.onclick=()=>{
+  if(!captured){ msg(tpath('msg.need_capture')); return; }
+  if(!last){ msg(tpath('msg.need_analyze')); return; }
+  const R=I18N[LANG].report, isRTL=!!I18N[LANG].rtl;
+  const imgData=cv.toDataURL('image/png'); const details=buildDetailedReading(last);
+  const w=window.open('','_blank');
+  w.document.write(`
+  <html><head><title>${R.title}</title><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:12px;color:#123;background:#f7f9fc;${isRTL?'direction:rtl':''}}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .box{border:1px solid #ccd;background:#fff;padding:10px;border-radius:10px}
+    .imgWrap{max-width:min(92vw,700px)}
+    img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .tag{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:999px;border:1px solid #cfe;background:#eef6ff;color:#134}
+    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+    .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    button{padding:.5em 1em;border-radius:10px;border:1px solid #aac;background:#fff;cursor:pointer}
+    .muted{opacity:.8}
+  </style></head><body>
+  <h2>${R.title}</h2>
+  <div class="row">
+    <div class="imgWrap box"><img src="${imgData}" alt="Palmistry Overlay"/></div>
+    <div class="box" style="flex:1;min-width:260px">
+      <h3>${R.legend}</h3>
+      <div class="legend">
+        <span class="tag"><span class="dot hrt"></span>${tpath('legend.heart')}</span>
+        <span class="tag"><span class="dot hd"></span>${tpath('legend.head')}</span>
+        <span class="tag"><span class="dot life"></span>${tpath('legend.life')}</span>
+        <span class="tag"><span class="dot fate"></span>${tpath('legend.fate')}</span>
+        <span class="tag"><span class="dot sun"></span>${tpath('legend.sun')}</span>
+        <span class="tag"><span class="dot marr"></span>${tpath('legend.marriage')}</span>
+        <span class="tag"><span class="dot hlth"></span>${tpath('legend.health')}</span>
       </div>
       <div class="btns">
         <button onclick="downloadImg()">${R.save}</button>
@@ -488,21 +377,15 @@ pick.onchange=e=>{
       <div class="muted">${R.copyright}</div>
     </div>
   </div>
-  <div class="box" style="margin-top:12px">
-    ${details}
-  </div>
-  <script>
-    function downloadImg(){
-      const a=document.createElement('a'); a.href='${imgData}'; a.download='palmistry_overlay.png'; a.click();
-    }
-  </script>
+  <div class="box" style="margin-top:12px">${details}</div>
+  <script>function downloadImg(){const a=document.createElement('a');a.href='${imgData}';a.download='palmistry_overlay.png';a.click();}</script>
   </body></html>`);
   w.document.close();
 };
 
-/* ---------- ANALYZE ---------- */
+/* ---------------- ANALYZE ---------------- */
 anBtn.onclick=()=>{
-  if(!captured) return msg(tpath('msg.need_choose'));
+  if(!captured) return msg(tpath('msg.need_capture'));
   msg(tpath('msg.analyzing'));
   setTimeout(()=>{ try{ analyze(); } catch(e){ console.error(e); msg(tpath('msg.analyze_fail')+(e.message||e)); } }, 50);
 };
@@ -543,7 +426,6 @@ function analyze(){
   }
   const T=edgeVal*mx, bin=new Uint8ClampedArray(wh);
   for(let i=0;i<wh;i++) bin[i]=mag[i]>T?1:0;
-
   // skeletonize (Zhang–Suen)
   const sk=Uint8Array.from(bin);
   const N=(x,y)=> sk[(y-1)*w+x]+sk[(y-1)*w+x+1]+sk[y*w+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)*w+x-1]+sk[y*w+x-1]+sk[(y-1)*w+x-1];
@@ -563,7 +445,7 @@ function analyze(){
     rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; pass++;
   }
 
-  // helpers
+  // region helpers
   const band=(y0,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[y*w+x]=1; return m; };
   const rect=(x0,y0,x1,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[y*w+x]=1; return m; };
   const pickLongest=(mask)=>{ const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; let best=[];
@@ -587,21 +469,22 @@ function analyze(){
     segs.sort((a,b)=>polyLen(b)-polyLen(a)); return segs.slice(0,K);
   };
 
-  // zones
+  // bands (rough zoning)
   const yHeart0=0, yHeart1=Math.floor(h*0.30);
   const yHead0=yHeart1, yHead1=Math.floor(h*0.55);
   const yLife0=yHead1, yLife1=h;
 
-  // paths
+  // pick paths
   const pHeart = pickLongest(band(yHeart0,yHeart1));
   const pHead  = pickLongest(band(yHead0,yHead1));
   const pLife  = pickLongest(band(yLife0,yLife1));
+
   const pFate  = pickLongest(rect(Math.floor(w*0.40), Math.floor(h*0.35), Math.floor(w*0.60), h));
   const pSun   = pickLongest(rect(Math.floor(w*0.60), Math.floor(h*0.40), Math.floor(w*0.80), h));
   const pMarriage = pickTopK(rect(Math.floor(w*0.70), Math.floor(h*0.10), w, Math.floor(h*0.25)), 3, 40, 120, true);
   const pHealth= pickLongest(rect(Math.floor(w*0.55), Math.floor(h*0.55), w, h));
 
-  // faint edges
+  // faint cyan edges
   const overlay = ctx.createImageData(w,h);
   for(let i=0,j=0;i<wh;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=60; }
   ctx.putImageData(overlay,0,0);
@@ -621,68 +504,51 @@ function analyze(){
     return {len:polyLen(p), slope:orient(p), gaps:gaps(p)}; };
 
   ctx.globalAlpha=0.95;
-  if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); }
-  if(tFate.checked)   drawPath(pFate,'#a1a1ff',3.5);
-  if(tSun.checked)    drawPath(pSun,'#ffd54a',3.5);
-  if(tMarr.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3));
-  if(tHealth.checked) drawPath(pHealth,'#5ad1ff',3.5);
+  if(T_primary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); }
+  if(T_fate.checked)   drawPath(pFate,'#a1a1ff',3.5);
+  if(T_sun.checked)    drawPath(pSun,'#ffd54a',3.5);
+  if(T_marriage.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3));
+  if(T_health.checked) drawPath(pHealth,'#5ad1ff',3.5);
   ctx.globalAlpha=1; cv.style.display='block';
 
-  // store metrics
-  last = {
-    heart:M(pHeart), head:M(pHead), life:M(pLife),
-    fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth)
-  };
+  last = { heart:M(pHeart), head:M(pHead), life:M(pLife),
+           fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth) };
   lastOverlay = cv.toDataURL('image/png');
 
   showSummary(buildSummaryTable(last));
   msg('✨ Analyze done');
 }
 
-/* ---------- summaries ---------- */
-function grade(L,G){
-  const g = (L<80)?'weak' : (G>15)?'fragmented' : (L>220)?'strong' : 'moderate';
-  return I18N[LANG].grades[g] || g;
-}
-function ori(r){
-  const d=r*180/Math.PI;
-  const k = (d<-25)?'up' : (d>25)?'down' : 'level';
-  return I18N[LANG].orient[k] || k;
-}
-function lineRow(name, m){
-  const na = I18N[LANG].na || 'n/a';
-  if(!m||!m.len) return `${name}: <i>${na}</i>`;
-  return `${name}: <b>${grade(m.len,m.gaps)}</b> (${ori(m.slope)}), ~${m.len}, gaps ${m.gaps}.`;
-}
+/* ---------------- summaries ---------------- */
+function grade(L,G){ const n = (L<80)?'weak':(G>15)?'fragmented':(L>220)?'strong':'moderate'; return I18N[LANG].grades[n]||n; }
+function ori(r){ const d=r*180/Math.PI; const k = d<-25?'up': d>25?'down':'level'; return I18N[LANG].orient[k]||k; }
+function lineRow(name,m){ if(!m||!m.len) return `${name}: <i>n/a</i>`; return `${name}: <b>${grade(m.len,m.gaps)}</b> (${ori(m.slope)}), ~${m.len}, gaps ${m.gaps}.`; }
 function buildSummaryTable(m){
   const L=I18N[LANG].lines;
   const pri = `❤️ ${lineRow(L.heart,m.heart)}<br>🧡 ${lineRow(L.head,m.head)}<br>💚 ${lineRow(L.life,m.life)}`;
-  const sec = `🟪 ${lineRow(L.fate,m.fate)}<br>🟨 ${lineRow(L.sun,m.sun)}<br>🩷 ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>'#'+(i+1)+'~'+x.len).join(', ') : (I18N[LANG].na||'n/a')}<br>🩵 ${lineRow(L.health,m.health)}`;
+  const sec = `🟪 ${lineRow(L.fate,m.fate)}<br>🟨 ${lineRow(L.sun,m.sun)}<br>🩷 ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>'#'+(i+1)+'~'+x.len).join(', ') : 'n/a'}<br>🩵 ${lineRow(L.health,m.health)}`;
   return `<p>${pri}</p><hr/><p>${sec}</p>`;
 }
 function buildDetailedReading(m){
   const L=I18N[LANG].lines, M=I18N[LANG].meanings, R=I18N[LANG].report;
-  const text = (label, mm, meaningStrong, meaningWeak) => {
-    const na = I18N[LANG].na || 'n/a';
-    if(!mm||!mm.len) return `<p><b>${label}:</b> ${na}</p>`;
-    const g=grade(mm.len,mm.gaps), o=ori(mm.slope);
-    const meaning = (g===I18N[LANG].grades.strong || g===I18N[LANG].grades.moderate) ? meaningStrong : meaningWeak;
+  const text=(label,mm,strong,weak)=>{ if(!mm||!mm.len) return `<p><b>${label}:</b> n/a</p>`;
+    const g=grade(mm.len,mm.gaps), o=ori(mm.slope); const meaning = (g===I18N[LANG].grades.strong||g===I18N[LANG].grades.moderate)?strong:weak;
     return `<p><b>${label}:</b> <i>${g}</i> (${o}). ${meaning}</p>`;
   };
   return `
-    <h3>${R.detailed||'AI Summary (Detailed)'}</h3>
-    ${text(L.heart, m.heart, M.heartStrong, M.heartWeak)}
-    ${text(L.head,  m.head,  M.headStrong,  M.headWeak)}
-    ${text(L.life,  m.life,  M.lifeStrong,  M.lifeWeak)}
-    ${text(L.fate,  m.fate,  M.fateStrong,  M.fateWeak)}
-    ${text(L.sun,   m.sun,   M.sunStrong,   M.sunWeak)}
-    <p><b>${L.marriage}:</b> ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>`#${i+1} ~ ${x.len}px`).join(', ') : (I18N[LANG].na||'n/a')}.</p>
+    <h3>${R.detailed}</h3>
+    ${text(L.heart,m.heart,M.heartStrong,M.heartWeak)}
+    ${text(L.head,m.head,M.headStrong,M.headWeak)}
+    ${text(L.life,m.life,M.lifeStrong,M.lifeWeak)}
+    ${text(L.fate,m.fate,M.fateStrong,M.fateWeak)}
+    ${text(L.sun,m.sun,M.sunStrong,M.sunWeak)}
+    <p><b>${L.marriage}:</b> ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>`#${i+1} ~ ${x.len}px`).join(', ') : 'n/a'}</p>
     ${text(L.health,m.health,M.healthStrong,M.healthWeak)}
     <hr/><div class="muted">${R.notes}</div>
   `;
 }
 
-/* ---------- on load ---------- */
+/* ---------------- on load ---------------- */
 window.addEventListener('load',()=>{
   applyI18n();
   msg(tpath('msg.start_hint'));
