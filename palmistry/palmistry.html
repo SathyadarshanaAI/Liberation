@@ -1,68 +1,702 @@
-
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry Universal v5.2 · Report Enhancer</title>
-<meta name="description" content="Palmistry AI Overlay v5.2 — Heart, Head, Life + Fate, Sun, Marriage, Health with full overlay report.">
+<title>Palmistry Universal v5.3 · Sathyadarshana</title>
+<meta name="description" content="Palmistry AI Overlay v5.3 — Multilingual palm reading with Heart, Head, Life, Fate, Sun, Marriage, Health lines.">
 <style>
-  :root{--pri:#16f0a7;--bg:#0b0f16;--card:#0f1420;--ink:#e6f0ff}
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Arial;text-align:center}
-  h1{margin:14px 0 4px} small{opacity:.85}
-  .stage{position:relative;display:inline-block;width:min(92vw,520px)}
-  #cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
-  #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
-  .captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
-  .legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
-  .tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
-  .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
-  .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
-  .toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
-  .toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
-  .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
-  .left{background:#16243a;color:#cfe9ff}.an{background:#16f0a7;color:#062}.report{background:#a78bfa;color:#120}
-  select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
-  .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
-  .sliderRow label{display:flex;gap:8px;align-items:center}
-  input[type=range]{accent-color:#16f0a7}
-  #status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
-  #summary{max-width:900px;margin:10px auto;text-align:left;background:var(--card);border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
-  #summary h3{margin:0 0 8px}
-  nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
-  nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
-  nav a:hover{background:#0d1a2c}
-  footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
+:root {
+  --pri:#16f0a7; --bg:#0b0f16; --card:#0f1420; --ink:#e6f0ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:system-ui,Segoe UI,Arial; text-align:center; min-height:100vh;
+}
+h1{margin:18px 0 4px}
+small{opacity:.85}
+.stage{position:relative;display:inline-block;width:min(92vw,520px)}
+#cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
+#cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
+.captureBtn{
+  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+  width:86px;height:86px;border-radius:50%;border:none;
+  background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer;
+}
+.legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
+.tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;
+     border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}
+.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
+.toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
+.toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
+.btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
+.left{background:#16243a;color:#cfe9ff}.an{background:#16f0a7;color:#062}.report{background:#a78bfa;color:#120}
+select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
+.sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
+.sliderRow label{display:flex;gap:8px;align-items:center}
+input[type=range]{accent-color:#16f0a7}
+#status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
+#summary{max-width:900px;margin:10px auto;text-align:left;background:var(--card);border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
+#summary h3{margin:0 0 8px}
+nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
+nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
+nav a:hover{background:#0d1a2c}
+footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
 </style>
 </head>
 <body>
-  <h1>🖐️ Palmistry Universal v5.2</h1>
-  <small>Primary + Secondary Lines · Capture → Analyze → Report</small>
+  <h1>🖐️ Palmistry Universal v5.3</h1>
+  <small>Multilingual · Capture → Analyze → Report</small>
   <nav><a href="./index.html">← Back to Home</a></nav>
 
   <div class="stage">
     <video id="cam" autoplay playsinline muted></video>
-    <canvas id="cv"></canvas>
+    <canvas id="cv"></canvas><script>
+/* =========================
+   Palmistry Universal v5.3
+   - Camera + Analyze + Report
+   - Multilingual (EN, SI, AR) with auto-detect & URL override
+   ========================= */
+
+/* ---------- i18n ---------- */
+const I18N = {
+  en: {
+    title: "Palmistry Universal v5.3",
+    subtitle: "Multilingual · Capture → Analyze → Report",
+    back: "← Back to Home",
+    legend: {heart:"Heart", head:"Head", life:"Life", fate:"Fate", sun:"Sun", marriage:"Marriage", health:"Health"},
+    toggles: {
+      primary:"Primary (Heart/Head/Life)", fate:"Fate", sun:"Sun", marriage:"Marriage", health:"Health"
+    },
+    ui: {
+      start:"▶️ Start", cycle:"🔁 Cycle", flip:"↔️ Flip", zoom:"Zoom",
+      analyze:"✨ Analyze", report:"📄 Report", clear:"🧹 Clear",
+      res_hd:"HD 1280×720", res_fhd:"FullHD 1920×1080", res_vga:"VGA 640×480",
+      fps30:"30 FPS", fps60:"60 FPS", fps24:"24 FPS",
+      edge:"Edge", detail:"Detail",
+      pick_placeholder:"Choose image…"
+    },
+    msg: {
+      start_hint:"▶️ Start → Allow camera. Capture/Upload → Analyze. Report shows overlay + long reading.",
+      https:"🔒 Use HTTPS for best camera support",
+      cam_err:"❌ Camera error: ",
+      torch_err:"Torch error: ",
+      need_capture:"Capture first",
+      need_analyze:"Run Analyze first.",
+      photo_locked:"🖐️ Photo locked. Analyze to detect lines.",
+      photo_loaded:"🖼️ Photo loaded. Analyze to detect lines.",
+      cleared:"🧹 Cleared. Ready.",
+      analyzing:"⏳ Analyzing…",
+      analyze_fail:"❌ Analyze failed: ",
+      need_choose:"❗First Capture or Choose Photo."
+    },
+    report: {
+      title:"🖐️ Palmistry Report",
+      legend:"Legend",
+      save:"⬇️ Save Image",
+      print:"🖨️ Print / Save PDF",
+      copyright:"© Sathyadarshana · Palmistry AI Overlay v5.3",
+      detailed:"AI Summary (Detailed)",
+      notes:"Notes: This reading is educational and not medical advice."
+    },
+    lines: {
+      heart:"❤️ Heart line",
+      head:"🧡 Head (Cheettha) line",
+      life:"💚 Life line",
+      fate:"🟪 Fate (IraNami) line",
+      sun:"🟨 Sun line",
+      marriage:"🩷 Marriage lines",
+      health:"🩵 Health line"
+    },
+    meanings: {
+      heartStrong:"Warm, empathetic nature; bonds deeply with people. Emotions expressed with control; relationships benefit from stability.",
+      heartWeak:"Emotional energy appears sensitive; practice boundaries and self-care.",
+      headStrong:"Clear thinker with practical problem-solving; learns by doing.",
+      headWeak:"Focus may diffuse; use checklists and single-tasking.",
+      lifeStrong:"Good vitality and resilience; steady stamina; adaptable to change.",
+      lifeWeak:"Energy may fluctuate; prioritize sleep, hydration, and morning light.",
+      fateStrong:"Purpose grows through consistent effort; career path clarifies with age.",
+      fateWeak:"External factors influence direction; keep optionality and upskill.",
+      sunStrong:"Creativity/reputation grows via consistent craft work.",
+      sunWeak:"Recognition low now; publish small works frequently.",
+      healthStrong:"Recovery is good; keep posture and breath work.",
+      healthWeak:"Watch workload/posture; take micro-breaks and stretch."
+    },
+    grades: {weak:"weak", fragmented:"fragmented", strong:"strong", moderate:"moderate"},
+    orient: {up:"tilt-up", down:"tilt-down", level:"level"},
+    na:"n/a"
+  },
+
+  si: {
+    title:"Palmistry Universal v5.3",
+    subtitle:"බහුභාෂා · පිටපත්ගන්න → විශ්ලේෂණය → රිපෝට්",
+    back:"← මුල් පිටුවට",
+    legend:{heart:"Heart", head:"Head (Cheettha)", life:"Life", fate:"IraNami / Fate", sun:"Sun", marriage:"Marriage", health:"Health"},
+    toggles:{
+      primary:"ප්‍රාථමික (Heart/Head/Life)", fate:"IraNami/Fate", sun:"Sun", marriage:"Marriage", health:"Health"
+    },
+    ui:{
+      start:"▶️ Start", cycle:"🔁 Cycle", flip:"↔️ Flip", zoom:"Zoom",
+      analyze:"✨ Analyze", report:"📄 Report", clear:"🧹 Clear",
+      res_hd:"HD 1280×720", res_fhd:"FullHD 1920×1080", res_vga:"VGA 640×480",
+      fps30:"30 FPS", fps60:"60 FPS", fps24:"24 FPS",
+      edge:"Edge", detail:"Detail",
+      pick_placeholder:"රූපයක් තෝරන්න…"
+    },
+    msg:{
+      start_hint:"▶️ Start → Camera allow කරන්න. Capture/Upload → Analyze. Report එක overlay + දිගු විස්තර.",
+      https:"🔒 Camera සඳහා HTTPS භාවිතා කරන්න",
+      cam_err:"❌ Camera error: ",
+      torch_err:"Torch error: ",
+      need_capture:"පළමුව Capture කරන්න",
+      need_analyze:"පළමුව Analyze ක්‍රියාත්මක කරන්න.",
+      photo_locked:"🖐️ Photo locked. Analyze කරන්න.",
+      photo_loaded:"🖼️ Photo loaded. Analyze කරන්න.",
+      cleared:"🧹 සූදානම්.",
+      analyzing:"⏳ Analyzing…",
+      analyze_fail:"❌ Analyze failed: ",
+      need_choose:"❗පළමුව Capture හෝ රූපයක් තෝරන්න."
+    },
+    report:{
+      title:"🖐️ Palmistry Report",
+      legend:"Legend",
+      save:"⬇️ රූපය සුරකින්න",
+      print:"🖨️ Print / PDF",
+      copyright:"© Sathyadarshana · Palmistry AI Overlay v5.3",
+      detailed:"AI සාරාංශය (දිගු)",
+      notes:"සටහන: මෙය අධ්‍යාපනික අර්ථකථනයකි; වෛද්‍ය උපදෙස් නොවේ."
+    },
+    lines:{
+      heart:"❤️ Heart line", head:"🧡 Head (Cheettha) line", life:"💚 Life line",
+      fate:"🟪 Fate (IraNami) line", sun:"🟨 Sun line", marriage:"🩷 Marriage lines", health:"🩵 Health line"
+    },
+    meanings:{
+      heartStrong:"ආදාරය සහ හුරුබුහුටි බව. සංවේදන පාලනය මත පදනම්ව නිසි සම්බන්ධතා.",
+      heartWeak:"සංවේදී බව වැඩි; සීමා පවත්වාගෙන යන්න.",
+      headStrong:"ප්‍රායෝගික සිත; කරමින් ඉගෙනීම.",
+      headWeak:"අනේක ව්‍යාපාරය; ලැයිස්තු/Single-tasking උදව් වේ.",
+      lifeStrong:"ජීව ශක්තිය වර්ධිත; වෙනස්කම්ಗಳಿಗೆ හුරුපුරුදු.",
+      lifeWeak:"ශක්තිය ලච්ච; නින්ද/ ජල සේවනය ප්‍රමුඛ.",
+      fateStrong:"ඉටුකරීම සදාචාරය මත; වෘත්තියේ පැහැදිලිභාවය වැඩේ.",
+      fateWeak:"බාහිර බලපෑම්; විකල්ප තබා ගන්න/කෞශල්ය වැඩි කරන්න.",
+      sunStrong:"සෘජු කාර්යයෙන් ප්‍රසිද්ධිය වර්ධනය වේ.",
+      sunWeak:"ප්‍රසිද්ධිය අඩු; කුඩා කාර්ය පළ කරන්න.",
+      healthStrong:"ප්‍රතිසාධනය හොඳයි; කම්මැලි භාව/ඇඳහිටීම පාලනය කරන්න.",
+      healthWeak:"බර වැඩ/අනතුරු ඇඟවීම; විවේක ගන්න/දිග හැරීම් කරන්න."
+    },
+    grades:{weak:"දුර්වල", fragmented:"කැබලි වී", strong:"ශක්තිමත්", moderate:"මධ්‍යස්ථ"},
+    orient:{up:"ඉහළට වංගුව", down:"පාන්දර වංගුව", level:"සමතා",
+    },
+    na:"n/a"
+  },
+
+  ar: {
+    title:"قارئ الكف v5.3",
+    subtitle:"متعدد اللغات · التقط → حلّل → تقرير",
+    back:"← العودة إلى الرئيسية",
+    legend:{heart:"القلب", head:"العقل", life:"الحياة", fate:"القدر", sun:"الشمس", marriage:"الزواج", health:"الصحة"},
+    toggles:{
+      primary:"أساسي (القلب/العقل/الحياة)", fate:"القدر", sun:"الشمس", marriage:"الزواج", health:"الصحة"
+    },
+    ui:{
+      start:"▶️ بدء", cycle:"🔁 تبديل", flip:"↔️ قلب", zoom:"تكبير",
+      analyze:"✨ تحليل", report:"📄 تقرير", clear:"🧹 مسح",
+      res_hd:"HD 1280×720", res_fhd:"FullHD 1920×1080", res_vga:"VGA 640×480",
+      fps30:"30 إطار/ث", fps60:"60 إطار/ث", fps24:"24 إطار/ث",
+      edge:"الحافة", detail:"التفاصيل",
+      pick_placeholder:"اختر صورة…"
+    },
+    msg:{
+      start_hint:"▶️ ابدأ → اسمح للكاميرا. التقط/حمّل → حلّل. التقرير يعرض الطبقات + قراءة مفصلة.",
+      https:"🔒 استخدم HTTPS لدعم الكاميرا",
+      cam_err:"❌ خطأ الكاميرا: ",
+      torch_err:"خطأ المصباح: ",
+      need_capture:"التقط أولًا",
+      need_analyze:"شغّل التحليل أولًا.",
+      photo_locked:"🖐️ تم تثبيت الصورة. ابدأ التحليل.",
+      photo_loaded:"🖼️ تم تحميل الصورة. ابدأ التحليل.",
+      cleared:"🧹 تم المسح. جاهز.",
+      analyzing:"⏳ جارٍ التحليل…",
+      analyze_fail:"❌ فشل التحليل: ",
+      need_choose:"❗التقط أو اختر صورة أولًا."
+    },
+    report:{
+      title:"🖐️ تقرير قراءة الكف",
+      legend:"الدليل",
+      save:"⬇️ حفظ الصورة",
+      print:"🖨️ طباعة / PDF",
+      copyright:"© Sathyadarshana · Palmistry AI v5.3",
+      detailed:"ملخص الذكاء الاصطناعي (مفصل)",
+      notes:"ملاحظة: هذه قراءة تعليمية وليست نصيحة طبية."
+    },
+    lines:{
+      heart:"❤️ خط القلب", head:"🧡 خط العقل", life:"💚 خط الحياة",
+      fate:"🟪 خط القدر", sun:"🟨 خط الشمس", marriage:"🩷 خطوط الزواج", health:"🩵 خط الصحة"
+    },
+    meanings:{
+      heartStrong:"تعاطف ودفء؛ علاقات مستقرة.",
+      heartWeak:"حساسية عالية؛ احمِ حدودك.",
+      headStrong:"تفكير عملي وحل مشكلات واضح.",
+      headWeak:"تشتت الانتباه؛ استخدم قوائم قصيرة.",
+      lifeStrong:"مرونة وحيوية جيدة.",
+      lifeWeak:"تذبذب الطاقة؛ أولِ النوم والماء.",
+      fateStrong:"الغاية تتضح بالعمل المتواصل.",
+      fateWeak:"العوامل الخارجية مؤثرة؛ زد مهاراتك.",
+      sunStrong:"السمعة والإبداع ينموان بالممارسة.",
+      sunWeak:"الظهور منخفض الآن؛ انشر أعمالًا صغيرة.",
+      healthStrong:"تعافٍ جيد؛ انتبه للوضعية والتنفس.",
+      healthWeak:"خفف الحمل وخذ فواصل وتمارين تمدد."
+    },
+    grades:{weak:"ضعيف", fragmented:"متقطع", strong:"قوي", moderate:"متوسط"},
+    orient:{up:"مائل للأعلى", down:"مائل للأسفل", level:"مستوي"},
+    na:"غير متاح",
+    rtl:true
+  }
+};
+
+// Pick language: URL ?lang=xx > localStorage > navigator.language
+function getLang(){
+  const url = new URL(location.href);
+  const q = (url.searchParams.get('lang')||'').toLowerCase();
+  const stored = localStorage.getItem('palm_lang')||'';
+  const nav = (navigator.language||'en').slice(0,2).toLowerCase();
+  const prefer = q || stored || nav;
+  if (I18N[prefer]) return prefer;
+  if (prefer.startsWith('si')) return 'si';
+  if (prefer.startsWith('ar')) return 'ar';
+  return 'en';
+}
+let LANG = getLang();
+localStorage.setItem('palm_lang', LANG);
+
+// apply i18n to UI (best effort without data-i18n attrs)
+function tpath(path, fallback=""){ // e.g. tpath("ui.start")
+  const seg=path.split('.'); let o=I18N[LANG];
+  for(const s of seg){ if(o && s in o) o=o[s]; else return fallback; }
+  return (typeof o==="string")?o:fallback;
+}
+function applyI18n(){
+  document.title = `${tpath('title','Palmistry v5.3')} · Sathyadarshana`;
+  document.querySelector('h1')?.replaceChildren(document.createTextNode(tpath('title','Palmistry Universal v5.3')));
+  document.querySelector('small')?.replaceChildren(document.createTextNode(tpath('subtitle','Multilingual · Capture → Analyze → Report')));
+  const navA = document.querySelector('nav a'); if(navA) navA.textContent = tpath('back','← Back to Home');
+
+  // Legend labels (order fixed from Part A)
+  const leg = document.querySelectorAll('.legend .tag');
+  const L = I18N[LANG].legend;
+  const names = [L.heart,L.head,L.life,L.fate,L.sun,L.marriage,L.health];
+  leg.forEach((el,i)=>{ if(names[i]) el.lastChild.textContent = names[i]; });
+
+  // Toggles
+  const labs = document.querySelectorAll('.toggles label');
+  const T = I18N[LANG].toggles;
+  const tnames = [T.primary,T.fate,T.sun,T.marriage,T.health];
+  labs.forEach((el,i)=>{ if(tnames[i]) el.lastChild.textContent = ' '+tnames[i]; });
+
+  // Buttons/selects
+  byId('startBtn').textContent = tpath('ui.start');
+  byId('cycleBtn').textContent = tpath('ui.cycle');
+  byId('flipBtn').textContent = tpath('ui.flip');
+  byId('anBtn').textContent = tpath('ui.analyze');
+  byId('reportBtn').textContent = tpath('ui.report');
+  byId('clearBtn').textContent = tpath('ui.clear');
+  // selects (rebuild for translated options)
+  const resSel = byId('resSel');
+  resSel.options[0].text = tpath('ui.res_hd');
+  resSel.options[1].text = tpath('ui.res_fhd');
+  resSel.options[2].text = tpath('ui.res_vga');
+  const fpsSel = byId('fpsSel');
+  fpsSel.options[0].text = tpath('ui.fps30');
+  fpsSel.options[1].text = tpath('ui.fps60');
+  fpsSel.options[2].text = tpath('ui.fps24');
+  // sliders
+  document.querySelectorAll('.sliderRow label')[0].childNodes[0].textContent = tpath('ui.edge')+' ';
+  document.querySelectorAll('.sliderRow label')[1].childNodes[0].textContent = tpath('ui.detail')+' ';
+  // pick placeholder
+  byId('pick').setAttribute('title', tpath('ui.pick_placeholder'));
+
+  // Summary title
+  document.querySelector('#summary h3').textContent = '🔎 ' + (I18N[LANG].report.detailed || 'AI Summary (Detailed)');
+
+  // RTL support (Arabic)
+  const isRTL = !!I18N[LANG].rtl;
+  document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+  document.body.style.direction = isRTL ? 'rtl' : 'ltr';
+}
+
+/* ---------- refs ---------- */
+const video=byId('cam'), cv=byId('cv'), ctx=cv.getContext('2d');
+const startBtn=byId('startBtn'), camsel=byId('camsel'), cycleBtn=byId('cycleBtn');
+const resSel=byId('resSel'), fpsSel=byId('fpsSel'), zoomEl=byId('zoom');
+const pick=byId('pick'), flipBtn=byId('flipBtn'), torchBtn=byId('torchBtn');
+const capBtn=byId('capBtn'), anBtn=byId('anBtn'), reportBtn=byId('reportBtn'), clearBtn=byId('clearBtn');
+const tPrimary=byId('tPrimary'), tFate=byId('tFate'), tSun=byId('tSun'), tMarr=byId('tMarr'), tHealth=byId('tHealth');
+
+let stream=null, track=null, captured=false, isMirrored=false;
+let last=null;          // metrics
+let lastOverlay=null;   // dataURL of canvas with colored lines
+
+function byId(x){return document.getElementById(x)}
+function msg(t){ const s=byId('status'); s.textContent=t; s.style.display='block'; }
+function showSummary(html){ const b=byId('summary'); byId('sumtext').innerHTML=html; b.style.display='block'; }
+function parseRes(v){ const [w,h]=v.split('x').map(Number); return {w,h}; }
+
+/* ---------- utils ---------- */
+function norm(maxW=1280,maxPx=1500000){
+  if(cv.width<=0||cv.height<=0) return;
+  const tooW=cv.width>maxW, tooPx=cv.width*cv.height>maxPx;
+  if(!(tooW||tooPx)) return;
+  const s=Math.min(maxW/cv.width, Math.sqrt(maxPx/(cv.width*cv.height)));
+  const w=Math.max(Math.round(cv.width*s),540), h=Math.round(cv.height*s);
+  const t=document.createElement('canvas'); t.width=w; t.height=h;
+  t.getContext('2d').drawImage(cv,0,0,w,h); cv.width=w; cv.height=h; ctx.drawImage(t,0,0);
+}
+
+/* ---------- camera ---------- */
+async function ensurePerm(){
+  if(!navigator.mediaDevices?.getUserMedia) throw new Error('No mediaDevices');
+  const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+  t.getTracks().forEach(x=>x.stop());
+}
+let camList=[], camIndex=0;
+async function listCams(){
+  const devs=await navigator.mediaDevices.enumerateDevices();
+  camList=devs.filter(d=>d.kind==='videoinput');
+  camsel.innerHTML='';
+  camList.forEach((c,i)=>{
+    const o=document.createElement('option');
+    o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o);
+  });
+  camsel.selectedIndex=0; camIndex=0;
+}
+async function startCam(id=null){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; track=null; }
+  const {w,h}=parseRes(resSel.value||'1280x720'); const fps=Number(fpsSel.value||30);
+  const facing=isMirrored?'user':'environment';
+  const cons={ video:id?{deviceId:{exact:id}}:{facingMode:{ideal:facing}}, audio:false };
+  Object.assign(cons.video,{ width:{ideal:w,max:w}, height:{ideal:h,max:h}, frameRate:{ideal:fps,max:fps} });
+  try{ stream=await navigator.mediaDevices.getUserMedia(cons); }
+  catch{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+  video.srcObject=stream; await video.play(); track=stream.getVideoTracks()[0];
+  const W=video.videoWidth||w, H=video.videoHeight||h; cv.width=W; cv.height=H;
+  video.style.transform=isMirrored?'scaleX(-1)':'none'; cv.style.display=captured?'block':'none';
+  const caps=track.getCapabilities?.()||{}; torchBtn.hidden=!('torch' in caps);
+  if('zoom' in caps){ zoomEl.min=caps.zoom.min||1; zoomEl.max=caps.zoom.max||5; zoomEl.step=caps.zoom.step||0.1; zoomEl.value=(track.getSettings?.().zoom)||zoomEl.min; zoomEl.parentElement.style.display=''; } else zoomEl.parentElement.style.display='none';
+  msg(`📷 ${track.label||'Camera'} • ${W}×${H}@${fps}`);
+}
+startBtn.onclick=async()=>{
+  try{
+    if(location.protocol!=='https:' && location.hostname!=='localhost') msg(tpath('msg.https'));
+    await ensurePerm(); await listCams(); await startCam(camsel.value||camList[0]?.deviceId||null);
+  }catch(e){ msg(tpath('msg.cam_err')+(e.message||e)); }
+};
+cycleBtn.onclick=async()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras');
+  camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
+camsel.onchange=async()=>startCam(camsel.value);
+resSel.onchange=async()=>startCam(camsel.value||null);
+fpsSel.onchange=async()=>startCam(camsel.value||null);
+flipBtn.onclick=async()=>{ isMirrored=!isMirrored; if(stream && !captured){ video.style.transform=isMirrored?'scaleX(-1)':'none'; await startCam(camsel.value||null); } else if(captured){ mirrorCanvas(); } };
+torchBtn.onclick=async()=>{ if(!track) return; try{ const on=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!on}]}); } catch(e){ msg(tpath('msg.torch_err')+e.message); } };
+zoomEl.oninput=async()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{} };
+
+function mirrorCanvas(){
+  const t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height;
+  t.getContext('2d').drawImage(cv,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,cv.width,0); ctx.drawImage(t,0,0); ctx.restore();
+}
+
+/* ---------- capture & file ---------- */
+capBtn.onclick=async()=>{
+  if(!stream) await startCam(camsel.value||null);
+  if(!video.videoWidth) await new Promise(r=>setTimeout(r,100));
+  cv.width=video.videoWidth; cv.height=video.videoHeight; ctx.save();
+  if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore();
+  norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
+  byId('summary').style.display='none';
+  msg(tpath('msg.photo_locked'));
+};
+pick.onchange=e=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  const img=new Image(); img.onload=()=>{ cv.width=img.naturalWidth; cv.height=img.naturalHeight; ctx.drawImage(img,0,0);
+    if(isMirrored) mirrorCanvas(); norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
+    byId('summary').style.display='none'; msg(tpath('msg.photo_loaded')); };
+  img.onerror=()=>msg('❌ Image load failed'); img.src=URL.createObjectURL(f);
+};
+clearBtn.onclick=()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; lastOverlay=null; byId('summary').style.display='none'; msg(tpath('msg.cleared')); };
+
+/* ---------- REPORT (overlay + long text) ---------- */
+reportBtn.onclick=()=>{
+  if(!captured){ msg(tpath('msg.need_capture')); return; }
+  if(!last){ msg(tpath('msg.need_analyze')); return; }
+  const imgData = cv.toDataURL('image/png');
+  const details = buildDetailedReading(last);
+
+  const R = I18N[LANG].report, isRTL = !!I18N[LANG].rtl;
+  const w = window.open('', '_blank');
+  w.document.write(`
+  <html ${isRTL?'dir="rtl"':''}><head><title>${R.title}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:12px;color:#123;background:#f7f9fc;${isRTL?'direction:rtl;':''}}
+    h2{margin:6px 0 12px}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .box{border:1px solid #ccd; background:#fff; padding:10px; border-radius:10px}
+    .imgWrap{max-width:min(92vw,700px)}
+    img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .tag{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:999px;border:1px solid #cfe;background:#eef6ff;color:#134}
+    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+    .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
+    .muted{opacity:.8}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    button{padding:.5em 1em;border-radius:10px;border:1px solid #aac;background:#fff;cursor:pointer}
+  </style></head><body>
+  <h2>${R.title}</h2>
+  <div class="row">
+    <div class="imgWrap box"><img src="${imgData}" alt="Palmistry Overlay"/></div>
+    <div class="box" style="flex:1;min-width:260px">
+      <h3>${R.legend}</h3>
+      <div class="legend">
+        <span class="tag"><span class="dot hrt"></span>${I18N[LANG].legend.heart}</span>
+        <span class="tag"><span class="dot hd"></span>${I18N[LANG].legend.head}</span>
+        <span class="tag"><span class="dot life"></span>${I18N[LANG].legend.life}</span>
+        <span class="tag"><span class="dot fate"></span>${I18N[LANG].legend.fate}</span>
+        <span class="tag"><span class="dot sun"></span>${I18N[LANG].legend.sun}</span>
+        <span class="tag"><span class="dot marr"></span>${I18N[LANG].legend.marriage}</span>
+        <span class="tag"><span class="dot hlth"></span>${I18N[LANG].legend.health}</span>
+      </div>
+      <div class="btns">
+        <button onclick="downloadImg()">${R.save}</button>
+        <button onclick="window.print()">${R.print}</button>
+      </div>
+      <div class="muted">${R.copyright}</div>
+    </div>
+  </div>
+  <div class="box" style="margin-top:12px">
+    ${details}
+  </div>
+  <script>
+    function downloadImg(){
+      const a=document.createElement('a'); a.href='${imgData}'; a.download='palmistry_overlay.png'; a.click();
+    }
+  </script>
+  </body></html>`);
+  w.document.close();
+};
+
+/* ---------- ANALYZE ---------- */
+anBtn.onclick=()=>{
+  if(!captured) return msg(tpath('msg.need_choose'));
+  msg(tpath('msg.analyzing'));
+  setTimeout(()=>{ try{ analyze(); } catch(e){ console.error(e); msg(tpath('msg.analyze_fail')+(e.message||e)); } }, 50);
+};
+
+function analyze(){
+  if(!cv.width||!cv.height){ msg('No canvas'); return; }
+  norm(1024,1000000);
+  let w=cv.width, h=cv.height, src;
+  for(let i=0;i<2;i++){
+    try{ src=ctx.getImageData(0,0,w,h); break; }
+    catch(e){
+      const t=document.createElement('canvas'); t.width=Math.round(w*0.8); t.height=Math.round(h*0.8);
+      t.getContext('2d').drawImage(cv,0,0,t.width,t.height);
+      cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0); w=cv.width; h=cv.height;
+    }
+  }
+  const wh=w*h, edgeVal=parseInt(byId('edge').value,10)/255, passes=parseInt(byId('gk').value,10);
+  // grayscale
+  const d=src.data, gray=new Uint8ClampedArray(wh);
+  for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
+  // blur
+  let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1], kn=16;
+  for(let p=0;p<passes;p++){
+    const t=new Float32Array(wh);
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/kn;
+    }
+    a=t;
+  }
+  const blur=Uint8ClampedArray.from(a);
+  // sobel
+  const mag=new Float32Array(wh); let mx=1;
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    const i=y*w+x;
+    const gx=-blur[i-w-1]-2*blur[i-1]-blur[i+w-1] + blur[i-w+1]+2*blur[i+1]+blur[i+w+1];
+    const gy=-blur[i-w-1]-2*blur[i-w]-blur[i-w+1] + blur[i+w-1]+2*blur[i+w]+blur[i+w+1];
+    const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m;
+  }
+  const T=edgeVal*mx, bin=new Uint8ClampedArray(wh);
+  for(let i=0;i<wh;i++) bin[i]=mag[i]>T?1:0;
+
+  // skeletonize (Zhang–Suen)
+  const sk=Uint8Array.from(bin);
+  const N=(x,y)=> sk[(y-1)*w+x]+sk[(y-1)*w+x+1]+sk[y*w+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)*w+x-1]+sk[y*w+x-1]+sk[(y-1)*w+x-1];
+  const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)*w+x+1],sk[y*w+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)*w+x-1],sk[y*w+x-1],sk[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
+  let changed=true, pass=0;
+  while(changed && pass<20){
+    changed=false; let rem=[];
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
+      if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[(y+1)*w+x]==0) && (sk[y*w+x+1]*sk[y*w+x-1]*sk[(y-1)*w+x]==0)) rem.push(i);
+    }
+    rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; rem=[];
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
+      if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]*sk[y*w+x-1]*sk[(y+1)*w+x]==0) && (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[y*w+x-1]==0)) rem.push(i);
+    }
+    rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; pass++;
+  }
+
+  // helpers
+  const band=(y0,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[y*w+x]=1; return m; };
+  const rect=(x0,y0,x1,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[y*w+x]=1; return m; };
+  const pickLongest=(mask)=>{ const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; let best=[];
+    function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]);
+      for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; }
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } }
+    return best;
+  };
+  const pickTopK=(mask,K=3,minLen=30,maxLen=140,preferHorizontal=true)=>{
+    const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; const segs=[];
+    function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh&&mask[j]&&sk[j]&&!seen[j]){ seen[j]=1; st.push(j);} } } return pts; }
+    const polyLen=(p)=>{ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; };
+    const orient=(p)=>{ if(p.length<2) return 0; const A=p[0],B=p[p.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); };
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); const L=polyLen(p);
+        if(L>=minLen && L<=maxLen){ let ok=true; if(preferHorizontal){ const ang=Math.abs(orient(p)*180/Math.PI); ok=(ang<25||ang>155); }
+          if(ok) segs.push(p);
+        }
+      }
+    }
+    segs.sort((a,b)=>polyLen(b)-polyLen(a)); return segs.slice(0,K);
+  };
+
+  // zones
+  const yHeart0=0, yHeart1=Math.floor(h*0.30);
+  const yHead0=yHeart1, yHead1=Math.floor(h*0.55);
+  const yLife0=yHead1, yLife1=h;
+
+  // paths
+  const pHeart = pickLongest(band(yHeart0,yHeart1));
+  const pHead  = pickLongest(band(yHead0,yHead1));
+  const pLife  = pickLongest(band(yLife0,yLife1));
+  const pFate  = pickLongest(rect(Math.floor(w*0.40), Math.floor(h*0.35), Math.floor(w*0.60), h));
+  const pSun   = pickLongest(rect(Math.floor(w*0.60), Math.floor(h*0.40), Math.floor(w*0.80), h));
+  const pMarriage = pickTopK(rect(Math.floor(w*0.70), Math.floor(h*0.10), w, Math.floor(h*0.25)), 3, 40, 120, true);
+  const pHealth= pickLongest(rect(Math.floor(w*0.55), Math.floor(h*0.55), w, h));
+
+  // faint edges
+  const overlay = ctx.createImageData(w,h);
+  for(let i=0,j=0;i<wh;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=60; }
+  ctx.putImageData(overlay,0,0);
+
+  // draw
+  function drawPath(pts,color,wid){
+    if(!pts||pts.length<5) return;
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.strokeStyle='#000'; ctx.lineWidth=wid+2;
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
+    ctx.strokeStyle=color; ctx.lineWidth=wid;
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
+  }
+  const M=(p)=>{ const polyLen=(pp)=>{ let L=0; for(let i=1;i<pp.length;i++){const dx=pp[i][0]-pp[i-1][0],dy=pp[i][1]-pp[i-1][1]; L+=Math.hypot(dx,dy);} return L|0; };
+    const orient=(pp)=>{ if(pp.length<2) return 0; const A=pp[0],B=pp[pp.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); };
+    const gaps=(pp)=>{ let g=0; for(let i=2;i<pp.length;i++) if(Math.hypot(pp[i][0]-pp[i-1][0],pp[i][1]-pp[i-1][1])>6) g++; return g; };
+    return {len:polyLen(p), slope:orient(p), gaps:gaps(p)}; };
+
+  ctx.globalAlpha=0.95;
+  if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); }
+  if(tFate.checked)   drawPath(pFate,'#a1a1ff',3.5);
+  if(tSun.checked)    drawPath(pSun,'#ffd54a',3.5);
+  if(tMarr.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3));
+  if(tHealth.checked) drawPath(pHealth,'#5ad1ff',3.5);
+  ctx.globalAlpha=1; cv.style.display='block';
+
+  // store metrics
+  last = {
+    heart:M(pHeart), head:M(pHead), life:M(pLife),
+    fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth)
+  };
+  lastOverlay = cv.toDataURL('image/png');
+
+  showSummary(buildSummaryTable(last));
+  msg('✨ Analyze done');
+}
+
+/* ---------- summaries ---------- */
+function grade(L,G){
+  const g = (L<80)?'weak' : (G>15)?'fragmented' : (L>220)?'strong' : 'moderate';
+  return I18N[LANG].grades[g] || g;
+}
+function ori(r){
+  const d=r*180/Math.PI;
+  const k = (d<-25)?'up' : (d>25)?'down' : 'level';
+  return I18N[LANG].orient[k] || k;
+}
+function lineRow(name, m){
+  const na = I18N[LANG].na || 'n/a';
+  if(!m||!m.len) return `${name}: <i>${na}</i>`;
+  return `${name}: <b>${grade(m.len,m.gaps)}</b> (${ori(m.slope)}), ~${m.len}, gaps ${m.gaps}.`;
+}
+function buildSummaryTable(m){
+  const L=I18N[LANG].lines;
+  const pri = `❤️ ${lineRow(L.heart,m.heart)}<br>🧡 ${lineRow(L.head,m.head)}<br>💚 ${lineRow(L.life,m.life)}`;
+  const sec = `🟪 ${lineRow(L.fate,m.fate)}<br>🟨 ${lineRow(L.sun,m.sun)}<br>🩷 ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>'#'+(i+1)+'~'+x.len).join(', ') : (I18N[LANG].na||'n/a')}<br>🩵 ${lineRow(L.health,m.health)}`;
+  return `<p>${pri}</p><hr/><p>${sec}</p>`;
+}
+function buildDetailedReading(m){
+  const L=I18N[LANG].lines, M=I18N[LANG].meanings, R=I18N[LANG].report;
+  const text = (label, mm, meaningStrong, meaningWeak) => {
+    const na = I18N[LANG].na || 'n/a';
+    if(!mm||!mm.len) return `<p><b>${label}:</b> ${na}</p>`;
+    const g=grade(mm.len,mm.gaps), o=ori(mm.slope);
+    const meaning = (g===I18N[LANG].grades.strong || g===I18N[LANG].grades.moderate) ? meaningStrong : meaningWeak;
+    return `<p><b>${label}:</b> <i>${g}</i> (${o}). ${meaning}</p>`;
+  };
+  return `
+    <h3>${R.detailed||'AI Summary (Detailed)'}</h3>
+    ${text(L.heart, m.heart, M.heartStrong, M.heartWeak)}
+    ${text(L.head,  m.head,  M.headStrong,  M.headWeak)}
+    ${text(L.life,  m.life,  M.lifeStrong,  M.lifeWeak)}
+    ${text(L.fate,  m.fate,  M.fateStrong,  M.fateWeak)}
+    ${text(L.sun,   m.sun,   M.sunStrong,   M.sunWeak)}
+    <p><b>${L.marriage}:</b> ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>`#${i+1} ~ ${x.len}px`).join(', ') : (I18N[LANG].na||'n/a')}.</p>
+    ${text(L.health,m.health,M.healthStrong,M.healthWeak)}
+    <hr/><div class="muted">${R.notes}</div>
+  `;
+}
+
+/* ---------- on load ---------- */
+window.addEventListener('load',()=>{
+  applyI18n();
+  msg(tpath('msg.start_hint'));
+});
+</script>
+</body>
+</html>
     <button class="captureBtn" id="capBtn">Capture</button>
   </div>
 
   <div class="legend">
     <span class="tag"><span class="dot hrt"></span>Heart</span>
-    <span class="tag"><span class="dot hd"></span>Head (Cheettha)</span>
+    <span class="tag"><span class="dot hd"></span>Head</span>
     <span class="tag"><span class="dot life"></span>Life</span>
-    <span class="tag"><span class="dot fate"></span>IraNami / Fate</span>
+    <span class="tag"><span class="dot fate"></span>Fate</span>
     <span class="tag"><span class="dot sun"></span>Sun</span>
     <span class="tag"><span class="dot marr"></span>Marriage</span>
     <span class="tag"><span class="dot hlth"></span>Health</span>
   </div>
 
   <div class="toggles">
-    <label><input type="checkbox" id="tPrimary" checked> Primary (Heart/Head/Life)</label>
-    <label><input type="checkbox" id="tFate" checked> IraNami/Fate</label>
-    <label><input type="checkbox" id="tSun" checked> Sun</label>
-    <label><input type="checkbox" id="tMarr" checked> Marriage</label>
-    <label><input type="checkbox" id="tHealth" checked> Health</label>
+    <label><input type="checkbox" id="tPrimary" checked>Primary (Heart/Head/Life)</label>
+    <label><input type="checkbox" id="tFate" checked>Fate</label>
+    <label><input type="checkbox" id="tSun" checked>Sun</label>
+    <label><input type="checkbox" id="tMarr" checked>Marriage</label>
+    <label><input type="checkbox" id="tHealth" checked>Health</label>
   </div>
 
   <div class="btns">
@@ -94,368 +728,5 @@
   </div>
 
   <div id="status"></div>
-
-  <div id="summary">
-    <h3>🔎 AI Summary</h3>
-    <div id="sumtext"></div>
-  </div>
-
-  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.2</footer>
-
-<script>
-/* ===== basics ===== */
-const video=byId('cam'), cv=byId('cv'), ctx=cv.getContext('2d');
-const startBtn=byId('startBtn'), camsel=byId('camsel'), cycleBtn=byId('cycleBtn');
-const resSel=byId('resSel'), fpsSel=byId('fpsSel'), zoomEl=byId('zoom');
-const pick=byId('pick'), flipBtn=byId('flipBtn'), torchBtn=byId('torchBtn');
-const capBtn=byId('capBtn'), anBtn=byId('anBtn'), reportBtn=byId('reportBtn'), clearBtn=byId('clearBtn');
-const tPrimary=byId('tPrimary'), tFate=byId('tFate'), tSun=byId('tSun'), tMarr=byId('tMarr'), tHealth=byId('tHealth');
-
-let stream=null, track=null, captured=false, isMirrored=false;
-let last=null;          // metrics
-let lastOverlay=null;   // dataURL of canvas with colored lines
-
-function byId(x){return document.getElementById(x)}
-function msg(t){ const s=byId('status'); s.textContent=t; s.style.display='block'; }
-function showSummary(html){ const b=byId('summary'); byId('sumtext').innerHTML=html; b.style.display='block'; }
-function parseRes(v){ const [w,h]=v.split('x').map(Number); return {w,h}; }
-
-/* ===== utils ===== */
-function norm(maxW=1280,maxPx=1500000){
-  if(cv.width<=0||cv.height<=0) return;
-  const tooW=cv.width>maxW, tooPx=cv.width*cv.height>maxPx;
-  if(!(tooW||tooPx)) return;
-  const s=Math.min(maxW/cv.width, Math.sqrt(maxPx/(cv.width*cv.height)));
-  const w=Math.max(Math.round(cv.width*s),540), h=Math.round(cv.height*s);
-  const t=document.createElement('canvas'); t.width=w; t.height=h;
-  t.getContext('2d').drawImage(cv,0,0,w,h); cv.width=w; cv.height=h; ctx.drawImage(t,0,0);
-}
-
-/* ===== camera ===== */
-async function ensurePerm(){
-  if(!navigator.mediaDevices?.getUserMedia) throw new Error('No mediaDevices');
-  const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); t.getTracks().forEach(x=>x.stop());
-}
-let camList=[], camIndex=0;
-async function listCams(){
-  const devs=await navigator.mediaDevices.enumerateDevices();
-  camList=devs.filter(d=>d.kind==='videoinput');
-  camsel.innerHTML='';
-  camList.forEach((c,i)=>{
-    const o=document.createElement('option');
-    o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o);
-  });
-  camsel.selectedIndex=0; camIndex=0;
-}
-async function startCam(id=null){
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; track=null; }
-  const {w,h}=parseRes(resSel.value||'1280x720'); const fps=Number(fpsSel.value||30);
-  const facing=isMirrored?'user':'environment';
-  const cons={ video:id?{deviceId:{exact:id}}:{facingMode:{ideal:facing}}, audio:false };
-  Object.assign(cons.video,{ width:{ideal:w,max:w}, height:{ideal:h,max:h}, frameRate:{ideal:fps,max:fps} });
-  try{ stream=await navigator.mediaDevices.getUserMedia(cons); }
-  catch{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-  video.srcObject=stream; await video.play(); track=stream.getVideoTracks()[0];
-  const W=video.videoWidth||w, H=video.videoHeight||h; cv.width=W; cv.height=H;
-  video.style.transform=isMirrored?'scaleX(-1)':'none'; cv.style.display=captured?'block':'none';
-  const caps=track.getCapabilities?.()||{}; torchBtn.hidden=!('torch' in caps);
-  if('zoom' in caps){ zoomEl.min=caps.zoom.min||1; zoomEl.max=caps.zoom.max||5; zoomEl.step=caps.zoom.step||0.1; zoomEl.value=(track.getSettings?.().zoom)||zoomEl.min; zoomEl.parentElement.style.display=''; } else zoomEl.parentElement.style.display='none';
-  msg(`📷 ${track.label||'Camera'} • ${W}×${H}@${fps}`);
-}
-startBtn.onclick=async()=>{
-  try{
-    if(location.protocol!=='https:' && location.hostname!=='localhost') msg('🔒 Use HTTPS for best camera support');
-    await ensurePerm(); await listCams(); await startCam(camsel.value||camList[0]?.deviceId||null);
-  }catch(e){ msg('❌ '+(e.message||e)); }
-};
-cycleBtn.onclick=async()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras');
-  camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
-camsel.onchange=async()=>startCam(camsel.value);
-resSel.onchange=async()=>startCam(camsel.value||null);
-fpsSel.onchange=async()=>startCam(camsel.value||null);
-flipBtn.onclick=async()=>{ isMirrored=!isMirrored; if(stream && !captured){ video.style.transform=isMirrored?'scaleX(-1)':'none'; await startCam(camsel.value||null); } else if(captured){ mirrorCanvas(); } };
-torchBtn.onclick=async()=>{ if(!track) return; try{ const on=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!on}]}); } catch(e){ msg('Torch error: '+e.message); } };
-zoomEl.oninput=async()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{} };
-
-function mirrorCanvas(){
-  const t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height;
-  t.getContext('2d').drawImage(cv,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,cv.width,0); ctx.drawImage(t,0,0); ctx.restore();
-}
-
-/* ===== capture & file ===== */
-capBtn.onclick=async()=>{
-  if(!stream) await startCam(camsel.value||null);
-  if(!video.videoWidth) await new Promise(r=>setTimeout(r,100));
-  cv.width=video.videoWidth; cv.height=video.videoHeight; ctx.save();
-  if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
-  ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore();
-  norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
-  byId('summary').style.display='none';
-  msg('🖐️ Photo locked. Analyze to detect lines.');
-};
-pick.onchange=e=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  const img=new Image(); img.onload=()=>{ cv.width=img.naturalWidth; cv.height=img.naturalHeight; ctx.drawImage(img,0,0);
-    if(isMirrored) mirrorCanvas(); norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
-    byId('summary').style.display='none'; msg('🖼️ Photo loaded. Analyze to detect lines.'); };
-  img.onerror=()=>msg('❌ Image load failed'); img.src=URL.createObjectURL(f);
-};
-clearBtn.onclick=()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; lastOverlay=null; byId('summary').style.display='none'; msg('🧹 Cleared. Ready.'); };
-
-/* ===== REPORT (overlay snapshot + detailed text) ===== */
-reportBtn.onclick=()=>{
-  if(!captured){ msg('Capture first'); return; }
-  if(!last){ msg('Run Analyze first.'); return; }
-
-  // use the already-painted canvas (with colored lines) as image
-  const imgData = cv.toDataURL('image/png');
-  const details = buildDetailedReading(last);
-
-  const w = window.open('', '_blank');
-  w.document.write(`
-  <html><head><title>Palmistry Report</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <style>
-    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:12px;color:#123;background:#f7f9fc}
-    h2{margin:6px 0 12px}
-    .row{display:flex;gap:16px;flex-wrap:wrap}
-    .box{border:1px solid #ccd; background:#fff; padding:10px; border-radius:10px}
-    .imgWrap{max-width:min(92vw,700px)}
-    img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
-    .legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-    .tag{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:999px;border:1px solid #cfe;background:#eef6ff;color:#134}
-    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
-    .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
-    .muted{opacity:.8}
-    .btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-    button{padding:.5em 1em;border-radius:10px;border:1px solid #aac;background:#fff;cursor:pointer}
-  </style></head><body>
-  <h2>🖐️ Palmistry Report</h2>
-  <div class="row">
-    <div class="imgWrap box"><img src="${imgData}" alt="Palmistry Overlay"/></div>
-    <div class="box" style="flex:1;min-width:260px">
-      <h3>Legend</h3>
-      <div class="legend">
-        <span class="tag"><span class="dot hrt"></span>Heart</span>
-        <span class="tag"><span class="dot hd"></span>Head</span>
-        <span class="tag"><span class="dot life"></span>Life</span>
-        <span class="tag"><span class="dot fate"></span>Fate</span>
-        <span class="tag"><span class="dot sun"></span>Sun</span>
-        <span class="tag"><span class="dot marr"></span>Marriage</span>
-        <span class="tag"><span class="dot hlth"></span>Health</span>
-      </div>
-      <div class="btns">
-        <button onclick="downloadImg()">⬇️ Save Image</button>
-        <button onclick="window.print()">🖨️ Print / Save PDF</button>
-      </div>
-      <div class="muted">© Sathyadarshana · Palmistry AI Overlay v5.2</div>
-    </div>
-  </div>
-  <div class="box" style="margin-top:12px">
-    ${details}
-  </div>
-  <script>
-    function downloadImg(){
-      const a=document.createElement('a'); a.href='${imgData}'; a.download='palmistry_overlay.png'; a.click();
-    }
-  </script>
-  </body></html>`);
-  w.document.close();
-};
-
-/* ===== ANALYZE v5.2 ===== */
-anBtn.onclick=()=>{
-  if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.');
-  msg('⏳ Analyzing…');
-  setTimeout(()=>{ try{ analyze(); } catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } }, 50);
-};
-
-function analyze(){
-  if(!cv.width||!cv.height){ msg('No canvas'); return; }
-  norm(1024,1000000);
-  let w=cv.width, h=cv.height, src;
-  for(let i=0;i<2;i++){
-    try{ src=ctx.getImageData(0,0,w,h); break; }
-    catch(e){
-      const t=document.createElement('canvas'); t.width=Math.round(w*0.8); t.height=Math.round(h*0.8);
-      t.getContext('2d').drawImage(cv,0,0,t.width,t.height);
-      cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0); w=cv.width; h=cv.height;
-    }
-  }
-  const wh=w*h, edgeVal=parseInt(byId('edge').value,10)/255, passes=parseInt(byId('gk').value,10);
-  // grayscale
-  const d=src.data, gray=new Uint8ClampedArray(wh);
-  for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
-  // blur (3x3 gaussian, 'passes' times)
-  let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1], kn=16;
-  for(let p=0;p<passes;p++){
-    const t=new Float32Array(wh);
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/kn;
-    }
-    a=t;
-  }
-  const blur=Uint8ClampedArray.from(a);
-  // sobel
-  const mag=new Float32Array(wh); let mx=1;
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-    const i=y*w+x;
-    const gx=-blur[i-w-1]-2*blur[i-1]-blur[i+w-1] + blur[i-w+1]+2*blur[i+1]+blur[i+w+1];
-    const gy=-blur[i-w-1]-2*blur[i-w]-blur[i-w+1] + blur[i+w-1]+2*blur[i+w]+blur[i+w+1];
-    const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m;
-  }
-  const T=edgeVal*mx, bin=new Uint8ClampedArray(wh);
-  for(let i=0;i<wh;i++) bin[i]=mag[i]>T?1:0;
-  // skeletonize (Zhang–Suen)
-  const sk=Uint8Array.from(bin);
-  const N=(x,y)=> sk[(y-1)*w+x]+sk[(y-1)*w+x+1]+sk[y*w+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)*w+x-1]+sk[y*w+x-1]+sk[(y-1)*w+x-1];
-  const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)*w+x+1],sk[y*w+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)*w+x-1],sk[y*w+x-1],sk[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
-  let changed=true, pass=0;
-  while(changed && pass<20){
-    changed=false; let rem=[];
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[(y+1)*w+x]==0) && (sk[y*w+x+1]*sk[y*w+x-1]*sk[(y-1)*w+x]==0)) rem.push(i);
-    }
-    rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; rem=[];
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]*sk[y*w+x-1]*sk[(y+1)*w+x]==0) && (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[y*w+x-1]==0)) rem.push(i);
-    }
-    rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; pass++;
-  }
-
-  // region helpers
-  const band=(y0,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[y*w+x]=1; return m; };
-  const rect=(x0,y0,x1,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[y*w+x]=1; return m; };
-  const pickLongest=(mask)=>{ const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; let best=[];
-    function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]);
-      for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; }
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } }
-    return best;
-  };
-  const pickTopK=(mask,K=3,minLen=30,maxLen=140,preferHorizontal=true)=>{
-    const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; const segs=[];
-    function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh&&mask[j]&&sk[j]&&!seen[j]){ seen[j]=1; st.push(j);} } } return pts; }
-    const polyLen=(p)=>{ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; };
-    const orient=(p)=>{ if(p.length<2) return 0; const A=p[0],B=p[p.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); };
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); const L=polyLen(p);
-        if(L>=minLen && L<=maxLen){ let ok=true; if(preferHorizontal){ const ang=Math.abs(orient(p)*180/Math.PI); ok=(ang<25||ang>155); }
-          if(ok) segs.push(p);
-        }
-      }
-    }
-    segs.sort((a,b)=>polyLen(b)-polyLen(a)); return segs.slice(0,K);
-  };
-
-  // bands (rough zoning)
-  const yHeart0=0, yHeart1=Math.floor(h*0.30);
-  const yHead0=yHeart1, yHead1=Math.floor(h*0.55);
-  const yLife0=yHead1, yLife1=h;
-
-  // pick paths
-  const pHeart = pickLongest(band(yHeart0,yHeart1));
-  const pHead  = pickLongest(band(yHead0,yHead1));
-  const pLife  = pickLongest(band(yLife0,yLife1));
-
-  const pFate  = pickLongest(rect(Math.floor(w*0.40), Math.floor(h*0.35), Math.floor(w*0.60), h));
-  const pSun   = pickLongest(rect(Math.floor(w*0.60), Math.floor(h*0.40), Math.floor(w*0.80), h));
-  const pMarriage = pickTopK(rect(Math.floor(w*0.70), Math.floor(h*0.10), w, Math.floor(h*0.25)), 3, 40, 120, true);
-  const pHealth= pickLongest(rect(Math.floor(w*0.55), Math.floor(h*0.55), w, h));
-
-  // draw faint cyan edges
-  const overlay = ctx.createImageData(w,h);
-  for(let i=0,j=0;i<wh;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=60; }
-  ctx.putImageData(overlay,0,0);
-
-  // draw helper
-  function drawPath(pts,color,wid){
-    if(!pts||pts.length<5) return;
-    ctx.lineJoin='round'; ctx.lineCap='round';
-    ctx.strokeStyle='#000'; ctx.lineWidth=wid+2;
-    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-    ctx.strokeStyle=color; ctx.lineWidth=wid;
-    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-  }
-  // metrics
-  const M=(p)=>{ const polyLen=(pp)=>{ let L=0; for(let i=1;i<pp.length;i++){const dx=pp[i][0]-pp[i-1][0],dy=pp[i][1]-pp[i-1][1]; L+=Math.hypot(dx,dy);} return L|0; };
-    const orient=(pp)=>{ if(pp.length<2) return 0; const A=pp[0],B=pp[pp.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); };
-    const gaps=(pp)=>{ let g=0; for(let i=2;i<pp.length;i++) if(Math.hypot(pp[i][0]-pp[i-1][0],pp[i][1]-pp[i-1][1])>6) g++; return g; };
-    return {len:polyLen(p), slope:orient(p), gaps:gaps(p)}; };
-
-  // paint according to toggles
-  ctx.globalAlpha=0.95;
-  if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); }
-  if(tFate.checked)   drawPath(pFate,'#a1a1ff',3.5);
-  if(tSun.checked)    drawPath(pSun,'#ffd54a',3.5);
-  if(tMarr.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3));
-  if(tHealth.checked) drawPath(pHealth,'#5ad1ff',3.5);
-  ctx.globalAlpha=1; cv.style.display='block';
-
-  // metrics store
-  last = {
-    heart:M(pHeart), head:M(pHead), life:M(pLife),
-    fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth)
-  };
-
-  // keep overlay snapshot for the report
-  lastOverlay = cv.toDataURL('image/png');
-
-  showSummary(buildSummaryTable(last));
-  msg('✨ Analyze done');
-}
-
-/* ===== summaries ===== */
-function grade(L,G){ return (L<80)?'weak' : (G>15)?'fragmented' : (L>220)?'strong' : 'moderate'; }
-function ori(r){ const d=r*180/Math.PI; return d<-25?'tilt-up' : d>25?'tilt-down' : 'level'; }
-
-function lineRow(name, m){
-  if(!m||!m.len) return `${name}: <i>n/a</i>`;
-  return `${name}: <b>${grade(m.len,m.gaps)}</b> (${ori(m.slope)}), ~${m.len}, gaps ${m.gaps}.`;
-}
-function buildSummaryTable(m){
-  const pri = `❤️ ${lineRow('Heart',m.heart)}<br>🧡 ${lineRow('Head',m.head)}<br>💚 ${lineRow('Life',m.life)}`;
-  const sec = `🟪 IraNami/Fate: ${lineRow('Fate',m.fate)}<br>🟨 Sun: ${lineRow('Sun',m.sun)}<br>🩷 Marriage: ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>'#'+(i+1)+'~'+x.len).join(', ') : 'n/a'}<br>🩵 Health: ${lineRow('Health',m.health)}`;
-  return `<p>${pri}</p><hr/><p>${sec}</p>`;
-}
-function buildDetailedReading(m){
-  const text = (label, mm, meaningStrong, meaningWeak) => {
-    if(!mm||!mm.len) return `<p><b>${label}:</b> n/a</p>`;
-    const g=grade(mm.len,mm.gaps), o=ori(mm.slope);
-    const meaning = (g==='strong'||g==='moderate') ? meaningStrong : meaningWeak;
-    return `<p><b>${label}:</b> <i>${g}</i> (${o}). ${meaning}</p>`;
-  };
-  return `
-    <h3>AI Summary (Detailed)</h3>
-    ${text('❤️ Heart line', m.heart,
-      'Warm, empathetic nature; bonds deeply with people. Emotions are expressed with control; relationships benefit from stability.',
-      'Emotional energy appears scattered or sensitive; practice boundaries and self-care.')}
-    ${text('🧡 Head (Cheeththa) line', m.head,
-      'Clear thinker with practical problem-solving. Good focus; learns by doing. Tilt-down suggests realism and humility.',
-      'Mind may diffuse across tasks; use short checklists and single-tasking.')}
-    ${text('💚 Life line', m.life,
-      'Good vitality and resilience; steady stamina. Bends show adaptability to change.',
-      'Energy may fluctuate; prioritize sleep, hydration and morning light.')}
-    ${text('🟪 Fate (IraNami) line', m.fate,
-      'Purpose develops through consistent effort; career path clarifies with age.',
-      'External factors influence career direction; keep optionality and upskill.')}
-    ${text('🟨 Sun line', m.sun,
-      'Creativity / reputation support grows from consistent craft work.',
-      'Public recognition low right now; publish small works frequently.')}
-    <p><b>🩷 Marriage lines:</b> ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>`#${i+1} ~ ${x.len}px`).join(', ') : 'n/a'} — short horizontal markings under the little finger indicate affection episodes and commitments.</p>
-    ${text('🩵 Health line', m.health,
-      'Somatic awareness & recovery are good; keep posture and breath work.',
-      'Watch workload and posture; micro-breaks and stretching recommended.')}
-    <hr/>
-    <div class="muted">Notes: This reading is educational and not medical advice.</div>
-  `;
-}
-
-/* ===== on load ===== */
-window.addEventListener('load',()=>{
-  msg('▶️ Start → Allow camera. Capture/Upload → Analyze. Report shows overlay + long reading.');
-});
-</script>
-</body>
-</html>
+  <div id="summary"><h3>🔎 AI Summary</h3><div id="sumtext"></div></div>
+  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.3</footer>
