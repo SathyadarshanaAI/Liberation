@@ -1,56 +1,43 @@
+
 <!DOCTYPE html>
 <html lang="si">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Palmistry Universal v5.1 · Extended Lines</title>
-  <style>
-    :root{ --pri:#16f0a7; --bg:#0b0f16; --cy:#9fd6ff }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
-    h1{margin:14px 0 4px}
-    small{opacity:.85}
-    nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
-    nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
-    nav a:hover{background:#0d1a2c}
-
-    .stage{position:relative;display:inline-block;width:min(92vw,520px)}
-    #cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
-    #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
-    .captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
-      width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;
-      font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
-
-    .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-    button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
-    .left{background:#16243a;color:#cfe9ff}
-    .an{background:#16f0a7;color:#062}
-    .torch{background:#22c55e;color:#021}
-    .report{background:#a78bfa;color:#120}
-    select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
-
-    .legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
-    .tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
-    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
-    .dot.hrt{background:#ff3b3b}.dot.hd{background:#ffa533}.dot.life{background:#42ff6c}
-    .dot.fate{background:#a1a1ff}.dot.sun{background:#ffd54a}.dot.marr{background:#ff8ab0}.dot.hlth{background:#5ad1ff}
-
-    .toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
-    .toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
-
-    .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
-    .sliderRow label{display:flex;gap:8px;align-items:center}
-    input[type=range]{accent-color:#16f0a7}
-
-    #status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;
-      max-width:900px;display:none;white-space:pre-wrap;text-align:left}
-    #summary{max-width:900px;margin:10px auto;text-align:left;background:#0f1420;border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
-    #summary h3{margin:0 0 8px}
-    footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Palmistry Universal v5.2 · Report Enhancer</title>
+<meta name="description" content="Palmistry AI Overlay v5.2 — Heart, Head, Life + Fate, Sun, Marriage, Health with full overlay report.">
+<style>
+  :root{--pri:#16f0a7;--bg:#0b0f16;--card:#0f1420;--ink:#e6f0ff}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Arial;text-align:center}
+  h1{margin:14px 0 4px} small{opacity:.85}
+  .stage{position:relative;display:inline-block;width:min(92vw,520px)}
+  #cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
+  #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
+  .captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
+  .legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
+  .tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
+  .toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
+  .toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
+  .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
+  .left{background:#16243a;color:#cfe9ff}.an{background:#16f0a7;color:#062}.report{background:#a78bfa;color:#120}
+  select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
+  .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
+  .sliderRow label{display:flex;gap:8px;align-items:center}
+  input[type=range]{accent-color:#16f0a7}
+  #status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
+  #summary{max-width:900px;margin:10px auto;text-align:left;background:var(--card);border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
+  #summary h3{margin:0 0 8px}
+  nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
+  nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
+  nav a:hover{background:#0d1a2c}
+  footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
+</style>
 </head>
 <body>
-  <h1>🖐️ Palmistry Universal v5.1</h1>
+  <h1>🖐️ Palmistry Universal v5.2</h1>
   <small>Primary + Secondary Lines · Capture → Analyze → Report</small>
   <nav><a href="./index.html">← Back to Home</a></nav>
 
@@ -82,25 +69,20 @@
     <button class="btnLike" id="startBtn">▶️ Start</button>
     <select id="camsel" class="btnLike"></select>
     <button class="btnLike" id="cycleBtn">🔁 Cycle</button>
-
     <select id="resSel" class="btnLike">
       <option value="1280x720">HD 1280×720</option>
       <option value="1920x1080">FullHD 1920×1080</option>
       <option value="640x480">VGA 640×480</option>
     </select>
     <select id="fpsSel" class="btnLike">
-      <option value="30">30 FPS</option>
-      <option value="60">60 FPS</option>
-      <option value="24">24 FPS</option>
+      <option value="30">30 FPS</option><option value="60">60 FPS</option><option value="24">24 FPS</option>
     </select>
-
-    <input id="pick" type="file" accept="image/*" class="btnLike" />
+    <input id="pick" type="file" accept="image/*" class="btnLike"/>
     <button class="left" id="flipBtn">↔️ Flip</button>
-    <button class="torch" id="torchBtn" hidden>🔦 Torch</button>
+    <button class="btnLike" id="torchBtn" hidden>🔦 Torch</button>
     <label class="btnLike" style="display:flex;align-items:center;gap:8px">
       Zoom <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
     </label>
-
     <button class="an" id="anBtn">✨ Analyze</button>
     <button class="report" id="reportBtn">📄 Report</button>
     <button class="btnLike" id="clearBtn">🧹 Clear</button>
@@ -118,383 +100,362 @@
     <div id="sumtext"></div>
   </div>
 
-  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.1</footer>
+  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.2</footer>
 
+<script>
+/* ===== basics ===== */
+const video=byId('cam'), cv=byId('cv'), ctx=cv.getContext('2d');
+const startBtn=byId('startBtn'), camsel=byId('camsel'), cycleBtn=byId('cycleBtn');
+const resSel=byId('resSel'), fpsSel=byId('fpsSel'), zoomEl=byId('zoom');
+const pick=byId('pick'), flipBtn=byId('flipBtn'), torchBtn=byId('torchBtn');
+const capBtn=byId('capBtn'), anBtn=byId('anBtn'), reportBtn=byId('reportBtn'), clearBtn=byId('clearBtn');
+const tPrimary=byId('tPrimary'), tFate=byId('tFate'), tSun=byId('tSun'), tMarr=byId('tMarr'), tHealth=byId('tHealth');
+
+let stream=null, track=null, captured=false, isMirrored=false;
+let last=null;          // metrics
+let lastOverlay=null;   // dataURL of canvas with colored lines
+
+function byId(x){return document.getElementById(x)}
+function msg(t){ const s=byId('status'); s.textContent=t; s.style.display='block'; }
+function showSummary(html){ const b=byId('summary'); byId('sumtext').innerHTML=html; b.style.display='block'; }
+function parseRes(v){ const [w,h]=v.split('x').map(Number); return {w,h}; }
+
+/* ===== utils ===== */
+function norm(maxW=1280,maxPx=1500000){
+  if(cv.width<=0||cv.height<=0) return;
+  const tooW=cv.width>maxW, tooPx=cv.width*cv.height>maxPx;
+  if(!(tooW||tooPx)) return;
+  const s=Math.min(maxW/cv.width, Math.sqrt(maxPx/(cv.width*cv.height)));
+  const w=Math.max(Math.round(cv.width*s),540), h=Math.round(cv.height*s);
+  const t=document.createElement('canvas'); t.width=w; t.height=h;
+  t.getContext('2d').drawImage(cv,0,0,w,h); cv.width=w; cv.height=h; ctx.drawImage(t,0,0);
+}
+
+/* ===== camera ===== */
+async function ensurePerm(){
+  if(!navigator.mediaDevices?.getUserMedia) throw new Error('No mediaDevices');
+  const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); t.getTracks().forEach(x=>x.stop());
+}
+let camList=[], camIndex=0;
+async function listCams(){
+  const devs=await navigator.mediaDevices.enumerateDevices();
+  camList=devs.filter(d=>d.kind==='videoinput');
+  camsel.innerHTML='';
+  camList.forEach((c,i)=>{
+    const o=document.createElement('option');
+    o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o);
+  });
+  camsel.selectedIndex=0; camIndex=0;
+}
+async function startCam(id=null){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; track=null; }
+  const {w,h}=parseRes(resSel.value||'1280x720'); const fps=Number(fpsSel.value||30);
+  const facing=isMirrored?'user':'environment';
+  const cons={ video:id?{deviceId:{exact:id}}:{facingMode:{ideal:facing}}, audio:false };
+  Object.assign(cons.video,{ width:{ideal:w,max:w}, height:{ideal:h,max:h}, frameRate:{ideal:fps,max:fps} });
+  try{ stream=await navigator.mediaDevices.getUserMedia(cons); }
+  catch{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+  video.srcObject=stream; await video.play(); track=stream.getVideoTracks()[0];
+  const W=video.videoWidth||w, H=video.videoHeight||h; cv.width=W; cv.height=H;
+  video.style.transform=isMirrored?'scaleX(-1)':'none'; cv.style.display=captured?'block':'none';
+  const caps=track.getCapabilities?.()||{}; torchBtn.hidden=!('torch' in caps);
+  if('zoom' in caps){ zoomEl.min=caps.zoom.min||1; zoomEl.max=caps.zoom.max||5; zoomEl.step=caps.zoom.step||0.1; zoomEl.value=(track.getSettings?.().zoom)||zoomEl.min; zoomEl.parentElement.style.display=''; } else zoomEl.parentElement.style.display='none';
+  msg(`📷 ${track.label||'Camera'} • ${W}×${H}@${fps}`);
+}
+startBtn.onclick=async()=>{
+  try{
+    if(location.protocol!=='https:' && location.hostname!=='localhost') msg('🔒 Use HTTPS for best camera support');
+    await ensurePerm(); await listCams(); await startCam(camsel.value||camList[0]?.deviceId||null);
+  }catch(e){ msg('❌ '+(e.message||e)); }
+};
+cycleBtn.onclick=async()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras');
+  camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
+camsel.onchange=async()=>startCam(camsel.value);
+resSel.onchange=async()=>startCam(camsel.value||null);
+fpsSel.onchange=async()=>startCam(camsel.value||null);
+flipBtn.onclick=async()=>{ isMirrored=!isMirrored; if(stream && !captured){ video.style.transform=isMirrored?'scaleX(-1)':'none'; await startCam(camsel.value||null); } else if(captured){ mirrorCanvas(); } };
+torchBtn.onclick=async()=>{ if(!track) return; try{ const on=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!on}]}); } catch(e){ msg('Torch error: '+e.message); } };
+zoomEl.oninput=async()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{} };
+
+function mirrorCanvas(){
+  const t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height;
+  t.getContext('2d').drawImage(cv,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,cv.width,0); ctx.drawImage(t,0,0); ctx.restore();
+}
+
+/* ===== capture & file ===== */
+capBtn.onclick=async()=>{
+  if(!stream) await startCam(camsel.value||null);
+  if(!video.videoWidth) await new Promise(r=>setTimeout(r,100));
+  cv.width=video.videoWidth; cv.height=video.videoHeight; ctx.save();
+  if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore();
+  norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
+  byId('summary').style.display='none';
+  msg('🖐️ Photo locked. Analyze to detect lines.');
+};
+pick.onchange=e=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  const img=new Image(); img.onload=()=>{ cv.width=img.naturalWidth; cv.height=img.naturalHeight; ctx.drawImage(img,0,0);
+    if(isMirrored) mirrorCanvas(); norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
+    byId('summary').style.display='none'; msg('🖼️ Photo loaded. Analyze to detect lines.'); };
+  img.onerror=()=>msg('❌ Image load failed'); img.src=URL.createObjectURL(f);
+};
+clearBtn.onclick=()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; lastOverlay=null; byId('summary').style.display='none'; msg('🧹 Cleared. Ready.'); };
+
+/* ===== REPORT (overlay snapshot + detailed text) ===== */
+reportBtn.onclick=()=>{
+  if(!captured){ msg('Capture first'); return; }
+  if(!last){ msg('Run Analyze first.'); return; }
+
+  // use the already-painted canvas (with colored lines) as image
+  const imgData = cv.toDataURL('image/png');
+  const details = buildDetailedReading(last);
+
+  const w = window.open('', '_blank');
+  w.document.write(`
+  <html><head><title>Palmistry Report</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:12px;color:#123;background:#f7f9fc}
+    h2{margin:6px 0 12px}
+    .row{display:flex;gap:16px;flex-wrap:wrap}
+    .box{border:1px solid #ccd; background:#fff; padding:10px; border-radius:10px}
+    .imgWrap{max-width:min(92vw,700px)}
+    img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .tag{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:999px;border:1px solid #cfe;background:#eef6ff;color:#134}
+    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+    .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
+    .muted{opacity:.8}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    button{padding:.5em 1em;border-radius:10px;border:1px solid #aac;background:#fff;cursor:pointer}
+  </style></head><body>
+  <h2>🖐️ Palmistry Report</h2>
+  <div class="row">
+    <div class="imgWrap box"><img src="${imgData}" alt="Palmistry Overlay"/></div>
+    <div class="box" style="flex:1;min-width:260px">
+      <h3>Legend</h3>
+      <div class="legend">
+        <span class="tag"><span class="dot hrt"></span>Heart</span>
+        <span class="tag"><span class="dot hd"></span>Head</span>
+        <span class="tag"><span class="dot life"></span>Life</span>
+        <span class="tag"><span class="dot fate"></span>Fate</span>
+        <span class="tag"><span class="dot sun"></span>Sun</span>
+        <span class="tag"><span class="dot marr"></span>Marriage</span>
+        <span class="tag"><span class="dot hlth"></span>Health</span>
+      </div>
+      <div class="btns">
+        <button onclick="downloadImg()">⬇️ Save Image</button>
+        <button onclick="window.print()">🖨️ Print / Save PDF</button>
+      </div>
+      <div class="muted">© Sathyadarshana · Palmistry AI Overlay v5.2</div>
+    </div>
+  </div>
+  <div class="box" style="margin-top:12px">
+    ${details}
+  </div>
   <script>
-    /* ===== refs ===== */
-    const video = byId('cam'), cv = byId('cv'), ctx = cv.getContext('2d');
-    const startBtn = byId('startBtn'), camsel = byId('camsel'), cycleBtn = byId('cycleBtn');
-    const resSel = byId('resSel'), fpsSel = byId('fpsSel'), zoomEl = byId('zoom');
-    const pick = byId('pick'), flipBtn = byId('flipBtn'), torchBtn = byId('torchBtn');
-    const capBtn = byId('capBtn'), anBtn = byId('anBtn'), reportBtn = byId('reportBtn'), clearBtn = byId('clearBtn');
-    const tPrimary = byId('tPrimary'), tFate = byId('tFate'), tSun = byId('tSun'), tMarr = byId('tMarr'), tHealth = byId('tHealth');
-
-    let stream=null, track=null, captured=false, isMirrored=false, last=null;
-    let camList=[], camIndex=0;
-
-    function byId(x){ return document.getElementById(x); }
-    function msg(t){ const s=byId('status'); s.textContent=t; s.style.display='block'; }
-    function showSummary(html){ const b=byId('summary'); byId('sumtext').innerHTML=html; b.style.display='block'; }
-    function parseRes(v){ const [w,h]=v.split('x').map(Number); return {w,h}; }
-
-    /* ===== normalize big photos for speed ===== */
-    function norm(maxW=1280, maxPx=1_500_000){
-      if(cv.width<=0 || cv.height<=0) return;
-      const tooW = cv.width>maxW, tooPx = cv.width*cv.height>maxPx;
-      if(!(tooW||tooPx)) return;
-      const s=Math.min(maxW/cv.width, Math.sqrt(maxPx/(cv.width*cv.height)));
-      const w=Math.max(Math.round(cv.width*s),540), h=Math.round(cv.height*s);
-      const t=document.createElement('canvas'); t.width=w; t.height=h;
-      t.getContext('2d').drawImage(cv,0,0,w,h);
-      cv.width=w; cv.height=h; ctx.drawImage(t,0,0);
+    function downloadImg(){
+      const a=document.createElement('a'); a.href='${imgData}'; a.download='palmistry_overlay.png'; a.click();
     }
-
-    /* ===== camera core ===== */
-    async function ensurePerm(){
-      if(!navigator.mediaDevices?.getUserMedia) throw new Error('No mediaDevices');
-      const t = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
-      t.getTracks().forEach(x=>x.stop());
-    }
-    async function listCams(){
-      const devs = await navigator.mediaDevices.enumerateDevices();
-      camList = devs.filter(d=>d.kind==='videoinput')
-                    .sort((a,b)=>/back|rear|environment|wide/i.test(a.label)?-1:1);
-      camsel.innerHTML='';
-      camList.forEach((c,i)=>{const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o);});
-      camsel.selectedIndex=0; camIndex=0;
-    }
-    async function startCam(id=null){
-      if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; track=null; }
-      const {w,h}=parseRes(resSel.value || '1280x720');
-      const fps=Number(fpsSel.value || 30);
-      const facing = isMirrored ? 'user' : 'environment';
-      const cons = {
-        video: id?{deviceId:{exact:id}}:{facingMode:{ideal:facing}},
-        audio:false
-      };
-      Object.assign(cons.video,{
-        width:{ideal:w,max:w}, height:{ideal:h,max:h},
-        frameRate:{ideal:fps,max:fps},
-        advanced:[{focusMode:'continuous'},{exposureMode:'continuous'}]
-      });
-      try{
-        stream = await navigator.mediaDevices.getUserMedia(cons);
-      }catch(e){
-        try{ stream = await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-        catch(err){ msg('❌ Camera error: '+err.message); return; }
-      }
-      video.srcObject=stream; await video.play();
-      track=stream.getVideoTracks()[0];
-      const W=video.videoWidth||w, H=video.videoHeight||h;
-      cv.width=W; cv.height=H;
-      video.style.transform = isMirrored?'scaleX(-1)':'none';
-      cv.style.display = captured?'block':'none';
-
-      const caps=track.getCapabilities?.()||{};
-      torchBtn.hidden = !('torch' in caps);
-      if('zoom' in caps){
-        zoomEl.min=caps.zoom.min||1; zoomEl.max=caps.zoom.max||5; zoomEl.step=caps.zoom.step||0.1;
-        zoomEl.value=(track.getSettings?.().zoom)||zoomEl.min;
-        zoomEl.parentElement.style.display='';
-      }else{
-        zoomEl.parentElement.style.display='none';
-      }
-      msg(`📷 ${track.label||'Camera'} • ${W}×${H}@${fps}`);
-    }
-
-    startBtn.onclick = async()=>{
-      try{
-        if(location.protocol!=='https:' && location.hostname!=='localhost') msg('🔒 Use HTTPS for best camera support');
-        await ensurePerm(); await listCams(); await startCam(camsel.value || camList[0]?.deviceId || null);
-      }catch(e){ msg('❌ '+(e.message||e)); }
-    };
-    cycleBtn.onclick = async()=>{
-      if(!camList.length) await listCams();
-      if(!camList.length) return msg('No cameras');
-      camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex;
-      await startCam(camList[camIndex].deviceId);
-    };
-    camsel.onchange = async()=> startCam(camsel.value);
-    resSel.onchange = async()=> startCam(camsel.value || null);
-    fpsSel.onchange = async()=> startCam(camsel.value || null);
-
-    flipBtn.onclick = async()=>{
-      isMirrored=!isMirrored;
-      if(stream && !captured){
-        video.style.transform = isMirrored?'scaleX(-1)':'none';
-        await startCam(camsel.value || null);
-      }else if(captured){ mirrorCanvas(); }
-    };
-    torchBtn.onclick = async()=>{
-      if(!track) return;
-      try{
-        const on = (track.getSettings?.().torch)||false;
-        await track.applyConstraints({advanced:[{torch:!on}]});
-      }catch(e){ msg('Torch error: '+e.message); }
-    };
-    zoomEl.oninput = async()=>{
-      if(!track) return;
-      try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{}
-    };
-
-    function mirrorCanvas(){
-      const t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height;
-      t.getContext('2d').drawImage(cv,0,0);
-      ctx.save(); ctx.setTransform(-1,0,0,1,cv.width,0); ctx.drawImage(t,0,0); ctx.restore();
-    }
-
-    /* ===== capture / file ===== */
-    capBtn.onclick = async()=>{
-      if(!stream) await startCam(camsel.value || null);
-      if(!video.videoWidth) await new Promise(r=>setTimeout(r,100));
-      cv.width=video.videoWidth; cv.height=video.videoHeight;
-      ctx.save(); if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
-      ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore();
-      norm(1280,1_500_000);
-      cv.style.display='block'; captured=true; last=null; byId('summary').style.display='none';
-      msg('🖐️ Photo locked. Analyze to detect lines.');
-    };
-
-    pick.onchange = e=>{
-      const f=e.target.files?.[0]; if(!f) return;
-      const img=new Image();
-      img.onload=()=>{
-        cv.width=img.naturalWidth; cv.height=img.naturalHeight; ctx.drawImage(img,0,0);
-        if(isMirrored) mirrorCanvas(); norm(1280,1_500_000);
-        cv.style.display='block'; captured=true; last=null; byId('summary').style.display='none';
-        msg('🖼️ Photo loaded. Analyze to detect lines.');
-      };
-      img.onerror=()=>msg('❌ Image load failed');
-      img.src=URL.createObjectURL(f);
-    };
-
-    clearBtn.onclick=()=>{
-      ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none';
-      last=null; byId('summary').style.display='none'; msg('🧹 Cleared. Ready.');
-    };
-
-    /* ===== report ===== */
-    reportBtn.onclick=()=>{
-      if(!captured){ msg('Capture first'); return; }
-      const data=cv.toDataURL('image/png');
-      const s= last ? buildSummary(last) : '<p>Run Analyze first.</p>';
-      const w=window.open('','_blank');
-      w.document.write(`<html><head><title>Palmistry Report</title>
-        <style>body{font-family:system-ui;padding:12px;color:#123}
-        h2{margin:6px 0}.box{border:1px solid #ccd;padding:10px;border-radius:10px}img{max-width:100%}</style>
-        </head><body><h2>🖐️ Palmistry Report</h2><div class="box"><img src="${data}"/></div><div class="box">${s}</div></body></html>`);
-      w.document.close();
-    };
-
-    /* ===== ANALYZE v5.1 ===== */
-    anBtn.onclick=()=>{
-      if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.');
-      msg('⏳ Analyzing…');
-      setTimeout(()=>{ try{ analyzeV5(); }catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } },50);
-    };
-
-    function analyzeV5(){
-      if(!cv.width || !cv.height){ msg('No canvas'); return; }
-      norm(1024,1_000_000);
-
-      // Safe getImageData with downscale on failure
-      let w=cv.width, h=cv.height, src;
-      for(let i=0;i<2;i++){
-        try{ src=ctx.getImageData(0,0,w,h); break; }
-        catch(e){
-          const t=document.createElement('canvas');
-          t.width=Math.round(w*0.8); t.height=Math.round(h*0.8);
-          t.getContext('2d').drawImage(cv,0,0,t.width,t.height);
-          cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0);
-          w=cv.width; h=cv.height;
-        }
-      }
-      const wh=w*h;
-      const edgeVal = parseInt(byId('edge').value,10)/255;
-      const passes  = parseInt(byId('gk').value,10);
-
-      // grayscale
-      const d=src.data; const gray=new Uint8ClampedArray(wh);
-      for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114;
-
-      // blur (3x3) passes
-      let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1], kn=16;
-      for(let p=0;p<passes;p++){
-        const t=new Float32Array(wh);
-        for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-          let s=0,i=0;
-          for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++];
-          t[y*w+x]=s/kn;
-        }
-        a=t;
-      }
-      const blur=Uint8ClampedArray.from(a);
-
-      // sobel
-      const mag=new Float32Array(wh); let mx=1;
-      for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-        const i=y*w+x;
-        const gx=-blur[i-w-1]-2*blur[i-1]-blur[i+w-1] + blur[i-w+1]+2*blur[i+1]+blur[i+w+1];
-        const gy=-blur[i-w-1]-2*blur[i-w]-blur[i-w+1] + blur[i+w-1]+2*blur[i+w]+blur[i+w+1];
-        const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m;
-      }
-      const T=edgeVal*mx; const bin=new Uint8ClampedArray(wh);
-      for(let i=0;i<wh;i++) bin[i]=mag[i]>T?1:0;
-
-      // skeletonize (Zhang–Suen)
-      const sk=Uint8Array.from(bin); let changed=true, pass=0;
-      const N=(x,y)=> sk[(y-1)*w+x] + sk[(y-1)*w+x+1] + sk[y*w+x+1] + sk[(y+1)*w+x+1] +
-                       sk[(y+1)*w+x] + sk[(y+1)*w+x-1] + sk[y*w+x-1] + sk[(y-1)*w+x-1];
-      const S=(x,y)=>{ const p=[ sk[(y-1)*w+x], sk[(y-1)*w+x+1], sk[y*w+x+1], sk[(y+1)*w+x+1],
-                                 sk[(y+1)*w+x], sk[(y+1)*w+x-1], sk[y*w+x-1], sk[(y-1)*w+x-1] ];
-                       let t=0; for(let i=0;i<8;i++) if(p[i]==0 && p[(i+1)%8]==1) t++; return t; };
-      while(changed && pass<20){
-        changed=false; let rem=[];
-        for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-          const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
-          if(nn>=2&&nn<=6 && s==1 &&
-            (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[(y+1)*w+x]==0) &&
-            (sk[y*w+x+1]*sk[y*w+x-1]*sk[(y-1)*w+x]==0)) rem.push(i);
-        }
-        rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; rem=[];
-        for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-          const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
-          if(nn>=2&&nn<=6 && s==1 &&
-            (sk[(y-1)*w+x]*sk[y*w+x-1]*sk[(y+1)*w+x]==0) &&
-            (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[y*w+x-1]==0)) rem.push(i);
-        }
-        rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; pass++;
-      }
-
-      // region helpers
-      function band(y0,y1){ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[y*w+x]=1; return m; }
-      function rect(x0,y0,x1,y1){ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[y*w+x]=1; return m; }
-
-      // component walker
-      function pickLongest(mask){
-        const seen=new Uint8Array(wh);
-        const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w];
-        let best=[];
-        function walk(i0){
-          const st=[i0], pts=[]; seen[i0]=1;
-          while(st.length){
-            const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]);
-            for(const d8 of NB){ const j=i+d8;
-              if(j>0 && j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j); }
-            }
-          } return pts;
-        }
-        for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-          const i=y*w+x; if(mask[i] && sk[i] && !seen[i]){ const p=walk(i); if(p.length>best.length) best=p; }
-        }
-        return best;
-      }
-      function pickTopK(mask,K=3,minLen=30,maxLen=140,preferHorizontal=true){
-        const seen=new Uint8Array(wh), NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w], segs=[];
-        function walk(i0){
-          const st=[i0], pts=[]; seen[i0]=1;
-          while(st.length){
-            const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]);
-            for(const d8 of NB){ const j=i+d8;
-              if(j>0 && j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j); }
-            }
-          } return pts;
-        }
-        function polyLen(p){ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; }
-        function orient(p){ if(p.length<2) return 0; const A=p[0],B=p[p.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); }
-        for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-          const i=y*w+x;
-          if(mask[i] && sk[i] && !seen[i]){
-            const p=walk(i); const L=polyLen(p);
-            if(L>=minLen && L<=maxLen){
-              let ok=true;
-              if(preferHorizontal){ const ang=Math.abs(orient(p)*180/Math.PI); ok = (ang<25 || ang>155); }
-              if(ok) segs.push(p);
-            }
-          }
-        }
-        segs.sort((a,b)=>polyLen(b)-polyLen(a));
-        return segs.slice(0,K);
-      }
-
-      // bands (y)
-      const yHeart0=0, yHeart1=Math.floor(h*0.30);
-      const yHead0=yHeart1, yHead1=Math.floor(h*0.55);
-      const yLife0=yHead1,  yLife1=h;
-
-      // primary
-      const pHeart = pickLongest(band(yHeart0,yHeart1));
-      const pHead  = pickLongest(band(yHead0,yHead1));
-      const pLife  = pickLongest(band(yLife0,yLife1));
-
-      // secondary heuristics
-      const xC0=Math.floor(w*0.40), xC1=Math.floor(w*0.60), yF0=Math.floor(h*0.35), yF1=h;
-      const pFate = pickLongest(rect(xC0,yF0,xC1,yF1));
-
-      const xS0=Math.floor(w*0.60), xS1=Math.floor(w*0.80), yS0=Math.floor(h*0.40), yS1=h;
-      const pSun  = pickLongest(rect(xS0,yS0,xS1,yS1));
-
-      const xM0=Math.floor(w*0.70), xM1=w, yM0=Math.floor(h*0.10), yM1=Math.floor(h*0.25);
-      const pMarriage = pickTopK(rect(xM0,yM0,xM1,yM1),3,40,120,true);
-
-      const xH0=Math.floor(w*0.55), xH1=w, yH0=Math.floor(h*0.55), yH1=h;
-      const pHealth = pickLongest(rect(xH0,yH0,xH1,yH1));
-
-      // faint cyan edges
-      const overlay=ctx.createImageData(w,h);
-      for(let i=0,j=0;i<wh;i++,j+=4){ if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=70; } }
-      ctx.putImageData(overlay,0,0);
-
-      // draw
-      function drawPath(pts,color,wid){
-        if(!pts || pts.length<5) return;
-        ctx.lineJoin='round'; ctx.lineCap='round';
-        ctx.strokeStyle='#000'; ctx.lineWidth=wid+2; ctx.beginPath();
-        ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-        ctx.strokeStyle=color; ctx.lineWidth=wid; ctx.beginPath();
-        ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-      }
-      function M(p){
-        function polyLen(a){ let L=0; for(let i=1;i<a.length;i++){ const dx=a[i][0]-a[i-1][0], dy=a[i][1]-a[i-1][1]; L+=Math.hypot(dx,dy);} return L; }
-        function orient(a){ if(a.length<2) return 0; const A=a[0],B=a[a.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); }
-        function gaps(a){ let g=0; for(let i=2;i<a.length;i++) if(Math.hypot(a[i][0]-a[i-1][0],a[i][1]-a[i-1][1])>6) g++; return g; }
-        return {len:polyLen(p)|0, slope:orient(p), gaps:gaps(p)};
-      }
-
-      ctx.globalAlpha=0.95;
-      if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); }
-      if(tFate.checked)   drawPath(pFate,'#a1a1ff',3.5);
-      if(tSun.checked)    drawPath(pSun,'#ffd54a',3.5);
-      if(tMarr.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3));
-      if(tHealth.checked) drawPath(pHealth,'#5ad1ff',3.5);
-      ctx.globalAlpha=1; cv.style.display='block';
-
-      last={
-        heart:M(pHeart), head:M(pHead), life:M(pLife),
-        fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth)
-      };
-      showSummary(buildSummary(last));
-      msg('✨ Analyze done');
-    }
-
-    function buildSummary(m){
-      const grade=(L,G)=> (L<80?'weak': G>15?'fragmented': L>220?'strong':'moderate');
-      const ori=(r)=>{ const d=r*180/Math.PI; return d<-25?'tilt-up': d>25?'tilt-down':'level'; };
-      const line=(label,mm)=> (!mm||!mm.len) ? `${label}: n/a` :
-        `${label}: <b>${grade(mm.len,mm.gaps)}</b> (${ori(mm.slope)}), ~${mm.len}, gaps ${mm.gaps}.`;
-
-      const pri = `❤️ ${line('Heart',m.heart)}<br>🧡 ${line('Head',m.head)}<br>💚 ${line('Life',m.life)}`;
-      const sec = `🟪 IraNami/Fate: ${line('Fate',m.fate)}<br>🟨 Sun: ${line('Sun',m.sun)}<br>`+
-                  `🩷 Marriage: ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>'#'+(i+1)+'~'+x.len).join(', ') : 'n/a'}<br>`+
-                  `🩵 Health: ${line('Health',m.health)}`;
-
-      return `<div><h3 style="margin:0 0 8px">🔍 AI Summary</h3>
-        <p>${pri}</p><hr><p>${sec}</p></div>`;
-    }
-
-    window.addEventListener('load',()=>{
-      msg('▶️ Start → Allow camera. Capture/Upload → Analyze. Use toggles to show/hide lines.');
-    });
   </script>
+  </body></html>`);
+  w.document.close();
+};
+
+/* ===== ANALYZE v5.2 ===== */
+anBtn.onclick=()=>{
+  if(!captured) return msg('❗පළමුව Capture හෝ Choose Photo කරන්න.');
+  msg('⏳ Analyzing…');
+  setTimeout(()=>{ try{ analyze(); } catch(e){ console.error(e); msg('❌ Analyze failed: '+(e.message||e)); } }, 50);
+};
+
+function analyze(){
+  if(!cv.width||!cv.height){ msg('No canvas'); return; }
+  norm(1024,1000000);
+  let w=cv.width, h=cv.height, src;
+  for(let i=0;i<2;i++){
+    try{ src=ctx.getImageData(0,0,w,h); break; }
+    catch(e){
+      const t=document.createElement('canvas'); t.width=Math.round(w*0.8); t.height=Math.round(h*0.8);
+      t.getContext('2d').drawImage(cv,0,0,t.width,t.height);
+      cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0); w=cv.width; h=cv.height;
+    }
+  }
+  const wh=w*h, edgeVal=parseInt(byId('edge').value,10)/255, passes=parseInt(byId('gk').value,10);
+  // grayscale
+  const d=src.data, gray=new Uint8ClampedArray(wh);
+  for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
+  // blur (3x3 gaussian, 'passes' times)
+  let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1], kn=16;
+  for(let p=0;p<passes;p++){
+    const t=new Float32Array(wh);
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/kn;
+    }
+    a=t;
+  }
+  const blur=Uint8ClampedArray.from(a);
+  // sobel
+  const mag=new Float32Array(wh); let mx=1;
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    const i=y*w+x;
+    const gx=-blur[i-w-1]-2*blur[i-1]-blur[i+w-1] + blur[i-w+1]+2*blur[i+1]+blur[i+w+1];
+    const gy=-blur[i-w-1]-2*blur[i-w]-blur[i-w+1] + blur[i+w-1]+2*blur[i+w]+blur[i+w+1];
+    const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m;
+  }
+  const T=edgeVal*mx, bin=new Uint8ClampedArray(wh);
+  for(let i=0;i<wh;i++) bin[i]=mag[i]>T?1:0;
+  // skeletonize (Zhang–Suen)
+  const sk=Uint8Array.from(bin);
+  const N=(x,y)=> sk[(y-1)*w+x]+sk[(y-1)*w+x+1]+sk[y*w+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)*w+x-1]+sk[y*w+x-1]+sk[(y-1)*w+x-1];
+  const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)*w+x+1],sk[y*w+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)*w+x-1],sk[y*w+x-1],sk[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
+  let changed=true, pass=0;
+  while(changed && pass<20){
+    changed=false; let rem=[];
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
+      if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[(y+1)*w+x]==0) && (sk[y*w+x+1]*sk[y*w+x-1]*sk[(y-1)*w+x]==0)) rem.push(i);
+    }
+    rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; rem=[];
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
+      if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]*sk[y*w+x-1]*sk[(y+1)*w+x]==0) && (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[y*w+x-1]==0)) rem.push(i);
+    }
+    rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; pass++;
+  }
+
+  // region helpers
+  const band=(y0,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[y*w+x]=1; return m; };
+  const rect=(x0,y0,x1,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[y*w+x]=1; return m; };
+  const pickLongest=(mask)=>{ const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; let best=[];
+    function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]);
+      for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; }
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } }
+    return best;
+  };
+  const pickTopK=(mask,K=3,minLen=30,maxLen=140,preferHorizontal=true)=>{
+    const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; const segs=[];
+    function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh&&mask[j]&&sk[j]&&!seen[j]){ seen[j]=1; st.push(j);} } } return pts; }
+    const polyLen=(p)=>{ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; };
+    const orient=(p)=>{ if(p.length<2) return 0; const A=p[0],B=p[p.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); };
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); const L=polyLen(p);
+        if(L>=minLen && L<=maxLen){ let ok=true; if(preferHorizontal){ const ang=Math.abs(orient(p)*180/Math.PI); ok=(ang<25||ang>155); }
+          if(ok) segs.push(p);
+        }
+      }
+    }
+    segs.sort((a,b)=>polyLen(b)-polyLen(a)); return segs.slice(0,K);
+  };
+
+  // bands (rough zoning)
+  const yHeart0=0, yHeart1=Math.floor(h*0.30);
+  const yHead0=yHeart1, yHead1=Math.floor(h*0.55);
+  const yLife0=yHead1, yLife1=h;
+
+  // pick paths
+  const pHeart = pickLongest(band(yHeart0,yHeart1));
+  const pHead  = pickLongest(band(yHead0,yHead1));
+  const pLife  = pickLongest(band(yLife0,yLife1));
+
+  const pFate  = pickLongest(rect(Math.floor(w*0.40), Math.floor(h*0.35), Math.floor(w*0.60), h));
+  const pSun   = pickLongest(rect(Math.floor(w*0.60), Math.floor(h*0.40), Math.floor(w*0.80), h));
+  const pMarriage = pickTopK(rect(Math.floor(w*0.70), Math.floor(h*0.10), w, Math.floor(h*0.25)), 3, 40, 120, true);
+  const pHealth= pickLongest(rect(Math.floor(w*0.55), Math.floor(h*0.55), w, h));
+
+  // draw faint cyan edges
+  const overlay = ctx.createImageData(w,h);
+  for(let i=0,j=0;i<wh;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=60; }
+  ctx.putImageData(overlay,0,0);
+
+  // draw helper
+  function drawPath(pts,color,wid){
+    if(!pts||pts.length<5) return;
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.strokeStyle='#000'; ctx.lineWidth=wid+2;
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
+    ctx.strokeStyle=color; ctx.lineWidth=wid;
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
+  }
+  // metrics
+  const M=(p)=>{ const polyLen=(pp)=>{ let L=0; for(let i=1;i<pp.length;i++){const dx=pp[i][0]-pp[i-1][0],dy=pp[i][1]-pp[i-1][1]; L+=Math.hypot(dx,dy);} return L|0; };
+    const orient=(pp)=>{ if(pp.length<2) return 0; const A=pp[0],B=pp[pp.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); };
+    const gaps=(pp)=>{ let g=0; for(let i=2;i<pp.length;i++) if(Math.hypot(pp[i][0]-pp[i-1][0],pp[i][1]-pp[i-1][1])>6) g++; return g; };
+    return {len:polyLen(p), slope:orient(p), gaps:gaps(p)}; };
+
+  // paint according to toggles
+  ctx.globalAlpha=0.95;
+  if(tPrimary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); }
+  if(tFate.checked)   drawPath(pFate,'#a1a1ff',3.5);
+  if(tSun.checked)    drawPath(pSun,'#ffd54a',3.5);
+  if(tMarr.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3));
+  if(tHealth.checked) drawPath(pHealth,'#5ad1ff',3.5);
+  ctx.globalAlpha=1; cv.style.display='block';
+
+  // metrics store
+  last = {
+    heart:M(pHeart), head:M(pHead), life:M(pLife),
+    fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth)
+  };
+
+  // keep overlay snapshot for the report
+  lastOverlay = cv.toDataURL('image/png');
+
+  showSummary(buildSummaryTable(last));
+  msg('✨ Analyze done');
+}
+
+/* ===== summaries ===== */
+function grade(L,G){ return (L<80)?'weak' : (G>15)?'fragmented' : (L>220)?'strong' : 'moderate'; }
+function ori(r){ const d=r*180/Math.PI; return d<-25?'tilt-up' : d>25?'tilt-down' : 'level'; }
+
+function lineRow(name, m){
+  if(!m||!m.len) return `${name}: <i>n/a</i>`;
+  return `${name}: <b>${grade(m.len,m.gaps)}</b> (${ori(m.slope)}), ~${m.len}, gaps ${m.gaps}.`;
+}
+function buildSummaryTable(m){
+  const pri = `❤️ ${lineRow('Heart',m.heart)}<br>🧡 ${lineRow('Head',m.head)}<br>💚 ${lineRow('Life',m.life)}`;
+  const sec = `🟪 IraNami/Fate: ${lineRow('Fate',m.fate)}<br>🟨 Sun: ${lineRow('Sun',m.sun)}<br>🩷 Marriage: ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>'#'+(i+1)+'~'+x.len).join(', ') : 'n/a'}<br>🩵 Health: ${lineRow('Health',m.health)}`;
+  return `<p>${pri}</p><hr/><p>${sec}</p>`;
+}
+function buildDetailedReading(m){
+  const text = (label, mm, meaningStrong, meaningWeak) => {
+    if(!mm||!mm.len) return `<p><b>${label}:</b> n/a</p>`;
+    const g=grade(mm.len,mm.gaps), o=ori(mm.slope);
+    const meaning = (g==='strong'||g==='moderate') ? meaningStrong : meaningWeak;
+    return `<p><b>${label}:</b> <i>${g}</i> (${o}). ${meaning}</p>`;
+  };
+  return `
+    <h3>AI Summary (Detailed)</h3>
+    ${text('❤️ Heart line', m.heart,
+      'Warm, empathetic nature; bonds deeply with people. Emotions are expressed with control; relationships benefit from stability.',
+      'Emotional energy appears scattered or sensitive; practice boundaries and self-care.')}
+    ${text('🧡 Head (Cheeththa) line', m.head,
+      'Clear thinker with practical problem-solving. Good focus; learns by doing. Tilt-down suggests realism and humility.',
+      'Mind may diffuse across tasks; use short checklists and single-tasking.')}
+    ${text('💚 Life line', m.life,
+      'Good vitality and resilience; steady stamina. Bends show adaptability to change.',
+      'Energy may fluctuate; prioritize sleep, hydration and morning light.')}
+    ${text('🟪 Fate (IraNami) line', m.fate,
+      'Purpose develops through consistent effort; career path clarifies with age.',
+      'External factors influence career direction; keep optionality and upskill.')}
+    ${text('🟨 Sun line', m.sun,
+      'Creativity / reputation support grows from consistent craft work.',
+      'Public recognition low right now; publish small works frequently.')}
+    <p><b>🩷 Marriage lines:</b> ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>`#${i+1} ~ ${x.len}px`).join(', ') : 'n/a'} — short horizontal markings under the little finger indicate affection episodes and commitments.</p>
+    ${text('🩵 Health line', m.health,
+      'Somatic awareness & recovery are good; keep posture and breath work.',
+      'Watch workload and posture; micro-breaks and stretching recommended.')}
+    <hr/>
+    <div class="muted">Notes: This reading is educational and not medical advice.</div>
+  `;
+}
+
+/* ===== on load ===== */
+window.addEventListener('load',()=>{
+  msg('▶️ Start → Allow camera. Capture/Upload → Analyze. Report shows overlay + long reading.');
+});
+</script>
 </body>
 </html>
