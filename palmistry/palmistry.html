@@ -2,557 +2,336 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry Universal v5.3 · Sathyadarshana</title>
-<meta name="description" content="Palmistry AI Overlay v5.3 — Multilingual palm reading (Heart, Head, Life, Fate, Sun, Marriage, Health) with overlay + printable report.">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Palmistry Universal v5.5 · Camera + Analyze</title>
 <style>
-  :root{--pri:#16f0a7;--bg:#0b0f16;--card:#0f1420;--ink:#e6f0ff}
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Arial;text-align:center;min-height:100vh}
-  h1{margin:18px 0 4px} small{opacity:.85}
-  .stage{position:relative;display:inline-block;width:min(92vw,520px)}
-  #cam{width:100%;border-radius:16px;border:2px solid var(--pri);background:#000;display:block}
-  #cv{position:absolute;inset:0;width:100%;height:100%;border-radius:16px;display:none;pointer-events:none}
-  .captureBtn{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:86px;height:86px;border-radius:50%;border:none;background:#2196f3;color:#000;font-weight:700;box-shadow:0 0 15px #2196f333;cursor:pointer}
-  .legend{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 8px}
-  .tag{display:inline-flex;gap:6px;align-items:center;margin:4px;padding:4px 10px;border-radius:999px;border:1px solid #2a4b72;background:#0d1a2c;color:#9fd6ff;font-size:.9em}
-  .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
-  .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}
-  .fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
-  .toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0}
-  .toggles label{background:#142235;border:1px solid #29405f;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}
-  .btns{margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  button,.btnLike{border:none;border-radius:10px;padding:.6em 1em;font-weight:700;cursor:pointer}
-  .left{background:#16243a;color:#cfe9ff}.an{background:#16f0a7;color:#062}.report{background:#a78bfa;color:#120}
-  select.btnLike,input[type=file].btnLike{background:#19283f;color:#cfe9ff}
-  .sliderRow{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin:10px 0 6px}
-  .sliderRow label{display:flex;gap:8px;align-items:center}
-  input[type=range]{accent-color:#16f0a7}
-  #status{margin:8px auto 0;padding:10px;border:1px dashed #355;border-radius:10px;color:#cfe;max-width:900px;display:none;white-space:pre-wrap;text-align:left}
-  #summary{max-width:900px;margin:10px auto;text-align:left;background:var(--card);border:1px solid #243e60;border-radius:12px;padding:12px;display:none}
-  #summary h3{margin:0 0 8px}
-  nav{display:flex;gap:10px;justify-content:center;margin:10px 0}
-  nav a{color:#9fd6ff;text-decoration:none;border:1px solid #29405f;border-radius:10px;padding:6px 10px}
-  nav a:hover{background:#0d1a2c}
-  footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
+:root{
+  --pri:#16f0a7; --neon:#00e5ff; --bg:#0b0f16; --ink:#e6f0ff; --card:#0f1420;
+  --muted:#9fb3c8; --warn:#ffcc66; --err:#ff6b6b;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Roboto,Arial}
+main{max-width:980px;margin:auto;padding:14px}
+h1{margin:10px 0 2px}
+small{opacity:.85}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid #122136;border-radius:16px;padding:10px;box-shadow:0 0 0 1px #0a1520 inset}
+.stage{position:relative;display:grid;place-items:center}
+video,canvas{width:100%;max-width:460px;border-radius:16px;border:2px solid var(--pri);background:#000}
+.overlay{position:absolute;inset:10px;pointer-events:none;opacity:.55}
+.controls label{display:inline-flex;align-items:center;gap:6px;margin:6px 10px 0 0;font-size:.95rem}
+select,input[type=range]{background:#091120;color:var(--ink);border:1px solid #2a405a;border-radius:10px;padding:6px 8px}
+button{
+  background:linear-gradient(180deg,var(--neon),var(--pri));
+  color:#001315;border:none;border-radius:12px;padding:10px 14px;font-weight:600;
+  box-shadow:0 6px 20px rgba(0,229,255,.25), inset 0 0 0 1px rgba(0,0,0,.25); cursor:pointer
+}
+button.secondary{background:#0f2033;color:#d7ecff;border:1px solid #29465f}
+button:disabled{opacity:.45;cursor:not-allowed}
+.kbd{font:600 12px/1 ui-monospace,Menlo;background:#09131f;border:1px solid #1a2a3f;padding:2px 6px;border-radius:6px}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#0e1d2c;border:1px solid #274663;color:#bfe9ff;font-size:.78rem}
+hr{border:none;border-top:1px solid #173048;margin:12px 0}
+.notice{font-size:.95rem;color:var(--muted)}
+footer{margin:14px 0 6px;text-align:center;color:#9db3c8}
+#status{border:1px dashed #35597a;border-radius:10px;padding:8px 10px;min-height:42px}
+#summary{border:1px solid #234459;border-radius:12px;padding:10px;background:#0c1623}
 </style>
 </head>
 <body>
-  <h1>🖐️ Palmistry Universal v5.3</h1>
-  <small>Multilingual · Capture → Analyze → Report</small>
-  <nav><a href="./index.html">← Back to Home</a></nav>
+<main>
+  <h1>Palmistry Universal <span class="badge">v5.5</span></h1>
+  <small>Multilingual · Capture → Analyze → Report (edge-map baseline)</small>
 
-  <div class="stage">
-    <video id="cam" autoplay playsinline muted></video>
-    <canvas id="cv"></canvas>
-    <button class="captureBtn" id="capBtn">Capture</button>
+  <div class="row">
+    <section class="card" style="flex:1 1 480px">
+      <div class="stage">
+        <video id="cam" playsinline muted></video>
+        <canvas id="overlay" class="overlay"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="row">
+          <button id="startBtn">Start</button>
+          <button id="cycleBtn" class="secondary">Cycle Camera</button>
+          <button id="flipBtn" class="secondary">Flip</button>
+          <button id="torchBtn" class="secondary">Torch</button>
+          <button id="captureBtn">Capture</button>
+          <button id="analyzeBtn" class="secondary">Analyze</button>
+          <button id="clearBtn" class="secondary">Clear</button>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <label>Device
+            <select id="deviceSel"></select>
+          </label>
+          <label>Resolution
+            <select id="resSel">
+              <option value="1920x1080">1920×1080</option>
+              <option value="1280x720" selected>1280×720</option>
+              <option value="960x540">960×540</option>
+              <option value="640x480">640×480</option>
+            </select>
+          </label>
+          <label>FPS
+            <select id="fpsSel">
+              <option>60</option><option selected>30</option><option>24</option>
+            </select>
+          </label>
+          <label>Zoom
+            <input id="zoom" type="range" min="1" max="5" value="1" step="0.1">
+          </label>
+          <label>Edge
+            <input id="edge" type="range" min="20" max="120" value="70">
+          </label>
+        </div>
+      </div>
+
+      <hr/>
+      <div id="status" class="notice">Press <span class="kbd">Start</span> and allow camera access.</div>
+    </section>
+
+    <section class="card" style="flex:1 1 420px">
+      <canvas id="capture" width="0" height="0" aria-label="Captured frame" style="width:100%;max-width:460px"></canvas>
+      <hr/>
+      <h3 style="margin:6px 0">AI Summary</h3>
+      <div id="summary">
+        <div><strong>Lines:</strong> Heart, Head, Life, Fate, Sun, Marriage (auto-detect planned)</div>
+        <div id="aiText" class="notice">Run <b>Analyze</b> to see an edge map. This baseline prepares for palm-line detection.</div>
+      </div>
+    </section>
   </div>
 
-  <div class="legend">
-    <span class="tag"><span class="dot hrt"></span><span id="L_heart">Heart</span></span>
-    <span class="tag"><span class="dot hd"></span><span id="L_head">Head</span></span>
-    <span class="tag"><span class="dot life"></span><span id="L_life">Life</span></span>
-    <span class="tag"><span class="dot fate"></span><span id="L_fate">Fate</span></span>
-    <span class="tag"><span class="dot sun"></span><span id="L_sun">Sun</span></span>
-    <span class="tag"><span class="dot marr"></span><span id="L_marriage">Marriage</span></span>
-    <span class="tag"><span class="dot hlth"></span><span id="L_health">Health</span></span>
-  </div>
-
-  <div class="toggles">
-    <label><input type="checkbox" id="T_primary" checked><span id="T_primary_label">Primary (Heart/Head/Life)</span></label>
-    <label><input type="checkbox" id="T_fate" checked><span id="T_fate_label">Fate</span></label>
-    <label><input type="checkbox" id="T_sun" checked><span id="T_sun_label">Sun</span></label>
-    <label><input type="checkbox" id="T_marriage" checked><span id="T_marriage_label">Marriage</span></label>
-    <label><input type="checkbox" id="T_health" checked><span id="T_health_label">Health</span></label>
-  </div>
-
-  <div class="btns">
-    <button class="btnLike" id="startBtn">▶️ Start</button>
-    <select id="camsel" class="btnLike"></select>
-    <button class="btnLike" id="cycleBtn">🔁 Cycle</button>
-    <select id="resSel" class="btnLike">
-      <option value="1280x720">HD 1280×720</option>
-      <option value="1920x1080">FullHD 1920×1080</option>
-      <option value="640x480">VGA 640×480</option>
-    </select>
-    <select id="fpsSel" class="btnLike">
-      <option value="30">30 FPS</option><option value="60">60 FPS</option><option value="24">24 FPS</option>
-    </select>
-    <input id="pick" type="file" accept="image/*" class="btnLike"/>
-    <button class="left" id="flipBtn">↔️ Flip</button>
-    <button class="btnLike" id="torchBtn" hidden>🔦 Torch</button>
-    <label class="btnLike" style="display:flex;align-items:center;gap:8px">Zoom
-      <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
-    </label>
-    <button class="an" id="anBtn">✨ Analyze</button>
-    <button class="report" id="reportBtn">📄 Report</button>
-    <button class="btnLike" id="clearBtn">🧹 Clear</button>
-  </div>
-
-  <div class="sliderRow">
-    <label id="edgeLab">Edge <input id="edge" type="range" min="40" max="110" value="75"></label>
-    <label id="detLab">Detail <input id="gk" type="range" min="1" max="5" value="3"></label>
-  </div>
-
-  <div id="status"></div>
-
-  <div id="summary">
-    <h3>🔎 AI Summary</h3>
-    <div id="sumtext"></div>
-  </div>
-
-  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.3</footer>
+  <footer>© Sathyadarshana · Neon Jelly UI · Works offline (no external libs)</footer>
+</main>
 
 <script>
-/* ---------------- i18n (EN, SI, AR) ---------------- */
-const I18N = {
-  en:{title:"Palmistry Universal v5.3",subtitle:"Multilingual · Capture → Analyze → Report",
-    back:"Back to Home",
-    legend:{heart:"Heart",head:"Head",life:"Life",fate:"Fate",sun:"Sun",marriage:"Marriage",health:"Health"},
-    toggles:{primary:"Primary (Heart/Head/Life)",fate:"Fate",sun:"Sun",marriage:"Marriage",health:"Health"},
-    ui:{start:"▶️ Start",cycle:"🔁 Cycle",flip:"↔️ Flip",zoom:"Zoom",analyze:"✨ Analyze",report:"📄 Report",clear:"🧹 Clear",
-        res_hd:"HD 1280×720",res_fhd:"FullHD 1920×1080",res_vga:"VGA 640×480",
-        fps30:"30 FPS",fps60:"60 FPS",fps24:"24 FPS",pick_placeholder:"Choose image…"},
-    msg:{start_hint:"▶️ Start → Allow camera. Capture/Upload → Analyze. Report shows overlay + long reading.",
-         https:"🔒 Use HTTPS for best camera support.",
-         cam_err:"❌ Camera error: ",torch_err:"Torch error.",need_capture:"First Capture or Choose Photo.",
-         need_analyze:"Run Analyze first.",photo_locked:"🖐️ Photo locked. Analyze to detect lines.",
-         photo_loaded:"🖼️ Photo loaded. Analyze.",cleared:"🧹 Cleared. Ready.",
-         analyzing:"⏳ Analyzing…",analyze_fail:"❌ Analyze failed: "},
-    report:{title:"🖐️ Palmistry Report",legend:"Legend",save:"Save Image",print:"Print / Save PDF",
-            copyright:"© Sathyadarshana · Palmistry AI v5.3",detailed:"AI Summary (Detailed)",
-            notes:"Notes: This reading is educational and not medical advice."},
-    lines:{heart:"❤️ Heart line",head:"🧡 Head (Cheettha) line",life:"💚 Life line",fate:"🟪 Fate (IraNami) line",
-           sun:"🟨 Sun line",marriage:"🩷 Marriage lines",health:"🩵 Health line"},
-    meanings:{
-      heartStrong:"Warm, empathetic nature; bonds deeply with people. Emotions expressed with control; relationships benefit from stability.",
-      heartWeak:"Emotional energy appears sensitive; practice boundaries and self-care.",
-      headStrong:"Clear thinker with practical problem-solving; learns by doing.",
-      headWeak:"Focus may diffuse; use checklists and single-tasking.",
-      lifeStrong:"Good vitality and resilience; steady stamina; adaptable.",
-      lifeWeak:"Energy may fluctuate; prioritize sleep, hydration, and morning light.",
-      fateStrong:"Purpose grows through consistent effort; career path clarifies with age.",
-      fateWeak:"External factors influence direction; keep optionality and upskill.",
-      sunStrong:"Creativity/reputation grows via consistent craft work.",
-      sunWeak:"Recognition low now; publish small works frequently.",
-      healthStrong:"Recovery is good; keep posture and breath work.",
-      healthWeak:"Watch workload/posture; take micro-breaks and stretch."
-    },
-    grades:{weak:"weak",fragmented:"fragmented",strong:"strong",moderate:"moderate"},
-    orient:{up:"tilt-up",down:"tilt-down",level:"level"}, rtl:false
-  },
-  si:{title:"Palmistry Universal v5.3",subtitle:"බහුභාෂා · සටහන් → විශ්ලේෂණය → වාර්තාව",
-    back:"මුල් පිටුවට",
-    legend:{heart:"හෘදය",head:"සිත්තම් (Head)",life:"ජීවිතය",fate:"ඉරණාමි / විධි",sun:"සූර්ය",marriage:"වාහය",health:"සෞඛ්‍යය"},
-    toggles:{primary:"ප්‍රාථමික (Heart/Head/Life)",fate:"ඉරණාමි/Fate",sun:"Sun",marriage:"Marriage",health:"Health"},
-    ui:{start:"▶️ ආරම්භ",cycle:"🔁 Cycle",flip:"↔️ Flip",zoom:"Zoom",analyze:"✨ විශ්ලේෂණය",report:"📄 වාර්තාව",clear:"🧹 Clear",
-        res_hd:"HD 1280×720",res_fhd:"FullHD 1920×1080",res_vga:"VGA 640×480",
-        fps30:"30 FPS",fps60:"60 FPS",fps24:"24 FPS",pick_placeholder:"රූපයක් තෝරන්න…"},
-    msg:{start_hint:"▶️ Start → කැමරා අයිතිය දී Capture/Upload → Analyze → Report.",
-         https:"🔒 HTTPS භාවිතා කරන්න.",cam_err:"❌ කැමරා දෝෂය: ",torch_err:"Torch දෝෂය.",
-         need_capture:"පළමුව Capture හෝ Photo තෝරන්න.",need_analyze:"Analyze පළමුව ධාවනය කරන්න.",
-         photo_locked:"🖐️ Photo locked. Analyze කරන්න.",photo_loaded:"🖼️ Photo loaded.",cleared:"🧹 හිස් කළා.",
-         analyzing:"⏳ විශ්ලේෂණය වෙමින්…",analyze_fail:"❌ Analyze failed: "},
-    report:{title:"🖐️ Palmistry Report",legend:"Legend",save:"රූපය සුරකින්න",print:"Print / PDF",
-            copyright:"© Sathyadarshana · Palmistry AI v5.3",detailed:"AI සාරාංශය (විස්තරාත්මක)",
-            notes:"සටහන: මෙය අධ්‍යාපන කාර්‍යය සඳහා පමණි."},
-    lines:{heart:"❤️ හෘදය",head:"🧡 සිත්තම්",life:"💚 ජීවිතය",fate:"🟪 ඉරණාමි",sun:"🟨 සූර්ය",marriage:"🩷 වාහය",health:"🩵 සෞඛ්‍යය"},
-    meanings:{heartStrong:"අනුකම්පාවත්; ස්ථිර සබඳතා.",heartWeak:"අතිසංවේදී; සීමා අභ්‍යාස කරගන්න.",
-      headStrong:"පැහැදිලි සිත; ක්‍රියාමය විසඳුම්.",headWeak:"කේන්ද්‍රීකරණය විහිදෙයි; ලැයිස්තුවක්/Single-tasking.",
-      lifeStrong:"ආත්ම ශක්තිමත්; පරිකල්පිත.",lifeWeak:"ශක්තිය වෙනස් විය හැක; නින්ද/දෙහිදීම/උදේ ආලෝකය.",
-      fateStrong:"පියවරෙන්-පියවර වෘත්තීය පැහැදිලි වෙයි.",fateWeak:"පිටත බලපෑම්; තේරීම් විවෘතව තබාගන්න.",
-      sunStrong:"ප්‍රවීණතා/ප්‍රසිද්ධිය වැඩේ සමග ඉහළට.",sunWeak:"දැන් අඩු; කුඩා කෘති නිතර ප්‍රකාශනය කරන්න.",
-      healthStrong:"පුරුෂාරථය/භාවනාව හොඳයි.",healthWeak:"වැඩභාර/姿勢 මතක තබා ඕනෑ විරාම."},
-    grades:{weak:"අඩු",fragmented:"කැබලි-වූ",strong:"ඉහළ",moderate:"මධ්‍යස්ථ"},
-    orient:{up:"උඩට නමී",down:"පහළට නමී",level:"සම"}, rtl:false
-  },
-  ar:{title:"‏Palmistry v5.3",subtitle:"متعدد اللغات · التقط → حلّل → تقرير",
-    back:"العودة",legend:{heart:"القلب",head:"العقل",life:"الحياة",fate:"القدر",sun:"الشمس",marriage:"الزواج",health:"الصحة"},
-    toggles:{primary:"أساسي (قلب/عقل/حياة)",fate:"القدر",sun:"الشمس",marriage:"الزواج",health:"الصحة"},
-    ui:{start:"▶️ ابدأ",cycle:"🔁 تبديل",flip:"↔️ عكس",zoom:"تكبير",analyze:"✨ تحليل",report:"📄 تقرير",clear:"🧹 مسح",
-        res_hd:"HD 1280×720",res_fhd:"FullHD 1920×1080",res_vga:"VGA 640×480",
-        fps30:"30 إطار/ث",fps60:"60 إطار/ث",fps24:"24 إطار/ث",pick_placeholder:"اختر صورة…"},
-    msg:{start_hint:"▶️ ابدأ ثم اسمح للكاميرا…",https:"🔒 استخدم HTTPS",
-         cam_err:"❌ خطأ الكاميرا: ",torch_err:"خطأ المصباح.",need_capture:"التقط أو اختر صورة أولاً.",
-         need_analyze:"شغّل التحليل أولاً.",photo_locked:"🖐️ تم التثبيت. حلّل الآن.",
-         photo_loaded:"🖼️ تم التحميل. حلّل.",cleared:"🧹 تم المسح.",
-         analyzing:"⏳ جارٍ التحليل…",analyze_fail:"❌ فشل التحليل: "},
-    report:{title:"🖐️ تقرير قراءة الكف",legend:"الدليل",save:"حفظ الصورة",print:"طباعة / PDF",
-            copyright:"© Sathyadarshana · Palmistry AI v5.3",detailed:"ملخص الذكاء التفصيلي",
-            notes:"ملاحظة: قراءة تعليمية وليست طبية."},
-    lines:{heart:"❤️ خط القلب",head:"🧡 خط العقل",life:"💚 خط الحياة",fate:"🟪 خط القدر",sun:"🟨 خط الشمس",marriage:"🩷 خطوط الزواج",health:"🩵 خط الصحة"},
-    meanings:{heartStrong:"عاطفة دافئة وروابط ثابتة.",heartWeak:"حساسية عاطفية؛ اعتنِ بالحدود.",
-      headStrong:"تفكير واضح وحلول عملية.",headWeak:"تشتت التركيز؛ قوائم ومهمة واحدة.",
-      lifeStrong:"حيوية جيدة ومرونة.",lifeWeak:"تقلّبات الطاقة؛ نوم وماء وضوء صباحي.",
-      fateStrong:"يتضح المسار مع الجهد المتواصل.",fateWeak:"عوامل خارجية تؤثر؛ وسّع الخيارات.",
-      sunStrong:"تنمو السمعة بالإنتاج المستمر.",sunWeak:"إبراز قليل الآن؛ انشر أعمالاً صغيرة.",
-      healthStrong:"تعافٍ جيد؛ وضع وتنفس.",healthWeak:"خفف العبء وخذ فواصل."},
-    grades:{weak:"ضعيف",fragmented:"مجزأ",strong:"قوي",moderate:"متوسط"},
-    orient:{up:"مائل للأعلى",down:"مائل للأسفل",level:"مستوي"},
-    rtl:true
-  }
+/* ========= Utilities ========= */
+const $ = sel => document.querySelector(sel);
+const log = (msg, type="info") => {
+  const box = $("#status");
+  const color = type==="error" ? "var(--err)" : type==="warn" ? "var(--warn)" : "var(--muted)";
+  box.innerHTML = `<span style="color:${color}">${msg}</span>`;
+  console[type==="error"?"error":type==="warn"?"warn":"log"]("[Palmistry]", msg);
 };
 
-/* ---------- pick language & apply ---------- */
-function getLang(){
-  const q=new URL(location.href).searchParams.get('lang')||'';
-  const stored=localStorage.getItem('palm_lang')||'';
-  const nav=(navigator.language||'en').slice(0,2).toLowerCase();
-  const prefer=(q||stored||nav);
-  if(I18N[prefer]) return prefer;
-  if(prefer.startsWith('si')) return 'si';
-  if(prefer.startsWith('ar')) return 'ar';
-  return 'en';
-}
-let LANG=getLang();
-localStorage.setItem('palm_lang',LANG);
-function tpath(path,fallback=""){const seg=path.split('.'); let o=I18N[LANG];
-  for(const k of seg){ if(!o) return fallback; o=o[k]; }
-  return (typeof o==="string")?o:(o||fallback);
-}
-function applyI18n(){
-  document.title = tpath('title')+' · Sathyadarshana';
-  document.querySelector('h1').textContent = '🖐️ '+tpath('title');
-  document.querySelector('small').textContent = tpath('subtitle');
-  document.querySelector('nav a').textContent = '← '+tpath('back');
+let stream = null, track = null, torchOn = false, facing = "environment";
+let currentDeviceId = null;
 
-  const L = I18N[LANG].legend;
-  const ids = ['L_heart','L_head','L_life','L_fate','L_sun','L_marriage','L_health'];
-  const names = [L.heart,L.head,L.life,L.fate,L.sun,L.marriage,L.health];
-  ids.forEach((id,i)=>document.getElementById(id).textContent=names[i]);
+const cam = $("#cam");
+const overlay = $("#overlay");
+const octx = overlay.getContext("2d");
+const cap = $("#capture");
+const cctx = cap.getContext("2d");
 
-  const T = I18N[LANG].toggles;
-  document.getElementById('T_primary_label').textContent=T.primary;
-  document.getElementById('T_fate_label').textContent=T.fate;
-  document.getElementById('T_sun_label').textContent=T.sun;
-  document.getElementById('T_marriage_label').textContent=T.marriage;
-  document.getElementById('T_health_label').textContent=T.health;
-
-  const U = I18N[LANG].ui;
-  byId('startBtn').textContent=U.start; byId('cycleBtn').textContent=U.cycle;
-  byId('flipBtn').textContent=U.flip; byId('anBtn').textContent=U.analyze;
-  byId('reportBtn').textContent=U.report; byId('clearBtn').textContent=U.clear;
-  byId('fpsSel').innerHTML=`<option value="30">${U.fps30}</option><option value="60">${U.fps60}</option><option value="24">${U.fps24}</option>`;
-  byId('resSel').innerHTML=`<option value="1280x720">${U.res_hd}</option><option value="1920x1080">${U.res_fhd}</option><option value="640x480">${U.res_vga}</option>`;
-  byId('pick').setAttribute('title',U.pick_placeholder);
-
-  document.querySelector('#summary h3').textContent = '🔎 '+(tpath('report.detailed')||'AI Summary (Detailed)');
-
-  const isRTL = !!I18N[LANG].rtl;
-  document.documentElement.dir = isRTL?'rtl':'ltr';
-  document.body.style.direction = isRTL?'rtl':'ltr';
-}
-
-/* ---------------- refs ---------------- */
-const video=byId('cam'), cv=byId('cv'), ctx=cv.getContext('2d');
-const startBtn=byId('startBtn'), camsel=byId('camsel'), cycleBtn=byId('cycleBtn');
-const resSel=byId('resSel'), fpsSel=byId('fpsSel'), zoomEl=byId('zoom');
-const pick=byId('pick'), flipBtn=byId('flipBtn'), torchBtn=byId('torchBtn');
-const capBtn=byId('capBtn'), anBtn=byId('anBtn'), reportBtn=byId('reportBtn'), clearBtn=byId('clearBtn');
-const T_primary=byId('T_primary'), T_fate=byId('T_fate'), T_sun=byId('T_sun'), T_marriage=byId('T_marriage'), T_health=byId('T_health');
-
-let stream=null, track=null, captured=false, isMirrored=false;
-let last=null;          // metrics
-let lastOverlay=null;   // dataURL of canvas with colored lines
-
-function byId(x){return document.getElementById(x)}
-function msg(t){ const s=byId('status'); s.textContent=t; s.style.display='block'; }
-function showSummary(html){ const b=byId('summary'); byId('sumtext').innerHTML=html; b.style.display='block'; }
-function parseRes(v){ const [w,h]=v.split('x').map(Number); return {w,h}; }
-function norm(maxW=1280,maxPx=1500000){
-  if(cv.width<=0||cv.height<=0) return;
-  const tooW=cv.width>maxW, tooPx=cv.width*cv.height>maxPx;
-  if(!(tooW||tooPx)) return;
-  const s=Math.min(maxW/cv.width, Math.sqrt(maxPx/(cv.width*cv.height)));
-  const w=Math.max(Math.round(cv.width*s),540), h=Math.round(cv.height*s);
-  const t=document.createElement('canvas'); t.width=w; t.height=h;
-  t.getContext('2d').drawImage(cv,0,0,w,h); cv.width=w; cv.height=h; ctx.drawImage(t,0,0);
-}
-
-/* ---------------- camera ---------------- */
-async function ensurePerm(){
-  if(!navigator.mediaDevices?.getUserMedia) throw new Error('No mediaDevices');
-  const t=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); t.getTracks().forEach(x=>x.stop());
-}
-let camList=[], camIndex=0;
-async function listCams(){
-  const devs=await navigator.mediaDevices.enumerateDevices();
-  camList=devs.filter(d=>d.kind==='videoinput');
-  camsel.innerHTML=''; camList.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`; camsel.appendChild(o); });
-  camsel.selectedIndex=0; camIndex=0;
-}
-async function startCam(id=null){
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; track=null; }
-  const {w,h}=parseRes(resSel.value||'1280x720'); const fps=Number(fpsSel.value||30);
-  const facing=isMirrored?'user':'environment';
-  const cons={ video:id?{deviceId:{exact:id}}:{facingMode:{ideal:facing}}, audio:false };
-  Object.assign(cons.video,{ width:{ideal:w,max:w}, height:{ideal:h,max:h}, frameRate:{ideal:fps,max:fps} });
-  try{ stream=await navigator.mediaDevices.getUserMedia(cons); }
-  catch{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-  video.srcObject=stream; await video.play(); track=stream.getVideoTracks()[0];
-  const W=video.videoWidth||w, H=video.videoHeight||h; cv.width=W; cv.height=H;
-  video.style.transform=isMirrored?'scaleX(-1)':'none'; cv.style.display=captured?'block':'none';
-  const caps=track.getCapabilities?.()||{}; torchBtn.hidden=!('torch' in caps);
-  if('zoom' in caps){ zoomEl.min=caps.zoom.min||1; zoomEl.max=caps.zoom.max||5; zoomEl.step=caps.zoom.step||0.1; zoomEl.value=(track.getSettings?.().zoom)||zoomEl.min; zoomEl.parentElement.style.display=''; } else zoomEl.parentElement.style.display='none';
-  msg(`📷 ${track.label||'Camera'} • ${W}×${H}@${fps}`);
-}
-startBtn.onclick=async()=>{
+/* ========= Camera ========= */
+async function listDevices(){
   try{
-    if(location.protocol!=='https:' && location.hostname!=='localhost') msg(tpath('msg.https'));
-    await ensurePerm(); await listCams(); await startCam(camsel.value||camList[0]?.deviceId||null);
-  }catch(e){ msg(tpath('msg.cam_err')+(e.message||e)); }
-};
-cycleBtn.onclick=async()=>{ if(!camList.length) await listCams(); if(!camList.length) return msg('No cameras');
-  camIndex=(camIndex+1)%camList.length; camsel.selectedIndex=camIndex; await startCam(camList[camIndex].deviceId); };
-camsel.onchange=async()=>startCam(camsel.value);
-resSel.onchange=async()=>startCam(camsel.value||null);
-fpsSel.onchange=async()=>startCam(camsel.value||null);
-flipBtn.onclick=async()=>{ isMirrored=!isMirrored; if(stream && !captured){ video.style.transform=isMirrored?'scaleX(-1)':'none'; await startCam(camsel.value||null); } else if(captured){ mirrorCanvas(); } };
-torchBtn.onclick=async()=>{ if(!track) return; try{ const on=(track.getSettings?.().torch)||false; await track.applyConstraints({advanced:[{torch:!on}]}); } catch(e){ msg(tpath('msg.torch_err')); } };
-zoomEl.oninput=async()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{zoom:Number(zoomEl.value)}]}); }catch{} };
-function mirrorCanvas(){
-  const t=document.createElement('canvas'); t.width=cv.width; t.height=cv.height;
-  t.getContext('2d').drawImage(cv,0,0); ctx.save(); ctx.setTransform(-1,0,0,1,cv.width,0); ctx.drawImage(t,0,0); ctx.restore();
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const vids = devs.filter(d=>d.kind==="videoinput");
+    const sel = $("#deviceSel"); sel.innerHTML = "";
+    vids.forEach((d,i)=>{
+      const opt=document.createElement("option");
+      opt.value=d.deviceId; opt.textContent=d.label || `Camera ${i+1}`;
+      sel.appendChild(opt);
+    });
+    if(vids.length){ currentDeviceId = vids[0].deviceId; }
+  }catch(e){ log("Device list failed: "+e.message,"warn"); }
 }
 
-/* ---------------- capture & file ---------------- */
-capBtn.onclick=async()=>{
-  if(!stream) await startCam(camsel.value||null);
-  if(!video.videoWidth) await new Promise(r=>setTimeout(r,100));
-  cv.width=video.videoWidth; cv.height=video.videoHeight; ctx.save();
-  if(isMirrored){ ctx.translate(cv.width,0); ctx.scale(-1,1); }
-  ctx.drawImage(video,0,0,cv.width,cv.height); ctx.restore();
-  norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
-  byId('summary').style.display='none'; msg(tpath('msg.photo_locked'));
-};
-pick.onchange=e=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  const img=new Image(); img.onload=()=>{ cv.width=img.naturalWidth; cv.height=img.naturalHeight; ctx.drawImage(img,0,0);
-    if(isMirrored) mirrorCanvas(); norm(1280,1500000); cv.style.display='block'; captured=true; last=null; lastOverlay=null;
-    byId('summary').style.display='none'; msg(tpath('msg.photo_loaded')); };
-  img.onerror=()=>msg('❌ Image load failed'); img.src=URL.createObjectURL(f);
-};
-clearBtn.onclick=()=>{ ctx.clearRect(0,0,cv.width,cv.height); captured=false; cv.style.display='none'; last=null; lastOverlay=null; byId('summary').style.display='none'; msg(tpath('msg.cleared')); };
-
-/* ---------------- REPORT (overlay + text) ---------------- */
-reportBtn.onclick=()=>{
-  if(!captured){ msg(tpath('msg.need_capture')); return; }
-  if(!last){ msg(tpath('msg.need_analyze')); return; }
-  const R=I18N[LANG].report, isRTL=!!I18N[LANG].rtl;
-  const imgData=cv.toDataURL('image/png'); const details=buildDetailedReading(last);
-  const w=window.open('','_blank');
-  w.document.write(`
-  <html><head><title>${R.title}</title><meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <style>
-    body{font-family:system-ui,Segoe UI,Arial;margin:0;padding:12px;color:#123;background:#f7f9fc;${isRTL?'direction:rtl':''}}
-    .row{display:flex;gap:16px;flex-wrap:wrap}
-    .box{border:1px solid #ccd;background:#fff;padding:10px;border-radius:10px}
-    .imgWrap{max-width:min(92vw,700px)}
-    img{max-width:100%;height:auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
-    .legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-    .tag{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:999px;border:1px solid #cfe;background:#eef6ff;color:#134}
-    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
-    .hrt{background:#ff3b3b}.hd{background:#ffa533}.life{background:#42ff6c}.fate{background:#a1a1ff}.sun{background:#ffd54a}.marr{background:#ff8ab0}.hlth{background:#5ad1ff}
-    .btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-    button{padding:.5em 1em;border-radius:10px;border:1px solid #aac;background:#fff;cursor:pointer}
-    .muted{opacity:.8}
-  </style></head><body>
-  <h2>${R.title}</h2>
-  <div class="row">
-    <div class="imgWrap box"><img src="${imgData}" alt="Palmistry Overlay"/></div>
-    <div class="box" style="flex:1;min-width:260px">
-      <h3>${R.legend}</h3>
-      <div class="legend">
-        <span class="tag"><span class="dot hrt"></span>${tpath('legend.heart')}</span>
-        <span class="tag"><span class="dot hd"></span>${tpath('legend.head')}</span>
-        <span class="tag"><span class="dot life"></span>${tpath('legend.life')}</span>
-        <span class="tag"><span class="dot fate"></span>${tpath('legend.fate')}</span>
-        <span class="tag"><span class="dot sun"></span>${tpath('legend.sun')}</span>
-        <span class="tag"><span class="dot marr"></span>${tpath('legend.marriage')}</span>
-        <span class="tag"><span class="dot hlth"></span>${tpath('legend.health')}</span>
-      </div>
-      <div class="btns">
-        <button onclick="downloadImg()">${R.save}</button>
-        <button onclick="window.print()">${R.print}</button>
-      </div>
-      <div class="muted">${R.copyright}</div>
-    </div>
-  </div>
-  <div class="box" style="margin-top:12px">${details}</div>
-  <script>function downloadImg(){const a=document.createElement('a');a.href='${imgData}';a.download='palmistry_overlay.png';a.click();}</script>
-  </body></html>`);
-  w.document.close();
-};
-
-/* ---------------- ANALYZE ---------------- */
-anBtn.onclick=()=>{
-  if(!captured) return msg(tpath('msg.need_capture'));
-  msg(tpath('msg.analyzing'));
-  setTimeout(()=>{ try{ analyze(); } catch(e){ console.error(e); msg(tpath('msg.analyze_fail')+(e.message||e)); } }, 50);
-};
-
-function analyze(){
-  if(!cv.width||!cv.height){ msg('No canvas'); return; }
-  norm(1024,1000000);
-  let w=cv.width, h=cv.height, src;
-  for(let i=0;i<2;i++){
-    try{ src=ctx.getImageData(0,0,w,h); break; }
-    catch(e){
-      const t=document.createElement('canvas'); t.width=Math.round(w*0.8); t.height=Math.round(h*0.8);
-      t.getContext('2d').drawImage(cv,0,0,t.width,t.height);
-      cv.width=t.width; cv.height=t.height; ctx.drawImage(t,0,0); w=cv.width; h=cv.height;
+function constraints(){
+  const [w,h] = $("#resSel").value.split("x").map(Number);
+  const fps = Number($("#fpsSel").value);
+  const base = {
+    audio:false,
+    video:{
+      deviceId: currentDeviceId?{exact:currentDeviceId}:undefined,
+      facingMode: currentDeviceId?undefined:{ideal:facing},
+      width:{ideal:w}, height:{ideal:h}, frameRate:{ideal:fps}
     }
-  }
-  const wh=w*h, edgeVal=parseInt(byId('edge').value,10)/255, passes=parseInt(byId('gk').value,10);
-  // grayscale
-  const d=src.data, gray=new Uint8ClampedArray(wh);
-  for(let i=0,j=0;i<d.length;i+=4,j++) gray[j]=d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
-  // blur
-  let a=Float32Array.from(gray); const k=[1,2,1,2,4,2,1,2,1], kn=16;
-  for(let p=0;p<passes;p++){
-    const t=new Float32Array(wh);
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      let s=0,i=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=a[(y+dy)*w+(x+dx)]*k[i++]; t[y*w+x]=s/kn;
-    }
-    a=t;
-  }
-  const blur=Uint8ClampedArray.from(a);
-  // sobel
-  const mag=new Float32Array(wh); let mx=1;
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-    const i=y*w+x;
-    const gx=-blur[i-w-1]-2*blur[i-1]-blur[i+w-1] + blur[i-w+1]+2*blur[i+1]+blur[i+w+1];
-    const gy=-blur[i-w-1]-2*blur[i-w]-blur[i-w+1] + blur[i+w-1]+2*blur[i+w]+blur[i+w+1];
-    const m=Math.hypot(gx,gy); mag[i]=m; if(m>mx) mx=m;
-  }
-  const T=edgeVal*mx, bin=new Uint8ClampedArray(wh);
-  for(let i=0;i<wh;i++) bin[i]=mag[i]>T?1:0;
-  // skeletonize (Zhang–Suen)
-  const sk=Uint8Array.from(bin);
-  const N=(x,y)=> sk[(y-1)*w+x]+sk[(y-1)*w+x+1]+sk[y*w+x+1]+sk[(y+1)*w+x+1]+sk[(y+1)*w+x]+sk[(y+1)*w+x-1]+sk[y*w+x-1]+sk[(y-1)*w+x-1];
-  const S=(x,y)=>{ const p=[sk[(y-1)*w+x],sk[(y-1)*w+x+1],sk[y*w+x+1],sk[(y+1)*w+x+1],sk[(y+1)*w+x],sk[(y+1)*w+x-1],sk[y*w+x-1],sk[(y-1)*w+x-1]]; let t=0; for(let i=0;i<8;i++) if(p[i]==0&&p[(i+1)%8]==1) t++; return t; };
-  let changed=true, pass=0;
-  while(changed && pass<20){
-    changed=false; let rem=[];
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[(y+1)*w+x]==0) && (sk[y*w+x+1]*sk[y*w+x-1]*sk[(y-1)*w+x]==0)) rem.push(i);
-    }
-    rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; rem=[];
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      const i=y*w+x; if(!sk[i]) continue; const nn=N(x,y), s=S(x,y);
-      if(nn>=2&&nn<=6&&s==1 && (sk[(y-1)*w+x]*sk[y*w+x-1]*sk[(y+1)*w+x]==0) && (sk[(y-1)*w+x]*sk[y*w+x+1]*sk[y*w+x-1]==0)) rem.push(i);
-    }
-    rem.forEach(i=>sk[i]=0); if(rem.length) changed=true; pass++;
-  }
-
-  // region helpers
-  const band=(y0,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=0;x<w;x++) m[y*w+x]=1; return m; };
-  const rect=(x0,y0,x1,y1)=>{ const m=new Uint8Array(wh); for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++) m[y*w+x]=1; return m; };
-  const pickLongest=(mask)=>{ const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; let best=[];
-    function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]);
-      for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh && mask[j] && sk[j] && !seen[j]){ seen[j]=1; st.push(j);} } } return pts; }
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); if(p.length>best.length) best=p; } }
-    return best;
   };
-  const pickTopK=(mask,K=3,minLen=30,maxLen=140,preferHorizontal=true)=>{
-    const seen=new Uint8Array(wh); const NB=[-1-w,-w,1-w,-1,1,-1+w,w,1+w]; const segs=[];
-    function walk(i0){ const st=[i0], pts=[]; seen[i0]=1; while(st.length){ const i=st.pop(); const y=(i/w)|0, x=i%w; pts.push([x,y]); for(const d8 of NB){ const j=i+d8; if(j>0&&j<wh&&mask[j]&&sk[j]&&!seen[j]){ seen[j]=1; st.push(j);} } } return pts; }
-    const polyLen=(p)=>{ let L=0; for(let i=1;i<p.length;i++){ const dx=p[i][0]-p[i-1][0], dy=p[i][1]-p[i-1][1]; L+=Math.hypot(dx,dy);} return L; };
-    const orient=(p)=>{ if(p.length<2) return 0; const A=p[0],B=p[p.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); };
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      const i=y*w+x; if(mask[i]&&sk[i]&&!seen[i]){ const p=walk(i); const L=polyLen(p);
-        if(L>=minLen && L<=maxLen){ let ok=true; if(preferHorizontal){ const ang=Math.abs(orient(p)*180/Math.PI); ok=(ang<25||ang>155); }
-          if(ok) segs.push(p);
+  return base;
+}
+
+async function startCamera(){
+  try{
+    if(stream){ stopCamera(); }
+    stream = await navigator.mediaDevices.getUserMedia(constraints());
+    cam.srcObject = stream;
+    await cam.play();
+    track = stream.getVideoTracks()[0];
+
+    // Fit overlay to video box
+    const resize = ()=>{
+      const rect = cam.getBoundingClientRect();
+      overlay.width = rect.width; overlay.height = rect.height;
+    };
+    resize(); setTimeout(resize, 100);
+    window.addEventListener("resize", resize, {passive:true});
+
+    // Set zoom if supported
+    const caps = track.getCapabilities?.() || {};
+    if(caps.zoom){
+      $("#zoom").min = caps.zoom.min; $("#zoom").max = caps.zoom.max; $("#zoom").step = caps.zoom.step || 0.1;
+      $("#zoom").addEventListener("input", e=>{
+        track.applyConstraints({advanced:[{zoom: Number(e.target.value)}]}).catch(()=>{});
+      });
+    }else{
+      $("#zoom").disabled = true;
+    }
+
+    // Torch capability
+    $("#torchBtn").disabled = !(caps.torch);
+    log(`Camera started · ${track.label || "video track"} · ${cam.videoWidth}×${cam.videoHeight}@${$("#fpsSel").value}fps`);
+    drawOverlayLoop();
+    await listDevices();
+  }catch(e){
+    if(e.name==="NotAllowedError") log("Permission denied. Allow camera in browser settings and try again.","error");
+    else if(e.name==="NotFoundError") log("No camera found on this device.","error");
+    else log("Camera start failed: "+e.message,"error");
+  }
+}
+
+function stopCamera(){
+  try{ stream?.getTracks().forEach(t=>t.stop()); }catch{}
+  stream=null; track=null;
+}
+
+function cycleCamera(){
+  facing = (facing==="environment") ? "user" : "environment";
+  currentDeviceId = null; // let facingMode choose
+  startCamera();
+}
+
+function flipVideoCSS(){
+  cam.style.transform = cam.style.transform ? "" : "scaleX(-1)";
+  overlay.style.transform = cam.style.transform;
+}
+
+async function toggleTorch(){
+  if(!track) return;
+  const caps = track.getCapabilities?.() || {};
+  if(!caps.torch){ log("Torch not supported on this camera.","warn"); return; }
+  torchOn = !torchOn;
+  await track.applyConstraints({advanced:[{torch: torchOn}]});
+  log(torchOn ? "Torch ON" : "Torch OFF");
+}
+
+/* ========= Overlay loop ========= */
+let rafId = null;
+function drawOverlayLoop(){
+  cancelAnimationFrame(rafId);
+  const draw = ()=>{
+    const rect = cam.getBoundingClientRect();
+    octx.clearRect(0,0,overlay.width, overlay.height);
+
+    // guide box + crosshair
+    octx.strokeStyle = "rgba(0,229,255,.9)";
+    octx.lineWidth = 2;
+    const pad=10;
+    octx.strokeRect(pad,pad,overlay.width-2*pad,overlay.height-2*pad);
+
+    octx.setLineDash([6,6]); octx.lineWidth=1.5; octx.strokeStyle="rgba(22,240,167,.9)";
+    octx.beginPath();
+    octx.moveTo(overlay.width/2, pad); octx.lineTo(overlay.width/2, overlay.height-pad);
+    octx.moveTo(pad, overlay.height/2); octx.lineTo(overlay.width-pad, overlay.height/2);
+    octx.stroke(); octx.setLineDash([]);
+
+    rafId = requestAnimationFrame(draw);
+  };
+  draw();
+}
+
+/* ========= Capture & Analyze ========= */
+function captureFrame(){
+  if(!cam.videoWidth){ log("Camera not ready yet.","warn"); return; }
+  cap.width = cam.videoWidth; cap.height = cam.videoHeight;
+  cctx.save();
+  // If video is flipped via CSS, reflect the capture to match the view
+  const flipped = cam.style.transform.includes("scaleX(-1)");
+  if(flipped){
+    cctx.translate(cap.width,0); cctx.scale(-1,1);
+  }
+  cctx.drawImage(cam,0,0,cap.width,cap.height);
+  cctx.restore();
+  $("#aiText").innerHTML = "Captured frame ready. Click <b>Analyze</b>.";
+  log("Captured current frame.");
+}
+
+// Simple Sobel edge map with threshold slider (#edge)
+function analyze(){
+  if(cap.width===0){ log("No capture yet. Click Capture first.","warn"); return; }
+  const w=cap.width,h=cap.height;
+  const img = cctx.getImageData(0,0,w,h);
+  const gray = new Uint8ClampedArray(w*h);
+  for(let i=0,j=0;i<img.data.length;i+=4, j++){
+    const r=img.data[i], g=img.data[i+1], b=img.data[i+2];
+    gray[j] = (r*0.299 + g*0.587 + b*0.114)|0;
+  }
+  const sob = new Uint8ClampedArray(w*h);
+  const kx=[-1,0,1,-2,0,2,-1,0,1], ky=[-1,-2,-1,0,0,0,1,2,1];
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=y*w+x;
+      let gx=0,gy=0, t=0;
+      let p=0;
+      for(let yy=-1;yy<=1;yy++){
+        for(let xx=-1;xx<=1;xx++){
+          p = gray[(y+yy)*w + (x+xx)];
+          const idx=(yy+1)*3+(xx+1);
+          gx += p * kx[idx]; gy += p * ky[idx];
         }
       }
+      const mag = Math.hypot(gx,gy);
+      sob[i] = mag> Number($("#edge").value) ? 255 : 0;
     }
-    segs.sort((a,b)=>polyLen(b)-polyLen(a)); return segs.slice(0,K);
-  };
-
-  // bands (rough zoning)
-  const yHeart0=0, yHeart1=Math.floor(h*0.30);
-  const yHead0=yHeart1, yHead1=Math.floor(h*0.55);
-  const yLife0=yHead1, yLife1=h;
-
-  // pick paths
-  const pHeart = pickLongest(band(yHeart0,yHeart1));
-  const pHead  = pickLongest(band(yHead0,yHead1));
-  const pLife  = pickLongest(band(yLife0,yLife1));
-
-  const pFate  = pickLongest(rect(Math.floor(w*0.40), Math.floor(h*0.35), Math.floor(w*0.60), h));
-  const pSun   = pickLongest(rect(Math.floor(w*0.60), Math.floor(h*0.40), Math.floor(w*0.80), h));
-  const pMarriage = pickTopK(rect(Math.floor(w*0.70), Math.floor(h*0.10), w, Math.floor(h*0.25)), 3, 40, 120, true);
-  const pHealth= pickLongest(rect(Math.floor(w*0.55), Math.floor(h*0.55), w, h));
-
-  // faint cyan edges
-  const overlay = ctx.createImageData(w,h);
-  for(let i=0,j=0;i<wh;i++,j+=4) if(bin[i]){ overlay.data[j]=0; overlay.data[j+1]=255; overlay.data[j+2]=255; overlay.data[j+3]=60; }
-  ctx.putImageData(overlay,0,0);
-
-  // draw
-  function drawPath(pts,color,wid){
-    if(!pts||pts.length<5) return;
-    ctx.lineJoin='round'; ctx.lineCap='round';
-    ctx.strokeStyle='#000'; ctx.lineWidth=wid+2;
-    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
-    ctx.strokeStyle=color; ctx.lineWidth=wid;
-    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); for(const [x,y] of pts) ctx.lineTo(x,y); ctx.stroke();
   }
-  const M=(p)=>{ const polyLen=(pp)=>{ let L=0; for(let i=1;i<pp.length;i++){const dx=pp[i][0]-pp[i-1][0],dy=pp[i][1]-pp[i-1][1]; L+=Math.hypot(dx,dy);} return L|0; };
-    const orient=(pp)=>{ if(pp.length<2) return 0; const A=pp[0],B=pp[pp.length-1]; return Math.atan2(B[1]-A[1],B[0]-A[0]); };
-    const gaps=(pp)=>{ let g=0; for(let i=2;i<pp.length;i++) if(Math.hypot(pp[i][0]-pp[i-1][0],pp[i][1]-pp[i-1][1])>6) g++; return g; };
-    return {len:polyLen(p), slope:orient(p), gaps:gaps(p)}; };
-
-  ctx.globalAlpha=0.95;
-  if(T_primary.checked){ drawPath(pHeart,'#ff3b3b',4); drawPath(pHead,'#ffa533',4); drawPath(pLife,'#42ff6c',4); }
-  if(T_fate.checked)   drawPath(pFate,'#a1a1ff',3.5);
-  if(T_sun.checked)    drawPath(pSun,'#ffd54a',3.5);
-  if(T_marriage.checked)   pMarriage.forEach(p=>drawPath(p,'#ff8ab0',3));
-  if(T_health.checked) drawPath(pHealth,'#5ad1ff',3.5);
-  ctx.globalAlpha=1; cv.style.display='block';
-
-  last = { heart:M(pHeart), head:M(pHead), life:M(pLife),
-           fate:M(pFate), sun:M(pSun), marriage:pMarriage.map(M), health:M(pHealth) };
-  lastOverlay = cv.toDataURL('image/png');
-
-  showSummary(buildSummaryTable(last));
-  msg('✨ Analyze done');
+  // paint edge map (white on black, slight teal tint)
+  const out = cctx.createImageData(w,h);
+  for(let i=0;i<sob.length;i++){
+    const v=sob[i];
+    out.data[i*4+0]= v? 180:0;
+    out.data[i*4+1]= v? 255:0;
+    out.data[i*4+2]= v? 255:0;
+    out.data[i*4+3]= 255;
+  }
+  cctx.putImageData(out,0,0);
+  $("#aiText").innerHTML = "Edge map generated. Next step: line clustering & labeling (Heart/Head/Life/Fate/Sun/Marriage).";
+  log("Analyze completed (Sobel edge map).");
 }
 
-/* ---------------- summaries ---------------- */
-function grade(L,G){ const n = (L<80)?'weak':(G>15)?'fragmented':(L>220)?'strong':'moderate'; return I18N[LANG].grades[n]||n; }
-function ori(r){ const d=r*180/Math.PI; const k = d<-25?'up': d>25?'down':'level'; return I18N[LANG].orient[k]||k; }
-function lineRow(name,m){ if(!m||!m.len) return `${name}: <i>n/a</i>`; return `${name}: <b>${grade(m.len,m.gaps)}</b> (${ori(m.slope)}), ~${m.len}, gaps ${m.gaps}.`; }
-function buildSummaryTable(m){
-  const L=I18N[LANG].lines;
-  const pri = `❤️ ${lineRow(L.heart,m.heart)}<br>🧡 ${lineRow(L.head,m.head)}<br>💚 ${lineRow(L.life,m.life)}`;
-  const sec = `🟪 ${lineRow(L.fate,m.fate)}<br>🟨 ${lineRow(L.sun,m.sun)}<br>🩷 ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>'#'+(i+1)+'~'+x.len).join(', ') : 'n/a'}<br>🩵 ${lineRow(L.health,m.health)}`;
-  return `<p>${pri}</p><hr/><p>${sec}</p>`;
-}
-function buildDetailedReading(m){
-  const L=I18N[LANG].lines, M=I18N[LANG].meanings, R=I18N[LANG].report;
-  const text=(label,mm,strong,weak)=>{ if(!mm||!mm.len) return `<p><b>${label}:</b> n/a</p>`;
-    const g=grade(mm.len,mm.gaps), o=ori(mm.slope); const meaning = (g===I18N[LANG].grades.strong||g===I18N[LANG].grades.moderate)?strong:weak;
-    return `<p><b>${label}:</b> <i>${g}</i> (${o}). ${meaning}</p>`;
-  };
-  return `
-    <h3>${R.detailed}</h3>
-    ${text(L.heart,m.heart,M.heartStrong,M.heartWeak)}
-    ${text(L.head,m.head,M.headStrong,M.headWeak)}
-    ${text(L.life,m.life,M.lifeStrong,M.lifeWeak)}
-    ${text(L.fate,m.fate,M.fateStrong,M.fateWeak)}
-    ${text(L.sun,m.sun,M.sunStrong,M.sunWeak)}
-    <p><b>${L.marriage}:</b> ${m.marriage&&m.marriage.length? m.marriage.map((x,i)=>`#${i+1} ~ ${x.len}px`).join(', ') : 'n/a'}</p>
-    ${text(L.health,m.health,M.healthStrong,M.healthWeak)}
-    <hr/><div class="muted">${R.notes}</div>
-  `;
+function clearAll(){
+  cctx.clearRect(0,0,cap.width,cap.height);
+  $("#aiText").textContent = "Cleared. Capture again.";
 }
 
-/* ---------------- on load ---------------- */
-window.addEventListener('load',()=>{
-  applyI18n();
-  msg(tpath('msg.start_hint'));
+/* ========= Event wiring ========= */
+$("#startBtn").addEventListener("click", async ()=>{
+  await startCamera();
 });
+$("#cycleBtn").addEventListener("click", cycleCamera);
+$("#flipBtn").addEventListener("click", flipVideoCSS);
+$("#torchBtn").addEventListener("click", toggleTorch);
+$("#captureBtn").addEventListener("click", captureFrame);
+$("#analyzeBtn").addEventListener("click", analyze);
+$("#clearBtn").addEventListener("click", clearAll);
+$("#deviceSel").addEventListener("change", (e)=>{ currentDeviceId=e.target.value; startCamera(); });
+$("#resSel").addEventListener("change", startCamera);
+$("#fpsSel").addEventListener("change", startCamera);
+
+/* ========= Bootstrap ========= */
+(async function bootstrap(){
+  if(!("mediaDevices" in navigator)){
+    log("This browser does not support camera access (no navigator.mediaDevices).","error");
+    return;
+  }
+  try{
+    // Pre-prompt permission (for labels) with a tiny, soon-stopped stream in some browsers
+    await listDevices();
+    log("Ready. Choose resolution/FPS if needed, then press Start.");
+  }catch(e){
+    log("Init warning: "+e.message, "warn");
+  }
+})();
 </script>
 </body>
 </html>
