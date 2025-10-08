@@ -55,7 +55,59 @@ footer{color:#16f0a7;margin:12px 0 22px;font-size:.9em}
 
   <div class="stage">
     <video id="cam" autoplay playsinline muted></video>
-    <canvas id="cv"></canvas><script>
+    <canvas id="cv"></canvas>
+    <button class="captureBtn" id="capBtn">Capture</button>
+  </div>
+
+  <div class="legend">
+    <span class="tag"><span class="dot hrt"></span>Heart</span>
+    <span class="tag"><span class="dot hd"></span>Head</span>
+    <span class="tag"><span class="dot life"></span>Life</span>
+    <span class="tag"><span class="dot fate"></span>Fate</span>
+    <span class="tag"><span class="dot sun"></span>Sun</span>
+    <span class="tag"><span class="dot marr"></span>Marriage</span>
+    <span class="tag"><span class="dot hlth"></span>Health</span>
+  </div>
+
+  <div class="toggles">
+    <label><input type="checkbox" id="tPrimary" checked>Primary (Heart/Head/Life)</label>
+    <label><input type="checkbox" id="tFate" checked>Fate</label>
+    <label><input type="checkbox" id="tSun" checked>Sun</label>
+    <label><input type="checkbox" id="tMarr" checked>Marriage</label>
+    <label><input type="checkbox" id="tHealth" checked>Health</label>
+  </div>
+
+  <div class="btns">
+    <button class="btnLike" id="startBtn">▶️ Start</button>
+    <select id="camsel" class="btnLike"></select>
+    <button class="btnLike" id="cycleBtn">🔁 Cycle</button>
+    <select id="resSel" class="btnLike">
+      <option value="1280x720">HD 1280×720</option>
+      <option value="1920x1080">FullHD 1920×1080</option>
+      <option value="640x480">VGA 640×480</option>
+    </select>
+    <select id="fpsSel" class="btnLike">
+      <option value="30">30 FPS</option><option value="60">60 FPS</option><option value="24">24 FPS</option>
+    </select>
+    <input id="pick" type="file" accept="image/*" class="btnLike"/>
+    <button class="left" id="flipBtn">↔️ Flip</button>
+    <button class="btnLike" id="torchBtn" hidden>🔦 Torch</button>
+    <label class="btnLike" style="display:flex;align-items:center;gap:8px">
+      Zoom <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
+    </label>
+    <button class="an" id="anBtn">✨ Analyze</button>
+    <button class="report" id="reportBtn">📄 Report</button>
+    <button class="btnLike" id="clearBtn">🧹 Clear</button>
+  </div>
+
+  <div class="sliderRow">
+    <label>Edge <input id="edge" type="range" min="40" max="110" value="75"></label>
+    <label>Detail <input id="gk" type="range" min="1" max="5" value="3"></label>
+  </div>
+
+  <div id="status"></div>
+  <div id="summary"><h3>🔎 AI Summary</h3><div id="sumtext"></div></div>
+  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.3</footer><script>
 /* =========================
    Palmistry Universal v5.3
    - Camera + Analyze + Report
@@ -678,55 +730,3 @@ window.addEventListener('load',()=>{
 </script>
 </body>
 </html>
-    <button class="captureBtn" id="capBtn">Capture</button>
-  </div>
-
-  <div class="legend">
-    <span class="tag"><span class="dot hrt"></span>Heart</span>
-    <span class="tag"><span class="dot hd"></span>Head</span>
-    <span class="tag"><span class="dot life"></span>Life</span>
-    <span class="tag"><span class="dot fate"></span>Fate</span>
-    <span class="tag"><span class="dot sun"></span>Sun</span>
-    <span class="tag"><span class="dot marr"></span>Marriage</span>
-    <span class="tag"><span class="dot hlth"></span>Health</span>
-  </div>
-
-  <div class="toggles">
-    <label><input type="checkbox" id="tPrimary" checked>Primary (Heart/Head/Life)</label>
-    <label><input type="checkbox" id="tFate" checked>Fate</label>
-    <label><input type="checkbox" id="tSun" checked>Sun</label>
-    <label><input type="checkbox" id="tMarr" checked>Marriage</label>
-    <label><input type="checkbox" id="tHealth" checked>Health</label>
-  </div>
-
-  <div class="btns">
-    <button class="btnLike" id="startBtn">▶️ Start</button>
-    <select id="camsel" class="btnLike"></select>
-    <button class="btnLike" id="cycleBtn">🔁 Cycle</button>
-    <select id="resSel" class="btnLike">
-      <option value="1280x720">HD 1280×720</option>
-      <option value="1920x1080">FullHD 1920×1080</option>
-      <option value="640x480">VGA 640×480</option>
-    </select>
-    <select id="fpsSel" class="btnLike">
-      <option value="30">30 FPS</option><option value="60">60 FPS</option><option value="24">24 FPS</option>
-    </select>
-    <input id="pick" type="file" accept="image/*" class="btnLike"/>
-    <button class="left" id="flipBtn">↔️ Flip</button>
-    <button class="btnLike" id="torchBtn" hidden>🔦 Torch</button>
-    <label class="btnLike" style="display:flex;align-items:center;gap:8px">
-      Zoom <input id="zoom" type="range" min="1" max="1" step="0.1" value="1" style="width:120px">
-    </label>
-    <button class="an" id="anBtn">✨ Analyze</button>
-    <button class="report" id="reportBtn">📄 Report</button>
-    <button class="btnLike" id="clearBtn">🧹 Clear</button>
-  </div>
-
-  <div class="sliderRow">
-    <label>Edge <input id="edge" type="range" min="40" max="110" value="75"></label>
-    <label>Detail <input id="gk" type="range" min="1" max="5" value="3"></label>
-  </div>
-
-  <div id="status"></div>
-  <div id="summary"><h3>🔎 AI Summary</h3><div id="sumtext"></div></div>
-  <footer>© 2025 Sathyadarshana · Palmistry AI Overlay v5.3</footer>
