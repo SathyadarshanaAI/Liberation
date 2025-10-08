@@ -332,6 +332,101 @@ $("#fpsSel").addEventListener("change", startCamera);
     log("Init warning: "+e.message, "warn");
   }
 })();
-</script>
+</script>// ---- Extra diagnostics (add once) ----
+function capDump(prefix=""){
+  if(!track) return;
+  const s = track.getSettings?.() || {};
+  const c = track.getCapabilities?.() || {};
+  console.group(prefix || "Camera Diagnostics");
+  console.log("label:", track.label);
+  console.log("settings:", s);
+  console.log("capabilities:", c);
+  console.log("readySize:", cam.videoWidth + "x" + cam.videoHeight);
+  console.groupEnd();
+}
+
+// Hook into startCamera success:
+async function startCamera(){
+  try{
+    if(stream) stopCamera();
+    const t0 = performance.now();
+    stream = await navigator.mediaDevices.getUserMedia(constraints());
+    cam.srcObject = stream;
+    await cam.play();
+    track = stream.getVideoTracks()[0];
+
+    // ... (existing resize/zoom/torch code)
+
+    log(`Camera started · ${track.label||"video track"} · ${cam.videoWidth}×${cam.videoHeight}@${$("#fpsSel").value}fps`);
+    capDump("After startCamera()");
+    console.table([{
+      width: cam.videoWidth,
+      height: cam.videoHeight,
+      fps: $("#fpsSel").value,
+      device: (track.label||"n/a")
+    }]);
+    console.log("startCamera() took", (performance.now()-t0).toFixed(1), "ms");
+
+    drawOverlayLoop();
+    await listDevices();
+  } catch(e){
+    // ... (existing error logs)
+  }
+}
+
+// Measure Analyze time + edges count
+function analyze(){
+  if(cap.width===0){ log("No capture yet. Click Capture first.","warn"); return; }
+  const t0 = performance.now();
+
+  const w=cap.width,h=cap.height;
+  const img = cctx.getImageData(0,0,w,h);
+
+  // Optional prefilter (reduces grid/background noise)
+  // Draw into a temp canvas with slight blur:
+  // const tcv=document.createElement("canvas"); tcv.width=w; tcv.height=h;
+  // const tctx=tcv.getContext("2d"); tctx.filter="blur(1.2px)"; tctx.drawImage(cap,0,0);
+  // const img=tctx.getImageData(0,0,w,h);
+
+  const gray=new Uint8ClampedArray(w*h);
+  for(let i=0,j=0;i<img.data.length;i+=4,j++){
+    const r=img.data[i],g=img.data[i+1],b=img.data[i+2];
+    gray[j]=(r*0.299 + g*0.587 + b*0.114)|0;
+  }
+
+  const sob=new Uint8ClampedArray(w*h);
+  const kx=[-1,0,1,-2,0,2,-1,0,1], ky=[-1,-2,-1,0,0,0,1,2,1];
+  let edgeCount=0;
+  const TH=Number($("#edge").value);
+
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const idx=y*w+x;
+      let gx=0,gy=0; let p=0;
+      for(let yy=-1;yy<=1;yy++){
+        for(let xx=-1;xx<=1;xx++){
+          p=gray[(y+yy)*w+(x+xx)];
+          const k=(yy+1)*3+(xx+1);
+          gx+=p*kx[k]; gy+=p*ky[k];
+        }
+      }
+      const mag=Math.hypot(gx,gy);
+      const hit = mag>TH ? 255 : 0;
+      sob[idx]=hit; if(hit) edgeCount++;
+    }
+  }
+
+  const out=cctx.createImageData(w,h);
+  for(let i=0;i<sob.length;i++){
+    const v=sob[i];
+    out.data[i*4+0]=v?180:0; out.data[i*4+1]=v?255:0; out.data[i*4+2]=v?255:0; out.data[i*4+3]=255;
+  }
+  cctx.putImageData(out,0,0);
+
+  const ms=(performance.now()-t0).toFixed(1);
+  console.log(`Analyze: ${w}x${h}, threshold=${TH}, edges=${edgeCount}, time=${ms}ms`);
+  log("Analyze completed (Sobel edge map).");
+  $("#aiText").innerHTML = "Edge map generated. Next step: line clustering & labeling (Heart/Head/Life/Fate/Sun/Marriage).";
+}
 </body>
 </html>
