@@ -1,225 +1,321 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>Palmistry Universal v5.7 · Sathyadarshana</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>Palmistry Universal v5.7 · Back Camera + 7 Lines</title>
 <style>
-:root{
- --pri:#16f0a7;--neon:#00e5ff;--bg:#0b0f16;--ink:#e6f0ff;
- --card:#0f1420;--muted:#9fb3c8;--warn:#ffcc66;--err:#ff6b6b
-}
+:root{--pri:#16f0a7;--neon:#00e5ff;--bg:#0b0f16;--ink:#e6f0ff;--card:#0f1420;--muted:#9fb3c8;--warn:#ffcc66;--err:#ff6b6b}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui;text-align:center}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Roboto,Arial}
 main{max-width:960px;margin:auto;padding:14px}
 h1{margin:10px 0 2px}
+small{opacity:.85}
 .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 .card{background:var(--card);border:1px solid #122136;border-radius:16px;padding:10px;box-shadow:0 0 0 1px #0a1520 inset}
 .stage{position:relative;display:grid;place-items:center}
 video,canvas{width:100%;max-width:460px;border-radius:16px;border:2px solid var(--pri);background:#000}
-.overlay{position:absolute;inset:10px;pointer-events:none;opacity:.55}
 button{background:linear-gradient(180deg,var(--neon),var(--pri));color:#001315;border:none;border-radius:12px;padding:10px 14px;font-weight:600;box-shadow:0 6px 20px rgba(0,229,255,.25),inset 0 0 0 1px rgba(0,0,0,.25);cursor:pointer}
 button.secondary{background:#0f2033;color:#d7ecff;border:1px solid #29465f}
 button:disabled{opacity:.45;cursor:not-allowed}
 select,input[type=range]{background:#091120;color:var(--ink);border:1px solid #2a405a;border-radius:10px;padding:6px 8px}
 footer{margin:14px 0 6px;text-align:center;color:#9db3c8}
 #status{border:1px dashed #35597a;border-radius:10px;padding:8px 10px;min-height:42px}
+.notice{color:var(--muted)}
 </style>
 </head>
 <body>
 <main>
-<h1>Palmistry Universal <span style="font-size:0.8em;color:var(--neon)">v5.7</span></h1>
-<small>AI Edge Detection + Color Zones (Back Camera)</small>
+  <h1>Palmistry Universal <span style="font-size:.85em;color:var(--neon)">v5.7</span></h1>
+  <small>Back Camera · Background Cut · Color only the 7 main lines</small>
 
-<div class="row">
-<section class="card" style="flex:1 1 480px">
- <div class="stage">
-  <video id="cam" playsinline muted></video>
-  <canvas id="overlay" class="overlay"></canvas>
- </div>
- <div class="row" style="margin-top:6px">
-  <button id="startBtn">Start</button>
-  <button id="captureBtn" class="secondary">Capture</button>
-  <button id="analyzeBtn" class="secondary">Analyze</button>
-  <button id="clearBtn" class="secondary">Clear</button>
- </div>
- <div class="row" style="margin-top:6px">
-  <label>Resolution<select id="resSel">
-    <option value="1920x1080">1920×1080</option>
-    <option value="1280x720" selected>1280×720</option>
-    <option value="960x540">960×540</option>
-  </select></label>
-  <label>FPS<select id="fpsSel"><option>60</option><option selected>30</option></select></label>
-  <label>Edge<input id="edge" type="range" min="20" max="120" value="70"></label>
- </div>
- <hr/>
- <div id="status" class="notice">Press <b>Start</b> to use back camera.</div>
-</section>
+  <div class="row">
+    <section class="card" style="flex:1 1 480px">
+      <div class="stage">
+        <video id="cam" playsinline muted></video>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="startBtn">Start</button>
+        <button id="captureBtn" class="secondary">Capture</button>
+        <button id="analyzeBtn" class="secondary">Analyze</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <label>Resolution
+          <select id="resSel">
+            <option value="1920x1080">1920×1080</option>
+            <option value="1280x720" selected>1280×720</option>
+            <option value="960x540">960×540</option>
+            <option value="640x480">640×480</option>
+          </select>
+        </label>
+        <label>FPS
+          <select id="fpsSel">
+            <option>60</option>
+            <option selected>30</option>
+            <option>24</option>
+          </select>
+        </label>
+        <label>Edge
+          <input id="edge" type="range" min="20" max="120" value="70">
+        </label>
+      </div>
+      <hr/>
+      <div id="status" class="notice">Press <b>Start</b> to use the back camera.</div>
+    </section>
 
-<section class="card" style="flex:1 1 420px">
- <canvas id="capture" width="0" height="0"></canvas>
- <hr/>
- <h3>AI Summary</h3>
- <div id="aiText" style="color:var(--muted)">Run <b>Analyze</b> after capture.</div>
-</section>
-</div>
+    <section class="card" style="flex:1 1 420px">
+      <canvas id="capture" width="0" height="0" aria-label="Processed image"></canvas>
+      <hr/>
+      <h3 style="margin:6px 0">AI Summary</h3>
+      <div id="aiText" class="notice">Run <b>Analyze</b> after capture. Background will be masked; only Heart/Head/Life/Fate/Sun/Marriage/Health lines are colored.</div>
+    </section>
+  </div>
 
-<footer>© Sathyadarshana · Neon Jelly UI · Back Camera Enabled</footer>
+  <footer>© Sathyadarshana · Neon Jelly UI · Works offline</footer>
 </main>
 
 <script>
-const $=s=>document.querySelector(s);
-const log=(m,t="info")=>{
- const b=$("#status");
- const c=t==="error"?"var(--err)":t==="warn"?"var(--warn)":"var(--muted)";
- b.innerHTML=`<span style="color:${c}">${m}</span>`;
- console[t==="error"?"error":t==="warn"?"warn":"log"]("[Palmistry]",m);
+/* ===== Utilities ===== */
+const $ = s => document.querySelector(s);
+const log = (m, t="info") => {
+  const b = $("#status");
+  const c = t==="error" ? "var(--err)" : t==="warn" ? "var(--warn)" : "var(--muted)";
+  b.innerHTML = `<span style="color:${c}">${m}</span>`;
+  console[t==="error"?"error":t==="warn"?"warn":"log"]("[Palmistry]", m);
 };
 
-let stream=null,track=null;
-const cam=$("#cam"),cap=$("#capture"),cctx=cap.getContext("2d");
+/* ===== Camera ===== */
+let stream=null, track=null;
+const cam=$("#cam"), cap=$("#capture"), cctx=cap.getContext("2d");
 
 function constraints(){
- const [w,h]=$("#resSel").value.split("x").map(Number);
- const fps=Number($("#fpsSel").value);
- return {
-  audio:false,
-  video:{
-    width:{ideal:w},
-    height:{ideal:h},
-    frameRate:{ideal:fps},
-    facingMode:{exact:"environment"} // ✅ back camera
-  }
- };
+  const [w,h]=$("#resSel").value.split("x").map(Number);
+  const fps=Number($("#fpsSel").value);
+  return {
+    audio:false,
+    video:{
+      width:{ideal:w}, height:{ideal:h}, frameRate:{ideal:fps},
+      facingMode:{exact:"environment"} // back camera
+    }
+  };
 }
 
 async function startCamera(){
- try{
-  if(stream) stopCamera();
-  stream=await navigator.mediaDevices.getUserMedia(constraints());
-  cam.srcObject=stream;
-  await cam.play();
-  track=stream.getVideoTracks()[0];
-  log(`Camera started · ${track.label||"video"} (back) · ${cam.videoWidth}×${cam.videoHeight}`);
- }catch(e){log("Camera failed: "+e.message,"error");}
+  try{
+    if(stream) stopCamera();
+    stream = await navigator.mediaDevices.getUserMedia(constraints());
+    cam.srcObject = stream;
+    await cam.play();
+    track = stream.getVideoTracks()[0];
+    log(`Camera started · ${track.label||"video"} · ${cam.videoWidth}×${cam.videoHeight}@${$("#fpsSel").value}fps`);
+  }catch(e){
+    log("Camera failed: "+e.message,"error");
+  }
 }
-function stopCamera(){try{stream?.getTracks().forEach(t=>t.stop());}catch{}}
+function stopCamera(){ try{ stream?.getTracks().forEach(t=>t.stop()); }catch{} }
+
 function captureFrame(){
- if(!cam.videoWidth){log("Camera not ready","warn");return;}
- cap.width=cam.videoWidth;cap.height=cam.videoHeight;
- cctx.drawImage(cam,0,0,cap.width,cap.height);
- $("#aiText").innerHTML="Captured frame ready. Click <b>Analyze</b>.";
- log("Captured.");
+  if(!cam.videoWidth){ log("Camera not ready","warn"); return; }
+  cap.width = cam.videoWidth; cap.height = cam.videoHeight;
+  cctx.drawImage(cam,0,0,cap.width,cap.height);
+  $("#aiText").innerHTML = "Captured frame ready. Click <b>Analyze</b>.";
+  log("Captured.");
 }
 
-function analyze(){
- if(cap.width===0){log("No capture yet.","warn");return;}
- const t0=performance.now();
- const w=cap.width,h=cap.height;
- const img=cctx.getImageData(0,0,w,h);
- const gray=new Uint8ClampedArray(w*h);
- for(let i=0,j=0;i<img.data.length;i+=4,j++){
-  const r=img.data[i],g=img.data[i+1],b=img.data[i+2];
-  gray[j]=(r*0.299+g*0.587+b*0.114)|0;
- }
- const sob=new Uint8ClampedArray(w*h);
- const kx=[-1,0,1,-2,0,2,-1,0,1],ky=[-1,-2,-1,0,0,0,1,2,1];
- for(let y=1;y<h-1;y++){
-  for(let x=1;x<w-1;x++){
-   const i=y*w+x;
-   let gx=0,gy=0;
-   for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++){
-    const p=gray[(y+yy)*w+(x+xx)],k=(yy+1)*3+(xx+1);
-    gx+=p*kx[k];gy+=p*ky[k];
-   }
-   sob[i]=Math.hypot(gx,gy)>$("#edge").value?255:0;
-  }
- }
- const out=cctx.createImageData(w,h);
- for(let y=0;y<h;y++){
-  for(let x=0;x<w;x++){
-   const i=(y*w+x)*4;
-   if(!sob[y*w+x]){out.data[i+3]=255;continue;}
-   const yf=y/h;
-   let R=180,G=255,B=255;
-   if(yf<0.25){R=255;G=105;B=180;}      // Heart line zone
-   else if(yf<0.45){R=255;G=255;B=120;} // Head line zone
-   else if(yf<0.70){R=0;G=255;B=180;}   // Life line zone
-   else if(yf<0.85){R=135;G=206;B=255;} // Fate line zone
-   else{R=255;G=165;B=0;}               // Marriage line zone
-   out.data[i]=R;out.data[i+1]=G;out.data[i+2]=B;out.data[i+3]=255;
-  }
- }
- cctx.putImageData(out,0,0);
- const ms=(performance.now()-t0).toFixed(1);
- $("#aiText").innerHTML=`Colorized overlay ✓<br>${w}×${h}px processed in ${ms} ms`;
- log("Analyze completed (v5.7: back camera + color zones).");
-}
-
-function clearAll(){cctx.clearRect(0,0,cap.width,cap.height);$("#aiText").textContent="Cleared. Capture again.";}
-
-$("#startBtn").onclick=startCamera;
-$("#captureBtn").onclick=captureFrame;
-$("#analyzeBtn").onclick=analyze;
-$("#clearBtn").onclick=clearAll;
-
-(async function bootstrap(){
- if(!("mediaDevices" in navigator)){log("No camera access support","error");return;}
- log("Ready. Using back camera (environment mode).");
-})(); // --- A1. RGB -> YCbCr helper
+/* ===== Image helpers ===== */
+// RGB -> YCbCr
 function rgb2ycbcr(r,g,b){
-  const Y  =  0.299*r + 0.587*g + 0.114*b;
+  const Y  = 0.299*r + 0.587*g + 0.114*b;
   const Cb = -0.168736*r - 0.331264*g + 0.5*b + 128;
-  const Cr =  0.5*r - 0.418688*g - 0.081312*b + 128;
+  const Cr = 0.5*r - 0.418688*g - 0.081312*b + 128;
   return [Y,Cb,Cr];
 }
 
-// --- A2. Make palm mask (1=skin, 0=bg). Keeps largest blob.
+// Palm skin mask (largest blob kept)
 function makePalmMask(img,w,h){
-  const mask = new Uint8Array(w*h);
-  // skin threshold (YCbCr) – mobile-friendly
+  const mask=new Uint8Array(w*h);
   for(let i=0,j=0;i<img.data.length;i+=4,j++){
     const r=img.data[i], g=img.data[i+1], b=img.data[i+2];
-    const [Y,Cb,Cr] = rgb2ycbcr(r,g,b);
-    // generic skin window (tune if needed)
-    const isSkin = (Cr>135 && Cr<180 && Cb>85 && Cb<135 && Y>40);
-    mask[j] = isSkin ? 1 : 0;
+    const [Y,Cb,Cr]=rgb2ycbcr(r,g,b);
+    mask[j] = (Cr>135&&Cr<180&&Cb>85&&Cb<135&&Y>40)?1:0;
   }
-  // morphological open/close (3x3)
-  const tmp = new Uint8Array(mask);
-  const idx=(x,y)=>y*w+x;
+  const tmp=new Uint8Array(mask); const idx=(x,y)=>y*w+x;
   // erode
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
     let keep=1; for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++) keep&=tmp[idx(x+xx,y+yy)];
-    mask[idx(x,y)] = keep;
+    mask[idx(x,y)]=keep;
   }
   // dilate
   tmp.set(mask);
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
     let k=0; for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++) k|=tmp[idx(x+xx,y+yy)];
-    mask[idx(x,y)] = k;
+    mask[idx(x,y)]=k;
   }
-  // keep largest connected component
-  const lab = new Int32Array(w*h).fill(-1);
-  let best=-1,bestArea=0,curLab=0;
+  // largest CC
+  const lab=new Int32Array(w*h).fill(-1);
   const qx=new Int32Array(w*h), qy=new Int32Array(w*h);
+  let best=-1, bestArea=0, cur=0;
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
     const i=idx(x,y); if(!mask[i]||lab[i]>=0) continue;
-    let head=0,tail=0,area=0; qx[tail]=x; qy[tail]=y; tail++; lab[i]=curLab;
+    let head=0, tail=0, area=0; qx[tail]=x; qy[tail]=y; tail++; lab[i]=cur;
     while(head<tail){
-      const cx=qx[head], cy=qy[head]; head++;
-      area++;
+      const cx=qx[head], cy=qy[head]; head++; area++;
       for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
         const nx=cx+dx, ny=cy+dy; if(nx<0||ny<0||nx>=w||ny>=h) continue;
-        const ni=idx(nx,ny); if(mask[ni] && lab[ni]<0){ lab[ni]=curLab; qx[tail]=nx; qy[tail]=ny; tail++; }
+        const ni=idx(nx,ny); if(mask[ni]&&lab[ni]<0){ lab[ni]=cur; qx[tail]=nx; qy[tail]=ny; tail++; }
       }
     }
-    if(area>bestArea){bestArea=area; best=curLab;}
-    curLab++;
+    if(area>bestArea){bestArea=area; best=cur;}
+    cur++;
   }
-  const out = new Uint8Array(w*h);
-  if(best>=0) for(let i=0;i<lab.length;i++) out[i] = lab[i]===best ? 1 : 0;
+  const out=new Uint8Array(w*h);
+  if(best>=0) for(let i=0;i<lab.length;i++) out[i]= (lab[i]===best)?1:0;
   return out;
 }
+
+// Thinning (few Zhang–Suen-like passes)
+function thinBinary(bin,w,h,passes=12){
+  const N=new Uint8Array(w*h); const idx=(x,y)=>y*w+x;
+  const get=(x,y)=> (x<0||y<0||x>=w||y>=h)?0:bin[idx(x,y)]?1:0;
+  for(let p=0;p<passes;p++){
+    let changed=false;
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+      const i=idx(x,y); if(!bin[i]) continue;
+      const P=[get(x,y-1),get(x+1,y-1),get(x+1,y),get(x+1,y+1),get(x,y+1),get(x-1,y+1),get(x-1,y),get(x-1,y-1)];
+      const A=P.slice(0,7).reduce((s,_,k)=>s+((P[k]==0&&P[(k+1)%8]==1)?1:0),0);
+      const B=P.reduce((s,v)=>s+v,0);
+      if(A===1&&B>=2&&B<=6&&!(P[0]&&P[2]&&P[4])&&!(P[2]&&P[4]&&P[6])){ N[i]=1; changed=true; }
+    }
+    if(!changed) break;
+    for(let i=0;i<N.length;i++){ if(N[i]){bin[i]=0; N[i]=0;} }
+  }
+  return bin;
+}
+
+// Trace polylines
+function traceLines(bin,w,h,minLen=80){
+  const used=new Uint8Array(w*h), lines=[];
+  const idx=(x,y)=>y*w+x; const N=[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+    const i=idx(x,y); if(!bin[i]||used[i]) continue;
+    let deg=0; for(const [dx,dy] of N){ if(bin[idx(x+dx,y+dy)]) deg++; }
+    if(deg!==1 && deg!==2) continue;
+    const pts=[]; let cx=x, cy=y, guard=0;
+    while(guard++<20000){
+      const ii=idx(cx,cy); if(used[ii]) break; used[ii]=1; pts.push([cx,cy]);
+      let moved=false;
+      for(const [dx,dy] of N){
+        const nx=cx+dx, ny=cy+dy, ni=idx(nx,ny);
+        if(nx<=0||ny<=0||nx>=w-1||ny>=h-1) continue;
+        if(bin[ni] && !used[ni]){ cx=nx; cy=ny; moved=true; break; }
+      }
+      if(!moved) break;
+    }
+    if(pts.length>=minLen) lines.push(pts);
+  }
+  return lines;
+}
+
+// Classify into 7 main lines
+function classifySeven(lines,w,h){
+  const H=[]; const midX=w*0.5;
+  for(const pts of lines){
+    let minx=w,maxx=0,miny=h,maxy=0;
+    for(const [x,y] of pts){ if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; }
+    const len=Math.hypot(maxx-minx,maxy-miny);
+    const cx=(minx+maxx)/2, cy=(miny+maxy)/2;
+    const horiz=(maxx-minx)>(maxy-miny)*1.6, vert=(maxy-miny)>(maxx-minx)*1.4;
+
+    let kind=null;
+    if(horiz && cy<h*0.30) kind="Heart";
+    else if(horiz && cy>=h*0.30 && cy<h*0.50) kind="Head";
+    else if(!horiz && !vert && cy>=h*0.45 && cx<w*0.46) kind="Life";
+    else if(vert && Math.abs(cx-midX)<w*0.15 && cy>h*0.35) kind="Fate";
+    else if(vert && cx>w*0.60 && cy>h*0.40) kind="Sun";
+    else if(horiz && cy>h*0.78) kind="Health";
+    else if(horiz && cy<h*0.25 && cx>w*0.60 && len<w*0.40) kind="Marriage";
+
+    if(kind) H.push({kind,pts,len});
+  }
+  const best={}; for(const x of H){ if(!best[x.kind]||x.len>best[x.kind].len) best[x.kind]=x; }
+  return best; // map kind -> {pts,len}
+}
+
+/* ===== Analyze ===== */
+function analyze(){
+  if(cap.width===0){ log("No capture yet.","warn"); return; }
+  const t0=performance.now();
+  const w=cap.width, h=cap.height;
+  const img=cctx.getImageData(0,0,w,h);
+
+  // background cut (palm mask)
+  const mask = makePalmMask(img,w,h);
+
+  // grayscale
+  const gray=new Uint8ClampedArray(w*h);
+  for(let i=0,j=0;i<img.data.length;i+=4,j++){
+    const r=img.data[i],g=img.data[i+1],b=img.data[i+2];
+    gray[j]=(r*0.299+g*0.587+b*0.114)|0;
+  }
+
+  // Sobel + threshold inside mask only
+  const sob=new Uint8ClampedArray(w*h);
+  const kx=[-1,0,1,-2,0,2,-1,0,1], ky=[-1,-2,-1,0,0,0,1,2,1];
+  const TH=Number($("#edge").value);
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=y*w+x; if(!mask[i]){ sob[i]=0; continue; }
+      let gx=0,gy=0;
+      for(let yy=-1;yy<=1;yy++) for(let xx=-1;xx<=1;xx++){
+        const p=gray[(y+yy)*w+(x+xx)], k=(yy+1)*3+(xx+1);
+        gx+=p*kx[k]; gy+=p*ky[k];
+      }
+      sob[i]=(Math.hypot(gx,gy)>TH)?255:0;
+    }
+  }
+
+  // thinning + trace
+  const bin=new Uint8Array(w*h); for(let i=0;i<sob.length;i++) bin[i]=sob[i]?1:0;
+  thinBinary(bin,w,h,12);
+  const lines=traceLines(bin,w,h,120);
+  const detected=classifySeven(lines,w,h);
+
+  // paint only detected 7 lines, black background
+  const out=cctx.createImageData(w,h);
+  for(let i=0;i<out.data.length;i+=4) out.data[i+3]=255;
+  const colors={
+    Heart:[255,105,180], Head:[255,255,120], Life:[0,255,180],
+    Fate:[135,206,255], Sun:[255,120,0], Marriage:[255,165,0], Health:[255,200,120]
+  };
+  for(const kind in detected){
+    const [R,G,B]=colors[kind];
+    for(const [x,y] of detected[kind].pts){
+      const ii=(y*w+x)*4; out.data[ii]=R; out.data[ii+1]=G; out.data[ii+2]=B;
+    }
+  }
+  cctx.putImageData(out,0,0);
+
+  const ms=(performance.now()-t0).toFixed(1);
+  $("#aiText").innerHTML = `Lines colored: <b>${Object.keys(detected).join(", ")||"—"}</b><br>${w}×${h}px processed in ${ms} ms`;
+  log("Analyze completed (back camera + bg mask + 7 lines).");
+}
+
+function clearAll(){ cctx.clearRect(0,0,cap.width,cap.height); $("#aiText").textContent="Cleared. Capture again."; }
+
+/* ===== Events ===== */
+$("#startBtn").onclick=startCamera;
+$("#captureBtn").onclick=captureFrame;
+$("#analyzeBtn").onclick=analyze;
+$("#clearBtn").onclick=clearAll;
+$("#resSel").onchange=startCamera;
+$("#fpsSel").onchange=startCamera;
+
+/* ===== Bootstrap ===== */
+(async function bootstrap(){
+  if(!("mediaDevices" in navigator)){ log("No camera access support","error"); return; }
+  log("Ready. Using back camera (environment).");
+})();
+</script>
 </body>
 </html>
