@@ -1,43 +1,71 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry AI Insight Report · Sathyadarshana</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Palmistry AI Insight Report · v2.2</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
+*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
-video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+
+/* ===== Stage: single view ===== */
+.stage{
+  position:relative;
+  width:92vw; max-width:420px; margin:0 auto 8px;
+  border:2px solid var(--pri); border-radius:16px; overflow:hidden; background:#000;
+}
+.stage > *{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  display:none;           /* JS controls visibility */
+}
+
 button{border:none;border-radius:20px;padding:10px 16px;margin:4px;font-weight:700}
 .btn{background:var(--neon);color:#000}
 .sec{background:#222;color:#fff;border:1px solid var(--pri)}
-#summary{margin-top:10px}
-small{opacity:.8}
-#reportBox{max-width:480px;margin:12px auto;text-align:left;background:#101820;padding:12px;border-radius:12px;display:none}
-#reportBox h3{margin-top:0;text-align:center;color:#00e5ff}
-.downloadBtn{background:#00e5ff;color:#000;font-weight:bold;margin-top:10px}
 .controls{display:flex;gap:10px;justify-content:center;align-items:center;margin:6px 0 2px}
 .range{width:180px;accent-color:#3b82f6}
+
+#summary{margin-top:8px}
+small{opacity:.8}
+
 .legend{max-width:480px;margin:6px auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
 .tag{display:flex;align-items:center;gap:8px;font-size:14px;opacity:.95}
 .sw{width:14px;height:14px;border-radius:3px;border:1px solid #0003}
+
+#reportBox{max-width:480px;margin:12px auto;text-align:left;background:#101820;padding:12px;border-radius:12px;display:none}
+#reportBox h3{margin-top:0;text-align:center;color:#00e5ff}
+.downloadBtn{background:#00e5ff;color:#000;font-weight:bold;margin-top:10px}
+footer{margin:10px 0 24px;opacity:.8}
 </style>
 </head>
 <body>
 <h1>Palmistry AI Analyzer · 7 Line Insight Report</h1>
-<video id="vid" autoplay playsinline muted></video>
-<canvas id="base" style="display:none"></canvas>
-<canvas id="overlay" style="display:none"></canvas>
-<canvas id="labels" style="display:none"></canvas><div>
+
+<!-- Single-layer media stack -->
+<div class="stage" id="stage">
+  <video id="vid" autoplay playsinline muted></video>
+  <canvas id="base"></canvas>
+  <canvas id="overlay"></canvas>
+  <canvas id="labels"></canvas>
+</div>
+
+<div>
   <button id="capture" class="btn">Capture (Lock)</button>
   <button id="analyze" class="sec">Analyze</button>
   <button id="reset" class="sec">Retake</button>
 </div>
+
 <div class="controls">
   <small>Threshold</small>
-  <input id="thr" class="range" type="range" min="0" max="70" step="2" value="10"/>
+  <input id="thr" class="range" type="range" min="0" max="70" step="2" value="10" />
   <small id="thrVal">10</small>
-</div><div class="legend">
+</div>
+
+<div class="legend">
   <div class="tag"><span class="sw" style="background:#ff5a7d"></span>Heart</div>
   <div class="tag"><span class="sw" style="background:#5aa3ff"></span>Head</div>
   <div class="tag"><span class="sw" style="background:#54f19a"></span>Life</div>
@@ -45,89 +73,127 @@ small{opacity:.8}
   <div class="tag"><span class="sw" style="background:#ffa64d"></span>Sun (Apollo)</div>
   <div class="tag"><span class="sw" style="background:#a78bfa"></span>Mercury (Health)</div>
   <div class="tag"><span class="sw" style="background:#ff9bd3"></span>Marriage</div>
-</div><div id="summary">AI Summary: —</div>
+</div>
+
+<div id="summary">AI Summary: —</div>
+
 <div id="reportBox">
   <h3>🪶 Palmistry Insight Report</h3>
   <div id="reportText"></div>
   <button id="savePDF" class="downloadBtn">Download PDF</button>
 </div>
-<footer><small>© Sathyadarshana · Research Build v2.1 · Works Offline</small></footer><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script>
-const vid=document.getElementById('vid');
-const base=document.getElementById('base');
-const overlay=document.getElementById('overlay');
-const labels=document.getElementById('labels');
-const bctx=base.getContext('2d');
-const octx=overlay.getContext('2d');
-const lctx=labels.getContext('2d');
-const cap=document.getElementById('capture');
-const ana=document.getElementById('analyze');
-const res=document.getElementById('reset');
-const thr=document.getElementById('thr');
-const thrVal=document.getElementById('thrVal');
-const sum=document.getElementById('summary');
-const report=document.getElementById('reportBox');
-const rtext=document.getElementById('reportText');
-const pdfBtn=document.getElementById('savePDF');
-let locked=false, stream=null;
 
-async function openCamera(){
-  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-  vid.srcObject=stream;
-  await new Promise(r=>vid.onloadedmetadata=r);
-  [base,overlay,labels].forEach(c=>{c.width=vid.videoWidth; c.height=vid.videoHeight;});
+<footer><small>© Sathyadarshana · Research Build v2.2 · Works Offline</small></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ===== Elements & Contexts ===== */
+const vid = document.getElementById('vid');
+const base = document.getElementById('base');
+const overlay = document.getElementById('overlay');
+const labels = document.getElementById('labels');
+const bctx = base.getContext('2d');
+const octx = overlay.getContext('2d');
+const lctx = labels.getContext('2d');
+
+const cap = document.getElementById('capture');
+const ana = document.getElementById('analyze');
+const res = document.getElementById('reset');
+const thr = document.getElementById('thr');
+const thrVal = document.getElementById('thrVal');
+const sum = document.getElementById('summary');
+const report = document.getElementById('reportBox');
+const rtext = document.getElementById('reportText');
+const pdfBtn = document.getElementById('savePDF');
+
+let stream = null, locked = false;
+
+/* ===== View helpers (single-layer) ===== */
+function showVideo(){
   vid.style.display='block';
-  base.style.display='none'; overlay.style.display='none'; labels.style.display='none';
+  base.style.display='none';
+  overlay.style.display='none';
+  labels.style.display='none';
 }
+function showStack(){
+  vid.style.display='none';
+  base.style.display='block';
+  overlay.style.display='block';
+  labels.style.display='block';
+}
+
+/* ===== Camera ===== */
+async function openCamera(){
+  stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  vid.srcObject = stream;
+  await new Promise(r=>vid.onloadedmetadata=r);
+  [base,overlay,labels].forEach(c=>{ c.width = vid.videoWidth; c.height = vid.videoHeight; });
+  showVideo();
+  sum.textContent = 'AI Summary: —';
+}
+function stopCam(){ try{ stream?.getTracks().forEach(t=>t.stop()); }catch{} }
 openCamera();
 
-function stopCam(){ try{ stream?.getTracks().forEach(t=>t.stop()); }catch{} }
-
-cap.onclick=()=>{
-  // Draw current frame and HARD LOCK (single layer view)
+/* ===== Capture (lock) ===== */
+cap.onclick = () => {
+  if (!vid.videoWidth) return;
   bctx.drawImage(vid,0,0,base.width,base.height);
-  // Background whitening (push bright bg to white, keep hand)
-  const img=bctx.getImageData(0,0,base.width,base.height); const d=img.data;
+
+  // Balanced background whitening (prevents white-out)
+  const img = bctx.getImageData(0,0,base.width,base.height);
+  const d = img.data;
   for(let i=0;i<d.length;i+=4){
-    const avg=(d[i]+d[i+1]+d[i+2])/3;
-    const k = avg>115 ? 1.45 : 1.12; // brighten background more
-    let r=d[i]*k,g=d[i+1]*k,b=d[i+2]*k, m=(r+g+b)/3, mix=(avg>150)?0.6:0.25;
-    d[i]=Math.min(255, r*(1-mix)+m*mix);
-    d[i+1]=Math.min(255, g*(1-mix)+m*mix);
-    d[i+2]=Math.min(255, b*(1-mix)+m*mix);
+    const avg = (d[i]+d[i+1]+d[i+2])/3;
+    const mix = avg>185 ? 0.55 : (avg>140 ? 0.35 : 0.18); // push bright areas more, keep skin
+    d[i]   = Math.min(255, d[i]*(1-mix)+255*mix);
+    d[i+1] = Math.min(255, d[i+1]*(1-mix)+255*mix);
+    d[i+2] = Math.min(255, d[i+2]*(1-mix)+255*mix);
   }
   bctx.putImageData(img,0,0);
 
   vid.pause(); stopCam();
-  vid.style.display='none'; base.style.display='block'; overlay.style.display='block'; labels.style.display='block';
-  locked=true; sum.textContent='Captured successfully. Frame locked.';
+  locked = true;
+  showStack();                       // << single-layer view
+  sum.textContent = 'Captured successfully. Frame locked.';
 };
 
+/* ===== Analyze (edges + 7 zones) ===== */
 function percentile(arr,p){ const a=Array.from(arr).sort((x,y)=>x-y); const i=Math.floor((p/100)*(a.length-1)); return a[i]; }
 
-ana.onclick=()=>{
+ana.onclick = () => {
   if(!locked){ alert('Please Capture first'); return; }
-  const w=base.width,h=base.height;
-  const img=bctx.getImageData(0,0,w,h); const d=img.data;
-  // --- grayscale ---
-  const gray=new Uint8ClampedArray(w*h);
-  for(let i=0,j=0;i<d.length;i+=4,j++){ gray[j]=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0; }
-  // --- Sobel edges (magnitude) ---
+  const w = base.width, h = base.height;
+
+  // grayscale
+  const src = bctx.getImageData(0,0,w,h).data;
+  const gray = new Uint8ClampedArray(w*h);
+  for(let i=0,j=0;i<src.length;i+=4,j++){
+    gray[j] = (src[i]*0.299 + src[i+1]*0.587 + src[i+2]*0.114)|0;
+  }
+
+  // Sobel magnitude
   const gx=[-1,0,1,-2,0,2,-1,0,1], gy=[-1,-2,-1,0,0,0,1,2,1];
   const mag=new Uint16Array(w*h);
   for(let y=1;y<h-1;y++){
     for(let x=1;x<w-1;x++){
       let sx=0,sy=0,k=0;
-      for(let yy=-1;yy<=1;yy++){ for(let xx=-1;xx<=1;xx++){ const v=gray[(y+yy)*w+(x+xx)]; sx+=v*gx[k]; sy+=v*gy[k]; k++; } }
+      for(let yy=-1;yy<=1;yy++){
+        for(let xx=-1;xx<=1;xx++){
+          const v=gray[(y+yy)*w+(x+xx)];
+          sx+=v*gx[k]; sy+=v*gy[k]; k++;
+        }
+      }
       mag[y*w+x]=Math.min(1023,Math.abs(sx)+Math.abs(sy));
     }
   }
-  // --- adaptive threshold with slider offset ---
+
+  // adaptive T + user offset
   const sample=[]; for(let i=0;i<mag.length;i+=16) sample.push(mag[i]);
   const autoT=percentile(sample,92);
-  const userOff=(Number(thr.value)-10)*6; // -60..+360 range approx
-  const T=autoT+userOff; thrVal.textContent=String(Number(thr.value));
+  const T = autoT + (Number(thr.value)-10)*6;
+  thrVal.textContent = String(Number(thr.value));
 
-  // --- zones for 7 lines ---
+  // zones
   const X={thumb:0.18, center:0.50, ring:0.65, little:0.80};
   const Y={top:0.18, heart1:0.28, head1:0.45, life1:0.60, bottom:0.88};
   const zones=[
@@ -140,43 +206,60 @@ ana.onclick=()=>{
     {name:'Marriage',color:[255,155,211], test:(x,y)=> y<h*Y.top && x>w*X.little*0.9 }
   ];
 
-  // --- draw edge-only overlay, colored by zone ---
-  const overlayImg=octx.createImageData(w,h); let px=0;
+  // lines overlay (edge-only)
+  const out = octx.createImageData(w,h); let px=0;
   for(let y=1;y<h-1;y++){
     for(let x=1;x<w-1;x++){
       const i=y*w+x; if(mag[i]<=T) continue;
       if(mag[i-1]>T && mag[i+1]>T && mag[i-w]>T && mag[i+w]>T) continue; // 1px outline
-      for(const z of zones){ if(z.test(x,y)){ const idx=i*4; overlayImg.data[idx]=z.color[0]; overlayImg.data[idx+1]=z.color[1]; overlayImg.data[idx+2]=z.color[2]; overlayImg.data[idx+3]=220; px++; break; } }
+      for(const z of zones){
+        if(z.test(x,y)){
+          const k=i*4; out.data[k]=z.color[0]; out.data[k+1]=z.color[1]; out.data[k+2]=z.color[2]; out.data[k+3]=220; px++; break;
+        }
+      }
     }
   }
   octx.clearRect(0,0,w,h);
-  octx.filter='brightness(1.05)'; // gentle brighten to blend
-  octx.putImageData(overlayImg,0,0);
+  octx.filter='brightness(1.05)';
+  octx.putImageData(out,0,0);
 
-  // --- place labels (centroids) ---
-  lctx.clearRect(0,0,w,h); lctx.font=`${Math.round(w*0.035)}px system-ui`; lctx.textAlign='center'; lctx.lineWidth=4;
-  const cent=Object.fromEntries(zones.map(z=>[z.name,{x:0,y:0,n:0,col:z.color}]));
+  // labels
+  lctx.clearRect(0,0,w,h);
+  lctx.font=`${Math.round(w*0.035)}px system-ui`; lctx.textAlign='center'; lctx.lineWidth=4;
+  const cent = Object.fromEntries(zones.map(z=>[z.name,{x:0,y:0,n:0,col:z.color}]));
   for(let y=0;y<h;y++){
     for(let x=0;x<w;x++){
-      const i=(y*w+x)*4; const a=overlayImg.data[i+3]; if(!a) continue;
-      const r=overlayImg.data[i], g=overlayImg.data[i+1], b=overlayImg.data[i+2];
+      const idx=(y*w+x)*4, a=out.data[idx+3]; if(!a) continue;
+      const r=out.data[idx], g=out.data[idx+1], b=out.data[idx+2];
       zones.some(z=>{ if(r===z.color[0]&&g===z.color[1]&&b===z.color[2]){ const c=cent[z.name]; c.x+=x; c.y+=y; c.n++; return true; } });
     }
   }
-  for(const z of zones){ const c=cent[z.name]; if(c.n<800) continue; const x=(c.x/c.n)|0, y=(c.y/c.n)|0; lctx.strokeStyle='rgba(0,0,0,.65)'; lctx.fillStyle=`rgb(${c.col[0]},${c.col[1]},${c.col[2]})`; lctx.strokeText(z.name,x,y-6); lctx.fillText(z.name,x,y-6); }
+  for(const z of zones){
+    const c=cent[z.name]; if(c.n<800) continue;
+    const x=(c.x/c.n)|0, y=(c.y/c.n)|0;
+    lctx.strokeStyle='rgba(0,0,0,.65)';
+    lctx.fillStyle=`rgb(${c.col[0]},${c.col[1]},${c.col[2]})`;
+    lctx.strokeText(z.name,x,y-6);
+    lctx.fillText(z.name,x,y-6);
+  }
 
-  sum.textContent=`Analyze complete · 7 lines colored.`;
+  sum.textContent = 'Analyze complete · 7 lines colored.';
   showReport();
 };
 
+/* live adjust */
 thr.addEventListener('input', ()=>{ if(locked) ana.click(); });
 
-res.onclick=async ()=>{ // unlock without reloading page
-  locked=false; report.style.display='none';
-  overlay.style.display='none'; labels.style.display='none'; base.style.display='none';
-  await openCamera(); sum.textContent='AI Summary: —';
+/* ===== Retake ===== */
+res.onclick = async ()=>{
+  locked=false;
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  lctx.clearRect(0,0,labels.width,labels.height);
+  report.style.display='none';
+  await openCamera();
 };
 
+/* ===== Report ===== */
 function showReport(){
   report.style.display='block';
   const meanings=[
@@ -191,13 +274,16 @@ function showReport(){
   rtext.innerHTML = meanings.map(m=>`<p><b>${m.n}</b><br>${m.t}</p>`).join('');
 }
 
-// PDF download
-pdfBtn.onclick=()=>{
-  const {jsPDF}=window.jspdf; const doc=new jsPDF();
-  doc.setFontSize(16); doc.text('Sathyadarshana Palmistry AI Insight Report',10,15);
-  doc.setFontSize(12); doc.text('────────────────────────────',10,20);
-  const lines=rtext.innerText.split('\n'); let y=30; for(const line of lines){ if(!line.trim()) continue; doc.text(line,10,y); y+=8; }
-  doc.save('Palmistry_AI_Report.pdf');
+/* ===== PDF ===== */
+document.getElementById('savePDF').onclick=()=>{
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFontSize(16); doc.text("Sathyadarshana Palmistry AI Insight Report",10,15);
+  doc.setFontSize(12); doc.text("────────────────────────────",10,20);
+  const lines=rtext.innerText.split("\n");
+  let y=30; for(const line of lines){ if(!line.trim()) continue; doc.text(line,10,y); y+=8; }
+  doc.save("Palmistry_AI_Report.pdf");
 };
-</script></body>
+</script>
+</body>
 </html>
