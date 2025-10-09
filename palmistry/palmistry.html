@@ -3,155 +3,194 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>Palmistry – Capture & Analyze (Fix)</title>
+<title>Palmistry – Guided Auto-Capture</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
-*{box-sizing:border-box} body{margin:0;background:#0b0f16;color:#e6f0ff;font-family:system-ui}
-.wrap{max-width:460px;margin:20px auto;padding:12px}
-h1{margin:6px 0 12px;font-weight:700}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui}
+.wrap{max-width:480px;margin:18px auto;padding:12px}
+h1{margin:4px 0 10px}
 .card{position:relative;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000}
 video,canvas{display:block;width:100%;height:auto}
-.overlay{position:absolute;inset:0;pointer-events:none;opacity:.7}
-.bar{display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
-button{background:var(--neon);border:none;color:#000;padding:10px 14px;border-radius:999px;font-weight:700}
-button.sec{background:#1f2937;color:#e6f0ff;border:1px solid #3b82f6}
-small.mono{font-family:ui-monospace,monospace;opacity:.85}
-.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
-.range{accent-color:#3b82f6;width:140px}
-.badge{display:inline-block;background:#111827;border:1px solid #374151;padding:4px 8px;border-radius:10px}
+#base{display:none}
+.overlay{position:absolute;inset:0;pointer-events:none}
+.badge{display:inline-block;background:#0f172a;border:1px solid #334155;padding:6px 10px;border-radius:999px;margin-bottom:6px}
+.ok{border-color:#22c55e;color:#bbf7d0}
+.warn{border-color:#f59e0b;color:#fde68a}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin:10px 0 6px}
+button{border:none;border-radius:999px;padding:10px 14px;font-weight:700}
+.btn{background:var(--neon);color:#000}
+.sec{background:#1f2937;color:#e6f0ff;border:1px solid #3b82f6}
+.ghost{background:transparent;color:#e6f0ff;border:1px dashed #64748b}
+.row{display:flex;gap:8px;align-items:center;justify-content:center}
+.range{width:150px;accent-color:#3b82f6}
+.small{opacity:.85}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;background:#111827;border:1px solid #ef4444;
        color:#fff;padding:8px 12px;border-radius:10px;display:none;z-index:9999}
-footer{opacity:.8;text-align:center;margin:12px 0 24px}
+footer{opacity:.8;text-align:center;margin:10px 0 24px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Palmistry – Capture & Analyze</h1>
+  <div id="status" class="badge">Opening camera…</div>
 
-  <div id="status" class="badge">Ready. Opened camera…</div>
-
-  <div class="card" id="card">
+  <div class="card">
     <video id="vid" playsinline autoplay muted></video>
-    <canvas id="cap" class="overlay"></canvas>
+    <canvas id="guide" class="overlay"></canvas>
+    <canvas id="base"></canvas>
     <canvas id="out" class="overlay"></canvas>
   </div>
 
   <div class="bar">
-    <button id="btnCap">Capture</button>
     <button id="btnAna" class="sec">Analyze</button>
+    <button id="btnRet" class="ghost">Retake (Unlock)</button>
     <div class="row">
       <small>Threshold</small>
       <input id="thr" class="range" type="range" min="10" max="80" step="2" value="34"/>
-      <small id="thrVal" class="mono">34</small>
+      <small id="thrVal" class="small">34</small>
     </div>
   </div>
 
   <div id="summary" class="badge">AI Summary: —</div>
-
+  <p class="small">Tip: අත guide box එකට මැදව – box එක **හරිත** වෙන්න තබාගන්න. Auto-capture → lock.</p>
   <footer><small>© Sathyadarshana · Research build · Works offline</small></footer>
 </div>
-
 <div id="toast" class="toast"></div>
 
 <script>
-const $ = (q)=>document.querySelector(q);
-const vid = $('#vid'), cap = $('#cap'), out = $('#out');
-const btnCap = $('#btnCap'), btnAna = $('#btnAna');
-const statusEl = $('#status'), sumEl = $('#summary');
-const thr = $('#thr'), thrVal = $('#thrVal'), toast = $('#toast');
-let gotFrame = false;
+const $=q=>document.querySelector(q);
+const vid=$('#vid'), base=$('#base'), guide=$('#guide'), out=$('#out');
+const btnAna=$('#btnAna'), btnRet=$('#btnRet'), statusEl=$('#status'), sumEl=$('#summary');
+const thr=$('#thr'), thrVal=$('#thrVal'), toast=$('#toast');
+let locked=false, prevROI=null, autoTimer=null;
 
-function say(s){ statusEl.textContent = s; }
-function oops(e){ toast.textContent = e; toast.style.display='block'; setTimeout(()=>toast.style.display='none',2200); }
+function say(msg,cls){
+  statusEl.className='badge '+(cls||''); statusEl.textContent=msg;
+}
+function oops(e){ toast.textContent=e; toast.style.display='block'; setTimeout(()=>toast.style.display='none',2200); }
 
 async function openCam(){
   try{
-    const str = await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:'environment'}
-    });
-    vid.srcObject = str;
-    await vid.play();
-    // IMPORTANT: set canvas sizes *after* metadata is ready
-    await new Promise(r=>vid.onloadedmetadata=r);
-    const w = vid.videoWidth, h = vid.videoHeight;
-    [cap,out].forEach(c=>{ c.width=w; c.height=h; });
-    say('Camera ready. Frame streaming…');
+    const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    vid.srcObject=st; await vid.play(); await new Promise(r=>vid.onloadedmetadata=r);
+    const w=vid.videoWidth, h=vid.videoHeight;
+    [guide,base,out].forEach(c=>{ c.width=w; c.height=h; });
+    locked=false; base.style.display='none'; vid.style.display='block';
+    drawGuide(); say('Ready. Place hand inside box…','warn');
+    startAutoCapture();
   }catch(err){ oops('Camera error: '+err.message); say('Camera failed'); }
 }
 
-btnCap.addEventListener('click', async ()=>{
-  try{
-    const w = vid.videoWidth, h = vid.videoHeight;
-    if(!w||!h){ oops('Video not ready'); return; }
-    // draw current frame to cap
-    const cx = cap.getContext('2d',{willReadFrequently:true});
-    cx.drawImage(vid,0,0,w,h);
-    gotFrame = true;
-    sumEl.textContent = 'AI Summary: Captured frame.';
-    say('Captured frame. Click Analyze.');
-  }catch(err){ oops('Capture failed: '+err.message); }
+function drawGuide(ok=false){
+  const g=guide.getContext('2d'); g.clearRect(0,0,guide.width,guide.height);
+  const w=guide.width, h=guide.height;
+  const gw=Math.floor(w*0.70), gh=Math.floor(h*0.70); // ROI size
+  const gx=Math.floor((w-gw)/2), gy=Math.floor((h-gh)/2);
+  // background dim
+  g.fillStyle='rgba(0,0,0,0.25)'; g.fillRect(0,0,w,h);
+  // clear ROI
+  g.clearRect(gx,gy,gw,gh);
+  // outline
+  g.strokeStyle = ok? 'rgba(34,197,94,0.95)' : 'rgba(59,130,246,0.95)';
+  g.lineWidth=6; g.strokeRect(gx,gy,gw,gh);
+  // corners
+  g.lineWidth=10;
+  const c=ok?'rgba(34,197,94,1)':'rgba(59,130,246,1)';
+  g.strokeStyle=c;
+  const L=28; // corner length
+  // 4 corners
+  g.beginPath();
+  g.moveTo(gx,gy+L); g.lineTo(gx,gy); g.lineTo(gx+L,gy);
+  g.moveTo(gx+gw-L,gy); g.lineTo(gx+gw,gy); g.lineTo(gx+gw,gy+L);
+  g.moveTo(gx,gy+gh-L); g.lineTo(gx,gy+gh); g.lineTo(gx+L,gy+gh);
+  g.moveTo(gx+gw-L,gy+gh); g.lineTo(gx+gw,gy+gh); g.lineTo(gx+gw,gy+gh-L);
+  g.stroke();
+  // store ROI rect
+  guide._roi={x:gx,y:gy,w:gw,h:gh};
+}
+
+function startAutoCapture(){
+  stopAutoCapture();
+  autoTimer=setInterval(()=>{
+    if(locked) return;
+    const {x,y,w,h}=guide._roi;
+    // grab ROI frame
+    const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h;
+    const tctx=tmp.getContext('2d',{willReadFrequently:true});
+    tctx.drawImage(vid,x,y,w,h,0,0,w,h);
+    const img=tctx.getImageData(0,0,w,h).data;
+
+    // quick metrics: motion & “hand fill” using simple brightness window
+    // motion (mean abs diff vs prev frame)
+    let motion=0, fill=0, N=w*h;
+    if(prevROI){
+      for(let i=0,j=0;i<img.length;i+=4,j++){
+        const g1=(img[i]*0.299+img[i+1]*0.587+img[i+2]*0.114)|0;
+        const g0=prevROI[j]; motion+=Math.abs(g1-g0); if(g1>90 && g1<210) fill++; // mid-tone proxy for skin
+        prevROI[j]=g1;
+      }
+      motion/=N;
+    }else{
+      prevROI=new Uint8ClampedArray(N);
+      for(let i=0,j=0;i<img.length;i+=4,j++){
+        prevROI[j]=(img[i]*0.299+img[i+1]*0.587+img[i+2]*0.114)|0;
+      }
+      return; // need a previous frame
+    }
+
+    const fillPct= (fill/N)*100;   // ~skin-like area %
+    const ok = (motion<2.0) && (fillPct>70); // stable + ROI mostly hand
+    drawGuide(ok);
+    if(ok){ doCapture(); }
+    say(ok?'Stable · box full – auto-capturing…':'Hold steady & fill the box','warn');
+  }, 120);
+}
+
+function stopAutoCapture(){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } }
+
+function doCapture(){
+  if(locked) return;
+  // draw full frame to base (not only ROI) so analysis sees whole hand
+  const b=base.getContext('2d',{willReadFrequently:true});
+  b.drawImage(vid,0,0,base.width,base.height);
+  base.style.display='block'; vid.style.display='none'; locked=true; stopAutoCapture();
+  out.getContext('2d').clearRect(0,0,out.width,out.height);
+  sumEl.textContent='AI Summary: Captured frame (locked).';
+  say('Captured & locked. Press Analyze.','ok');
+}
+
+btnRet.addEventListener('click', ()=>{
+  base.style.display='none'; vid.style.display='block'; locked=false;
+  out.getContext('2d').clearRect(0,0,out.width,out.height);
+  sumEl.textContent='AI Summary: —'; prevROI=null; startAutoCapture();
+  say('Live camera. Place hand into box…','warn');
 });
 
 btnAna.addEventListener('click', ()=>{
-  if(!gotFrame){ oops('No frame. Tap Capture first.'); return; }
+  if(!locked){ oops('Not locked yet. Wait for auto-capture or press Retake.'); return; }
   try{
-    const t0 = performance.now();
-    const w = cap.width, h = cap.height;
-    const srcCtx = cap.getContext('2d',{willReadFrequently:true});
-    const img = srcCtx.getImageData(0,0,w,h);
-    // grayscale + local contrast + threshold
-    const data = img.data, gray = new Uint8ClampedArray(w*h);
-    for(let i=0,j=0;i<data.length;i+=4,j++){
-      const r=data[i], g=data[i+1], b=data[i+2];
-      gray[j] = (r*0.299 + g*0.587 + b*0.114)|0;
-    }
-    // simple high-pass (unsharp) to make lines pop
-    const hp = new Uint8ClampedArray(w*h);
-    for(let y=1;y<h-1;y++){
-      for(let x=1;x<w-1;x++){
-        const i=y*w+x;
-        const c = gray[i]*5 - (gray[i-1]+gray[i+1]+gray[i-w]+gray[i+w]);
-        hp[i] = Math.max(0, Math.min(255, c+128));
-      }
-    }
-    const T = Number(thr.value); thrVal.textContent = T;
-    const mask = new Uint8ClampedArray(w*h);
-    let cnt=0;
-    for(let i=0;i<mask.length;i++){
-      const v = hp[i] > (128+T) ? 255 : 0;
-      mask[i]=v; if(v) cnt++;
-    }
-    // draw overlay (colored)
-    const octx = out.getContext('2d');
-    const overlay = octx.createImageData(w,h);
+    const t0=performance.now(), w=base.width, h=base.height;
+    const bctx=base.getContext('2d',{willReadFrequently:true});
+    const img=bctx.getImageData(0,0,w,h);
+    const data=img.data, gray=new Uint8ClampedArray(w*h);
+    for(let i=0,j=0;i<data.length;i+=4,j++){ const r=data[i],g=data[i+1],b=data[i+2]; gray[j]=(r*0.299+g*0.587+b*0.114)|0; }
+    const hp=new Uint8ClampedArray(w*h);
+    for(let y=1;y<h-1;y++){ for(let x=1;x<w-1;x++){ const i=y*w+x; const c=gray[i]*5-(gray[i-1]+gray[i+1]+gray[i-w]+gray[i+w]); hp[i]=Math.max(0,Math.min(255,c+128)); } }
+    const T=Number(thr.value); thrVal.textContent=T;
+    const mask=new Uint8ClampedArray(w*h); let px=0;
+    for(let i=0;i<mask.length;i++){ const v = hp[i]>(128+T)?255:0; mask[i]=v; if(v) px++; }
+    const octx=out.getContext('2d'), overlay=octx.createImageData(w,h);
     for(let i=0,j=0;i<overlay.data.length;i+=4,j++){
-      if(mask[j]){
-        overlay.data[i]=0;         // R
-        overlay.data[i+1]=255;     // G
-        overlay.data[i+2]=180;     // B
-        overlay.data[i+3]=190;     // A
-      }else{
-        overlay.data[i]=0; overlay.data[i+1]=0; overlay.data[i+2]=0; overlay.data[i+3]=0;
-      }
+      if(mask[j]){ overlay.data[i]=0; overlay.data[i+1]=255; overlay.data[i+2]=180; overlay.data[i+3]=190; }
     }
     octx.putImageData(overlay,0,0);
-    const ms = (performance.now()-t0).toFixed(1);
-    say(`Analyze completed (overlay + ${cnt.toLocaleString()} px).`);
-    sumEl.textContent = `AI Summary: Lines highlighted · ${w}×${h} processed in ${ms} ms · Thr=${T}`;
-  }catch(err){
-    oops('Analyze failed: '+err.message);
-    say('Analyze failed.');
-  }
+    const ms=(performance.now()-t0).toFixed(1);
+    say(`Analyze completed · overlay ${px.toLocaleString()}px`,'ok');
+    sumEl.textContent=`AI Summary: Lines highlighted · ${w}×${h} · ${ms} ms · Thr=${T}`;
+  }catch(err){ oops('Analyze failed: '+err.message); say('Analyze failed'); }
 });
 
-// slider live re-run if already captured
-thr.addEventListener('input', ()=>{
-  thrVal.textContent = thr.value;
-  if(gotFrame) btnAna.click();
-});
-
-// Prevent overlay blocking buttons on some UIs
-document.querySelectorAll('.overlay').forEach(el=>el.style.pointerEvents='none');
+thr.addEventListener('input', ()=>{ thrVal.textContent=thr.value; if(locked) btnAna.click(); });
 
 openCam();
 </script>
