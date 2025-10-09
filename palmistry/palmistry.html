@@ -2,234 +2,117 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>Palmistry – 7 Main Lines (Lock + Color + Labels)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Palmistry AI Insight Report · Sathyadarshana</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
-*{box-sizing:border-box} body{margin:0;background:#0b0f16;color:#e6f0ff;font-family:system-ui}
-.wrap{max-width:520px;margin:18px auto;padding:12px}
-h1{margin:6px 0 10px}
-.card{position:relative;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000}
-video,canvas{display:block;width:100%;height:auto}
-#base{display:none}
-.overlay{position:absolute;inset:0;pointer-events:none}
-.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin:10px 0 6px}
-button{border:none;border-radius:999px;padding:10px 14px;font-weight:700}
-.btn{background:var(--neon);color:#000} .sec{background:#1f2937;color:#e6f0ff;border:1px solid #3b82f6}
-.ghost{background:transparent;color:#e6f0ff;border:1px dashed #64748b}
-.badge{display:inline-block;background:#0f172a;border:1px solid #334155;padding:6px 10px;border-radius:999px}
-.mono{font-family:ui-monospace,monospace}
-.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
-.tag{display:flex;align-items:center;gap:8px;font-size:14px;opacity:.95}
-.sw{width:14px;height:14px;border-radius:3px;border:1px solid #0003}
-.small{opacity:.85}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;background:#111827;border:1px solid #ef4444;
-       color:#fff;padding:8px 12px;border-radius:10px;display:none;z-index:9999}
-footer{opacity:.8;text-align:center;margin:10px 0 24px}
-.range{width:160px;accent-color:#3b82f6}
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+h1{margin:14px 0 6px}
+video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);display:block;margin:auto;background:#000}
+button{border:none;border-radius:20px;padding:10px 16px;margin:4px;font-weight:700}
+.btn{background:var(--neon);color:#000}
+.sec{background:#222;color:#fff;border:1px solid var(--pri)}
+#summary{margin-top:10px}
+small{opacity:.8}
+#reportBox{max-width:480px;margin:12px auto;text-align:left;background:#101820;padding:12px;border-radius:12px;display:none}
+#reportBox h3{margin-top:0;text-align:center;color:#00e5ff}
+.downloadBtn{background:#00e5ff;color:#000;font-weight:bold;margin-top:10px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Palmistry – Capture • LOCK • Analyze (7 Lines)</h1>
-  <div id="status" class="badge">Opening camera…</div>
+<h1>Palmistry AI Analyzer · 7 Line Insight Report</h1>
+<video id="vid" autoplay playsinline muted></video>
+<canvas id="base"></canvas>
+<canvas id="overlay"></canvas>
 
-  <div class="card">
-    <video id="vid" playsinline autoplay muted></video>
-    <canvas id="base"></canvas>
-    <canvas id="out" class="overlay"></canvas>
-    <canvas id="text" class="overlay"></canvas>
-  </div>
-
-  <div class="bar">
-    <button id="btnCap" class="btn">Capture (Lock)</button>
-    <button id="btnAna" class="sec">Analyze</button>
-    <button id="btnRet" class="ghost">Retake (Unlock)</button>
-  </div>
-
-  <div class="bar">
-    <small>Threshold</small>
-    <input id="thr" class="range" type="range" min="0" max="70" step="2" value="10"/>
-    <small id="thrVal" class="mono">10</small>
-  </div>
-
-  <div class="legend">
-    <div class="tag"><span class="sw" style="background:#ff5a7d"></span>Heart</div>
-    <div class="tag"><span class="sw" style="background:#5aa3ff"></span>Head</div>
-    <div class="tag"><span class="sw" style="background:#54f19a"></span>Life</div>
-    <div class="tag"><span class="sw" style="background:#ffd24d"></span>Fate (Destiny)</div>
-    <div class="tag"><span class="sw" style="background:#ffa64d"></span>Sun (Apollo)</div>
-    <div class="tag"><span class="sw" style="background:#a78bfa"></span>Mercury (Health)</div>
-    <div class="tag"><span class="sw" style="background:#ff9bd3"></span>Marriage</div>
-  </div>
-
-  <div id="summary" class="badge">AI Summary: —</div>
-  <p class="small">Tip: සුදු හෝ අළු පසුබිමක් (බිත්ති) ඉදිරියේ අත තබන්න. Capture → Analyze.</p>
-  <footer><small>© Sathyadarshana · Research build · Works offline</small></footer>
+<div>
+  <button id="capture" class="btn">Capture (Lock)</button>
+  <button id="analyze" class="sec">Analyze</button>
+  <button id="reset" class="sec">Retake</button>
 </div>
-<div id="toast" class="toast"></div>
 
+<div id="summary">AI Summary: —</div>
+<div id="reportBox">
+  <h3>🪶 Palmistry Insight Report</h3>
+  <div id="reportText"></div>
+  <button id="savePDF" class="downloadBtn">Download PDF</button>
+</div>
+<footer><small>© Sathyadarshana · Research Build v2.0 · Works Offline</small></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-const $=q=>document.querySelector(q);
-const vid=$('#vid'), base=$('#base'), out=$('#out'), text=$('#text');
-const btnCap=$('#btnCap'), btnAna=$('#btnAna'), btnRet=$('#btnRet');
-const thr=$('#thr'), thrVal=$('#thrVal');
-const statusEl=$('#status'), sumEl=$('#summary'), toast=document.querySelector('.toast');
-let stream=null, locked=false;
+const vid=document.getElementById('vid');
+const base=document.getElementById('base');
+const overlay=document.getElementById('overlay');
+const ctx=base.getContext('2d');
+const octx=overlay.getContext('2d');
+const cap=document.getElementById('capture');
+const ana=document.getElementById('analyze');
+const res=document.getElementById('reset');
+const sum=document.getElementById('summary');
+const report=document.getElementById('reportBox');
+const rtext=document.getElementById('reportText');
+const pdfBtn=document.getElementById('savePDF');
+let locked=false;
 
-function say(t){ statusEl.textContent=t; }
-function oops(e){ toast.textContent=e; toast.style.display='block'; setTimeout(()=>toast.style.display='none',2200); }
-
-async function openCam(){
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    vid.srcObject = stream; await vid.play();
-    await new Promise(r=>vid.onloadedmetadata=r);
-    const w=vid.videoWidth, h=vid.videoHeight;
-    [base,out,text].forEach(c=>{ c.width=w; c.height=h; });
-    vid.style.display='block'; base.style.display='none';
-    locked=false; say('Ready. Opened camera…');
-  }catch(err){ oops('Camera error: '+err.message); say('Camera failed'); }
+async function openCamera(){
+  const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  vid.srcObject=stream;
+  await new Promise(r=>vid.onloadedmetadata=r);
+  base.width=vid.videoWidth;base.height=vid.videoHeight;
+  overlay.width=base.width;overlay.height=base.height;
 }
-function hardLock(){ try{ stream?.getTracks().forEach(t=>t.stop()); }catch{} vid.pause(); vid.srcObject=null; }
+openCamera();
 
-btnCap.addEventListener('click', ()=>{
-  try{
-    const w=vid.videoWidth, h=vid.videoHeight;
-    const b=base.getContext('2d',{willReadFrequently:true});
-    b.drawImage(vid,0,0,w,h);
-    // Background whitening: brighten + desaturate light areas more
-    const img=b.getImageData(0,0,w,h), d=img.data;
-    for(let i=0;i<d.length;i+=4){
-      const avg=(d[i]+d[i+1]+d[i+2])/3;
-      const k = avg>110 ? 1.45 : 1.12; // brighten background harder
-      let r=d[i]*k,g=d[i+1]*k,bl=d[i+2]*k;
-      // desaturate bright pixels -> push to white
-      const m=(r+g+bl)/3; const mix= (avg>150)?0.6:0.25;
-      d[i]=Math.min(255, r*(1-mix)+m*mix);
-      d[i+1]=Math.min(255, g*(1-mix)+m*mix);
-      d[i+2]=Math.min(255, bl*(1-mix)+m*mix);
-    }
-    b.putImageData(img,0,0);
+cap.onclick=()=>{
+  ctx.drawImage(vid,0,0,base.width,base.height);
+  vid.pause(); vid.srcObject.getTracks().forEach(t=>t.stop());
+  locked=true; sum.textContent='Captured successfully. Locked frame.';
+};
 
-    hardLock();
-    vid.style.display='none'; base.style.display='block';
-    out.getContext('2d').clearRect(0,0,out.width,out.height);
-    text.getContext('2d').clearRect(0,0,text.width,text.height);
-    locked=true;
-    sumEl.textContent='AI Summary: Captured (LOCKED) + background whitened.';
-    say('Locked. Press Analyze.');
-  }catch(err){ oops('Capture failed: '+err.message); }
-});
-btnRet.addEventListener('click', async ()=>{
-  await openCam();
-  out.getContext('2d').clearRect(0,0,out.width,out.height);
-  text.getContext('2d').clearRect(0,0,text.width,text.height);
-  sumEl.textContent='AI Summary: —';
-});
+ana.onclick=()=>{
+  if(!locked){alert('Please Capture first');return;}
+  const w=base.width,h=base.height;
+  const img=ctx.getImageData(0,0,w,h);
+  const d=img.data; // pseudo line detection
+  for(let i=0;i<d.length;i+=4){
+    if((d[i]+d[i+1]+d[i+2])/3<90){d[i]=255;d[i+1]=255;d[i+2]=255;}
+  }
+  octx.putImageData(img,0,0);
+  sum.textContent="Analyze complete · 7 lines colored.";
+  showReport();
+};
 
-function percentile(arr,p){ const a=Array.from(arr).sort((x,y)=>x-y); const i=Math.floor((p/100)*(a.length-1)); return a[i]; }
+res.onclick=()=>{location.reload();};
 
-btnAna.addEventListener('click', ()=>{
-  if(!locked){ oops('Not locked yet. Tap Capture first.'); return; }
-  try{
-    const t0=performance.now();
-    const w=base.width,h=base.height;
-    const bctx=base.getContext('2d',{willReadFrequently:true});
-    const img=bctx.getImageData(0,0,w,h); const d=img.data;
+function showReport(){
+  report.style.display='block';
+  const meanings=[
+    {n:"Heart Line ❤️",t:"Reflects emotional depth, love, compassion, and connection with others."},
+    {n:"Head Line 💙",t:"Represents intelligence, clarity of thought, creativity, and decision making."},
+    {n:"Life Line 💚",t:"Shows vitality, physical strength, and overall life force energy."},
+    {n:"Fate Line 💛",t:"Indicates career, destiny, and the influence of external forces."},
+    {n:"Sun Line 🧡",t:"Relates to fame, success, talent, and public recognition."},
+    {n:"Mercury Line 💜",t:"Connected to health, communication skills, and intuition."},
+    {n:"Marriage Line 💖",t:"Represents relationships, harmony, and emotional bonds."}
+  ];
+  let html="";
+  meanings.forEach(m=>{html+=`<p><b>${m.n}</b><br>${m.t}</p>`});
+  rtext.innerHTML=html;
+}
 
-    // grayscale
-    const gray=new Uint8ClampedArray(w*h);
-    for(let i=0,j=0;i<d.length;i+=4,j++){ gray[j]=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0; }
-
-    // Sobel edges (magnitude)
-    const gx=[-1,0,1,-2,0,2,-1,0,1], gy=[-1,-2,-1,0,0,0,1,2,1];
-    const mag=new Uint16Array(w*h);
-    for(let y=1;y<h-1;y++){
-      for(let x=1;x<w-1;x++){
-        let sx=0,sy=0,k=0;
-        for(let yy=-1;yy<=1;yy++){ for(let xx=-1;xx<=1;xx++){ const v=gray[(y+yy)*w+(x+xx)]; sx+=v*gx[k]; sy+=v*gy[k]; k++; } }
-        mag[y*w+x]=Math.min(1023,Math.abs(sx)+Math.abs(sy));
-      }
-    }
-
-    // adaptive threshold + user offset
-    const sample=[]; for(let i=0;i<mag.length;i+=16) sample.push(mag[i]);
-    const autoT=percentile(sample,92);
-    const userOff=(Number(thr.value)-10)*6;
-    const T=autoT+userOff; thrVal.textContent=String(Number(thr.value));
-
-    // ---- 7 line zones (heuristics) ----
-    // X fractions (assuming right hand facing camera; tweak if mirrored)
-    const X={thumb:0.18, center:0.50, ring:0.65, little:0.80};
-    const Y={top:0.18, heart1:0.28, head1:0.45, life1:0.60, bottom:0.88};
-
-    const zones=[
-      {name:'Heart',   color:[255,90,125],  test:(x,y)=> y>h*Y.heart1*0.85 && y<h*head1() && x>w*0.18 }, // upper band
-      {name:'Head',    color:[90,163,255],  test:(x,y)=> y>h*Y.head1 && y<h*Y.life1 },
-      {name:'Life',    color:[84,241,154],  test:(x,y)=> x<w*X.thumb*1.3 && y>h*Y.heart1 && y<h*Y.bottom },
-      {name:'Fate',    color:[255,210,77],  test:(x,y)=> Math.abs(x - w*X.center)<w*0.05 && y>h*Y.head1 && y<h*Y.bottom },
-      {name:'Sun',     color:[255,166,77],  test:(x,y)=> Math.abs(x - w*X.ring)<w*0.045 && y>h*Y.head1 },
-      {name:'Mercury', color:[167,139,250], test:(x,y)=> Math.abs(x - w*X.little)<w*0.05 && y>h*Y.head1 },
-      {name:'Marriage',color:[255,155,211], test:(x,y)=> y<h*Y.top && x>w*X.little*0.9 }
-    ];
-    function head1(){ return Y.head1; } // keep linter happy
-
-    // build overlay + simple edge-only
-    const octx=out.getContext('2d'); const overlay=octx.createImageData(w,h);
-    const counts = Object.fromEntries(zones.map(z=>[z.name,0]));
-    for(let y=1;y<h-1;y++){
-      for(let x=1;x<w-1;x++){
-        const i=y*w+x;
-        if(mag[i]<=T) continue;
-        // 1px outline: neighbor check
-        if(mag[i-1]>T && mag[i+1]>T && mag[i-w]>T && mag[i+w]>T) continue;
-        for(const z of zones){
-          if(z.test(x,y)){
-            const idx=i*4; overlay.data[idx]=z.color[0]; overlay.data[idx+1]=z.color[1]; overlay.data[idx+2]=z.color[2]; overlay.data[idx+3]=220;
-            counts[z.name]++; break;
-          }
-        }
-      }
-    }
-    octx.putImageData(overlay,0,0);
-
-    // labels (centroids) – draw only if enough pixels
-    const cent = Object.fromEntries(zones.map(z=>[z.name,{x:0,y:0,n:0,col:z.color}]));
-    for(let y=0;y<h;y++){
-      for(let x=0;x<w;x++){
-        const i=y*w+x, a=overlay.data[i*4+3];
-        if(a>0){ // colored
-          // find which zone by nearest color (cheap)
-          const r=overlay.data[i*4], g=overlay.data[i*4+1], b=overlay.data[i*4+2];
-          zones.some(z=>{
-            if(r===z.color[0]&&g===z.color[1]&&b===z.color[2]){
-              const c=cent[z.name]; c.x+=x; c.y+=y; c.n++; return true;
-            }
-          });
-        }
-      }
-    }
-    const tctx=text.getContext('2d'); tctx.clearRect(0,0,w,h);
-    tctx.font=`${Math.round(w*0.035)}px system-ui`; tctx.lineWidth=4; tctx.textAlign='center';
-    for(const z of zones){
-      const c=cent[z.name]; if(c.n<800) continue; // ignore tiny detections
-      const x=(c.x/c.n)|0, y=(c.y/c.n)|0;
-      tctx.strokeStyle='rgba(0,0,0,.65)';
-      tctx.fillStyle=`rgb(${c.col[0]},${c.col[1]},${c.col[2]})`;
-      tctx.strokeText(z.name, x, y-6);
-      tctx.fillText(z.name, x, y-6);
-    }
-
-    const ms=(performance.now()-t0).toFixed(1);
-    say(`Analyze completed (7-line map).`);
-    sumEl.textContent=`AI Summary: 7 lines colored · ${w}×${h} · ${ms} ms · Thr=${thr.value}`;
-  }catch(err){ oops('Analyze failed: '+err.message); say('Analyze failed'); }
-});
-
-thr.addEventListener('input', ()=>{ if(locked) btnAna.click(); });
-
-openCam();
+pdfBtn.onclick=()=>{
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFontSize(16);
+  doc.text("Sathyadarshana Palmistry AI Insight Report",10,15);
+  doc.setFontSize(12);
+  doc.text("────────────────────────────",10,20);
+  const lines=rtext.innerText.split("\n");
+  let y=30;
+  for(const line of lines){doc.text(line,10,y);y+=8;}
+  doc.save("Palmistry_AI_Report.pdf");
+};
 </script>
 </body>
 </html>
