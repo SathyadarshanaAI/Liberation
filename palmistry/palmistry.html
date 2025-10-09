@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>Palmistry Universal v5.6 · Sathyadarshana</title>
+<title>Palmistry Universal v5.7 · Sathyadarshana</title>
 <style>
 :root{
  --pri:#16f0a7;--neon:#00e5ff;--bg:#0b0f16;--ink:#e6f0ff;
@@ -11,7 +11,7 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui;text-align:center}
-main{max-width:980px;margin:auto;padding:14px}
+main{max-width:960px;margin:auto;padding:14px}
 h1{margin:10px 0 2px}
 .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 .card{background:var(--card);border:1px solid #122136;border-radius:16px;padding:10px;box-shadow:0 0 0 1px #0a1520 inset}
@@ -28,8 +28,8 @@ footer{margin:14px 0 6px;text-align:center;color:#9db3c8}
 </head>
 <body>
 <main>
-<h1>Palmistry Universal <span style="font-size:0.8em;color:var(--neon)">v5.6</span></h1>
-<small>AI Edge Detection + Color Overlay</small>
+<h1>Palmistry Universal <span style="font-size:0.8em;color:var(--neon)">v5.7</span></h1>
+<small>AI Edge Detection + Color Zones (Back Camera)</small>
 
 <div class="row">
 <section class="card" style="flex:1 1 480px">
@@ -48,27 +48,23 @@ footer{margin:14px 0 6px;text-align:center;color:#9db3c8}
     <option value="1920x1080">1920×1080</option>
     <option value="1280x720" selected>1280×720</option>
     <option value="960x540">960×540</option>
-    <option value="640x480">640×480</option>
   </select></label>
-  <label>FPS<select id="fpsSel">
-    <option>60</option><option selected>30</option><option>24</option>
-  </select></label>
-  <label>Zoom<input id="zoom" type="range" min="1" max="5" value="1" step="0.1"></label>
+  <label>FPS<select id="fpsSel"><option>60</option><option selected>30</option></select></label>
   <label>Edge<input id="edge" type="range" min="20" max="120" value="70"></label>
  </div>
  <hr/>
- <div id="status" class="notice">Press <b>Start</b> and allow camera access.</div>
+ <div id="status" class="notice">Press <b>Start</b> to use back camera.</div>
 </section>
 
 <section class="card" style="flex:1 1 420px">
  <canvas id="capture" width="0" height="0"></canvas>
  <hr/>
  <h3>AI Summary</h3>
- <div id="aiText" style="color:var(--muted)">Run <b>Analyze</b> to generate colorized edge map.</div>
+ <div id="aiText" style="color:var(--muted)">Run <b>Analyze</b> after capture.</div>
 </section>
 </div>
 
-<footer>© Sathyadarshana · Neon Jelly UI · Works offline</footer>
+<footer>© Sathyadarshana · Neon Jelly UI · Back Camera Enabled</footer>
 </main>
 
 <script>
@@ -83,17 +79,18 @@ const log=(m,t="info")=>{
 let stream=null,track=null;
 const cam=$("#cam"),cap=$("#capture"),cctx=cap.getContext("2d");
 
-async function listDevices(){
- try{
-  const devs=await navigator.mediaDevices.enumerateDevices();
-  console.log("Devices:",devs.filter(d=>d.kind==="videoinput").length);
- }catch(e){log("Device list failed: "+e.message,"warn");}
-}
-
 function constraints(){
  const [w,h]=$("#resSel").value.split("x").map(Number);
  const fps=Number($("#fpsSel").value);
- return {audio:false,video:{width:{ideal:w},height:{ideal:h},frameRate:{ideal:fps}}};
+ return {
+  audio:false,
+  video:{
+    width:{ideal:w},
+    height:{ideal:h},
+    frameRate:{ideal:fps},
+    facingMode:{exact:"environment"} // ✅ back camera
+  }
+ };
 }
 
 async function startCamera(){
@@ -103,22 +100,20 @@ async function startCamera(){
   cam.srcObject=stream;
   await cam.play();
   track=stream.getVideoTracks()[0];
-  log(`Camera started · ${track.label||"video"} · ${cam.videoWidth}×${cam.videoHeight}@${$("#fpsSel").value}fps`);
- }catch(e){log("Camera start failed: "+e.message,"error");}
+  log(`Camera started · ${track.label||"video"} (back) · ${cam.videoWidth}×${cam.videoHeight}`);
+ }catch(e){log("Camera failed: "+e.message,"error");}
 }
-
 function stopCamera(){try{stream?.getTracks().forEach(t=>t.stop());}catch{}}
-
 function captureFrame(){
- if(!cam.videoWidth){log("Camera not ready yet.","warn");return;}
+ if(!cam.videoWidth){log("Camera not ready","warn");return;}
  cap.width=cam.videoWidth;cap.height=cam.videoHeight;
  cctx.drawImage(cam,0,0,cap.width,cap.height);
  $("#aiText").innerHTML="Captured frame ready. Click <b>Analyze</b>.";
- log("Captured current frame.");
+ log("Captured.");
 }
 
 function analyze(){
- if(cap.width===0){log("No capture yet. Click Capture first.","warn");return;}
+ if(cap.width===0){log("No capture yet.","warn");return;}
  const t0=performance.now();
  const w=cap.width,h=cap.height;
  const img=cctx.getImageData(0,0,w,h);
@@ -140,28 +135,25 @@ function analyze(){
    sob[i]=Math.hypot(gx,gy)>$("#edge").value?255:0;
   }
  }
-
- // ---- Color overlay ----
  const out=cctx.createImageData(w,h);
  for(let y=0;y<h;y++){
   for(let x=0;x<w;x++){
    const i=(y*w+x)*4;
    if(!sob[y*w+x]){out.data[i+3]=255;continue;}
-   let R=180,G=255,B=255;
    const yf=y/h;
-   if(yf<0.25){R=255;G=105;B=180;}
-   else if(yf<0.45){R=255;G=255;B=120;}
-   else if(yf<0.70){R=0;G=255;B=180;}
-   else if(yf<0.85){R=135;G=206;B=255;}
-   else{R=255;G=165;B=0;}
+   let R=180,G=255,B=255;
+   if(yf<0.25){R=255;G=105;B=180;}      // Heart line zone
+   else if(yf<0.45){R=255;G=255;B=120;} // Head line zone
+   else if(yf<0.70){R=0;G=255;B=180;}   // Life line zone
+   else if(yf<0.85){R=135;G=206;B=255;} // Fate line zone
+   else{R=255;G=165;B=0;}               // Marriage line zone
    out.data[i]=R;out.data[i+1]=G;out.data[i+2]=B;out.data[i+3]=255;
   }
  }
-
  cctx.putImageData(out,0,0);
  const ms=(performance.now()-t0).toFixed(1);
- $("#aiText").innerHTML=`Colorized overlay ✓ <br>${w}×${h}px processed in ${ms} ms`;
- log("Analyze completed (Sobel edge + color overlay).");
+ $("#aiText").innerHTML=`Colorized overlay ✓<br>${w}×${h}px processed in ${ms} ms`;
+ log("Analyze completed (v5.7: back camera + color zones).");
 }
 
 function clearAll(){cctx.clearRect(0,0,cap.width,cap.height);$("#aiText").textContent="Cleared. Capture again.";}
@@ -170,13 +162,10 @@ $("#startBtn").onclick=startCamera;
 $("#captureBtn").onclick=captureFrame;
 $("#analyzeBtn").onclick=analyze;
 $("#clearBtn").onclick=clearAll;
-$("#resSel").onchange=startCamera;
-$("#fpsSel").onchange=startCamera;
 
 (async function bootstrap(){
  if(!("mediaDevices" in navigator)){log("No camera access support","error");return;}
- await listDevices();
- log("Ready. Choose resolution/FPS if needed, then press Start.");
+ log("Ready. Using back camera (environment mode).");
 })();
 </script>
 </body>
