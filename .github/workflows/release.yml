@@ -1,0 +1,42 @@
+name: Release & Deploy
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Node setup
+        uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: Bump version in manifest & lab-core
+        run: |
+          NEWV=$(node -e "let m=require('./palmistry/manifest.json');let v=m.version.split('.');v[2]++;m.version=v.join('.');console.log(JSON.stringify(m,null,2))" > palmistry/manifest.json.new && jq -r .version palmistry/manifest.json.new)
+          mv palmistry/manifest.json.new palmistry/manifest.json
+          sed -i "s/window.LAB_VERSION = '.*'/window.LAB_VERSION = '${NEWV}'/" palmistry/core/lab-core.js
+          echo "New version: ${NEWV}"
+
+      - name: Build hashes (optional)
+        run: |
+          node -e "
+            const fs=require('fs'), crypto=require('crypto');
+            const mf=JSON.parse(fs.readFileSync('palmistry/manifest.json','utf8'));
+            mf.modules=mf.modules.map(m=>{
+              const data=fs.readFileSync('palmistry/'+m.path);
+              m.sha256=crypto.createHash('sha256').update(data).digest('hex');
+              return m;
+            });
+            fs.writeFileSync('palmistry/manifest.json', JSON.stringify(mf,null,2));
+          "
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: palmistry
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
