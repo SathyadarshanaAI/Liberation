@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Palmistry Photo Analyzer · v3.0 (Photo-only)</title>
+<title>Palmistry Photo Analyzer · v3.1 (Photo-only)</title>
 <style>
-:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
+:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff;--card:#101820}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
-.stage{position:relative;width:92vw;max-width:420px;margin:0 auto 8px;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000;aspect-ratio:3/4}
+.stage{position:relative;width:92vw;max-width:480px;margin:0 auto 8px;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000;aspect-ratio:3/4}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
 button{border:none;border-radius:20px;padding:10px 16px;margin:4px;font-weight:700;cursor:pointer}
 .btn{background:var(--neon);color:#000}
@@ -18,15 +18,16 @@ button{border:none;border-radius:20px;padding:10px 16px;margin:4px;font-weight:7
 .controls{display:flex;gap:10px;justify-content:center;align-items:center;margin:6px 0 2px}
 .range{width:180px;accent-color:#3b82f6}
 small{opacity:.8}
-.legend{max-width:480px;margin:6px auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
+.legend{max-width:520px;margin:6px auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
 .tag{display:flex;align-items:center;gap:8px;font-size:14px;opacity:.95}
 .sw{width:14px;height:14px;border-radius:3px;border:1px solid #0003}
-#err{max-width:480px;margin:6px auto;color:#ff9b9b;min-height:20px}
+#err{max-width:520px;margin:6px auto;color:#ff9b9b;min-height:20px}
 #summary{margin-top:8px}
-#reportBox{max-width:480px;margin:12px auto;text-align:left;background:#101820;padding:12px;border-radius:12px;display:none}
+#reportBox{max-width:520px;margin:12px auto;text-align:left;background:var(--card);padding:12px;border-radius:12px;display:none}
 #reportBox h3{text-align:center;color:#00e5ff;margin-top:0}
 .downloadBtn{background:#00e5ff;color:#000;font-weight:bold;margin-top:10px}
 footer{margin:12px 0 24px;opacity:.8}
+.tip{max-width:520px;margin:6px auto;background:#13202b;border:1px solid #0aefff30;padding:10px;border-radius:10px}
 </style>
 </head>
 <body>
@@ -37,6 +38,8 @@ footer{margin:12px 0 24px;opacity:.8}
   <canvas id="overlay"></canvas>
   <canvas id="labels"></canvas>
 </div>
+
+<div class="tip"><small>Hint: Bright, even light · no shadows · crop so palm fills the frame.</small></div>
 
 <div>
   <!-- Hand toggles -->
@@ -79,14 +82,14 @@ footer{margin:12px 0 24px;opacity:.8}
   <button id="savePDF" class="downloadBtn">Download PDF</button>
 </div>
 
-<footer><small>© Sathyadarshana · Research Build v3.0 (Photo-only) · Works Offline</small></footer>
+<footer><small>© Sathyadarshana · Research Build v3.1 (Photo-only) · Works Offline</small></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
+<script type="module">
 /* ===== elements ===== */
 const base = document.getElementById('base'),
       overlay = document.getElementById('overlay'),
-      labels = document.getElementById('labels'),
+      labels  = document.getElementById('labels'),
       bctx = base.getContext('2d'),
       octx = overlay.getContext('2d'),
       lctx = labels.getContext('2d'),
@@ -104,85 +107,198 @@ const pickPhotoBtn = document.getElementById('pickPhoto');
 const camInput = document.getElementById('camInput');
 const galInput = document.getElementById('galInput');
 
-let currentHand='right', locked=false;
+let currentHand = localStorage.getItem('palmistry_hand') || 'right';
+let locked=false;
 
-/* ===== helpers ===== */
+/* ===== utils ===== */
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 function showErr(m){ console.error(m); errBox.textContent=m||''; }
 function showStack(){ [base,overlay,labels].forEach(c=>c.style.display='block'); }
 function hideStack(){ [base,overlay,labels].forEach(c=>c.style.display='none'); }
-function drawImageToBase(img){
-  // fit image into canvas while keeping aspect
-  const W = base.width = overlay.width = labels.width  = img.width;
-  const H = base.height= overlay.height= labels.height = img.height;
-  bctx.clearRect(0,0,W,H);
-  bctx.drawImage(img,0,0,W,H);
-}
-
-/* ===== hand toggle ===== */
 function setHand(h){
   currentHand = h;
+  localStorage.setItem('palmistry_hand',h);
   handLeftBtn.classList.toggle('active', h==='left');
   handRightBtn.classList.toggle('active',h==='right');
   sum.textContent = `Selected: ${h[0].toUpperCase()+h.slice(1)} hand`;
 }
+setHand(currentHand);
 handLeftBtn.onclick  = ()=>setHand('left');
 handRightBtn.onclick = ()=>setHand('right');
 
-/* ===== photo inputs ===== */
-takePhotoBtn.onclick = ()=> camInput.click();    // opens system Camera app
-pickPhotoBtn.onclick = ()=> galInput.click();    // opens Gallery/Files picker
+/* ===== image loading with EXIF orientation + resize ===== */
+async function fileToImageBitmap(file){
+  try{
+    // Respect EXIF orientation if browser supports it
+    return await createImageBitmap(file, { imageOrientation: 'from-image' });
+  }catch{
+    // Fallback to Image()
+    return await new Promise((res,rej)=>{
+      const url=URL.createObjectURL(file);
+      const img=new Image();
+      img.onload=()=>{ res(img); URL.revokeObjectURL(url); };
+      img.onerror=rej;
+      img.src=url;
+    });
+  }
+}
+function drawBitmapScaled(bmp){
+  // Downscale large bitmaps for perf (max side 1500px)
+  const maxSide = 1500;
+  let w=bmp.width, h=bmp.height;
+  if (Math.max(w,h) > maxSide){ const s=maxSide/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+  base.width = overlay.width = labels.width = w;
+  base.height= overlay.height= labels.height = h;
+  bctx.clearRect(0,0,w,h);
+  bctx.drawImage(bmp, 0,0, w,h);
+}
 
-function handleFile(file){
+/* Quality metrics (very light): brightness, contrast, edge density */
+function quickMetrics(){
+  const {width:w, height:h} = base;
+  const img = bctx.getImageData(0,0,w,h).data;
+  let sum=0, sum2=0, edges=0;
+  for(let i=0;i<img.length;i+=4){
+    const v = (img[i]*0.299 + img[i+1]*0.587 + img[i+2]*0.114)/255; // luma
+    sum += v; sum2 += v*v;
+  }
+  const n = w*h;
+  const mean = sum/n;
+  const variance = clamp(sum2/n - mean*mean, 0, 1);
+  // crude edges: sample every 4px
+  for(let y=0;y<h;y+=4){
+    for(let x=0;x<w-4;x+=4){
+      const i1=((y*w)+x)*4, i2=((y*w)+x+4)*4;
+      const v1=(img[i1]*0.299+img[i1+1]*0.587+img[i1+2]*0.114);
+      const v2=(img[i2]*0.299+img[i2+1]*0.587+img[i2+2]*0.114);
+      if (Math.abs(v1-v2) > 35) edges++;
+    }
+  }
+  const edgeDensity = edges/((w/4)*(h/4)); // 0..~1
+  return { mean, contrast:Math.sqrt(variance), edgeDensity: clamp(edgeDensity,0,1) };
+}
+
+/* Map metrics -> demo line scores (replace by real model later) */
+function deriveLineScores(m){
+  const bright = clamp((m.mean-0.35)/0.25, 0, 1);         // prefer 0.35..0.60
+  const sharp  = clamp((m.edgeDensity-0.10)/0.25, 0, 1);  // prefer >=0.35
+  const contrast = clamp((m.contrast-0.15)/0.25, 0, 1);   // prefer >=0.40
+
+  return {
+    heart:   {score: (bright*0.4 + contrast*0.6)},
+    head:    {score: (contrast*0.7 + sharp*0.3)},
+    life:    {len:   (sharp*0.6 + bright*0.4)},
+    fate:    {score: (sharp*0.7 + contrast*0.3)},
+    sun:     {intensity: (bright*0.7 + contrast*0.3)},
+    mercury: {score: (sharp*0.6 + bright*0.4)},
+    marriage:{score: (contrast*0.5 + bright*0.5)}
+  };
+}
+
+/* Insight builder (dynamic text) */
+function buildInsight({hand, lines, meta}) {
+  const out=[];
+  const H = hand[0].toUpperCase()+hand.slice(1);
+
+  const T = (name,cond,a,b)=> out.push(`<p><b>${name}</b><br>${cond?a:b}</p>`);
+
+  T('Heart ❤️', lines.heart.score>0.65,
+    'Warm, steady emotions; loyal bonds.',
+    'Guard your energy; be clear with needs.');
+
+  T('Head 💙', (lines.head.score>0.65),
+    'Clear logic and structured thinking.',
+    'Creative mind; write ideas to focus.');
+
+  T('Life 💚', (lines.life.len>0.6),
+    'Good vitality and recovery signs.',
+    'Build sleep, water and walk routine.');
+
+  T('Fate 💛', (lines.fate.score>0.6),
+    'Purposeful career momentum detected.',
+    'Exploratory path; try small experiments.');
+
+  T('Sun 🧡', (lines.sun.intensity>0.6),
+    'Talent visibility rising—share work.',
+    'Practice then publish in small steps.');
+
+  T('Mercury 💜', (lines.mercury.score>0.6),
+    'Fast learning & communication.',
+    'Slow down; verify details carefully.');
+
+  T('Marriage 💖', (lines.marriage.score>0.55),
+    'Stable bonds; shared goals matter.',
+    'Healthy boundaries + honest talks.');
+
+  const hdr = `<p><i>Hand:</i> ${H} · v${meta.version||'dev'}</p>`;
+  return hdr + out.join('');
+}
+
+/* Storage helpers */
+const STORE_KEY='palmistryResults';
+const loadAll=()=>JSON.parse(localStorage.getItem(STORE_KEY)||'[]');
+const saveOne=r=>{const a=loadAll(); a.unshift(r); localStorage.setItem(STORE_KEY,JSON.stringify(a));};
+
+/* ===== interactions ===== */
+takePhotoBtn.onclick = ()=> camInput.click();
+pickPhotoBtn.onclick = ()=> galInput.click();
+
+async function handleFile(file){
   if(!file){ showErr('No image selected'); return; }
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = ()=>{
-    drawImageToBase(img);
+  try{
+    const bmp = await fileToImageBitmap(file);
+    drawBitmapScaled(bmp);
     locked = true;
     showStack();
     sum.textContent = 'Photo loaded. Ready to analyze.';
-    URL.revokeObjectURL(url);
-  };
-  img.src = url;
+    showErr('');
+  }catch(e){
+    showErr('Failed to load image');
+  }
 }
 camInput.onchange = e => handleFile(e.target.files?.[0]);
 galInput.onchange = e => handleFile(e.target.files?.[0]);
 
-/* ===== analyze (demo overlay) ===== */
-document.getElementById('analyze').onclick = ()=>{
+document.getElementById('analyze').onclick = async ()=>{
   if(!locked){ alert('Please take or pick a photo first'); return; }
+
+  // “Overlay” placeholder
   octx.clearRect(0,0,overlay.width,overlay.height);
-  octx.fillStyle='rgba(255,255,255,0.1)';
+  octx.fillStyle='rgba(255,255,255,0.12)';
   octx.fillRect(0,0,overlay.width,overlay.height);
+
+  // 1) quick metrics -> 2) demo line scores -> 3) insight
+  const metrics = quickMetrics();
+  const lines = deriveLineScores(metrics);
+  const manifest = await fetch('manifest.json').then(r=>r.json()).catch(()=>({version:'3.1'}));
+
+  const result = {
+    ts: Date.now(),
+    hand: currentHand,
+    lines,
+    meta: { version: manifest.version, mode:'photo' }
+  };
+
+  const html = buildInsight(result);
+  rtext.innerHTML = html;
+  report.style.display = 'block';
+
+  result.reportHTML = html;
+  saveOne(result);
+
   const H = currentHand[0].toUpperCase()+currentHand.slice(1);
-  sum.textContent = `Analyze complete · ${H} hand lines colored.`;
-  showReport();
-  saveResult();
+  sum.textContent = `Analyze complete · ${H} hand processed.`;
+  toast('Saved to Results. See “Results & Reports”.');
 };
 
-/* live threshold label (placeholder) */
 thr.addEventListener('input', ()=> thrVal.textContent = thr.value );
 
-/* ===== reset ===== */
 document.getElementById('reset').onclick = ()=>{
   locked=false; hideStack(); report.style.display='none';
   showErr(''); sum.textContent='AI Summary: —';
 };
 
-/* ===== report / pdf ===== */
-function showReport(){
-  report.style.display='block';
-  const lines=[
-    {n:'Heart ❤️',t:'Emotional depth, compassion, love.'},
-    {n:'Head 💙',t:'Intelligence, clarity, creativity.'},
-    {n:'Life 💚',t:'Vitality, strength, endurance.'},
-    {n:'Fate 💛',t:'Career, destiny, life direction.'},
-    {n:'Sun 🧡',t:'Fame, talent, inspiration.'},
-    {n:'Mercury 💜',t:'Health, intuition, communication.'},
-    {n:'Marriage 💖',t:'Harmony, bonds, emotional ties.'}
-  ];
-  rtext.innerHTML = lines.map(m=>`<p><b>${m.n}</b><br>${m.t}</p>`).join('');
-}
+/* PDF */
 document.getElementById('savePDF').onclick = ()=>{
   const {jsPDF}=window.jspdf; const doc=new jsPDF();
   doc.setFontSize(16); doc.text('Sathyadarshana Palmistry AI Insight Report',10,15);
@@ -192,21 +308,16 @@ document.getElementById('savePDF').onclick = ()=>{
   doc.save('Palmistry_AI_Report.pdf');
 };
 
-/* ===== results store ===== */
-function saveResult(){
-  const key='palmistryResults';
-  const result={ ts:Date.now(), hand:currentHand, summary:'7 lines colored',
-    lines:{heart:'Strong', head:'Balanced', life:'Long', fate:'Visible', sun:'Distinct', mercury:'Sharp', marriage:'Dual'}};
-  const arr=JSON.parse(localStorage.getItem(key)||'[]'); arr.unshift(result);
-  localStorage.setItem(key,JSON.stringify(arr));
-  const toast=document.createElement('div');
-  toast.textContent='Saved to Results. See “Results & Reports”.';
-  toast.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#00e5ff;color:#000;padding:8px 12px;border-radius:10px;font-weight:700;z-index:9999';
-  document.body.appendChild(toast); setTimeout(()=>toast.remove(),2200);
+/* small toast */
+function toast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#00e5ff;color:#000;padding:8px 12px;border-radius:10px;font-weight:700;z-index:9999';
+  document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
 }
 
 /* init */
 hideStack();
 </script>
 </body>
-</html>ච
+</html>
