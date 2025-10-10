@@ -1,74 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <!-- Base path for this folder -->
-  <base href="/Liberation/palmistry/" />
-  <title>Sathyadarshana Palmistry Lab · Research AI</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<base href="/Liberation/palmistry/" />
+<title>AI Detection Preview · Sathyadarshana</title>
 
-  <!-- HARD DISABLE camera/mic/geo on this page -->
-  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
-  <meta name="referrer" content="no-referrer" />
+<!-- block all hardware permissions -->
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
 
-  <style>
-    :root { --bg:#0b0f16; --pri:#16f0a7; --neon:#00e5ff; }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui, sans-serif;text-align:center}
-    h1{color:var(--neon);margin-top:18px}
-    nav{display:flex;justify-content:center;gap:10px;margin:12px 0;flex-wrap:wrap}
-    a.btn{background:#111;color:#00e5ff;border:1px solid #00e5ff;border-radius:16px;
-          padding:8px 14px;text-decoration:none;font-weight:600;transition:.25s}
-    a.btn:hover{background:#00e5ff;color:#000}
-    .section{max-width:580px;margin:20px auto;padding:14px;border-radius:16px;background:#101820;box-shadow:0 0 10px #0ff2;text-align:left}
-    .section h2{color:#16f0a7;margin:6px 0 10px}
-    .section p, .section li{line-height:1.6}
-    .center{ text-align:center }
-    footer{margin:24px 0;opacity:.7}
-  </style>
+<style>
+:root { --bg:#0b0f16; --pri:#16f0a7; --neon:#00e5ff; }
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+h1{color:#00e5ff;margin:16px 0 8px}
+nav{display:flex;justify-content:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+a.btn{background:#111;color:#00e5ff;border:1px solid #00e5ff;border-radius:16px;
+      padding:8px 14px;text-decoration:none;font-weight:600;transition:.25s}
+a.btn:hover{background:#00e5ff;color:#000}
+.section{max-width:600px;margin:18px auto;padding:14px;border-radius:14px;background:#101820;
+          box-shadow:0 0 8px #0ff2;text-align:left}
+footer{margin:24px 0;opacity:.7}
+img.sample{width:100%;max-width:520px;border:2px solid #00e5ff;border-radius:12px;margin:8px 0}
+</style>
 </head>
 <body>
-  <h1>🔮 Sathyadarshana Palmistry Lab</h1>
+<h1>🪞 AI Detection Preview</h1>
 
-  <nav>
-    <a href="palmistry.html" class="btn">Open Analyzer</a>
-    <a href="detect.html" class="btn">AI Detection</a>
-    <a href="result.html" class="btn">Results &amp; Reports</a>
-  </nav>
+<nav>
+  <a href="index.html" class="btn">Lab Home</a>
+  <a href="palmistry.html" class="btn">Analyzer</a>
+  <a href="result.html" class="btn">Results</a>
+</nav>
 
-  <div class="section">
-    <h2 class="center">About the Research Lab</h2>
-    <p>
-      The <b>Palmistry Lab</b> is a <i>research-grade project</i> under
-      <b>Sathyadarshana</b>, uniting ancient <em>Hasta Sastra</em> wisdom with
-      modern <em>computer vision</em> and <em>AI-based analysis</em>.
-    </p>
-    <p>
-      This platform captures hand images, highlights the seven major lines,
-      and interprets them using advanced algorithms and the KP astrology model.
-    </p>
-  </div>
+<div class="section">
+  <h2 style="color:#16f0a7;text-align:center">Concept Overview</h2>
+  <p>
+    The <b>AI Detection</b> module in development will preview the
+    automated recognition of hand zones, skin tone, and lighting quality
+    before analysis. This static demo shows visual placeholders only.
+  </p>
+</div>
 
-  <div class="section">
-    <h2 class="center">Features</h2>
-    <ul>
-      <li>📸 Real-time camera capture &amp; analysis (Analyzer page only)</li>
-      <li>🌈 7-line color classification (Heart, Head, Life, etc.)</li>
-      <li>🧠 Integration with KP Astrology module</li>
-      <li>📜 AI-generated insight reports (PDF export)</li>
-      <li>🌐 Works offline (PWA compatible)</li>
-    </ul>
-  </div>
+<div class="section" style="text-align:center">
+  <img src="preview-hand1.jpg" alt="Sample Hand Preview" class="sample"/>
+  <img src="preview-hand2.jpg" alt="Sample Overlay" class="sample"/>
+  <p><small>📷 These sample previews demonstrate framing guidance only.<br>
+  The live camera is <b>disabled</b> on this page for privacy and safety.</small></p>
+</div>
 
-  <div class="section">
-    <h2 class="center">Next Phase (Research Roadmap)</h2>
-    <p>1. Palm line depth mapping via OpenCV edge analysis</p>
-    <p>2. Palm landmark dataset collection (anonymized)</p>
-    <p>3. Sub-lord correlation AI between palm &amp; natal chart</p>
-  </div>
-
-  <footer>
-    <small>© 2025 Sathyadarshana · Palmistry Research Division</small>
-  </footer>
+<footer>
+  <small>© 2025 Sathyadarshana · Palmistry Research Division</small>
+</footer>
 </body>
 </html>
