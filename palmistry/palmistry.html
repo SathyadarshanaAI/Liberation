@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="manifest" href="manifest.json">
 <title>Palmistry Photo Analyzer · v3.1 (Photo-only)</title>
 <style>
-:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff;--card:#101820}
+:root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
-.stage{position:relative;width:92vw;max-width:480px;margin:0 auto 8px;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000;aspect-ratio:3/4}
+.stage{position:relative;width:92vw;max-width:420px;margin:0 auto 8px;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000;aspect-ratio:3/4}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
 button{border:none;border-radius:20px;padding:10px 16px;margin:4px;font-weight:700;cursor:pointer}
 .btn{background:var(--neon);color:#000}
@@ -18,20 +19,23 @@ button{border:none;border-radius:20px;padding:10px 16px;margin:4px;font-weight:7
 .controls{display:flex;gap:10px;justify-content:center;align-items:center;margin:6px 0 2px}
 .range{width:180px;accent-color:#3b82f6}
 small{opacity:.8}
-.legend{max-width:520px;margin:6px auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
+.legend{max-width:480px;margin:6px auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
 .tag{display:flex;align-items:center;gap:8px;font-size:14px;opacity:.95}
 .sw{width:14px;height:14px;border-radius:3px;border:1px solid #0003}
-#err{max-width:520px;margin:6px auto;color:#ff9b9b;min-height:20px}
+#err{max-width:480px;margin:6px auto;color:#ff9b9b;min-height:20px}
 #summary{margin-top:8px}
-#reportBox{max-width:520px;margin:12px auto;text-align:left;background:var(--card);padding:12px;border-radius:12px;display:none}
+#reportBox{max-width:520px;margin:12px auto;text-align:left;background:#101820;padding:12px;border-radius:12px;display:none}
 #reportBox h3{text-align:center;color:#00e5ff;margin-top:0}
 .downloadBtn{background:#00e5ff;color:#000;font-weight:bold;margin-top:10px}
+.bars{display:grid;grid-template-columns:120px 1fr;gap:8px 10px;align-items:center}
+.bars .lab{opacity:.9}
+.bars .bar{height:10px;background:#1e293b;border-radius:6px;overflow:hidden}
+.bars .bar > i{display:block;height:100%;background:#16f0a7}
 footer{margin:12px 0 24px;opacity:.8}
-.tip{max-width:520px;margin:6px auto;background:#13202b;border:1px solid #0aefff30;padding:10px;border-radius:10px}
 </style>
 </head>
 <body>
-<h1>Palmistry AI Analyzer · Photo Mode (100% Compatible)</h1>
+<h1>Palmistry AI Analyzer · Photo Mode</h1>
 
 <div class="stage">
   <canvas id="base"></canvas>
@@ -39,20 +43,15 @@ footer{margin:12px 0 24px;opacity:.8}
   <canvas id="labels"></canvas>
 </div>
 
-<div class="tip"><small>Hint: Bright, even light · no shadows · crop so palm fills the frame.</small></div>
-
 <div>
-  <!-- Hand toggles -->
   <button id="handLeft"  class="sec">Left Hand</button>
   <button id="handRight" class="sec active">Right Hand</button>
 
-  <!-- Photo inputs -->
   <button id="takePhoto" class="btn">📷 Take Photo</button>
   <button id="pickPhoto" class="sec">🖼️ Pick from Gallery</button>
   <input id="camInput"  type="file" accept="image/*" capture="environment" style="display:none">
   <input id="galInput"  type="file" accept="image/*" style="display:none">
 
-  <!-- Flow -->
   <button id="analyze" class="sec">Analyze</button>
   <button id="reset" class="sec">Retake</button>
 </div>
@@ -85,11 +84,11 @@ footer{margin:12px 0 24px;opacity:.8}
 <footer><small>© Sathyadarshana · Research Build v3.1 (Photo-only) · Works Offline</small></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script type="module">
-/* ===== elements ===== */
+<script>
+/* ========= elements ========= */
 const base = document.getElementById('base'),
       overlay = document.getElementById('overlay'),
-      labels  = document.getElementById('labels'),
+      labels = document.getElementById('labels'),
       bctx = base.getContext('2d'),
       octx = overlay.getContext('2d'),
       lctx = labels.getContext('2d'),
@@ -107,217 +106,184 @@ const pickPhotoBtn = document.getElementById('pickPhoto');
 const camInput = document.getElementById('camInput');
 const galInput = document.getElementById('galInput');
 
-let currentHand = localStorage.getItem('palmistry_hand') || 'right';
-let locked=false;
+let currentHand='right', locked=false, manifestVersion='3.1';
 
-/* ===== utils ===== */
-const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+/* ========= util ========= */
 function showErr(m){ console.error(m); errBox.textContent=m||''; }
 function showStack(){ [base,overlay,labels].forEach(c=>c.style.display='block'); }
 function hideStack(){ [base,overlay,labels].forEach(c=>c.style.display='none'); }
+function drawImageToBase(img){
+  const W = base.width = overlay.width = labels.width  = img.width;
+  const H = base.height= overlay.height= labels.height = img.height;
+  bctx.clearRect(0,0,W,H);
+  bctx.drawImage(img,0,0,W,H);
+}
 function setHand(h){
-  currentHand = h;
-  localStorage.setItem('palmistry_hand',h);
+  currentHand=h;
   handLeftBtn.classList.toggle('active', h==='left');
   handRightBtn.classList.toggle('active',h==='right');
   sum.textContent = `Selected: ${h[0].toUpperCase()+h.slice(1)} hand`;
 }
-setHand(currentHand);
+
+/* optional: read manifest version */
+fetch('manifest.json').then(r=>r.json()).then(j=>manifestVersion=j.version).catch(()=>{});
+
+/* ========= inputs ========= */
 handLeftBtn.onclick  = ()=>setHand('left');
 handRightBtn.onclick = ()=>setHand('right');
 
-/* ===== image loading with EXIF orientation + resize ===== */
-async function fileToImageBitmap(file){
-  try{
-    // Respect EXIF orientation if browser supports it
-    return await createImageBitmap(file, { imageOrientation: 'from-image' });
-  }catch{
-    // Fallback to Image()
-    return await new Promise((res,rej)=>{
-      const url=URL.createObjectURL(file);
-      const img=new Image();
-      img.onload=()=>{ res(img); URL.revokeObjectURL(url); };
-      img.onerror=rej;
-      img.src=url;
-    });
-  }
-}
-function drawBitmapScaled(bmp){
-  // Downscale large bitmaps for perf (max side 1500px)
-  const maxSide = 1500;
-  let w=bmp.width, h=bmp.height;
-  if (Math.max(w,h) > maxSide){ const s=maxSide/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
-  base.width = overlay.width = labels.width = w;
-  base.height= overlay.height= labels.height = h;
-  bctx.clearRect(0,0,w,h);
-  bctx.drawImage(bmp, 0,0, w,h);
-}
-
-/* Quality metrics (very light): brightness, contrast, edge density */
-function quickMetrics(){
-  const {width:w, height:h} = base;
-  const img = bctx.getImageData(0,0,w,h).data;
-  let sum=0, sum2=0, edges=0;
-  for(let i=0;i<img.length;i+=4){
-    const v = (img[i]*0.299 + img[i+1]*0.587 + img[i+2]*0.114)/255; // luma
-    sum += v; sum2 += v*v;
-  }
-  const n = w*h;
-  const mean = sum/n;
-  const variance = clamp(sum2/n - mean*mean, 0, 1);
-  // crude edges: sample every 4px
-  for(let y=0;y<h;y+=4){
-    for(let x=0;x<w-4;x+=4){
-      const i1=((y*w)+x)*4, i2=((y*w)+x+4)*4;
-      const v1=(img[i1]*0.299+img[i1+1]*0.587+img[i1+2]*0.114);
-      const v2=(img[i2]*0.299+img[i2+1]*0.587+img[i2+2]*0.114);
-      if (Math.abs(v1-v2) > 35) edges++;
-    }
-  }
-  const edgeDensity = edges/((w/4)*(h/4)); // 0..~1
-  return { mean, contrast:Math.sqrt(variance), edgeDensity: clamp(edgeDensity,0,1) };
-}
-
-/* Map metrics -> demo line scores (replace by real model later) */
-function deriveLineScores(m){
-  const bright = clamp((m.mean-0.35)/0.25, 0, 1);         // prefer 0.35..0.60
-  const sharp  = clamp((m.edgeDensity-0.10)/0.25, 0, 1);  // prefer >=0.35
-  const contrast = clamp((m.contrast-0.15)/0.25, 0, 1);   // prefer >=0.40
-
-  return {
-    heart:   {score: (bright*0.4 + contrast*0.6)},
-    head:    {score: (contrast*0.7 + sharp*0.3)},
-    life:    {len:   (sharp*0.6 + bright*0.4)},
-    fate:    {score: (sharp*0.7 + contrast*0.3)},
-    sun:     {intensity: (bright*0.7 + contrast*0.3)},
-    mercury: {score: (sharp*0.6 + bright*0.4)},
-    marriage:{score: (contrast*0.5 + bright*0.5)}
-  };
-}
-
-/* Insight builder (dynamic text) */
-function buildInsight({hand, lines, meta}) {
-  const out=[];
-  const H = hand[0].toUpperCase()+hand.slice(1);
-
-  const T = (name,cond,a,b)=> out.push(`<p><b>${name}</b><br>${cond?a:b}</p>`);
-
-  T('Heart ❤️', lines.heart.score>0.65,
-    'Warm, steady emotions; loyal bonds.',
-    'Guard your energy; be clear with needs.');
-
-  T('Head 💙', (lines.head.score>0.65),
-    'Clear logic and structured thinking.',
-    'Creative mind; write ideas to focus.');
-
-  T('Life 💚', (lines.life.len>0.6),
-    'Good vitality and recovery signs.',
-    'Build sleep, water and walk routine.');
-
-  T('Fate 💛', (lines.fate.score>0.6),
-    'Purposeful career momentum detected.',
-    'Exploratory path; try small experiments.');
-
-  T('Sun 🧡', (lines.sun.intensity>0.6),
-    'Talent visibility rising—share work.',
-    'Practice then publish in small steps.');
-
-  T('Mercury 💜', (lines.mercury.score>0.6),
-    'Fast learning & communication.',
-    'Slow down; verify details carefully.');
-
-  T('Marriage 💖', (lines.marriage.score>0.55),
-    'Stable bonds; shared goals matter.',
-    'Healthy boundaries + honest talks.');
-
-  const hdr = `<p><i>Hand:</i> ${H} · v${meta.version||'dev'}</p>`;
-  return hdr + out.join('');
-}
-
-/* Storage helpers */
-const STORE_KEY='palmistryResults';
-const loadAll=()=>JSON.parse(localStorage.getItem(STORE_KEY)||'[]');
-const saveOne=r=>{const a=loadAll(); a.unshift(r); localStorage.setItem(STORE_KEY,JSON.stringify(a));};
-
-/* ===== interactions ===== */
 takePhotoBtn.onclick = ()=> camInput.click();
 pickPhotoBtn.onclick = ()=> galInput.click();
 
-async function handleFile(file){
+function handleFile(file){
   if(!file){ showErr('No image selected'); return; }
-  try{
-    const bmp = await fileToImageBitmap(file);
-    drawBitmapScaled(bmp);
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = ()=>{
+    drawImageToBase(img);
     locked = true;
     showStack();
     sum.textContent = 'Photo loaded. Ready to analyze.';
-    showErr('');
-  }catch(e){
-    showErr('Failed to load image');
-  }
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
 }
 camInput.onchange = e => handleFile(e.target.files?.[0]);
 galInput.onchange = e => handleFile(e.target.files?.[0]);
 
-document.getElementById('analyze').onclick = async ()=>{
-  if(!locked){ alert('Please take or pick a photo first'); return; }
-
-  // “Overlay” placeholder
-  octx.clearRect(0,0,overlay.width,overlay.height);
-  octx.fillStyle='rgba(255,255,255,0.12)';
-  octx.fillRect(0,0,overlay.width,overlay.height);
-
-  // 1) quick metrics -> 2) demo line scores -> 3) insight
-  const metrics = quickMetrics();
-  const lines = deriveLineScores(metrics);
-  const manifest = await fetch('manifest.json').then(r=>r.json()).catch(()=>({version:'3.1'}));
-
-  const result = {
-    ts: Date.now(),
-    hand: currentHand,
-    lines,
-    meta: { version: manifest.version, mode:'photo' }
+/* ========= analysis hooks ========= */
+/* DEMO: derive line metrics from image data (replace with real CV later) */
+function deriveLineScores(){
+  const w=base.width,h=base.height;
+  const {data}=bctx.getImageData(0,0,w,h);
+  // Simple luminance variance as a proxy for detail/edges per horizontal band
+  let sum=0, sum2=0, n=0;
+  for(let i=0;i<data.length;i+=4){
+    const y=0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];
+    sum+=y; sum2+=y*y; n++;
+  }
+  const mean=sum/n, varc=Math.max(0,(sum2/n)-(mean*mean)); // 0..~65025
+  const baseScore=Math.max(0, Math.min(1, varc/5000));
+  // fabricate per-line but stable based on image stats + hand
+  const bias = currentHand==='left'? -0.05: +0.05;
+  return {
+    heart:   clamp01(baseScore*0.95 + 0.10 + bias),
+    head:    clamp01(baseScore*1.05 + 0.08 - bias),
+    life:    clamp01(baseScore*1.10 + 0.05),
+    fate:    clamp01(baseScore*0.85 + 0.12),
+    sun:     clamp01(baseScore*0.80 + 0.10),
+    mercury: clamp01(baseScore*0.90 + 0.06),
+    marriage:clamp01(baseScore*0.75 + 0.14)
   };
+}
+function clamp01(x){ return x<0?0:x>1?1:x; }
 
-  const html = buildInsight(result);
-  rtext.innerHTML = html;
-  report.style.display = 'block';
+/* pretty HTML for report (bars) */
+function makeReportHTML(scores){
+  const order=[
+    ['heart','Heart ❤️'],
+    ['head','Head 💙'],
+    ['life','Life 💚'],
+    ['fate','Fate 💛'],
+    ['sun','Sun 🧡'],
+    ['mercury','Mercury 💜'],
+    ['marriage','Marriage 💖'],
+  ];
+  const rows = order.map(([k,label])=>{
+    const pct=Math.round((scores[k]??0)*100);
+    return `<div class="lab">${label}</div>
+            <div class="bar"><i style="width:${pct}%"></i></div>`;
+  }).join('');
+  return `<div class="bars">${rows}</div>`;
+}
 
-  result.reportHTML = html;
-  saveOne(result);
+/* save small thumbnail (for future list previews) */
+function makeThumbnail(maxW=240){
+  const ratio = base.width/base.height;
+  const tw = maxW, th = Math.round(tw/ratio);
+  const c = document.createElement('canvas');
+  c.width=tw; c.height=th;
+  const cx=c.getContext('2d');
+  cx.drawImage(base,0,0,tw,th);
+  return c.toDataURL('image/jpeg',0.72);
+}
 
+/* overlay (demo) */
+function paintOverlay(){
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  octx.fillStyle='rgba(255,255,255,0.10)';
+  octx.fillRect(0,0,overlay.width,overlay.height);
+}
+
+/* ========= analyze ========= */
+document.getElementById('analyze').onclick = ()=>{
+  if(!locked){ alert('Please take or pick a photo first'); return; }
+  paintOverlay();
+  const scores = deriveLineScores();
   const H = currentHand[0].toUpperCase()+currentHand.slice(1);
-  sum.textContent = `Analyze complete · ${H} hand processed.`;
-  toast('Saved to Results. See “Results & Reports”.');
+  sum.textContent = `Analyze complete · ${H} hand.`;
+
+  const reportHTML = makeReportHTML(scores);
+  rtext.innerHTML = reportHTML;
+  report.style.display='block';
+
+  saveResult(scores, reportHTML);
 };
 
-thr.addEventListener('input', ()=> thrVal.textContent = thr.value );
-
+/* ========= reset ========= */
 document.getElementById('reset').onclick = ()=>{
   locked=false; hideStack(); report.style.display='none';
   showErr(''); sum.textContent='AI Summary: —';
 };
 
-/* PDF */
+/* ========= pdf ========= */
 document.getElementById('savePDF').onclick = ()=>{
   const {jsPDF}=window.jspdf; const doc=new jsPDF();
   doc.setFontSize(16); doc.text('Sathyadarshana Palmistry AI Insight Report',10,15);
   doc.setFontSize(12); doc.text('────────────────────────────',10,20);
-  const txt=rtext.innerText.split('\n'); let y=30;
-  for(const t of txt){ if(t.trim()) doc.text(t,10,y), y+=8; }
+  let y=30;
+  doc.text(`Hand: ${currentHand}`,10,y); y+=8;
+  // crude text export from our bars (labels only)
+  const labels=['Heart','Head','Life','Fate','Sun','Mercury','Marriage'];
+  const sc=JSON.parse(sessionStorage.getItem('lastScores')||'{}');
+  labels.forEach(L=>{ const v=sc[L.toLowerCase()]!=null? Math.round(sc[L.toLowerCase()]*100):'—';
+                      doc.text(`${L}: ${v}%`,10,(y+=8)); });
   doc.save('Palmistry_AI_Report.pdf');
 };
 
-/* small toast */
-function toast(msg){
-  const t=document.createElement('div');
-  t.textContent=msg;
-  t.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#00e5ff;color:#000;padding:8px 12px;border-radius:10px;font-weight:700;z-index:9999';
-  document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
+/* ========= results store ========= */
+function saveResult(scores, reportHTML){
+  const KEY='palmistryResults';
+  sessionStorage.setItem('lastScores', JSON.stringify(scores));
+  const result={
+    ts: Date.now(),
+    hand: currentHand,
+    summary: 'auto-analyzed',
+    lines: {
+      heart:{score:scores.heart},
+      head:{score:scores.head},
+      life:{score:scores.life},
+      fate:{score:scores.fate},
+      sun:{score:scores.sun},
+      mercury:{score:scores.mercury},
+      marriage:{score:scores.marriage}
+    },
+    reportHTML,
+    thumb: makeThumbnail(),
+    meta: { version: manifestVersion, mode:'photo' }
+  };
+  const arr=JSON.parse(localStorage.getItem(KEY)||'[]');
+  arr.unshift(result);
+  localStorage.setItem(KEY, JSON.stringify(arr));
+  const toast=document.createElement('div');
+  toast.textContent='Saved to Results. See “Results & Reports”.';
+  toast.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#00e5ff;color:#000;padding:8px 12px;border-radius:10px;font-weight:700;z-index:9999';
+  document.body.appendChild(toast); setTimeout(()=>toast.remove(),2200);
 }
 
 /* init */
 hideStack();
+thr.addEventListener('input', ()=> thrVal.textContent = thr.value );
 </script>
 </body>
 </html>
