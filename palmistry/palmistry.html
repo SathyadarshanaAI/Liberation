@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Palmistry AI Analyzer · v2.4.2</title>
+<title>Palmistry AI Analyzer · v2.4.3</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
@@ -44,8 +44,6 @@ footer{margin:12px 0 24px;opacity:.8}
   <button id="capture" class="btn">Capture (Lock)</button>
   <button id="analyze" class="sec">Analyze</button>
   <button id="reset" class="sec">Retake</button>
-  <button id="pickBtn" class="sec">Use Photo</button>
-  <input id="filePick" type="file" accept="image/*" capture="environment" style="display:none">
 </div>
 
 <div class="controls">
@@ -73,7 +71,7 @@ footer{margin:12px 0 24px;opacity:.8}
   <button id="savePDF" class="downloadBtn">Download PDF</button>
 </div>
 
-<footer><small>© Sathyadarshana · Research Build v2.4.2 · Works Offline</small></footer>
+<footer><small>© Sathyadarshana · Research Build v2.4.3 · Works Offline</small></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -101,7 +99,7 @@ async function openCamera(){
   try{
     if(location.protocol!=='https:' && location.hostname!=='localhost'){ showErr('Camera requires HTTPS (GitHub Pages ok).'); return; }
     stopCam();
-    const constraints={ audio:false, video:{ facingMode:{ideal:facing}, width:{ideal:1280}, height:{ideal:720} } };
+    const constraints={ audio:false, video:{ facingMode:{ideal:facing} } };
     stream=await navigator.mediaDevices.getUserMedia(constraints);
     vid.srcObject=stream; await vid.play();
     await new Promise(res=>vid.onloadedmetadata=res);
@@ -115,26 +113,14 @@ async function openCamera(){
 document.getElementById('openCam').onclick=()=>openCamera();
 document.getElementById('flip').onclick=async()=>{ facing=(facing==='environment'?'user':'environment'); await openCamera(); };
 
-/* ===== capture / photo ===== */
+/* ===== capture / analyze / reset ===== */
 document.getElementById('capture').onclick=()=>{
   if(!vid.videoWidth){ showErr('Open Camera first.'); return; }
   bctx.drawImage(vid,0,0,base.width,base.height);
   vid.pause(); stopCam(); locked=true; showStack();
   sum.textContent='Captured successfully. Frame locked.';
 };
-const filePick=document.getElementById('filePick');
-document.getElementById('pickBtn').onclick=()=>filePick.click();
-filePick.onchange=e=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  const url=URL.createObjectURL(f);
-  const img=new Image();
-  img.onload=()=>{ [base,overlay,labels].forEach(c=>{ c.width=img.width; c.height=img.height; });
-    bctx.drawImage(img,0,0,base.width,base.height);
-    locked=true; showStack(); sum.textContent='Photo loaded. Frame locked.'; };
-  img.src=url;
-};
 
-/* ===== analyze (demo overlay) ===== */
 document.getElementById('analyze').onclick=()=>{
   if(!locked){ alert('Please Capture first'); return; }
   octx.clearRect(0,0,overlay.width,overlay.height);
@@ -144,7 +130,6 @@ document.getElementById('analyze').onclick=()=>{
   showReport(); saveResult();
 };
 
-/* ===== reset ===== */
 document.getElementById('reset').onclick=()=>{
   locked=false;
   octx.clearRect(0,0,overlay.width,overlay.height);
@@ -187,7 +172,7 @@ function saveResult(){
   document.body.appendChild(toast); setTimeout(()=>toast.remove(),2200);
 }
 
-/* ===== Auto boot & first-gesture open ===== */
+/* ===== Auto boot & first gesture open ===== */
 let booted=false;
 async function tryOpenOnce(){
   if(booted) return; booted=true;
