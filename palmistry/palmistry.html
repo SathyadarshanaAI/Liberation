@@ -1,20 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Palmistry AI Analyzer · v2.4</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Palmistry AI Analyzer · v2.4.1</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
-
-.stage{
-  position:relative;width:92vw;max-width:420px;margin:0 auto 8px;
-  border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000;
-}
+.stage{position:relative;width:92vw;max-width:420px;margin:0 auto 8px;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000}
 .stage>*{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
 button{border:none;border-radius:20px;padding:10px 16px;margin:4px;font-weight:700;cursor:pointer}
 .btn{background:var(--neon);color:#000}
@@ -25,11 +20,11 @@ small{opacity:.8}
 .legend{max-width:480px;margin:6px auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
 .tag{display:flex;align-items:center;gap:8px;font-size:14px;opacity:.95}
 .sw{width:14px;height:14px;border-radius:3px;border:1px solid #0003}
+#err{max-width:480px;margin:6px auto;color:#ff9b9b;min-height:20px}
 #summary{margin-top:8px}
 #reportBox{max-width:480px;margin:12px auto;text-align:left;background:#101820;padding:12px;border-radius:12px;display:none}
 #reportBox h3{text-align:center;color:#00e5ff;margin-top:0}
 .downloadBtn{background:#00e5ff;color:#000;font-weight:bold;margin-top:10px}
-#err{max-width:480px;margin:6px auto;color:#ff9b9b;min-height:20px}
 footer{margin:12px 0 24px;opacity:.8}
 </style>
 </head>
@@ -37,7 +32,8 @@ footer{margin:12px 0 24px;opacity:.8}
 <h1>Palmistry AI Analyzer · 7 Line Insight Report</h1>
 
 <div class="stage" id="stage">
-  <video id="vid" autoplay playsinline muted></video>
+  <!-- autoplay ඉවත් කරලා; JS වලින් play() call කරනවා -->
+  <video id="vid" playsinline muted></video>
   <canvas id="base"></canvas>
   <canvas id="overlay"></canvas>
   <canvas id="labels"></canvas>
@@ -55,7 +51,7 @@ footer{margin:12px 0 24px;opacity:.8}
 
 <div class="controls">
   <small>Threshold</small>
-  <input id="thr" class="range" type="range" min="0" max="70" step="2" value="10" />
+  <input id="thr" class="range" type="range" min="0" max="70" step="2" value="10"/>
   <small id="thrVal">10</small>
 </div>
 
@@ -78,7 +74,7 @@ footer{margin:12px 0 24px;opacity:.8}
   <button id="savePDF" class="downloadBtn">Download PDF</button>
 </div>
 
-<footer><small>© Sathyadarshana · Research Build v2.4 · Works Offline</small></footer>
+<footer><small>© Sathyadarshana · Research Build v2.4.1 · Works Offline</small></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -89,78 +85,83 @@ sum=document.getElementById('summary'), thr=document.getElementById('thr'),
 thrVal=document.getElementById('thrVal'), report=document.getElementById('reportBox'),
 rtext=document.getElementById('reportText'), errBox=document.getElementById('err');
 
-let stream=null,locked=false,facing='environment';
+let stream=null, locked=false, facing='environment';
+
 function showErr(m){console.error(m);errBox.textContent=m}
 function showVideo(){vid.style.display='block';base.style.display='none';overlay.style.display='none';labels.style.display='none'}
 function showStack(){vid.style.display='none';base.style.display='block';overlay.style.display='block';labels.style.display='block'}
+function stopCam(){try{if(vid.srcObject)vid.srcObject.getTracks().forEach(t=>t.stop());vid.srcObject=null;}catch{}}
 
 async function openCamera(){
   try{
-    if(location.protocol!=='https:'&&location.hostname!=='localhost'){showErr('Camera requires HTTPS (Netlify ok).');return;}
+    if(location.protocol!=='https:' && location.hostname!=='localhost'){
+      showErr('Camera requires HTTPS (Netlify/localhost ok).'); return;
+    }
     stopCam();
-    const constraints={video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}},audio:false};
-    stream=await navigator.mediaDevices.getUserMedia(constraints);
-    vid.srcObject=stream;await vid.play();
-    await new Promise(r=>vid.onloadedmetadata=r);
+    const constraints={audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}};
+    stream=await navigator.mediaDevices.getUserMedia(constraints); // user gesture → allowed
+    vid.srcObject=stream; await vid.play();
+    await new Promise(res=>vid.onloadedmetadata=res);
     [base,overlay,labels].forEach(c=>{c.width=vid.videoWidth||640;c.height=vid.videoHeight||480;});
-    showVideo();errBox.textContent='';sum.textContent='Camera ready.';
+    showVideo(); errBox.textContent=''; sum.textContent='Camera ready.';
   }catch(e){
-    if(e.name==='NotAllowedError')showErr('Permission denied. Enable camera in browser settings.');
-    else if(e.name==='NotFoundError')showErr('No camera detected. Try Switch or Use Photo.');
-    else if(e.name==='NotReadableError')showErr('Camera in use by another app. Close others.');
+    if(e.name==='NotAllowedError')showErr('Permission denied. Allow camera in site settings.');
+    else if(e.name==='NotFoundError')showErr('No camera found. Try Switch or Use Photo.');
+    else if(e.name==='NotReadableError')showErr('Camera used by another app. Close others and retry.');
     else showErr('Camera error: '+e.name);
   }
 }
-function stopCam(){try{if(vid.srcObject)vid.srcObject.getTracks().forEach(t=>t.stop());vid.srcObject=null;}catch{}}
-openCamera();
+
 document.getElementById('openCam').onclick=openCamera;
-document.getElementById('flip').onclick=async()=>{facing=(facing==='environment'?'user':'environment');await openCamera();}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!locked&&!vid.srcObject)openCamera();});
+document.getElementById('flip').onclick=async()=>{facing=(facing==='environment'?'user':'environment');await openCamera();};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && !locked && !vid.srcObject){} }); // no auto-open
 
 document.getElementById('capture').onclick=()=>{
- if(!vid.videoWidth)return;
- bctx.drawImage(vid,0,0,base.width,base.height);
- vid.pause();stopCam();locked=true;showStack();
- sum.textContent='Captured successfully. Frame locked.';
+  if(!vid.videoWidth){showErr('Open Camera first.');return;}
+  bctx.drawImage(vid,0,0,base.width,base.height);
+  vid.pause(); stopCam(); locked=true; showStack();
+  sum.textContent='Captured successfully. Frame locked.';
 };
 
 document.getElementById('pickBtn').onclick=()=>document.getElementById('filePick').click();
 document.getElementById('filePick').onchange=e=>{
- const f=e.target.files?.[0];if(!f)return;
- const url=URL.createObjectURL(f);const img=new Image();
- img.onload=()=>{bctx.drawImage(img,0,0,base.width,base.height);locked=true;showStack();sum.textContent='Photo loaded. Frame locked.';}
- img.src=url;
+  const f=e.target.files?.[0]; if(!f)return;
+  const url=URL.createObjectURL(f); const img=new Image();
+  img.onload=()=>{bctx.drawImage(img,0,0,base.width,base.height); locked=true; showStack(); sum.textContent='Photo loaded. Frame locked.';}
+  img.src=url;
 };
 
-// Analyze logic simplified (demo marker)
 document.getElementById('analyze').onclick=()=>{
- if(!locked){alert('Please Capture first');return;}
- octx.fillStyle='rgba(255,255,255,0.1)';octx.fillRect(0,0,overlay.width,overlay.height);
- sum.textContent='Analyze complete · 7 lines colored.';
- showReport();
+  if(!locked){alert('Please Capture first');return;}
+  octx.fillStyle='rgba(255,255,255,0.1)'; octx.fillRect(0,0,overlay.width,overlay.height);
+  sum.textContent='Analyze complete · 7 lines colored.'; showReport();
 };
 
-document.getElementById('reset').onclick=async()=>{locked=false;octx.clearRect(0,0,overlay.width,overlay.height);lctx.clearRect(0,0,labels.width,labels.height);report.style.display='none';await openCamera();};
+document.getElementById('reset').onclick=()=>{
+  locked=false; octx.clearRect(0,0,overlay.width,overlay.height); lctx.clearRect(0,0,labels.width,labels.height);
+  report.style.display='none'; showErr(''); showVideo(); // user must press Open Camera again
+};
 
 function showReport(){
- report.style.display='block';
- const lines=[
- {n:'Heart ❤️',t:'Emotional depth, compassion, love.'},
- {n:'Head 💙',t:'Intelligence, clarity, creativity.'},
- {n:'Life 💚',t:'Vitality, strength, endurance.'},
- {n:'Fate 💛',t:'Career, destiny, life direction.'},
- {n:'Sun 🧡',t:'Fame, talent, inspiration.'},
- {n:'Mercury 💜',t:'Health, intuition, communication.'},
- {n:'Marriage 💖',t:'Harmony, bonds, emotional ties.'}
- ];
- rtext.innerHTML=lines.map(m=>`<p><b>${m.n}</b><br>${m.t}</p>`).join('');
+  report.style.display='block';
+  const lines=[
+    {n:'Heart ❤️',t:'Emotional depth, compassion, love.'},
+    {n:'Head 💙',t:'Intelligence, clarity, creativity.'},
+    {n:'Life 💚',t:'Vitality, strength, endurance.'},
+    {n:'Fate 💛',t:'Career, destiny, life direction.'},
+    {n:'Sun 🧡',t:'Fame, talent, inspiration.'},
+    {n:'Mercury 💜',t:'Health, intuition, communication.'},
+    {n:'Marriage 💖',t:'Harmony, bonds, emotional ties.'}
+  ];
+  rtext.innerHTML=lines.map(m=>`<p><b>${m.n}</b><br>${m.t}</p>`).join('');
 }
+
 document.getElementById('savePDF').onclick=()=>{
- const {jsPDF}=window.jspdf;const doc=new jsPDF();
- doc.setFontSize(16);doc.text('Sathyadarshana Palmistry AI Insight Report',10,15);
- doc.setFontSize(12);doc.text('────────────────────────────',10,20);
- const txt=rtext.innerText.split('\n');let y=30;for(const t of txt){if(t.trim())doc.text(t,10,y),y+=8;}
- doc.save('Palmistry_AI_Report.pdf');
+  const {jsPDF}=window.jspdf; const doc=new jsPDF();
+  doc.setFontSize(16); doc.text('Sathyadarshana Palmistry AI Insight Report',10,15);
+  doc.setFontSize(12); doc.text('────────────────────────────',10,20);
+  const txt=rtext.innerText.split('\n'); let y=30; for(const t of txt){ if(t.trim()) doc.text(t,10,y), y+=8; }
+  doc.save('Palmistry_AI_Report.pdf');
 };
 </script>
 </body>
