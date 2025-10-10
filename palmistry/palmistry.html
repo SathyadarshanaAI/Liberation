@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Palmistry AI Analyzer · v2.5</title>
+<title>Palmistry Photo Analyzer · v3.0 (Photo-only)</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
 h1{margin:14px 0 6px}
-.stage{position:relative;width:92vw;max-width:420px;margin:0 auto 8px;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000}
-.stage>*{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.stage{position:relative;width:92vw;max-width:420px;margin:0 auto 8px;border:2px solid var(--pri);border-radius:16px;overflow:hidden;background:#000;aspect-ratio:3/4}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
 button{border:none;border-radius:20px;padding:10px 16px;margin:4px;font-weight:700;cursor:pointer}
 .btn{background:var(--neon);color:#000}
 .sec{background:#222;color:#fff;border:1px solid var(--pri)}
@@ -30,30 +30,28 @@ footer{margin:12px 0 24px;opacity:.8}
 </style>
 </head>
 <body>
-<h1>Palmistry AI Analyzer · 7 Line Insight Report</h1>
+<h1>Palmistry AI Analyzer · Photo Mode (100% Compatible)</h1>
 
-<div class="stage" id="stage">
-  <video id="vid" playsinline muted></video>
+<div class="stage">
   <canvas id="base"></canvas>
   <canvas id="overlay"></canvas>
   <canvas id="labels"></canvas>
 </div>
 
 <div>
-  <button id="openCam" class="sec">Open Camera</button>
-  <button id="flip" class="sec">Switch</button>
-
-  <!-- NEW: Hand toggles -->
+  <!-- Hand toggles -->
   <button id="handLeft"  class="sec">Left Hand</button>
   <button id="handRight" class="sec active">Right Hand</button>
 
-  <button id="capture" class="btn">Capture (Lock)</button>
+  <!-- Photo inputs -->
+  <button id="takePhoto" class="btn">📷 Take Photo</button>
+  <button id="pickPhoto" class="sec">🖼️ Pick from Gallery</button>
+  <input id="camInput"  type="file" accept="image/*" capture="environment" style="display:none">
+  <input id="galInput"  type="file" accept="image/*" style="display:none">
+
+  <!-- Flow -->
   <button id="analyze" class="sec">Analyze</button>
   <button id="reset" class="sec">Retake</button>
-
-  <!-- Gallery / system picker -->
-  <button id="pickBtn" class="sec">Use Photo</button>
-  <input id="filePick" type="file" accept="image/*" capture="environment" style="display:none">
 </div>
 
 <div class="controls">
@@ -81,116 +79,94 @@ footer{margin:12px 0 24px;opacity:.8}
   <button id="savePDF" class="downloadBtn">Download PDF</button>
 </div>
 
-<footer><small>© Sathyadarshana · Research Build v2.5 · Works Offline</small></footer>
+<footer><small>© Sathyadarshana · Research Build v3.0 (Photo-only) · Works Offline</small></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 /* ===== elements ===== */
-const vid=document.getElementById('vid'),
-      base=document.getElementById('base'),
-      overlay=document.getElementById('overlay'),
-      labels=document.getElementById('labels'),
-      bctx=base.getContext('2d'),
-      octx=overlay.getContext('2d'),
-      lctx=labels.getContext('2d'),
-      sum=document.getElementById('summary'),
-      report=document.getElementById('reportBox'),
-      rtext=document.getElementById('reportText'),
-      errBox=document.getElementById('err'),
-      thr=document.getElementById('thr'),
-      thrVal=document.getElementById('thrVal'),
-      filePick=document.getElementById('filePick'),
-      handLeftBtn=document.getElementById('handLeft'),
-      handRightBtn=document.getElementById('handRight');
+const base = document.getElementById('base'),
+      overlay = document.getElementById('overlay'),
+      labels = document.getElementById('labels'),
+      bctx = base.getContext('2d'),
+      octx = overlay.getContext('2d'),
+      lctx = labels.getContext('2d'),
+      sum  = document.getElementById('summary'),
+      errBox = document.getElementById('err'),
+      report = document.getElementById('reportBox'),
+      rtext  = document.getElementById('reportText'),
+      thr    = document.getElementById('thr'),
+      thrVal = document.getElementById('thrVal');
 
-let stream=null, locked=false, facing='environment';
-let currentHand='right';
+const handLeftBtn  = document.getElementById('handLeft');
+const handRightBtn = document.getElementById('handRight');
+const takePhotoBtn = document.getElementById('takePhoto');
+const pickPhotoBtn = document.getElementById('pickPhoto');
+const camInput = document.getElementById('camInput');
+const galInput = document.getElementById('galInput');
+
+let currentHand='right', locked=false;
 
 /* ===== helpers ===== */
 function showErr(m){ console.error(m); errBox.textContent=m||''; }
-function showVideo(){ vid.style.display='block'; base.style.display='none'; overlay.style.display='none'; labels.style.display='none'; }
-function showStack(){ vid.style.display='none'; base.style.display='block'; overlay.style.display='block'; labels.style.display='block'; }
-function stopCam(){ try{ if(vid.srcObject) vid.srcObject.getTracks().forEach(t=>t.stop()); vid.srcObject=null; }catch{} }
-
-/* Draw with optional mirror (for selfie camera) */
-function drawToBase(source,{mirror=false}={}){
-  bctx.setTransform(1,0,0,1,0,0);
-  bctx.clearRect(0,0,base.width,base.height);
-  if(mirror){ bctx.translate(base.width,0); bctx.scale(-1,1); }
-  bctx.drawImage(source,0,0,base.width,base.height);
-  bctx.setTransform(1,0,0,1,0,0);
+function showStack(){ [base,overlay,labels].forEach(c=>c.style.display='block'); }
+function hideStack(){ [base,overlay,labels].forEach(c=>c.style.display='none'); }
+function drawImageToBase(img){
+  // fit image into canvas while keeping aspect
+  const W = base.width = overlay.width = labels.width  = img.width;
+  const H = base.height= overlay.height= labels.height = img.height;
+  bctx.clearRect(0,0,W,H);
+  bctx.drawImage(img,0,0,W,H);
 }
 
-/* Hand toggle */
+/* ===== hand toggle ===== */
 function setHand(h){
-  currentHand=h;
-  handLeftBtn.classList.toggle('active',h==='left');
+  currentHand = h;
+  handLeftBtn.classList.toggle('active', h==='left');
   handRightBtn.classList.toggle('active',h==='right');
   sum.textContent = `Selected: ${h[0].toUpperCase()+h.slice(1)} hand`;
 }
-handLeftBtn.onclick = ()=>setHand('left');
-handRightBtn.onclick= ()=>setHand('right');
+handLeftBtn.onclick  = ()=>setHand('left');
+handRightBtn.onclick = ()=>setHand('right');
 
-/* ===== camera ===== */
-async function openCamera(){
-  try{
-    if(location.protocol!=='https:' && location.hostname!=='localhost'){
-      showErr('Camera requires HTTPS (GitHub Pages ok).'); return;
-    }
-    stopCam();
-    const constraints={ audio:false, video:{ facingMode:{ideal:facing}, width:{ideal:1280}, height:{ideal:720} } };
-    stream=await navigator.mediaDevices.getUserMedia(constraints);
-    vid.srcObject=stream; await vid.play();
-    await new Promise(res=>vid.onloadedmetadata=res);
-    [base,overlay,labels].forEach(c=>{ c.width=vid.videoWidth||640; c.height=vid.videoHeight||480; });
-    showVideo(); showErr(''); sum.textContent='Camera ready.';
-  }catch(e){
-    showErr('Camera error: '+(e.name||'Unknown'));
-    throw e;
-  }
-}
-document.getElementById('openCam').onclick=()=>openCamera();
-document.getElementById('flip').onclick=async()=>{ facing=(facing==='environment'?'user':'environment'); await openCamera(); };
+/* ===== photo inputs ===== */
+takePhotoBtn.onclick = ()=> camInput.click();    // opens system Camera app
+pickPhotoBtn.onclick = ()=> galInput.click();    // opens Gallery/Files picker
 
-/* ===== capture / photo ===== */
-document.getElementById('capture').onclick=()=>{
-  if(!vid.videoWidth){ showErr('Open Camera first.'); return; }
-  drawToBase(vid,{mirror:facing==='user'});  // keep natural orientation in selfie
-  vid.pause(); stopCam(); locked=true; showStack();
-  sum.textContent='Captured successfully. Frame locked.';
-};
-document.getElementById('pickBtn').onclick=()=>filePick.click();
-filePick.onchange=e=>{
-  const f=e.target.files?.[0]; if(!f) return;
-  const url=URL.createObjectURL(f); const img=new Image();
-  img.onload=()=>{
-    [base,overlay,labels].forEach(c=>{ c.width=img.width; c.height=img.height; });
-    drawToBase(img,{mirror:false});
-    locked=true; showStack(); sum.textContent='Photo loaded. Frame locked.';
+function handleFile(file){
+  if(!file){ showErr('No image selected'); return; }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = ()=>{
+    drawImageToBase(img);
+    locked = true;
+    showStack();
+    sum.textContent = 'Photo loaded. Ready to analyze.';
+    URL.revokeObjectURL(url);
   };
-  img.src=url;
-};
+  img.src = url;
+}
+camInput.onchange = e => handleFile(e.target.files?.[0]);
+galInput.onchange = e => handleFile(e.target.files?.[0]);
 
 /* ===== analyze (demo overlay) ===== */
-document.getElementById('analyze').onclick=()=>{
-  if(!locked){ alert('Please Capture first'); return; }
+document.getElementById('analyze').onclick = ()=>{
+  if(!locked){ alert('Please take or pick a photo first'); return; }
   octx.clearRect(0,0,overlay.width,overlay.height);
   octx.fillStyle='rgba(255,255,255,0.1)';
   octx.fillRect(0,0,overlay.width,overlay.height);
   const H = currentHand[0].toUpperCase()+currentHand.slice(1);
-  sum.textContent=`Analyze complete · ${H} hand lines colored.`;
-  showReport(); saveResult();
+  sum.textContent = `Analyze complete · ${H} hand lines colored.`;
+  showReport();
+  saveResult();
 };
 
-/* Threshold live display (placeholder for future) */
-thr.addEventListener('input',()=>{ thrVal.textContent=thr.value; });
+/* live threshold label (placeholder) */
+thr.addEventListener('input', ()=> thrVal.textContent = thr.value );
 
 /* ===== reset ===== */
-document.getElementById('reset').onclick=()=>{
-  locked=false;
-  octx.clearRect(0,0,overlay.width,overlay.height);
-  lctx.clearRect(0,0,labels.width,labels.height);
-  report.style.display='none'; showErr(''); showVideo();
+document.getElementById('reset').onclick = ()=>{
+  locked=false; hideStack(); report.style.display='none';
+  showErr(''); sum.textContent='AI Summary: —';
 };
 
 /* ===== report / pdf ===== */
@@ -205,9 +181,9 @@ function showReport(){
     {n:'Mercury 💜',t:'Health, intuition, communication.'},
     {n:'Marriage 💖',t:'Harmony, bonds, emotional ties.'}
   ];
-  rtext.innerHTML=lines.map(m=>`<p><b>${m.n}</b><br>${m.t}</p>`).join('');
+  rtext.innerHTML = lines.map(m=>`<p><b>${m.n}</b><br>${m.t}</p>`).join('');
 }
-document.getElementById('savePDF').onclick=()=>{
+document.getElementById('savePDF').onclick = ()=>{
   const {jsPDF}=window.jspdf; const doc=new jsPDF();
   doc.setFontSize(16); doc.text('Sathyadarshana Palmistry AI Insight Report',10,15);
   doc.setFontSize(12); doc.text('────────────────────────────',10,20);
@@ -219,12 +195,8 @@ document.getElementById('savePDF').onclick=()=>{
 /* ===== results store ===== */
 function saveResult(){
   const key='palmistryResults';
-  const result={
-    ts:Date.now(),
-    hand: currentHand,                 // NEW: left/right
-    summary:'7 lines colored',
-    lines:{heart:'Strong',head:'Balanced',life:'Long',fate:'Visible',sun:'Distinct',mercury:'Sharp',marriage:'Dual'}
-  };
+  const result={ ts:Date.now(), hand:currentHand, summary:'7 lines colored',
+    lines:{heart:'Strong', head:'Balanced', life:'Long', fate:'Visible', sun:'Distinct', mercury:'Sharp', marriage:'Dual'}};
   const arr=JSON.parse(localStorage.getItem(key)||'[]'); arr.unshift(result);
   localStorage.setItem(key,JSON.stringify(arr));
   const toast=document.createElement('div');
@@ -233,34 +205,8 @@ function saveResult(){
   document.body.appendChild(toast); setTimeout(()=>toast.remove(),2200);
 }
 
-/* ===== Auto boot & first-gesture open ===== */
-let booted=false;
-async function tryOpenOnce(){
-  if(booted) return; booted=true;
-  try{ await openCamera(); }catch{}
-  document.removeEventListener('click',tryOpenOnce,{capture:true});
-  document.removeEventListener('touchstart',tryOpenOnce,{capture:true});
-}
-(async()=>{
-  try{
-    if('permissions' in navigator && navigator.permissions.query){
-      const st=await navigator.permissions.query({name:'camera'});
-      if(st.state==='granted'){ booted=true; openCamera(); }
-      else{
-        document.addEventListener('click',tryOpenOnce,{capture:true,once:true});
-        document.addEventListener('touchstart',tryOpenOnce,{capture:true,once:true});
-        errBox.textContent='Tap anywhere or press “Open Camera” to start.';
-      }
-    }else{
-      document.addEventListener('click',tryOpenOnce,{capture:true,once:true});
-      document.addEventListener('touchstart',tryOpenOnce,{capture:true,once:true});
-      errBox.textContent='Tap anywhere or press “Open Camera” to start.';
-    }
-  }catch{
-    document.addEventListener('click',tryOpenOnce,{capture:true,once:true});
-    document.addEventListener('touchstart',tryOpenOnce,{capture:true,once:true});
-  }
-})();
+/* init */
+hideStack();
 </script>
 </body>
-</html>
+</html>ච
