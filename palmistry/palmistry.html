@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry AI Analyzer · v2.4.1</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Palmistry AI Analyzer · v2.4.2</title>
 <style>
 :root{--pri:#16f0a7;--bg:#0b0f16;--neon:#00e5ff}
 *{box-sizing:border-box}
@@ -32,7 +32,6 @@ footer{margin:12px 0 24px;opacity:.8}
 <h1>Palmistry AI Analyzer · 7 Line Insight Report</h1>
 
 <div class="stage" id="stage">
-  <!-- autoplay ඉවත් කරලා; JS වලින් play() call කරනවා -->
   <video id="vid" playsinline muted></video>
   <canvas id="base"></canvas>
   <canvas id="overlay"></canvas>
@@ -51,7 +50,7 @@ footer{margin:12px 0 24px;opacity:.8}
 
 <div class="controls">
   <small>Threshold</small>
-  <input id="thr" class="range" type="range" min="0" max="70" step="2" value="10"/>
+  <input id="thr" class="range" type="range" min="0" max="70" step="2" value="10" />
   <small id="thrVal">10</small>
 </div>
 
@@ -74,130 +73,129 @@ footer{margin:12px 0 24px;opacity:.8}
   <button id="savePDF" class="downloadBtn">Download PDF</button>
 </div>
 
-<footer><small>© Sathyadarshana · Research Build v2.4.1 · Works Offline</small></footer>
+<footer><small>© Sathyadarshana · Research Build v2.4.2 · Works Offline</small></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-const vid=document.getElementById('vid'), base=document.getElementById('base'),
-overlay=document.getElementById('overlay'), labels=document.getElementById('labels'),
-bctx=base.getContext('2d'), octx=overlay.getContext('2d'), lctx=labels.getContext('2d'),
-sum=document.getElementById('summary'), thr=document.getElementById('thr'),
-thrVal=document.getElementById('thrVal'), report=document.getElementById('reportBox'),
-rtext=document.getElementById('reportText'), errBox=document.getElementById('err');
+/* ===== elements ===== */
+const vid=document.getElementById('vid'),
+      base=document.getElementById('base'),
+      overlay=document.getElementById('overlay'),
+      labels=document.getElementById('labels'),
+      bctx=base.getContext('2d'),
+      octx=overlay.getContext('2d'),
+      lctx=labels.getContext('2d'),
+      sum=document.getElementById('summary'),
+      thr=document.getElementById('thr'),
+      thrVal=document.getElementById('thrVal'),
+      report=document.getElementById('reportBox'),
+      rtext=document.getElementById('reportText'),
+      errBox=document.getElementById('err');
 
 let stream=null, locked=false, facing='environment';
 
-function showErr(m){console.error(m);errBox.textContent=m}
-function showVideo(){vid.style.display='block';base.style.display='none';overlay.style.display='none';labels.style.display='none'}
-function showStack(){vid.style.display='none';base.style.display='block';overlay.style.display='block';labels.style.display='block'}
-function stopCam(){try{if(vid.srcObject)vid.srcObject.getTracks().forEach(t=>t.stop());vid.srcObject=null;}catch{}}
+/* ===== helpers ===== */
+function showErr(m){console.error(m); errBox.textContent=m||'';}
+function showVideo(){vid.style.display='block'; base.style.display='none'; overlay.style.display='none'; labels.style.display='none';}
+function showStack(){vid.style.display='none'; base.style.display='block'; overlay.style.display='block'; labels.style.display='block';}
+function stopCam(){ try{ if(vid.srcObject) vid.srcObject.getTracks().forEach(t=>t.stop()); vid.srcObject=null; }catch{} }
 
+/* ===== camera ===== */
 async function openCamera(){
   try{
-    if(location.protocol!=='https:' && location.hostname!=='localhost'){
-      showErr('Camera requires HTTPS (Netlify/localhost ok).'); return;
-    }
+    if(location.protocol!=='https:' && location.hostname!=='localhost'){ showErr('Camera requires HTTPS (GitHub Pages ok).'); return; }
     stopCam();
-    const constraints={audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}};
-    stream=await navigator.mediaDevices.getUserMedia(constraints); // user gesture → allowed
-    vid.srcObject=stream; await vid.play();
+    const constraints={audio:false, video:{ facingMode:{ideal:facing}, width:{ideal:1280}, height:{ideal:720} }};
+    stream=await navigator.mediaDevices.getUserMedia(constraints);
+    vid.srcObject=stream;
+    await vid.play();
     await new Promise(res=>vid.onloadedmetadata=res);
-    [base,overlay,labels].forEach(c=>{c.width=vid.videoWidth||640;c.height=vid.videoHeight||480;});
-    showVideo(); errBox.textContent=''; sum.textContent='Camera ready.';
+    [base,overlay,labels].forEach(c=>{ c.width=vid.videoWidth||640; c.height=vid.videoHeight||480; });
+    showVideo(); showErr(''); sum.textContent='Camera ready.';
   }catch(e){
-    if(e.name==='NotAllowedError')showErr('Permission denied. Allow camera in site settings.');
-    else if(e.name==='NotFoundError')showErr('No camera found. Try Switch or Use Photo.');
-    else if(e.name==='NotReadableError')showErr('Camera used by another app. Close others and retry.');
+    if(e.name==='NotAllowedError') showErr('Permission denied. Allow camera in site settings.');
+    else if(e.name==='NotFoundError') showErr('No camera found. Try Switch or Use Photo.');
+    else if(e.name==='NotReadableError') showErr('Camera used by another app. Close others and retry.');
     else showErr('Camera error: '+e.name);
   }
 }
-
 document.getElementById('openCam').onclick=openCamera;
-document.getElementById('flip').onclick=async()=>{facing=(facing==='environment'?'user':'environment');await openCamera();};
-document.addEventListener('visibilitychange',()=>{if(!document.hidden && !locked && !vid.srcObject){} }); // no auto-open
+document.getElementById('flip').onclick=async()=>{ facing=(facing==='environment'?'user':'environment'); await openCamera(); };
 
+/* ===== capture / photo ===== */
 document.getElementById('capture').onclick=()=>{
-  if(!vid.videoWidth){showErr('Open Camera first.');return;}
+  if(!vid.videoWidth){ showErr('Open Camera first.'); return; }
   bctx.drawImage(vid,0,0,base.width,base.height);
-  vid.pause(); stopCam(); locked=true; showStack();
-  sum.textContent='Captured successfully. Frame locked.';
+  vid.pause(); stopCam();
+  locked=true; showStack(); sum.textContent='Captured successfully. Frame locked.';
 };
-
 document.getElementById('pickBtn').onclick=()=>document.getElementById('filePick').click();
 document.getElementById('filePick').onchange=e=>{
-  const f=e.target.files?.[0]; if(!f)return;
+  const f=e.target.files?.[0]; if(!f) return;
   const url=URL.createObjectURL(f); const img=new Image();
-  img.onload=()=>{bctx.drawImage(img,0,0,base.width,base.height); locked=true; showStack(); sum.textContent='Photo loaded. Frame locked.';}
+  img.onload=()=>{ 
+    [base,overlay,labels].forEach(c=>{ c.width=img.width; c.height=img.height; });
+    bctx.drawImage(img,0,0,base.width,base.height);
+    locked=true; showStack(); sum.textContent='Photo loaded. Frame locked.';
+  };
   img.src=url;
 };
 
+/* ===== analyze (demo overlay) ===== */
 document.getElementById('analyze').onclick=()=>{
-  if(!locked){alert('Please Capture first');return;}
-  octx.fillStyle='rgba(255,255,255,0.1)'; octx.fillRect(0,0,overlay.width,overlay.height);
-  sum.textContent='Analyze complete · 7 lines colored.'; showReport();
+  if(!locked){ alert('Please Capture first'); return; }
+  octx.clearRect(0,0,overlay.width,overlay.height);
+  octx.fillStyle='rgba(255,255,255,0.1)';
+  octx.fillRect(0,0,overlay.width,overlay.height);
+  sum.textContent='Analyze complete · 7 lines colored.';
+  showReport();
+  saveResult();            // <-- save to localStorage AFTER analyze
 };
 
+/* ===== reset ===== */
 document.getElementById('reset').onclick=()=>{
-  locked=false; octx.clearRect(0,0,overlay.width,overlay.height); lctx.clearRect(0,0,labels.width,labels.height);
-  report.style.display='none'; showErr(''); showVideo(); // user must press Open Camera again
+  locked=false; octx.clearRect(0,0,overlay.width,overlay.height);
+  lctx.clearRect(0,0,labels.width,labels.height);
+  report.style.display='none'; showErr(''); showVideo();
 };
 
+/* ===== report / pdf ===== */
 function showReport(){
   report.style.display='block';
   const lines=[
-    {n:'Heart ❤️',t:'Emotional depth, compassion, love.'},
-    {n:'Head 💙',t:'Intelligence, clarity, creativity.'},
-    {n:'Life 💚',t:'Vitality, strength, endurance.'},
-    {n:'Fate 💛',t:'Career, destiny, life direction.'},
-    {n:'Sun 🧡',t:'Fame, talent, inspiration.'},
-    {n:'Mercury 💜',t:'Health, intuition, communication.'},
-    {n:'Marriage 💖',t:'Harmony, bonds, emotional ties.'}
+    {n:'Heart ❤️', t:'Emotional depth, compassion, love.'},
+    {n:'Head 💙', t:'Intelligence, clarity, creativity.'},
+    {n:'Life 💚', t:'Vitality, strength, endurance.'},
+    {n:'Fate 💛', t:'Career, destiny, life direction.'},
+    {n:'Sun 🧡', t:'Fame, talent, inspiration.'},
+    {n:'Mercury 💜', t:'Health, intuition, communication.'},
+    {n:'Marriage 💖', t:'Harmony, bonds, emotional ties.'}
   ];
   rtext.innerHTML=lines.map(m=>`<p><b>${m.n}</b><br>${m.t}</p>`).join('');
 }
-
 document.getElementById('savePDF').onclick=()=>{
   const {jsPDF}=window.jspdf; const doc=new jsPDF();
   doc.setFontSize(16); doc.text('Sathyadarshana Palmistry AI Insight Report',10,15);
   doc.setFontSize(12); doc.text('────────────────────────────',10,20);
-  const txt=rtext.innerText.split('\n'); let y=30; for(const t of txt){ if(t.trim()) doc.text(t,10,y), y+=8; }
+  const txt=rtext.innerText.split('\n'); let y=30;
+  for(const t of txt){ if(t.trim()) doc.text(t,10,y), y+=8; }
   doc.save('Palmistry_AI_Report.pdf');
 };
-<script>
-// ...existing code...
 
-// ===== AFTER analyze completes =====
-(function saveResult() {
-  const key = 'palmistryResults';
-
-  // TODO: මෙතන ඇත්ත analysis results දාන්න. දැන් demo values දාලා තියෙනවා.
-  const result = {
-    ts: Date.now(),
-    summary: '7 lines colored',
-    lines: {
-      heart: 'Strong',
-      head: 'Balanced',
-      life: 'Long',
-      fate: 'Visible',
-      sun: 'Distinct',
-      mercury: 'Sharp',
-      marriage: 'Dual'
-    }
-  };
-
-  const arr = JSON.parse(localStorage.getItem(key) || '[]');
-  arr.unshift(result);                          // newest first
+/* ===== results store ===== */
+function saveResult(){
+  const key='palmistryResults';
+  const result={ ts:Date.now(), summary:'7 lines colored',
+    lines:{heart:'Strong', head:'Balanced', life:'Long', fate:'Visible', sun:'Distinct', mercury:'Sharp', marriage:'Dual'}};
+  const arr=JSON.parse(localStorage.getItem(key)||'[]'); arr.unshift(result);
   localStorage.setItem(key, JSON.stringify(arr));
-
-  // small hint to user
-  try {
-    const toast = document.createElement('div');
-    toast.textContent = 'Saved to Results. See “Results & Reports”.';
-    toast.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#00e5ff;color:#000;padding:8px 12px;border-radius:10px;font-weight:700;z-index:9999';
-    document.body.appendChild(toast);
-    setTimeout(()=>toast.remove(),2200);
-  } catch {}
-})();
+  try{
+    const toast=document.createElement('div');
+    toast.textContent='Saved to Results. See “Results & Reports”.';
+    toast.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#00e5ff;color:#000;padding:8px 12px;border-radius:10px;font-weight:700;z-index:9999';
+    document.body.appendChild(toast); setTimeout(()=>toast.remove(),2200);
+  }catch{}
+}
 </script>
 </body>
 </html>
