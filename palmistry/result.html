@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Palmistry · Results & Reports</title>
+<base href="/Liberation/palmistry/">
+<style>
+:root{--bg:#0b0f16;--pri:#16f0a7;--neon:#00e5ff}
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+h1{color:var(--neon);margin:18px 0}
+nav{display:flex;justify-content:center;gap:10px;margin:10px 0}
+a.btn{background:#111;color:var(--neon);border:1px solid var(--neon);
+border-radius:16px;padding:8px 14px;text-decoration:none;font-weight:600}
+a.btn:hover{background:var(--neon);color:#000}
+table{margin:20px auto;border-collapse:collapse;width:90%;max-width:500px}
+th,td{border:1px solid var(--pri);padding:8px}
+th{background:#101820;color:var(--neon)}
+td{background:#0e131a}
+button{margin-top:16px;padding:8px 20px;border:none;border-radius:10px;
+background:var(--pri);font-weight:600}
+</style>
+</head>
+<body>
+<h1>📊 AI Results & Reports</h1>
+<nav>
+  <a href="index.html" class="btn">Lab Home</a>
+  <a href="palmistry.html" class="btn">Analyzer</a>
+  <a href="detect.html" class="btn">AI Detection</a>
+</nav>
+
+<table>
+<tr><th>Line</th><th>Condition</th><th>Meaning</th></tr>
+<tr><td>Heart</td><td>Strong</td><td>Emotional depth, sensitivity</td></tr>
+<tr><td>Head</td><td>Balanced</td><td>Clear thinking, wisdom</td></tr>
+<tr><td>Life</td><td>Long</td><td>Vitality, endurance</td></tr>
+<tr><td>Fate</td><td>Visible</td><td>Purpose-driven life</td></tr>
+<tr><td>Sun</td><td>Distinct</td><td>Creativity, fame</td></tr>
+<tr><td>Mercury</td><td>Sharp</td><td>Health & communication</td></tr>
+<tr><td>Marriage</td><td>Dual</td><td>Emotional connection</td></tr>
+</table>
+
+<button onclick="window.print()">🖨️ Generate PDF Report</button>
+
+<p style="margin-top:20px;opacity:.7;font-size:13px;">
+© Sathyadarshana Palmistry Lab · AI Research Unit
+</p>
+</body>
+</html>
