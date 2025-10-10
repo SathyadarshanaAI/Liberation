@@ -45,5 +45,61 @@ background:var(--pri);font-weight:600}
 <p style="margin-top:20px;opacity:.7;font-size:13px;">
 © Sathyadarshana Palmistry Lab · AI Research Unit
 </p>
-</body>
+</body><script>
+(function loadResults(){
+  const key = 'palmistryResults';
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+
+  const tbl = document.querySelector('table');
+  // clear current rows except header
+  while (tbl.rows.length > 1) tbl.deleteRow(1);
+
+  if (!data.length){
+    const row = tbl.insertRow();
+    row.innerHTML = `<td colspan="3" style="text-align:center;opacity:.7">No saved results yet. Analyze first.</td>`;
+    return;
+  }
+
+  // latest one show as detail rows
+  const latest = data[0];
+  const map = latest.lines || {};
+  const pretty = {
+    heart:'Heart', head:'Head', life:'Life', fate:'Fate',
+    sun:'Sun', mercury:'Mercury', marriage:'Marriage'
+  };
+  Object.keys(pretty).forEach(k=>{
+    const row = tbl.insertRow();
+    row.innerHTML = `<td>${pretty[k]}</td><td>${map[k]||'-'}</td><td>${latest.summary||'-'}</td>`;
+  });
+
+  // history list (optional)
+  const hist = document.createElement('div');
+  hist.style.cssText='max-width:520px;margin:14px auto;opacity:.85';
+  hist.innerHTML = `<small>History: ${data.length} record(s). Latest: ${new Date(latest.ts).toLocaleString()}</small>`;
+  tbl.parentElement.appendChild(hist);
+
+  // add controls
+  const bar = document.createElement('div');
+  bar.style.cssText='margin:10px auto;display:flex;gap:8px;justify-content:center';
+  bar.innerHTML = `
+    <button id="dljson">⬇️ Download JSON</button>
+    <button id="clear">🗑️ Clear History</button>
+  `;
+  tbl.parentElement.appendChild(bar);
+
+  document.getElementById('dljson').onclick = ()=>{
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'palmistry_results.json';
+    a.click();
+  };
+  document.getElementById('clear').onclick = ()=>{
+    if (confirm('Clear all saved results?')){
+      localStorage.removeItem(key);
+      location.reload();
+    }
+  };
+})();
+</script>
 </html>
