@@ -69,12 +69,22 @@ function render(){
     const card=document.createElement('div'); card.className='card';
 
     const blocks=[];
+    // meta
     blocks.push(`<div class="meta"><b>${hand} Hand</b> · ${fmt(r.ts)} · ${meta}</div>`);
 
+    // >>> THUMBNAIL (NEW)
+    if (r.thumb){
+      blocks.push(`<div style="margin:6px 0">
+        <img src="${r.thumb}" alt="thumb"
+             style="width:120px;border-radius:10px;border:1px solid #0ff3"/>
+      </div>`);
+    }
+    // <<< THUMBNAIL
+
+    // reportHTML or fallback
     if (r.reportHTML){
       blocks.push(`<div class="report">${r.reportHTML}</div>`);
     } else {
-      // fallback if old entries
       const L=r.lines||{};
       blocks.push(`<ul style="margin:6px 0 2px 16px;line-height:1.5">
         <li>Heart: ${L.heart?.score?.toFixed?.(2) ?? '—'}</li>
