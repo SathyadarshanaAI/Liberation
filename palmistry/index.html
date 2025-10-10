@@ -31,7 +31,6 @@
     .list{margin:0;padding-left:18px;line-height:1.6}
     footer{margin:22px 0 28px;text-align:center;color:#9db0c6}
     .ok{color:#00e887}.warn{color:#ffd24d}.err{color:#ff9b9b}
-
     .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #1e2b36;border-radius:999px;padding:6px 10px;background:#0e1620}
     .row{display:flex;gap:8px;flex-wrap:wrap}
   </style>
@@ -45,11 +44,12 @@
   </div>
   <div id="verBadge" class="badge">Loading <b>version…</b></div>
 
-  <!-- Primary nav -->
+  <!-- Primary nav (UPDATED ORDER) -->
   <nav>
-    <a class="btn" href="palmistry.html">Open Analyzer</a>
-    <a class="btn" href="result.html">Results & Reports</a>
-    <a class="btn" href="detect.html">AI Detection (Preview)</a>
+    <a href="palmistry_photo.html" class="btn">Photo Analyzer</a>
+    <a href="detect.html" class="btn">AI Detection</a>
+    <a href="result.html" class="btn">Results & Reports</a>
+    <a href="compare.html" class="btn">Compare Hands</a>
   </nav>
 
   <!-- Cards -->
@@ -73,7 +73,7 @@
     <div class="card">
       <h3>Quick Start</h3>
       <ol class="list">
-        <li>Open <b>Analyzer</b> → choose Left/Right → Pick Photo or Take Photo.</li>
+        <li>Open <b>Photo Analyzer</b> → choose Left/Right → Pick Photo or Take Photo.</li>
         <li>Press <b>Analyze</b> to draw lines. Tune threshold slider if needed.</li>
         <li>Save results → see them in <b>Results & Reports</b>.</li>
       </ol>
@@ -159,7 +159,7 @@
     // 3) Service Worker status (sw.js already in repo)
     if('serviceWorker' in navigator){
       try{
-        const reg = await navigator.serviceWorker.register('./sw.js');
+        await navigator.serviceWorker.register('./sw.js');
         swStatus.classList.add('ok');
         sysMsg.textContent = 'Offline cache active.';
       }catch{
