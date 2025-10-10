@@ -1,24 +1,57 @@
-// core/lab-core.js
-import { ensureUpdatedUI, loadManifest } from './updater.js';
+<!-- palmistry/core/lab-core.js -->
+<script type="module">
+const LAB = {};
+const MANIFEST_URL = "manifest.json";        // production name
+const SW_URL = "../sw.js";                    // already added
 
-window.LAB_VERSION = '2.6.0'; // bump via CI
-const toast = (m)=>{ const t=document.createElement('div'); t.textContent=m; t.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#00e5ff;color:#000;padding:8px 12px;border-radius:10px;font-weight:700;z-index:9999'; document.body.appendChild(t); setTimeout(()=>t.remove(),1800); };
+// ---------- fetch with cache bust + sanity ----------
+async function fetchJSON(url) {
+  const bust = `v=${Date.now()}`;
+  const res = await fetch(`${url}?${bust}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status} @ ${url}`);
+  return res.json();
+}
 
-(async function boot(){
-  const manifest = await ensureUpdatedUI({toast}) || await loadManifest();
-  // feature flags
-  window.FLAGS = manifest.flags || {};
-  // ROI presets override
-  window.ROI = (manifest.roi_overrides && manifest.roi_overrides.default) || {};
-  // dynamic import modules
-  for (const m of manifest.modules) {
-    await import(`../${m.path}?v=${manifest.version}`);
-  }
-  // plugins (optional)
-  if (manifest.plugins && manifest.flags?.enable_plugins){
-    for (const p of manifest.plugins) {
-      if (p.enabled) await import(`../${p.path}?v=${manifest.version}`);
+// ---------- manifest ----------
+let manifest = null;
+LAB.loadManifest = async () => {
+  try {
+    manifest = await fetchJSON(MANIFEST_URL);
+    localStorage.setItem("lab_manifest", JSON.stringify(manifest));
+    return manifest;
+  } catch {
+    // offline / fallback
+    const cached = localStorage.getItem("lab_manifest");
+    if (cached) {
+      manifest = JSON.parse(cached);
+      return manifest;
     }
+    throw new Error("No manifest available");
   }
-  toast(`Palmistry Lab ready (v${manifest.version})`);
-})();
+};
+LAB.getManifest = () => manifest;
+LAB.getVersion = () => (manifest?.version ?? "0.0.0");
+
+// ---------- service worker ----------
+LAB.initSW = async () => {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    await navigator.serviceWorker.register(SW_URL);
+  } catch {}
+};
+
+// ---------- tiny pubsub for modules ----------
+const bus = new EventTarget();
+LAB.on  = (ev, fn) => bus.addEventListener(ev, fn);
+LAB.emit= (ev, detail) => bus.dispatchEvent(new CustomEvent(ev,{detail}));
+
+// ---------- boot ----------
+LAB.init = async () => {
+  await LAB.initSW();
+  await LAB.loadManifest();
+  LAB.emit("ready", { version: LAB.getVersion(), manifest });
+};
+
+window.LAB = LAB;
+export default LAB;
+</script>
