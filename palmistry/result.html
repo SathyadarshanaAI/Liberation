@@ -3,133 +3,209 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Palmistry · Results & Reports</title>
+<title>Palmistry · Results & Reports (safer v3.2)</title>
 <style>
 :root{--bg:#0b0f16;--pri:#16f0a7;--neon:#00e5ff;--card:#101820}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui}
 h1{text-align:center;color:var(--neon);margin:16px 0 8px}
 nav{display:flex;justify-content:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-a.btn{background:#111;color:#00e5ff;border:1px solid #00e5ff;border-radius:16px;padding:8px 14px;
-      text-decoration:none;font-weight:600;transition:.25s}
+a.btn{background:#111;color:#00e5ff;border:1px solid #00e5ff;border-radius:16px;padding:8px 14px;text-decoration:none;font-weight:600;transition:.25s}
 a.btn:hover{background:#00e5ff;color:#000}
-.container{max-width:800px;margin:0 auto;padding:10px}
+.container{max-width:900px;margin:0 auto;padding:10px}
 .card{background:var(--card);border:1px solid #0aefff33;border-radius:14px;padding:12px;margin:10px 0}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .meta{font-size:13px;opacity:.9;margin-bottom:6px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 button{border:none;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
-.btn-dl{background:#00e5ff;color:#000}
+.btn-dl{background:#00e5ff;color:#001016}
 .btn-del{background:#2a2a2a;color:#ffd4d4;border:1px solid #ff7a7a55}
 .empty{opacity:.8;text-align:center;margin:30px 0}
 footer{text-align:center;margin:18px 0;opacity:.75}
+.badge{display:inline-block;border:1px solid #1e3a5f;background:#0e1621;color:#9edcff;border-radius:999px;font-size:12px;padding:2px 8px;margin-left:6px}
+.thumb{width:140px;max-width:40vw;border-radius:10px;border:1px solid #0ff3;display:block}
+header .tip{font-size:12px;opacity:.8}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:8px 0}
+select, input[type="search"]{background:#0e1621;color:#e6f0ff;border:1px solid #183048;border-radius:10px;padding:8px}
 </style>
 </head>
 <body>
-<h1>Results & Reports</h1>
-<nav>
+<header>
+  <h1>Results & Reports</h1>
+  <div class="tip" style="text-align:center">Left = Past · Right = Present · ΔK = Present − Past</div>
+</header>
+<nav aria-label="Primary">
   <a href="index.html" class="btn">Lab Home</a>
   <a href="palmistry_photo.html" class="btn">Photo Analyzer</a>
   <a href="detect.html" class="btn">AI Detection</a>
 </nav>
 
-<div class="container">
-  <div class="actions" style="justify-content:flex-end;margin-bottom:8px">
-    <button id="exportAll" class="btn-dl">Export JSON</button>
-    <button id="clearAll" class="btn-del">Clear All</button>
+<main class="container" id="main">
+  <div class="controls">
+    <div class="actions" role="group" aria-label="Bulk actions">
+      <button id="exportAll" class="btn-dl" aria-label="Export all results as JSON">Export JSON</button>
+      <button id="clearAll" class="btn-del" aria-label="Delete all saved results">Clear All</button>
+    </div>
+    <div class="row">
+      <input id="q" type="search" placeholder="Search (hand, version)…" aria-label="Search results"/>
+      <select id="handFilter" aria-label="Filter by hand">
+        <option value="all">All hands</option>
+        <option value="left">Left (Past)</option>
+        <option value="right">Right (Present)</option>
+      </select>
+    </div>
   </div>
-  <div id="list"></div>
-</div>
+  <div id="list" aria-live="polite"></div>
+</main>
 
 <footer><small>© 2025 Sathyadarshana · Palmistry Research Division</small></footer>
 
 <script>
+// ---- storage keys
 const KEY='palmistryResults';
 const list=document.getElementById('list');
+const qEl=document.getElementById('q');
+const handEl=document.getElementById('handFilter');
 
-function load(){ return JSON.parse(localStorage.getItem(KEY)||'[]'); }
-function save(a){ localStorage.setItem(KEY, JSON.stringify(a)); }
-
+// ---- helpers
+function safeParse(json, fallback){
+  try{ return JSON.parse(json); } catch{ return fallback; }
+}
+function load(){
+  const raw = localStorage.getItem(KEY) || '[]';
+  const arr = safeParse(raw, []) || [];
+  // newest first
+  return arr.slice().sort((a,b)=> (b.ts||0)-(a.ts||0));
+}
+function save(arr){
+  const json = JSON.stringify(arr);
+  try {
+    localStorage.setItem(KEY, json);
+  } catch(e){
+    alert('Storage is full. Please Export JSON and Clear.');
+  }
+}
+function pad(n){ return String(n).padStart(2,'0'); }
 function fmt(ts){
-  const d=new Date(ts);
-  const pad=n=>String(n).padStart(2,'0');
+  const d=new Date(ts||Date.now());
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+// very-light sanitizer (allow basic markup, strip <script> and inline on*)
+function sanitize(html){
+  return String(html)
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,'')
+    .replace(/\son\w+="[^"]*"/gi,'')
+    .replace(/\son\w+='[^']*'/gi,'')
+    .replace(/\son\w+=\w+/gi,'');
+}
+function handLabel(h){
+  if(h==='left')  return 'Left (Past)';
+  if(h==='right') return 'Right (Present)';
+  return 'Unknown';
+}
+function stampName(ts){
+  const d=new Date(ts||Date.now());
+  const pad2 = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+}
 
+// ---- rendering
 function render(){
-  const data=load();
+  const data = load();
+  const term = (qEl.value||'').toLowerCase();
+  const hand = handEl.value;
+
+  const filtered = data.filter(r=>{
+    const handOk = hand==='all' || (r.hand||'').toLowerCase()===hand;
+    const metaV = r.meta && r.meta.version ? `v${r.meta.version}` : 'v?';
+    const hay = `${(r.hand||'').toLowerCase()} ${metaV.toLowerCase()}`;
+    const termOk = !term || hay.includes(term);
+    return handOk && termOk;
+  });
+
   list.innerHTML='';
-  if(!data.length){
-    list.innerHTML=`<div class="empty">No results yet. Run an analysis in the Photo Analyzer.</div>`;
+  if(!filtered.length){
+    list.innerHTML = `<div class="empty">No results found. Run an analysis in the Photo Analyzer.</div>`;
     return;
   }
-  data.forEach((r,idx)=>{
-    const hand = r.hand ? (r.hand[0].toUpperCase()+r.hand.slice(1)) : '—';
-    const meta = r.meta?.version ? `v${r.meta.version}` : 'v?';
+
+  filtered.forEach((r,idx)=>{
     const card=document.createElement('div'); card.className='card';
 
+    const handTxt = handLabel((r.hand||'').toLowerCase());
+    const meta = r.meta?.version ? `v${r.meta.version}` : 'v?';
+
     const blocks=[];
-    // meta
-    blocks.push(`<div class="meta"><b>${hand} Hand</b> · ${fmt(r.ts)} · ${meta}</div>`);
+    blocks.push(`<div class="meta"><b>${handTxt}</b> · ${fmt(r.ts)} · ${meta}
+      ${r.meta?.confidence!=null? `<span class="badge" title="Analyzer confidence">Conf ${Math.round(r.meta.confidence)}%</span>`:''}
+    </div>`);
 
-    // >>> THUMBNAIL (NEW)
-    if (r.thumb){
-      blocks.push(`<div style="margin:6px 0">
-        <img src="${r.thumb}" alt="thumb"
-             style="width:120px;border-radius:10px;border:1px solid #0ff3"/>
-      </div>`);
-    }
-    // <<< THUMBNAIL
+    // Thumbnail (graceful fallback)
+    const thumb = r.thumb || 'data:image/svg+xml;utf8,'+
+      encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="140" height="100"><rect width="100%" height="100%" fill="#0e1621"/><text x="50%" y="50%" fill="#7aa0c4" font-size="12" text-anchor="middle" dy=".3em">No preview</text></svg>`);
+    blocks.push(`<img class="thumb" src="${thumb}" alt="analysis thumbnail" loading="lazy"/>`);
 
-    // reportHTML or fallback
+    // Report HTML (sanitized) or numeric fallback
     if (r.reportHTML){
-      blocks.push(`<div class="report">${r.reportHTML}</div>`);
+      blocks.push(`<div class="report">${sanitize(r.reportHTML)}</div>`);
     } else {
       const L=r.lines||{};
       blocks.push(`<ul style="margin:6px 0 2px 16px;line-height:1.5">
         <li>Heart: ${L.heart?.score?.toFixed?.(2) ?? '—'}</li>
         <li>Head: ${L.head?.score?.toFixed?.(2) ?? '—'}</li>
-        <li>Life: ${L.life?.len?.toFixed?.(2) ?? '—'}</li>
+        <li>Life: ${L.life?.len?.toFixed?.(2) ?? L.life?.score?.toFixed?.(2) ?? '—'}</li>
         <li>Fate: ${L.fate?.score?.toFixed?.(2) ?? '—'}</li>
-        <li>Sun: ${L.sun?.intensity?.toFixed?.(2) ?? '—'}</li>
+        <li>Sun: ${L.sun?.intensity?.toFixed?.(2) ?? L.sun?.score?.toFixed?.(2) ?? '—'}</li>
         <li>Mercury: ${L.mercury?.score?.toFixed?.(2) ?? '—'}</li>
         <li>Marriage: ${L.marriage?.score?.toFixed?.(2) ?? '—'}</li>
       </ul>`);
     }
 
-    const id=`dl-${idx}`;
+    const id=`dl-${idx}-${Math.random().toString(36).slice(2)}`;
     blocks.push(`<div class="row actions">
-      <button class="btn-dl" id="${id}">Download JSON</button>
-      <button class="btn-del" data-i="${idx}">Delete</button>
+      <button class="btn-dl" id="${id}" aria-label="Download result ${idx+1} as JSON">Download JSON</button>
+      <button class="btn-del" data-i="${idx}" aria-label="Delete this result">Delete</button>
     </div>`);
 
     card.innerHTML = blocks.join('');
     list.appendChild(card);
 
+    // per-card handlers
     document.getElementById(id).onclick=()=>downloadOne(r, idx);
-    card.querySelector('.btn-del').onclick=()=>{ const a=load(); a.splice(idx,1); save(a); render(); };
+    card.querySelector('.btn-del').onclick=()=>{ const a=load(); const i=a.findIndex(x=>x.ts===r.ts); if(i>-1){ a.splice(i,1); save(a); render(); } };
   });
 }
 
 function downloadOne(obj, idx){
-  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  const stamp = stampName(obj.ts);
+  const json = JSON.stringify(obj,null,2);
+  const blob=new Blob([json],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download=`palmistry_result_${idx+1}.json`;
+  a.download=`palmistry_result_${idx+1}_${stamp}.json`;
   a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  setTimeout(()=>URL.revokeObjectURL(a.href),500);
 }
 
+// bulk handlers
 document.getElementById('exportAll').onclick=()=>{
-  const blob=new Blob([JSON.stringify(load(),null,2)],{type:'application/json'});
+  const data = load();
+  const stamp = stampName(Date.now());
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='palmistry_results_all.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  a.download=`palmistry_results_all_${stamp}.json`;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500);
 };
 document.getElementById('clearAll').onclick=()=>{
   if(!confirm('Delete all saved results?')) return;
   localStorage.removeItem(KEY); render();
 };
 
+// filters
+qEl.addEventListener('input', render);
+handEl.addEventListener('change', render);
+
+// initial
 render();
 </script>
 </body>
