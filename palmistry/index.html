@@ -3,369 +3,154 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quantum Palm Analyzer v4.2</title>
-<link rel="icon" href="../assets/favicon.png"/>
+<title>Quantum Palm Analyzer v4.3 · Sathyadarshana</title>
 <style>
 :root{
-  --bg:#0b0f16; --card:#0f172a; --neon:#00e5ff; --pri:#16f0a7; --mut:#9fb7d4;
-  --good:#16f0a7; --bad:#ff6b6b; --mid:#ffd166;
+  --bg:#0b0f16;--card:#0f172a;--neon:#00e5ff;--pri:#16f0a7;--mut:#9fb7d4;
 }
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(1200px 800px at 50% -10%, #0e2133 0%, #0b0f16 55%, #070a0f 100%);
-     color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial}
-h1{margin:14px 0 6px;text-align:center;color:var(--neon);letter-spacing:.3px}
-.sub{opacity:.85;text-align:center;margin-bottom:8px}
-.wrap{max-width:1100px;margin:0 auto;padding:12px}
-nav{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px 0 14px}
-a.btn,button.btn{background:#0c1320;color:#9edcff;border:1px solid #1c3a58;border-radius:14px;
-  padding:8px 12px;text-decoration:none;font-weight:700;cursor:pointer;transition:.25s}
-a.btn:hover,button.btn:hover{background:#00e5ff;color:#001015;border-color:#00e5ff}
-.grid{display:grid;gap:12px}
-@media(min-width:1000px){.grid{grid-template-columns:1.25fr 1fr}}
-.card{background:linear-gradient(180deg,#0f1524 0%, #0c1120 100%);
-      border:1px solid #113046;border-radius:16px;padding:12px;box-shadow:0 0 0 1px #0a1a29 inset}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-label{font-weight:700}
-select,input[type="file"]{background:#0d1522;color:#e6f0ff;border:1px solid #17324a;border-radius:10px;padding:8px}
-.badge{display:inline-block;border:1px solid #224d6b;background:#0c1522;color:#9edcff;border-radius:999px;
-       font-size:12px;padding:2px 8px;margin-left:6px}
-.kv{display:grid;grid-template-columns:140px 1fr;gap:6px;align-items:center}
-.bar{background:#0d1320;border-radius:10px;height:10px;overflow:hidden}
-.bar>span{display:block;height:100%;transform-origin:left center;transform:scaleX(0)}
-.bar.heart   > span{background:linear-gradient(90deg,#ff6b6b,#ff3b3b)}
-.bar.head    > span{background:linear-gradient(90deg,#60a5fa,#3b82f6)}
-.bar.life    > span{background:linear-gradient(90deg,#34d399,#10b981)}
-.bar.fate    > span{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
-.bar.sun     > span{background:linear-gradient(90deg,#f97316,#fb923c)}
-.bar.mercury > span{background:linear-gradient(90deg,#a78bfa,#8b5cf6)}
-.bar.marriage> span{background:linear-gradient(90deg,#f472b6,#ec4899)}
-hr{border:0;border-top:1px solid #0f2233;margin:10px 0}
-.center{text-align:center}
-
-/* Camera — taller preview */
-.camWrap{position:relative;display:grid;place-items:center;max-width:680px;margin:auto}
-video,canvas{width:100%;max-width:680px;border-radius:16px;border:2px solid #0e2a33;background:#000}
-#video[hidden]{display:none}
-.aura{position:absolute;inset:0;border-radius:16px;pointer-events:none;filter:blur(28px) saturate(140%);opacity:.85;mix-blend-mode:screen;
-  background:conic-gradient(from 0deg, #00e5ff55, #16f0a755, #9a6bff55, #00e5ff55);animation:aura 6s linear infinite}
-@keyframes aura{to{transform:rotate(360deg)}}
-
-.glowBtn{position:relative;overflow:hidden}
-.glowBtn.success::after{content:"";position:absolute;inset:-2px;border-radius:16px;background:conic-gradient(from 0deg,#00e5ff,#16f0a7,#9a6bff,#00e5ff);filter:blur(12px);opacity:.8;animation:aura 3s linear infinite}
-
-#insight{min-height:96px;background:#0b1320;border:1px solid #17324a;border-radius:12px;padding:10px}
-.type{white-space:pre-wrap}
-.tip{font-size:12px;opacity:.8}
-.smallmut{font-size:12px;opacity:.75}
-canvas#radar{display:block;margin:10px auto;border-radius:12px;background:#0b1320;border:1px solid #17324a}
-
-/* Language bar */
-.langbar{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:4px auto 10px}
-.langbar button{background:#0b1320;border:1px solid #17324a;color:#9edcff;border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer}
-.langbar button:hover{background:#00e5ff;color:#001015;border-color:#00e5ff}
+body{margin:0;background:radial-gradient(1200px 800px at 50% -10%,#0e2133,#0b0f16);
+     color:#e6f0ff;font-family:system-ui;text-align:center;}
+h1{margin:10px 0;color:var(--neon);}
+nav{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+button,a{background:#0d1522;color:#9edcff;border:1px solid #17324a;
+  border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer;text-decoration:none;}
+button:hover,a:hover{background:#00e5ff;color:#000}
+.wrap{max-width:900px;margin:auto;padding:10px}
+.camBox{position:relative;width:min(95vw,680px);aspect-ratio:3/4;border-radius:16px;
+  border:2px solid #00e5ff;overflow:hidden;margin:auto;box-shadow:0 0 30px #001 inset}
+.camBox video,.camBox canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.aura{position:absolute;inset:0;border-radius:16px;mix-blend-mode:screen;
+  background:conic-gradient(from 0deg,#00e5ff88,#16f0a788,#9a6bff88,#00e5ff88);
+  animation:spin 6s linear infinite;opacity:.7;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bar{background:#0b1320;height:10px;border-radius:10px;overflow:hidden;margin:3px 0}
+.bar span{display:block;height:100%;transform-origin:left center;transform:scaleX(0);
+  transition:transform 1s ease;}
+.bar.heart span{background:linear-gradient(90deg,#ff6b6b,#ff3b3b)}
+.bar.head span{background:linear-gradient(90deg,#60a5fa,#3b82f6)}
+.bar.life span{background:linear-gradient(90deg,#34d399,#10b981)}
+.bar.fate span{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.bar.sun span{background:linear-gradient(90deg,#f97316,#fb923c)}
+.bar.merc span{background:linear-gradient(90deg,#a78bfa,#8b5cf6)}
+.bar.mar span{background:linear-gradient(90deg,#f472b6,#ec4899)}
+canvas#radar{display:block;margin:10px auto;background:#0b1320;border:1px solid #17324a;border-radius:12px}
+.langbar{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin:5px}
+.langbar button{background:#0b1320;border:1px solid #17324a;color:#9edcff;border-radius:999px;padding:4px 8px;font-weight:700}
+.langbar button:hover{background:#00e5ff;color:#001015}
 #google_translate_element{display:inline-block;margin-left:6px}
 </style>
 </head>
 <body>
-  <h1>Quantum Palm Analyzer v4.2</h1>
-  <div class="sub">
-    Left=<b>Past</b> · Right=<b>Present</b> · ΔK ready · <span id="vtiBadge" class="badge">VTI —</span>
+<h1>Quantum Palm Analyzer v4.3</h1>
+<div class="langbar">
+  <span>🌐</span>
+  <button data-lang="en">English</button>
+  <button data-lang="si">සිංහල</button>
+  <button data-lang="ta">தமிழ்</button>
+  <button data-lang="de">Deutsch</button>
+  <button data-lang="it">Italiano</button>
+  <button data-lang="ja">日本語</button>
+  <button data-lang="hi">हिन्दी</button>
+  <button data-lang="zh-CN">中文</button>
+  <button data-lang="fr">Français</button>
+  <button data-lang="es">Español</button>
+  <button data-lang="tr">Türkçe</button>
+  <button data-lang="ru">Русский</button>
+  <span id="google_translate_element"></span>
+</div>
+
+<nav>
+  <a href="../astrology.html">← Astrology</a>
+  <button id="startCam">📷 Start</button>
+  <button id="capture">Capture</button>
+  <label for="filePick" class="btn">Upload</label>
+  <input id="filePick" type="file" accept="image/*" hidden/>
+  <button id="analyze">Analyze</button>
+  <button id="pdf">📄 PDF</button>
+</nav>
+
+<div class="wrap">
+  <div class="camBox" id="camBox">
+    <video id="video" playsinline autoplay muted hidden></video>
+    <canvas id="canvas"></canvas>
+    <div class="aura"></div>
   </div>
 
-  <!-- Language controls -->
-  <div class="langbar">
-    <span class="smallmut">Language:</span>
-    <button data-lang="en">English</button>
-    <button data-lang="si">සිංහල</button>
-    <button data-lang="ta">தமிழ்</button>
-    <button data-lang="de">Deutsch</button>
-    <button data-lang="it">Italiano</button>
-    <button data-lang="ja">日本語</button>
-    <button data-lang="hi">हिन्दी</button>
-    <button data-lang="zh-CN">中文</button>
-    <button data-lang="fr">Français</button>
-    <button data-lang="es">Español</button>
-    <button data-lang="tr">Türkçe</button>
-    <button data-lang="ru">Русский</button>
-    <!-- Native Google widget (kept minimal) -->
-    <span id="google_translate_element"></span>
+  <h3 id="status">No image yet</h3>
+  <div id="conf">Confidence —</div>
+
+  <div id="bars">
+    <div class="bar heart"><span></span></div>
+    <div class="bar head"><span></span></div>
+    <div class="bar life"><span></span></div>
+    <div class="bar fate"><span></span></div>
+    <div class="bar sun"><span></span></div>
+    <div class="bar merc"><span></span></div>
+    <div class="bar mar"><span></span></div>
   </div>
 
-  <nav>
-    <a class="btn" href="../astrology.html">← Astrology</a>
-    <a class="btn" href="./pages/results.html">Results & PairView</a>
-    <a class="btn" href="./report.html">PDF Report</a>
-  </nav>
+  <canvas id="radar" width="300" height="230"></canvas>
+  <pre id="insight">🜁 Waiting for analysis...</pre>
+</div>
 
-  <div class="wrap grid">
-    <!-- LEFT: Capture / Preview -->
-    <section class="card">
-      <div class="row">
-        <label for="hand">Hand</label>
-        <select id="hand">
-          <option value="left">Left (Past)</option>
-          <option value="right">Right (Present)</option>
-        </select>
-        <span class="badge">Engine v4</span>
-        <span class="tip">Diffuse daylight • neutral bg • 40–50cm</span>
-      </div>
-
-      <div class="row">
-        <button class="btn" id="newPair">New Session</button>
-        <button class="btn" id="reusePair">Continue Session</button>
-        <span class="badge" id="pairCode">pair: —</span>
-      </div>
-
-      <div class="row">
-        <button class="btn" id="startCam">Start Camera</button>
-        <button class="btn" id="capBtn">Capture</button>
-        <label class="btn" for="filePick" style="display:inline-block">Upload Photo</label>
-        <input id="filePick" type="file" accept="image/*" style="display:none"/>
-        <button class="btn" id="clear">Clear</button>
-      </div>
-
-      <div class="camWrap">
-        <!-- Taller canvas (height 440) -->
-        <video id="video" playsinline autoplay muted hidden></video>
-        <canvas id="preview" width="560" height="440"></canvas>
-        <div class="aura" aria-hidden="true"></div>
-      </div>
-      <div class="tip" id="placeholder" style="text-align:center;margin-top:6px">No image yet — start camera or upload a photo.</div>
-    </section>
-
-    <!-- RIGHT: Analysis / Insight / Save -->
-    <section class="card">
-      <div class="row">
-        <button class="btn" id="analyze">Analyze</button>
-        <button class="btn glowBtn" id="save">Save to Results</button>
-      </div>
-
-      <div class="kv"><b>Confidence</b> <div class="badge" id="confBadge">—</div></div>
-      <div class="kv"><span>Heart</span>   <div class="bar heart"><span id="bHeart"></span></div></div>
-      <div class="kv"><span>Head</span>    <div class="bar head"><span id="bHead"></span></div></div>
-      <div class="kv"><span>Life</span>    <div class="bar life"><span id="bLife"></span></div></div>
-      <div class="kv"><span>Fate</span>    <div class="bar fate"><span id="bFate"></span></div></div>
-      <div class="kv"><span>Sun</span>     <div class="bar sun"><span id="bSun"></span></div></div>
-      <div class="kv"><span>Mercury</span> <div class="bar mercury"><span id="bMerc"></span></div></div>
-      <div class="kv"><span>Marriage</span><div class="bar marriage"><span id="bMar"></span></div></div>
-
-      <canvas id="radar" width="300" height="230"></canvas>
-
-      <hr/>
-      <div id="insight">
-        <div class="type" id="typeBox">Run Analyze to generate insight…</div>
-        <div class="smallmut" id="marriageNote" style="margin-top:6px"></div>
-      </div>
-    </section>
-  </div>
-
-<!-- ===== JS ===== -->
 <script>
-/* ---------- Google Translate (page-level) ---------- */
+/* --- Google Translate setup --- */
 function googleTranslateElementInit(){
-  new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    includedLanguages: 'en,si,ta,de,it,ja,hi,zh-CN,fr,es,tr,ru',
-    autoDisplay: false
-  }, 'google_translate_element');
+ new google.translate.TranslateElement({
+   pageLanguage:'en',
+   includedLanguages:'en,si,ta,de,it,ja,hi,zh-CN,fr,es,tr,ru',
+   autoDisplay:false
+ },'google_translate_element');
 }
-// helper to programmatically switch language (sets cookie then reload)
-function setLangCookie(lang){
-  const v = '/auto/' + lang;
-  document.cookie = 'googtrans=' + v + ';path=/';
-  document.cookie = 'googtrans=' + v + ';path=/;domain=' + location.hostname;
-  location.reload();
-}
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest('.langbar button[data-lang]');
-  if(btn){ setLangCookie(btn.dataset.lang); }
-});
-// load google widget
-(function(){
-  var gt = document.createElement('script');
-  gt.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-  document.body.appendChild(gt);
-})();
+function setLangCookie(l){const v='/auto/'+l;document.cookie='googtrans='+v+';path=/';document.cookie='googtrans='+v+';path=/;domain='+location.hostname;location.reload();}
+document.addEventListener('click',e=>{const b=e.target.closest('.langbar button[data-lang]');if(b)setLangCookie(b.dataset.lang);});
+(function(){let s=document.createElement('script');s.src='https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';document.body.appendChild(s);})();
 
-/* ---------- Pair & Storage ---------- */
-const PAIR_KEY='currentPairId', PR_KEY='palmistryResults';
-const handSel = document.getElementById('hand');
-const getPairId=()=>localStorage.getItem(PAIR_KEY)||null;
-const setPairId=id=>localStorage.setItem(PAIR_KEY,id);
-const newPairId=()=> (crypto.randomUUID?.()||('pair_'+Date.now().toString(36)));
-function paintPair(){ document.getElementById('pairCode').textContent='pair: '+(getPairId()||'—'); }
-paintPair();
-function prLoad(){ try{ return JSON.parse(localStorage.getItem(PR_KEY)||'[]')||[] }catch{ return [] } }
-function prSave(a){ try{ localStorage.setItem(PR_KEY, JSON.stringify(a)); }catch{ alert('Storage full. Export from Results & clear.'); } }
-function prAdd(entry){ const a=prLoad(); if(a.some(x=>x.ts===entry.ts)) entry.ts=Date.now(); a.push(entry); prSave(a); }
-document.getElementById('newPair').onclick=()=>{ setPairId(newPairId()); paintPair(); };
-document.getElementById('reusePair').onclick=()=>{ if(!getPairId()) setPairId(newPairId()); paintPair(); };
-
-/* ---------- Camera (taller preview) ---------- */
+/* --- Camera setup --- */
 const video=document.getElementById('video');
-const canvas=document.getElementById('preview'); const ctx=canvas.getContext('2d');
-const ph=document.getElementById('placeholder');
-let stream=null;
-function showVideo(on){ video.hidden=!on; }
+const canvas=document.getElementById('canvas');const ctx=canvas.getContext('2d');
+const camBox=document.getElementById('camBox');
+function resizeCanvas(){const r=camBox.getBoundingClientRect();const d=Math.min(window.devicePixelRatio||1,2);
+canvas.width=r.width*d;canvas.height=r.height*d;}
+new ResizeObserver(resizeCanvas).observe(camBox);resizeCanvas();
+
 document.getElementById('startCam').onclick=async()=>{
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    video.srcObject=stream; showVideo(true); ph.textContent='Camera active — align your palm.';
-  }catch{ alert('Camera access failed. Use Upload Photo.'); }
+ try{
+  const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  video.srcObject=stream;video.hidden=false;status.textContent='Camera active';
+ }catch{alert('Camera access failed');}
 };
-document.getElementById('capBtn').onclick=()=>{ if(!video.srcObject){alert('Start camera first.');return;} drawToCanvas(video); showVideo(false); };
+document.getElementById('capture').onclick=()=>{
+ if(!video.srcObject){alert('Start camera');return;}
+ resizeCanvas();ctx.drawImage(video,0,0,canvas.width,canvas.height);status.textContent='Frame captured';
+};
 document.getElementById('filePick').onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const img=new Image(); img.onload=()=>drawToCanvas(img); img.src=URL.createObjectURL(f);
+ const f=e.target.files[0];if(!f)return;const img=new Image();
+ img.onload=()=>{resizeCanvas();ctx.drawImage(img,0,0,canvas.width,canvas.height);status.textContent='Image loaded'};
+ img.src=URL.createObjectURL(f);
 };
-document.getElementById('clear').onclick=()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); ph.textContent='Cleared — capture or upload again.'; };
-function drawToCanvas(src){
-  const w=canvas.width,h=canvas.height; ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h);
-  const sw=src.videoWidth||src.width, sh=src.videoHeight||src.height;
-  const CR=w/h, R=sw/sh; let sx=0,sy=0,Ssw=sw,Ssh=sh;
-  if(R>CR){ Ssh=sh; Ssw=Ssh*CR; sx=(sw-Ssw)/2; } else { Ssw=sw; Ssh=Ssw/CR; sy=(sh-Ssh)/2; }
-  ctx.drawImage(src,sx,sy,Ssw,Ssh,0,0,w,h); ph.textContent='Frame captured.';
-}
 
-/* ---------- Analyzer v4 (same as before) ---------- */
-const bars={ heart:byId('bHeart'), head:byId('bHead'), life:byId('bLife'), fate:byId('bFate'),
-             sun:byId('bSun'), mercury:byId('bMerc'), marriage:byId('bMar') };
-const confBadge=byId('confBadge'), vtiBadge=byId('vtiBadge');
-let lastResult=null;
-
+/* --- Analyzer --- */
+const bars=document.querySelectorAll('.bar span');
 document.getElementById('analyze').onclick=()=>{
-  const pix=ctx.getImageData(0,0,canvas.width,canvas.height).data;
-  let has=false; for(let i=0;i<pix.length;i+=64){ if(pix[i]|pix[i+1]|pix[i+2]){has=true;break;} }
-  if(!has){ alert('Capture or upload a photo first.'); return; }
-  const r=analyzeCanvas(); lastResult=r;
-  confBadge.textContent=r.confidence+'%';
-  for(const k of Object.keys(bars)){ bars[k].style.transform=`scaleX(${(r.lines[k].score||0)/100})`; }
-  drawRadar(r.lines);
-  typeInsight(buildInsightText(r));
-  document.getElementById('marriageNote').textContent='Partnership timing uses windows (Early/Mid/Later). Exact ages are not predicted.';
-  vtiBadge.textContent='VTI '+vitalityTrend(r.lines);
+ let data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+ let sum=0;for(let i=0;i<data.length;i+=24){sum+=data[i]+data[i+1]+data[i+2];}
+ let avg=sum/(data.length/24);let conf=Math.min(99,Math.max(60,avg/4));
+ document.getElementById('conf').textContent='Confidence '+conf.toFixed(1)+'%';
+ let scores=[90,84,80,70,76,85,65].map(v=>Math.min(100,v+(conf-80)/2));
+ bars.forEach((b,i)=>{b.style.transform=`scaleX(${scores[i]/100})`;});
+ drawRadar(scores);
+ document.getElementById('insight').textContent=
+ `🜂 Confidence ${conf.toFixed(1)}%\n• Heart ${scores[0]}  • Head ${scores[1]}\n• Life ${scores[2]}  • Fate ${scores[3]}\n• Sun ${scores[4]}  • Mercury ${scores[5]}  • Marriage ${scores[6]}\nInsight: Subtle energy balance emerging.`;
 };
-
-function analyzeCanvas(){
-  const {width:w,height:h}=canvas;
-  const img=ctx.getImageData(0,0,w,h), d=img.data;
-  const gray=new Float32Array(w*h);
-  for(let i=0,j=0;i<d.length;i+=4,j++){ gray[j]=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; }
-  const mag=new Float32Array(w*h);
-  const KX=[-1,0,1,-2,0,2,-1,0,1], KY=[-1,-2,-1,0,0,0,1,2,1];
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-    let gx=0,gy=0,k=0; for(let yy=-1;yy<=1;yy++) for(let xx=-1;xx<=1;xx++,k++){
-      const g=gray[(y+yy)*w+(x+xx)]; gx+=g*KX[k]; gy+=g*KY[k]; }
-    mag[y*w+x]=Math.hypot(gx,gy);
-  }
-  let mean=0; for(let i=0;i<gray.length;i++) mean+=gray[i]; mean/=gray.length;
-  let v=0; for(let i=0;i<gray.length;i++){ const dv=gray[i]-mean; v+=dv*dv; }
-  const contrast=Math.sqrt(v/gray.length); let e=0; for(let i=0;i<mag.length;i++) e+=mag[i];
-  const edgeMean=e/(mag.length||1);
-  const conf=clamp(map(contrast,15,38,55,96)*0.6 + map(edgeMean,2,14,40,98)*0.4, 30, 98);
-  const bands=7, arr=new Array(bands).fill(0);
-  for(let y=0;y<h;y++){ const bi=Math.min(bands-1,Math.floor(y/h*bands)); let row=0; for(let x=0;x<w;x++) row+=mag[y*w+x]; arr[bi]+=row/w; }
-  const mx=Math.max(...arr,1); const z=arr.map(v=>clamp((v/mx)*100,10,96));
-  const mapIdx={heart:0,head:1,life:2,fate:3,sun:4,mercury:5,marriage:6}; const lines={};
-  for(const [k,bi] of Object.entries(mapIdx)){ lines[k]={score:Math.round(clamp(0.65*z[bi]+0.35*conf,0,100))}; }
-  return {confidence:Math.round(conf),lines};
+function drawRadar(a){
+ const c=document.getElementById('radar'),g=c.getContext('2d');
+ const w=c.width,h=c.height,cx=w/2,cy=h/2,R=Math.min(w,h)/2-18;
+ g.clearRect(0,0,w,h);g.strokeStyle='#17324a';for(let r=0.2;r<=1;r+=0.2){g.beginPath();
+  for(let i=0;i<7;i++){let ang=i*2*Math.PI/7-Math.PI/2;let x=cx+Math.cos(ang)*R*r;let y=cy+Math.sin(ang)*R*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.stroke();}
+ g.beginPath();for(let i=0;i<7;i++){let ang=i*2*Math.PI/7-Math.PI/2;let x=cx+Math.cos(ang)*R*(a[i]/100);let y=cy+Math.sin(ang)*R*(a[i]/100);i?g.lineTo(x,y):g.moveTo(x,y);}
+ g.closePath();g.fillStyle='rgba(22,240,167,0.1)';g.fill();g.strokeStyle='#16f0a7';g.stroke();
 }
-function map(v,a,b,c,d){ const t=(v-a)/(b-a); return c+clamp(t,0,1)*(d-c); }
-function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-function byId(id){ return document.getElementById(id); }
-
-/* Radar chart */
-function drawRadar(lines){
-  const order=['heart','head','life','fate','sun','mercury','marriage'];
-  const labels=['Heart','Head','Life','Fate','Sun','Mercury','Marriage'];
-  const data=order.map(k=>(lines[k]?.score||0)/100);
-  const cnv=byId('radar'), g=cnv.getContext('2d');
-  const w=cnv.width,h=cnv.height,cx=w/2,cy=h/2,R=Math.min(w,h)/2-18;
-  g.clearRect(0,0,w,h);
-  g.lineWidth=1; g.strokeStyle='#193047'; g.fillStyle='rgba(22,240,167,0.08)';
-  for(let r=0.2;r<=1.0;r+=0.2){ g.beginPath();
-    for(let i=0;i<order.length;i++){ const a=(Math.PI*2/order.length)*i - Math.PI/2; const x=cx+Math.cos(a)*R*r,y=cy+Math.sin(a)*R*r; i?g.lineTo(x,y):g.moveTo(x,y); }
-    g.closePath(); g.stroke();
-  }
-  g.beginPath();
-  for(let i=0;i<data.length;i++){ const a=(Math.PI*2/data.length)*i - Math.PI/2, r=R*data[i]; const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; i?g.lineTo(x,y):g.moveTo(x,y); }
-  g.closePath(); g.fill(); g.strokeStyle='#16f0a7'; g.stroke();
-  g.fillStyle='#9fb7d4'; g.font='12px system-ui';
-  for(let i=0;i<labels.length;i++){ const a=(Math.PI*2/labels.length)*i - Math.PI/2; const x=cx+Math.cos(a)*(R+10), y=cy+Math.sin(a)*(R+10);
-    g.textAlign = Math.cos(a)>0.1? 'left' : (Math.cos(a)<-0.1? 'right' : 'center'); g.fillText(labels[i],x,y); }
-}
-
-/* Vitality & Marriage helpers */
-function vitalityTrend(lines){
-  const L=lines.life?.score||0, S=lines.sun?.score||0, M=lines.mercury?.score||0;
-  return Math.round(0.5*L + 0.3*S + 0.2*M);
-}
-function marriageWindow(lines){
-  const m=lines.marriage?.score||0;
-  if(m>=75) return 'Partnership window strong (mid–early)';
-  if(m>=55) return 'Moderate partnership window (mid)';
-  return 'Evolving window (later / presence)';
-}
-
-/* Insight text */
-function buildInsightText(r){
-  const L=r.lines;
-  const hi=Object.entries(L).sort((a,b)=>b[1].score-a[1].score)[0][0];
-  const lo=Object.entries(L).sort((a,b)=>a[1].score-b[1].score)[0][0];
-  const N={heart:'Heart',head:'Head',life:'Life',fate:'Fate',sun:'Sun',mercury:'Mercury',marriage:'Marriage'};
-  const mode=(handSel.value==='left')?'Past':'Present';
-  const tips=[], caut=[];
-  if(hi==='heart') tips.push('Emotional clarity strengthening.');
-  if(hi==='head') tips.push('Focused reasoning and calm decisions.');
-  if(hi==='life') tips.push('Vital energy resilient; routines support you.');
-  if(hi==='fate') tips.push('Purpose alignment increasing.');
-  if(hi==='sun')  tips.push('Creative radiance; recognition possible.');
-  if(hi==='mercury') tips.push('Communication & wellness balancing.');
-  if(hi==='marriage') tips.push('Partnership window strong: '+marriageWindow(L)+'.');
-  if(lo==='heart') caut.push('Nurture calm dialogue.');
-  if(lo==='head')  caut.push('Avoid overthinking; simplify.');
-  if(lo==='life')  caut.push('Prioritize rest & breath.');
-  if(lo==='fate')  caut.push('Stay open to pivots.');
-  if(lo==='sun')   caut.push('Create without chasing applause.');
-  if(lo==='mercury') caut.push('Hydrate, stretch, speak gently.');
-  if(lo==='marriage') caut.push('Partnership timing subtle: '+marriageWindow(L)+'.');
-  return [
-    `🜁 Mode: ${mode} · Confidence ${r.confidence}%`,
-    `• Strongest → ${N[hi]} (${L[hi].score})`,
-    `• Tender   → ${N[lo]} (${L[lo].score})`,
-    `▸ Insight : ${tips[0]||'Subtle progress emerging.'}`,
-    `▸ Care    : ${caut[0]||'Keep steady routines.'}`
-  ].join('\n');
-}
-function typeInsight(text){
-  const box=document.getElementById('typeBox'); box.textContent=''; let i=0;
-  (function tick(){ box.textContent=text.slice(0,i++); if(i<=text.length) requestAnimationFrame(tick); })();
-}
-
-/* Save */
-document.getElementById('save').onclick=async(ev)=>{
-  if(!lastResult){ alert('Run Analyze first.'); return; }
-  let pairId=getPairId(); if(!pairId){ pairId=newPairId(); setPairId(pairId); paintPair(); }
-  const whichHand=handSel.value;
-  const thumb=canvas.toDataURL('image/jpeg',0.75);
-  const L=lastResult.lines;
-  const reportHTML = `
-    <section><h3>${whichHand==='left'?'Past (Left)':'Present (Right)'} Reading</h3>
-      <ul>
-        <li>Heart: ${L.heart.score}</li><li>Head: ${L.head.score}</li>
-        <li>Life: ${L.life.score}</li><li>Fate: ${L.fate.score}</li>
-        <li>Sun: ${L.sun.score}</li><li>Mercury: ${L.mercury.score}</li>
-        <li>Marriage: ${L.marriage.score} (${marriageWindow(L)})</li>
-      </ul>
-      <div class="smallmut">Vitality Trend Index: ${vitalityTrend(L)} (not a lifespan prediction)</div>
-    </section>`.trim();
-  prAdd({ ts:Date.now(), pairId, hand:whichHand, thumb,
-          meta:{version:'4.2',confidence:lastResult.confidence},
-          lines:lastResult.lines, reportHTML });
-  ev.currentTarget.classList.add('success');
-  setTimeout(()=>ev.currentTarget.classList.remove('success'),1200);
-  alert('Saved! Open Results / Report to compare or export PDF.');
-};
 </script>
 </body>
 </html>
