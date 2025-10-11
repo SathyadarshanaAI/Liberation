@@ -106,7 +106,7 @@
 
   <footer>
     © 2025 Sathyadarshana · Research Build <span id="vFooter">v—</span> · Works Offline
-  </footer>
+  </footer>8
 
   <!-- Lab core init (version + updater + SW) -->
   <script type="module">
@@ -170,5 +170,7 @@
       swStatus.classList.add('warn');
     }
   </script>
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
 </body>
 </html>
