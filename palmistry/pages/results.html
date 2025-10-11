@@ -1,0 +1,32 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Palmistry · Results & PairView v4</title>
+<link rel="stylesheet" href="../assets/css/theme.css"/>
+<style>
+.table{width:100%;border-collapse:collapse;margin-top:8px}
+.table th,.table td{border-bottom:1px solid #0f2233;padding:8px;text-align:left;font-size:.92rem}
+.thumb{width:120px;border-radius:12px;border:1px solid #0ff3}
+.delta.up{color:var(--good);font-weight:700}
+.delta.down{color:var(--bad);font-weight:700}
+.delta.eq{color:var(--mid);font-weight:700}
+.header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+</style>
+</head><body>
+<h1>Results & PairView</h1>
+<div class="sub">Paired Past/Present comparisons, ΔK insight & PDF-ready</div>
+<nav><a class="btn" href="../index.html">← Back to Analyzer</a></nav>
+
+<div class="wrap">
+  <section class="card header">
+    <div class="row">
+      <button class="btn" id="exportAll">Export JSON</button>
+      <button class="btn" id="clearAll">Clear All</button>
+    </div>
+    <span class="tip">Tip: Print this page to export PDF.</span>
+  </section>
+
+  <div id="pairs"></div>
+</div>
+
+<script type="module" src="../assets/js/pairview.js"></script>
+</body></html>
