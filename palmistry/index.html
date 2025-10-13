@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quantum Palm Analyzer v4.4</title>
+<title>Quantum Palm Analyzer v4.5</title>
 <style>
 :root{--bg:#0b0f16;--card:#0f172a;--neon:#00e5ff;--pri:#16f0a7;--mut:#a9c2da}
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(1200px 800px at 50% -10%,#0e2133,#0b0f16);color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial}
-h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px;margin:0 auto;padding:10px}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 800px at 50% -10%,#0e2133,#0b0f16);color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial}
+h1{margin:12px 0 6px;text-align:center;color:var(--neon)}
+.wrap{max-width:1000px;margin:0 auto;padding:10px}
 
-/* pill buttons */
+/* buttons */
 .btn,button,a{background:#0d1522;color:#c7e8ff;border:1px solid #1a3a55;border-radius:22px;
   padding:12px 16px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;gap:8px;align-items:center}
 .btn:hover,button:hover,a:hover{background:#00e5ff;color:#001015;border-color:#00e5ff}
@@ -22,6 +24,8 @@ h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px
 #video[hidden]{display:none}
 .aura{mix-blend-mode:screen;background:conic-gradient(from 0deg,#00e5ff88,#16f0a788,#9a6bff88,#00e5ff88);animation:spin 6s linear infinite;opacity:.7}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* cards */
 .card{background:linear-gradient(180deg,#101a2b,#0c1320);border:1px solid #133149;border-radius:16px;padding:14px;margin-top:12px}
 .badge{display:inline-block;background:#0b1320;border:1px solid #17324a;border-radius:10px;padding:3px 8px;font-size:12px;color:#9edcff}
 
@@ -30,42 +34,43 @@ h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px
 .row{display:grid;grid-template-columns:240px 1fr;gap:10px;align-items:center}
 .bar{background:#0b1320;height:12px;border-radius:10px;overflow:hidden}
 .bar>span{display:block;height:100%;transform-origin:left center;transform:scaleX(0);transition:transform 900ms ease}
-.bar.h  >span{background:linear-gradient(90deg,#ff6b6b,#ff3b3b)}
-.bar.hh >span{background:linear-gradient(90deg,#60a5fa,#3b82f6)}
-.bar.l  >span{background:linear-gradient(90deg,#34d399,#10b981)}
-.bar.f  >span{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
-.bar.s  >span{background:linear-gradient(90deg,#f97316,#fb923c)}
-.bar.mer>span{background:linear-gradient(90deg,#a78bfa,#8b5cf6)}
-.bar.mar>span{background:linear-gradient(90deg,#f472b6,#ec4899)}
+.bar.h  >span{background:linear-gradient(90deg,#ff6b6b,#ff3b3b)}   /* Heart */
+.bar.hh >span{background:linear-gradient(90deg,#60a5fa,#3b82f6)}   /* Mind */
+.bar.l  >span{background:linear-gradient(90deg,#34d399,#10b981)}   /* Life */
+.bar.f  >span{background:linear-gradient(90deg,#f59e0b,#fbbf24)}   /* Fate */
+.bar.s  >span{background:linear-gradient(90deg,#f97316,#fb923c)}   /* Success */
+.bar.hl >span{background:linear-gradient(90deg,#a78bfa,#8b5cf6)}   /* Health */
+.bar.mar>span{background:linear-gradient(90deg,#f472b6,#ec4899)}   /* Marriage */
 
 /* legend */
 .legend{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
 .legend .item{display:flex;align-items:center;gap:8px;font-size:14px;color:#d7e8ff}
 .sw{width:14px;height:14px;border-radius:4px}
 .sw.h{background:#ff4f56}.sw.hh{background:#5aa2ff}.sw.l{background:#15c194}
-.sw.f{background:#f6a911}.sw.s{background:#fb8a2d}.sw.mer{background:#8b5cf6}.sw.mar{background:#ec4899}
+.sw.f{background:#f6a911}.sw.s{background:#fb8a2d}.sw.hl{background:#8b5cf6}.sw.mar{background:#ec4899}
 
 /* radar */
 #radar{display:block;margin:10px auto;background:#0b1320;border:1px solid #17324a;border-radius:12px}
 
-/* language bar */
+/* translate bar */
 .langbar{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:6px 0}
 .langbar button{background:#0b1320;border:1px solid #17324a;color:#9edcff;border-radius:999px;padding:6px 10px;font-weight:700}
 .langbar button:hover{background:#00e5ff;color:#001015}
 #google_translate_element{display:inline-block;margin-left:6px}
 
-/* notice banner */
+/* notice */
 .notice{max-width:1000px;margin:8px auto 0;background:#1b2636;border:1px solid #2d4a68;color:#e6f0ff;border-radius:12px;padding:10px 12px;box-shadow:0 4px 18px #0007}
-.notice strong{color:#16f0a7} .notice-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.notice strong{color:#16f0a7}
+.notice-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 </style>
 </head>
 <body>
-  <h1>Quantum Palm Analyzer v4.4</h1>
+  <h1>Quantum Palm Analyzer v4.5</h1>
 
-  <!-- Language -->
+  <!-- Language (12) -->
   <div class="langbar">
-    <button data-lang="en">English</button><button data-lang="si">සිංහල</button>
-    <button data-lang="ta">தமிழ்</button><button data-lang="de">Deutsch</button>
+    <button data-lang="en">English</button><button data-lang="si">Sinhala</button>
+    <button data-lang="ta">Tamil</button><button data-lang="de">Deutsch</button>
     <button data-lang="it">Italiano</button><button data-lang="ja">日本語</button>
     <button data-lang="hi">हिन्दी</button><button data-lang="zh-CN">中文</button>
     <button data-lang="fr">Français</button><button data-lang="es">Español</button>
@@ -88,7 +93,7 @@ h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px
     <a class="btn" href="./report.html">PDF Report</a>
   </div>
 
-  <!-- Notice / QA -->
+  <!-- Quality notice -->
   <div id="notice" class="notice" style="display:none">
     <div id="noticeText">Guidance…</div>
     <div class="notice-actions">
@@ -98,7 +103,7 @@ h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px
   </div>
 
   <div class="wrap">
-    <!-- Camera & hand select -->
+    <!-- Camera + hand select -->
     <div class="card">
       <div class="toolbar" style="margin-top:0;justify-content:flex-start;gap:8px">
         <span class="badge">Hand</span>
@@ -108,6 +113,7 @@ h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px
         </select>
         <span id="pairBadge" class="badge">pair: —</span>
       </div>
+
       <div class="camWrap">
         <div class="camBox" id="camBox">
           <video id="video" playsinline autoplay muted hidden></video>
@@ -122,31 +128,30 @@ h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px
     <div class="card">
       <div class="badge" id="conf">Confidence —</div>
       <div class="lines">
-        <div class="row"><div>❤️ හෘද (Heart)</div>     <div class="bar h"><span id="b0"></span></div></div>
-        <div class="row"><div>🧠 චිත්ත/Head</div>     <div class="bar hh"><span id="b1"></span></div></div>
-        <div class="row"><div>🌿 ජීවන (Life)</div>     <div class="bar l"><span id="b2"></span></div></div>
-        <div class="row"><div>🜂 භාග්‍ය (Fate)</div>   <div class="bar f"><span id="b3"></span></div></div>
-        <div class="row"><div>☀️ සූර්ය (Sun)</div>     <div class="bar s"><span id="b4"></span></div></div>
-        <div class="row"><div>☿ බුධ/සුව (Mercury)</div><div class="bar mer"><span id="b5"></span></div></div>
-        <div class="row"><div>💍 විවාහ (Marriage)</div><div class="bar mar"><span id="b6"></span></div></div>
+        <div class="row"><div>❤️ Heart line</div>      <div class="bar h"><span id="b0"></span></div></div>
+        <div class="row"><div>🧠 Mind line</div>       <div class="bar hh"><span id="b1"></span></div></div>
+        <div class="row"><div>🌿 Life line</div>       <div class="bar l"><span id="b2"></span></div></div>
+        <div class="row"><div>🜂 Fate line</div>       <div class="bar f"><span id="b3"></span></div></div>
+        <div class="row"><div>🏆 Success line</div>    <div class="bar s"><span id="b4"></span></div></div>
+        <div class="row"><div>🩺 Health line</div>     <div class="bar hl"><span id="b5"></span></div></div>
+        <div class="row"><div>💍 Marriage line</div>   <div class="bar mar"><span id="b6"></span></div></div>
       </div>
+
       <div class="legend">
-        <div class="item"><span class="sw h"></span>හෘද (Heart)</div>
-        <div class="item"><span class="sw hh"></span>චිත්ත/Head</div>
-        <div class="item"><span class="sw l"></span>ජීවන (Life)</div>
-        <div class="item"><span class="sw f"></span>භාග්‍ය (Fate)</div>
-        <div class="item"><span class="sw s"></span>සූර්ය (Sun)</div>
-        <div class="item"><span class="sw mer"></span>බුධ/සුව (Mercury)</div>
-        <div class="item"><span class="sw mar"></span>විවාහ (Marriage)</div>
+        <div class="item"><span class="sw h"></span>Heart line</div>
+        <div class="item"><span class="sw hh"></span>Mind line</div>
+        <div class="item"><span class="sw l"></span>Life line</div>
+        <div class="item"><span class="sw f"></span>Fate line</div>
+        <div class="item"><span class="sw s"></span>Success line</div>
+        <div class="item"><span class="sw hl"></span>Health line</div>
+        <div class="item"><span class="sw mar"></span>Marriage line</div>
       </div>
     </div>
 
     <!-- Radar + Insight -->
     <div class="card">
       <canvas id="radar" width="320" height="240"></canvas>
-      <pre id="insight" style="white-space:pre-wrap;text-align:left;margin:6px auto;max-width:720px">
-🜁 Run Analyze to generate insight…
-      </pre>
+      <pre id="insight" style="white-space:pre-wrap;text-align:left;margin:6px auto;max-width:720px">Run Analyze to generate insight…</pre>
     </div>
 
     <!-- Pair Summary -->
@@ -154,9 +159,9 @@ h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px
       <h3 style="margin:0 0 8px">Pair Summary — Left (Past) vs Right (Present)</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start">
         <div>
-          <img id="sumLeft"  alt="Left (Past)"  style="width:100%;border-radius:12px;border:1px solid #17324a;filter:grayscale(100%) contrast(130%)"/>
+          <img id="sumLeft" alt="Left (Past)" style="width:100%;border-radius:12px;border:1px solid #17324a;filter:grayscale(100%) contrast(130%)"/>
           <div class="badge">Past (Left)</div>
-          <div id="txtLeft"  style="margin-top:6px;white-space:pre-wrap"></div>
+          <div id="txtLeft" style="margin-top:6px;white-space:pre-wrap"></div>
         </div>
         <div>
           <img id="sumRight" alt="Right (Present)" style="width:100%;border-radius:12px;border:1px solid #17324a;filter:grayscale(100%) contrast(130%)"/>
@@ -172,49 +177,77 @@ h1{margin:12px 0 6px;text-align:center;color:var(--neon)} .wrap{max-width:1000px
 <script>
 /* === Google Translate === */
 function googleTranslateElementInit(){
-  new google.translate.TranslateElement({pageLanguage:'en',
-    includedLanguages:'en,si,ta,de,it,ja,hi,zh-CN,fr,es,tr,ru',autoDisplay:false
+  new google.translate.TranslateElement({
+    pageLanguage:'en',
+    includedLanguages:'en,si,ta,de,it,ja,hi,zh-CN,fr,es,tr,ru',
+    autoDisplay:false
   },'google_translate_element');
 }
-function setLangCookie(l){const v='/auto/'+l;document.cookie='googtrans='+v+';path=/';
-document.cookie='googtrans='+v+';path=/;domain='+location.hostname;location.reload();}
-document.addEventListener('click',e=>{const b=e.target.closest('.langbar button[data-lang]'); if(b) setLangCookie(b.dataset.lang);});
-(function(){const s=document.createElement('script');s.src='https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';document.body.appendChild(s);})();
+function setLangCookie(l){
+  const v='/auto/'+l;
+  document.cookie='googtrans='+v+';path=/';
+  document.cookie='googtrans='+v+';path=/;domain='+location.hostname;
+  location.reload();
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.langbar button[data-lang]');
+  if(b) setLangCookie(b.dataset.lang);
+});
+(function(){
+  const s=document.createElement('script');
+  s.src='https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+  document.body.appendChild(s);
+})();
 
-/* === Storage (results) & pair id === */
+/* === Storage & pair id === */
 const PR_KEY='palmistryResults', PAIR_KEY='currentPairId';
 const handSel=document.getElementById('handSel'), pairBadge=document.getElementById('pairBadge');
 const prLoad=()=>{try{return JSON.parse(localStorage.getItem(PR_KEY)||'[]')}catch{return[]}};
 const prSave=a=>localStorage.setItem(PR_KEY,JSON.stringify(a));
-const prAdd=o=>{const a=prLoad();a.push(o);prSave(a);}
+const prAdd=o=>{const a=prLoad();a.push(o);prSave(a);};
 const getPairId=()=>localStorage.getItem(PAIR_KEY)||null;
-const setPairId=id=>{localStorage.setItem(PAIR_KEY,id); paintPair();};
-const newPairId=()=> (crypto.randomUUID?.()||('pair_'+Date.now().toString(36)));
-function paintPair(){ pairBadge.textContent='pair: '+(getPairId()||'—'); } paintPair();
+const setPairId=id=>{localStorage.setItem(PAIR_KEY,id);paintPair();};
+const newPairId=()=> (crypto.randomUUID?.() || ('pair_'+Date.now().toString(36)));
+function paintPair(){pairBadge.textContent='pair: '+(getPairId()||'—');}
+paintPair();
 
 /* === Camera === */
 const video=document.getElementById('video');
 const canvas=document.getElementById('canvas'); const ctx=canvas.getContext('2d');
 const camBox=document.getElementById('camBox'); const statusBox=document.getElementById('status');
 let mediaStream=null, camFacing='environment';
-function sizeCanvas(){const r=camBox.getBoundingClientRect();const d=Math.min(window.devicePixelRatio||1,2);canvas.width=r.width*d;canvas.height=r.height*d;}
+
+function sizeCanvas(){
+  const r=camBox.getBoundingClientRect();
+  const d=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=r.width*d; canvas.height=r.height*d;
+}
 new ResizeObserver(sizeCanvas).observe(camBox); sizeCanvas();
 
-async function startCamera(){try{
-  mediaStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:camFacing}}});
-  video.srcObject=mediaStream; video.hidden=false; statusBox.textContent='Camera active';
-}catch{alert('Camera access failed');}}
+async function startCamera(){
+  try{
+    mediaStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:camFacing}}});
+    video.srcObject=mediaStream; video.hidden=false; statusBox.textContent='Camera active';
+  }catch{ alert('Camera access failed'); }
+}
 document.getElementById('startCam').onclick=startCamera;
 
-document.getElementById('switchBtn').onclick=async()=>{camFacing=(camFacing==='environment')?'user':'environment'; await startCamera();};
+document.getElementById('switchBtn').onclick=async()=>{
+  camFacing=(camFacing==='environment')?'user':'environment';
+  await startCamera();
+};
 
 function detectTrack(){ return mediaStream?.getVideoTracks?.()[0] || video.srcObject?.getVideoTracks?.()[0] || null; }
 document.getElementById('flashBtn').onclick=async()=>{
-  const track=detectTrack(); if(!track){alert('Start camera first');return;}
-  const caps=track.getCapabilities?track.getCapabilities():{}; if(!caps.torch){alert('Flash/torch not supported');return;}
-  const current=track.getSettings?.().torch; try{ await track.applyConstraints({advanced:[{torch:!current}]});
-    document.getElementById('flashBtn').textContent = (!current)?'⚡ Flash ON':'⚡ Flash';
-  }catch{alert('Torch control failed');}
+  const track=detectTrack();
+  if(!track){alert('Start camera first');return;}
+  const caps=track.getCapabilities?track.getCapabilities():{};
+  if(!caps.torch){alert('Flash/torch not supported');return;}
+  const current=track.getSettings?.().torch;
+  try{
+    await track.applyConstraints({advanced:[{torch:!current}]});
+    document.getElementById('flashBtn').textContent=(!current)?'⚡ Flash ON':'⚡ Flash';
+  }catch{ alert('Torch control failed'); }
 };
 
 document.getElementById('capture').onclick=()=>{
@@ -223,13 +256,16 @@ document.getElementById('capture').onclick=()=>{
 };
 document.getElementById('filePick').onchange=e=>{
   const f=e.target.files[0]; if(!f)return;
-  const img=new Image(); img.onload=()=>{sizeCanvas(); drawToCanvas(img);}; img.src=URL.createObjectURL(f);
+  const img=new Image(); img.onload=()=>{sizeCanvas(); drawToCanvas(img);};
+  img.src=URL.createObjectURL(f);
 };
 
 function drawToCanvas(src){
-  const w=canvas.width,h=canvas.height; ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h);
+  const w=canvas.width,h=canvas.height;
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h);
   const sw=src.videoWidth||src.width, sh=src.videoHeight||src.height;
-  const CR=w/h, R=sw/sh; let sx=0,sy=0,Ssw=sw,Ssh=sh;
+  const CR=w/h, R=sw/sh;
+  let sx=0,sy=0,Ssw=sw,Ssh=sh;
   if(R>CR){ Ssh=sh; Ssw=Ssh*CR; sx=(sw-Ssw)/2; } else { Ssw=sw; Ssh=Ssw/CR; sy=(sh-Ssh)/2; }
   ctx.drawImage(src,sx,sy,Ssw,Ssh,0,0,w,h);
   statusBox.textContent='Frame captured';
@@ -239,33 +275,47 @@ function drawToCanvas(src){
 /* === Analyzer (demo heuristic) === */
 const bars=[...Array(7)].map((_,i)=>document.getElementById('b'+i));
 let lastResult=null;
+
 document.getElementById('analyze').onclick=()=>{
   const pix=ctx.getImageData(0,0,canvas.width,canvas.height).data;
   if(!pix || !pix.length){alert('Load an image first');return;}
   let sum=0; for(let i=0;i<pix.length;i+=24) sum+=pix[i]+pix[i+1]+pix[i+2];
-  const avg=sum/(pix.length/24); const conf=Math.min(99,Math.max(60,avg/4));
+  const avg=sum/(pix.length/24);
+  const conf=Math.min(99,Math.max(60,avg/4));
   document.getElementById('conf').textContent='Confidence '+conf.toFixed(1)+'%';
+
+  // placeholder scores (replace with your model output)
   const sc=[80,74,70,60,66,75,55].map(v=>Math.min(100,v+(conf-80)/2));
   sc.forEach((v,i)=>bars[i].style.transform=`scaleX(${v/100})`);
   drawRadar(sc);
-  lastResult={confidence:Math.round(conf),lines:{
-    heart:{score:Math.round(sc[0])}, head:{score:Math.round(sc[1])}, life:{score:Math.round(sc[2])},
-    fate:{score:Math.round(sc[3])}, sun:{score:Math.round(sc[4])}, mercury:{score:Math.round(sc[5])},
-    marriage:{score:Math.round(sc[6])}
-  }};
-  document.getElementById('insight').textContent=
-  `Δ Confidence ${conf.toFixed(1)}%
-• Heart ${sc[0]}  • Head ${sc[1]}
+
+  lastResult={
+    confidence: Math.round(conf),
+    lines:{
+      heart:{score:Math.round(sc[0])},
+      mind:{score:Math.round(sc[1])},
+      life:{score:Math.round(sc[2])},
+      fate:{score:Math.round(sc[3])},
+      success:{score:Math.round(sc[4])},
+      health:{score:Math.round(sc[5])},
+      marriage:{score:Math.round(sc[6])}
+    }
+  };
+
+  document.getElementById('insight').textContent =
+`Confidence ${conf.toFixed(1)}%
+• Heart ${sc[0]}  • Mind ${sc[1]}
 • Life  ${sc[2]}  • Fate ${sc[3]}
-• Sun   ${sc[4]}  • Mercury ${sc[5]}  • Marriage ${sc[6]}
-Insight: Subtle energy balance emerging.`;
+• Success ${sc[4]}  • Health ${sc[5]}  • Marriage ${sc[6]}
+Insight: Subtle progress balance detected.`;
 };
 
 function drawRadar(a){
   const c=document.getElementById('radar'), g=c.getContext('2d');
   const w=c.width,h=c.height,cx=w/2,cy=h/2,R=Math.min(w,h)/2-18;
   g.clearRect(0,0,w,h); g.strokeStyle='#17324a'; g.lineWidth=1;
-  for(let r=0.2;r<=1;r+=0.2){ g.beginPath();
+  for(let r=0.2;r<=1;r+=0.2){
+    g.beginPath();
     for(let i=0;i<7;i++){const ang=i*2*Math.PI/7-Math.PI/2; const x=cx+Math.cos(ang)*R*r; const y=cy+Math.sin(ang)*R*r; i?g.lineTo(x,y):g.moveTo(x,y);}
     g.closePath(); g.stroke();
   }
@@ -274,91 +324,131 @@ function drawRadar(a){
   g.closePath(); g.fillStyle='rgba(22,240,167,.12)'; g.fill(); g.strokeStyle='#16f0a7'; g.stroke();
 }
 
-/* === Save to Results === */
+/* === Save === */
 document.getElementById('save').onclick=()=>{
   if(!lastResult){alert('Analyze first');return;}
-  let pid=getPairId(); if(!pid){ pid=newPairId(); setPairId(pid); }
+  let pid=getPairId(); if(!pid){pid=newPairId(); setPairId(pid);}
   const entry={
     ts:Date.now(), pairId:pid, hand:handSel.value,
     thumb:canvas.toDataURL('image/jpeg',0.75),
-    meta:{version:'4.4',confidence:lastResult.confidence},
+    meta:{version:'4.5',confidence:lastResult.confidence},
     lines:lastResult.lines
   };
-  prAdd(entry);
-  alert('Saved to Results. Use Pair Summary to compare.');
+  prAdd(entry); alert('Saved to Results.');
 };
 
 /* === Pair Summary === */
 function latestPairWithBoth(){
-  const all=prLoad(); const map={};
-  for(const r of all){ const id=r.pairId||('solo-'+r.ts); map[id]=map[id]||{id,left:null,right:null,ts:0};
-    if(r.hand==='left') map[id].left=r; if(r.hand==='right') map[id].right=r; map[id].ts=Math.max(map[id].ts,r.ts); }
-  const groups=Object.values(map).filter(g=>g.left&&g.right).sort((a,b)=>b.ts-a.ts); return groups[0]||null;
+  const all=prLoad(), map={};
+  for(const r of all){
+    const id=r.pairId || ('solo-'+r.ts);
+    map[id]=map[id]||{id,left:null,right:null,ts:0};
+    if(r.hand==='left') map[id].left=r;
+    if(r.hand==='right') map[id].right=r;
+    map[id].ts=Math.max(map[id].ts,r.ts);
+  }
+  const groups=Object.values(map).filter(g=>g.left&&g.right).sort((a,b)=>b.ts-a.ts);
+  return groups[0]||null;
 }
-function lineName(k){return({heart:'Heart',head:'Head',life:'Life',fate:'Fate',sun:'Sun',mercury:'Mercury',marriage:'Marriage'})[k]||k;}
+function lineName(k){
+  return ({heart:'Heart',mind:'Mind',life:'Life',fate:'Fate',success:'Success',health:'Health',marriage:'Marriage'})[k]||k;
+}
 function quickNarrative(rec,mode){
-  const L=rec.lines||{}, order=['heart','head','life','fate','sun','mercury','marriage'];
-  const sorted=order.map(k=>[k,L[k]?.score||0]).sort((a,b)=>b[1]-a[1]); const hi=sorted[0], lo=sorted.at(-1);
-  const partner=(L.marriage?.score||0)>=75?'Partnership window strong':(L.marriage?.score||0)>=55?'Moderate partnership window':'Evolving partnership window';
-  const vti=Math.round(0.5*(L.life?.score||0)+0.3*(L.sun?.score||0)+0.2*(L.mercury?.score||0));
-  return `• Mode: ${mode} · Confidence ${rec.meta?.confidence??'—'}%
-• Vitality Trend Index: ${vti}
-• Strongest → ${lineName(hi[0])} (${hi[1]})
-• Tender   → ${lineName(lo[0])} (${lo[1]})
-• Family/Partnership: ${partner}
-• Care: steady routines; professional advice for health decisions.`;
+  const L=rec.lines||{}, keys=['heart','mind','life','fate','success','health','marriage'];
+  const sorted=keys.map(k=>[k,L[k]?.score||0]).sort((a,b)=>b[1]-a[1]);
+  const hi=sorted[0], lo=sorted.at(-1);
+  const vti=Math.round(0.5*(L.life?.score||0)+0.3*(L.success?.score||0)+0.2*(L.health?.score||0));
+  return `Mode: ${mode} · Confidence ${rec.meta?.confidence??'—'}%
+Vitality Index: ${vti}
+Strongest → ${lineName(hi[0])} (${hi[1]})
+Tender   → ${lineName(lo[0])} (${lo[1]})
+Care: steady routines; professional advice for health decisions.`;
 }
 function renderPairSummary(){
   const pair=latestPairWithBoth(); const box=document.getElementById('pairSummary');
   if(!pair){alert('Save both Left & Right first.');return;}
   document.getElementById('sumLeft').src=pair.left.thumb;
   document.getElementById('sumRight').src=pair.right.thumb;
-  document.getElementById('txtLeft').textContent = quickNarrative(pair.left,'Past (Left)');
-  document.getElementById('txtRight').textContent= quickNarrative(pair.right,'Present (Right)');
-  const keys=['heart','head','life','fate','sun','mercury','marriage'];
-  const deltas=keys.map(k=> (pair.right.lines[k]?.score??0)-(pair.left.lines[k]?.score??0));
-  const dk=Math.round(deltas.reduce((a,b)=>a+b,0)/deltas.length); document.getElementById('deltaBadge').textContent=`ΔK average change: ${dk>0?'+':''}${dk}`;
+  document.getElementById('txtLeft').textContent=quickNarrative(pair.left,'Past (Left)');
+  document.getElementById('txtRight').textContent=quickNarrative(pair.right,'Present (Right)');
+  const keys=['heart','mind','life','fate','success','health','marriage'];
+  const deltas=keys.map(k=>(pair.right.lines[k]?.score??0)-(pair.left.lines[k]?.score??0));
+  const dk=Math.round(deltas.reduce((a,b)=>a+b,0)/deltas.length);
+  document.getElementById('deltaBadge').textContent=`ΔK average change: ${dk>0?'+':''}${dk}`;
   box.style.display='block';
 }
 document.getElementById('summaryBtn').onclick=renderPairSummary;
 
-/* === QA Guidance (left/right + lighting + wrist/coverage) === */
-const notice=document.getElementById('notice'), nText=document.getElementById('noticeText'), nSwitch=document.getElementById('noticeSwitch'), nOk=document.getElementById('noticeOk');
-nOk.onclick=()=>notice.style.display='none'; nSwitch.onclick=()=>{ handSel.value=(handSel.value==='left'?'right':'left'); notice.style.display='none'; };
+/* === QA: lighting / coverage / hand-guess === */
+const notice=document.getElementById('notice'), nText=document.getElementById('noticeText'),
+      nSwitch=document.getElementById('noticeSwitch'), nOk=document.getElementById('noticeOk');
+nOk.onclick=()=>notice.style.display='none';
+nSwitch.onclick=()=>{handSel.value=(handSel.value==='left'?'right':'left'); notice.style.display='none';};
 
 function skinMask(img,w,h){
   const d=img.data, m=new Uint8Array(w*h);
   for(let i=0,p=0;i<w*h;i++,p+=4){
-    const r=d[p],g=d[p+1],b=d[p+2]; const Y=0.299*r+0.587*g+0.114*b; const Cr=(r-Y)*0.713+128; const Cb=(b-Y)*0.564+128;
+    const r=d[p],g=d[p+1],b=d[p+2];
+    const Y=0.299*r+0.587*g+0.114*b;
+    const Cr=(r-Y)*0.713+128, Cb=(b-Y)*0.564+128;
     m[i]=((Cr>135&&Cr<180&&Cb>85&&Cb<135)||(r>95&&g>40&&b>20&&r>g&&r>b))?1:0;
-  } return m;
+  }
+  return m;
 }
-function luminanceStats(img){const d=img.data;let s=0,s2=0;for(let i=0;i<d.length;i+=4){const y=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];s+=y;s2+=y*y;}const n=d.length/4,mu=s/n;return{mean:mu,std:Math.sqrt(Math.max(0,s2/n-mu*mu))};}
-function coverage(mask,w,h){let c=0,l=1e9,r=-1,t=1e9,b=-1;for(let y=0,i=0;y<h;y++){for(let x=0;x<w;x++,i++){if(mask[i]){c++;if(x<l)l=x;if(x>r)r=x;if(y<t)t=y;if(y>b)b=y;}}}return{area:c/(w*h),touch:{left:l<=w*0.02,right:r>=w*0.98,top:t<=h*0.02,bottom:b>=h*0.98}};}
-function wristEnergy(img,w,h){const top=Math.floor(h*0.88);let e=0,c=0;for(let y=top;y<h-1;y++){for(let x=1;x<w-1;x++){const p=(y*w+x)*4;const gx=(img.data[p-4]-img.data[p+4])+(img.data[p-4*w]-img.data[p+4*w]);const gy=(img.data[p-4*w]-img.data[p+4*w])+(img.data[p-4*w-4]-img.data[p+4*w+4]);e+=Math.hypot(gx,gy);c++;}}return e/(c||1);}
-function thumbBulk(mask,w,h){const band=Math.floor(w*0.25);let L=0,R=0;for(let y=0,i=0;y<h;y++){for(let x=0;x<w;x++,i++){if(mask[i]){if(x<band)L++; if(x>=w-band)R++;}}} if(L>R*1.25) return 'left-side-bulk'; if(R>L*1.25) return 'right-side-bulk'; return 'unknown';}
-function mapped(bulk){ if(bulk==='left-side-bulk') return 'right'; if(bulk==='right-side-bulk') return 'left'; return null; }
+function luminanceStats(img){
+  const d=img.data; let s=0,s2=0;
+  for(let i=0;i<d.length;i+=4){const y=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; s+=y; s2+=y*y;}
+  const n=d.length/4, mu=s/n; return {mean:mu,std:Math.sqrt(Math.max(0,s2/n-mu*mu))};
+}
+function coverage(mask,w,h){
+  let c=0,l=1e9,r=-1,t=1e9,b=-1;
+  for(let y=0,i=0;y<h;y++){for(let x=0;x<w;x++,i++){if(mask[i]){c++; if(x<l)l=x;if(x>r)r=x;if(y<t)t=y;if(y>b)b=y;}}}
+  return {area:c/(w*h),touch:{left:l<=w*0.02,right:r>=w*0.98,top:t<=h*0.02,bottom:b>=h*0.98}};
+}
+function wristEnergy(img,w,h){
+  const top=Math.floor(h*0.88); let e=0,c=0;
+  for(let y=top;y<h-1;y++){for(let x=1;x<w-1;x++){const p=(y*w+x)*4;
+    const gx=(img.data[p-4]-img.data[p+4])+(img.data[p-4*w]-img.data[p+4*w]);
+    const gy=(img.data[p-4*w]-img.data[p+4*w])+(img.data[p-4*w-4]-img.data[p+4*w+4]);
+    e+=Math.hypot(gx,gy); c++;}}
+  return e/(c||1);
+}
+function thumbBulk(mask,w,h){
+  const band=Math.floor(w*0.25); let L=0,R=0;
+  for(let y=0,i=0;y<h;y++){for(let x=0;x<w;x++,i++){ if(mask[i]){ if(x<band)L++; if(x>=w-band)R++; } }}
+  if(L>R*1.25) return 'left-side-bulk';
+  if(R>L*1.25) return 'right-side-bulk';
+  return 'unknown';
+}
+function mapped(bulk){ if(bulk==='left-side-bulk')return 'right'; if(bulk==='right-side-bulk')return 'left'; return null; }
 
 function runFrameQA(){
-  const w=canvas.width,h=canvas.height; const frame=ctx.getImageData(0,0,w,h);
-  const stats=luminanceStats(frame); const mask=skinMask(frame,w,h); const cov=coverage(mask,w,h); const wrist=wristEnergy(frame,w,h); const guess=mapped(thumbBulk(mask,w,h));
+  const w=canvas.width,h=canvas.height;
+  const frame=ctx.getImageData(0,0,w,h);
+  const stats=luminanceStats(frame);
+  const mask=skinMask(frame,w,h);
+  const cov=coverage(mask,w,h);
+  const wrist=wristEnergy(frame,w,h);
+  const guess=mapped(thumbBulk(mask,w,h));
+
   const msgs=[];
-  if(stats.mean<65) msgs.push('Image looks <strong>too dark</strong>. Turn on ⚡ Flash or move to better light.');
-  if(stats.mean>210) msgs.push('Image looks <strong>over-exposed</strong>. Reduce flash/brightness.');
-  if(stats.std<20) msgs.push('Low contrast detected. Keep a neutral background and good focus.');
-  if(cov.area<0.25) msgs.push('Only a <strong>small part of the hand</strong> is visible. Fill more of the frame.');
-  const touches=Object.entries(cov.touch).filter(([k,v])=>v).map(([k])=>k).join(', '); if(touches) msgs.push(`Palm is <strong>cut at the ${touches}</strong> edge. Keep full palm inside the border.`);
-  if(wrist<150) msgs.push('Include the <strong>wrist (manikhaṇḍa) lines</strong> at the bottom.');
-  if(guess){ const exp=handSel.value; if(guess!==exp){ msgs.push(`This photo looks like <strong>${guess.toUpperCase()}</strong> hand, but selector is ${exp.toUpperCase()}.`); nSwitch.style.display='inline-flex'; } else nSwitch.style.display='none'; }
-  if(msgs.length){ nText.innerHTML='• '+msgs.join('<br>• '); notice.style.display='block'; } else notice.style.display='none';
+  if(stats.mean<65) msgs.push('Image looks too dark. Turn on flash or move to brighter light.');
+  if(stats.mean>210) msgs.push('Image is over-exposed. Reduce flash/brightness.');
+  if(stats.std<20) msgs.push('Low contrast detected. Use neutral background and steady focus.');
+  if(cov.area<0.25) msgs.push('Only a small part of the hand is visible. Fill more of the frame.');
+  const touches=Object.entries(cov.touch).filter(([k,v])=>v).map(([k])=>k).join(', ');
+  if(touches) msgs.push(`Palm is cut at the ${touches} edge. Keep the full palm inside the border.`);
+  if(wrist<150) msgs.push('Include wrist (bracelet) lines at the bottom.');
+
+  if(guess){
+    const exp=handSel.value;
+    if(guess!==exp){ msgs.push(`This looks like the ${guess.toUpperCase()} hand, but selector is ${exp.toUpperCase()}.`); nSwitch.style.display='inline-flex'; }
+    else nSwitch.style.display='none';
+  }
+
+  if(msgs.length){ nText.innerHTML='• '+msgs.join('<br>• '); notice.style.display='block'; }
+  else notice.style.display='none';
 }
-
-/* === Pair Summary trigger === */
-document.getElementById('summaryBtn').onclick=renderPairSummary;
-
-/* === Notice buttons === */
-const nOk=document.getElementById('noticeOk'), nSwitch=document.getElementById('noticeSwitch');
-nOk.onclick=()=>notice.style.display='none'; nSwitch.onclick=()=>{handSel.value=(handSel.value==='left'?'right':'left'); notice.style.display='none';};
 </script>
 </body>
 </html>
