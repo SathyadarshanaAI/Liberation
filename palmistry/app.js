@@ -1,114 +1,104 @@
-// app.js — Quantum Palm Analyzer v4.7+
+// Quantum Palm Analyzer v5.0
 const $=(s,r=document)=>r.querySelector(s);
-const statusEl=$("#status"), video=$("#video"), overlay=$("#overlay");
-const btnOpen=$("#open"), btnSnap=$("#snap"), btnClose=$("#close");
+const statusEl=$("#status"),video=$("#video"),overlay=$("#overlay");
+const btnOpen=$("#open"),btnSnap=$("#snap"),btnClose=$("#close");
+const btnSave=$("#save"),btnReset=$("#reset");
 const resultEl=$("#result");
-let stream;
+let stream, lastShot=null;
 
-const secureOK = () =>
-  location.hostname==="localhost" ||
-  location.hostname==="127.0.0.1" ||
-  location.protocol==="https:";
+const secureOK=()=>location.hostname==="localhost"||location.hostname==="127.0.0.1"||location.protocol==="https:";
 
-/* ---------------- Camera controls ---------------- */
-btnOpen.onclick = async () => {
+/* ---------------- Camera ---------------- */
+btnOpen.onclick=async()=>{
   if(!secureOK()){ alert("Use HTTPS or localhost"); return; }
   try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:"environment" }, audio:false
-    });
-    video.srcObject = stream;
-    await video.play();
-    btnSnap.disabled = false; btnClose.disabled = false;
-    statusEl.textContent = "Camera ON";
-  }catch(e){
-    statusEl.textContent = "Camera error: " + e.message;
-  }
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+    video.srcObject=stream; await video.play();
+    enable(btnSnap,btnClose); disable(btnSave,btnReset);
+    status("Camera ON");
+  }catch(e){ status("Camera error: "+e.message); }
 };
 
-btnClose.onclick = () => {
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
-  video.srcObject = null;
-  btnSnap.disabled = true; btnClose.disabled = true;
-  statusEl.textContent = "Camera OFF";
-};
-
-/* ---------------- Utils ---------------- */
-function brightness(r,g,b){ return (r+g+g+b)/4 } // green bias
-function avgBrightness(pixels){
-  let d=pixels.data,sum=0;
-  for(let i=0;i<d.length;i+=4) sum+=brightness(d[i],d[i+1],d[i+2]);
-  return sum/(d.length/4);
+btnClose.onclick=stopCamera;
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  video.srcObject=null; disable(btnSnap,btnClose,btnSave,btnReset);
+  status("Camera OFF");
 }
 
-// crude skin mask (fast): YCbCr-ish threshold on RGB
+/* ---------------- Helpers ---------------- */
+const enable=(...els)=>els.forEach(el=>el.disabled=false);
+const disable=(...els)=>els.forEach(el=>el.disabled=true);
+const status=t=>statusEl.textContent=t;
+
+function avgBrightness(img){
+  const d=img.data; let s=0;
+  for(let i=0;i<d.length;i+=4){ s+= (d[i]+d[i+1]+d[i+2])/3; }
+  return s/(d.length/4);
+}
 function skinMask(ctx,w,h){
   const img=ctx.getImageData(0,0,w,h), d=img.data;
-  const mask=new Uint8ClampedArray(w*h);
+  const m=new Uint8ClampedArray(w*h);
   for(let i=0,j=0;i<d.length;i+=4,++j){
-    const r=d[i], g=d[i+1], b=d[i+2];
-    const max=Math.max(r,g,b), min=Math.min(r,g,b);
-    const sat = max-min;
-    const skin = (r>95 && g>40 && b>20 && (max-min)>15 && Math.abs(r-g)>15 && r>g && r>b);
-    mask[j] = skin ? 255 : 0;
+    const r=d[i],g=d[i+1],b=d[i+2];
+    const skin=(r>95&&g>40&&b>20&&(Math.max(r,g,b)-Math.min(r,g,b))>15&&Math.abs(r-g)>15&&r>g&&r>b);
+    m[j]=skin?255:0;
   }
-  return mask;
+  return m;
 }
-
-// estimate left/right: compare leftmost vs rightmost extent of skin mask
-function estimateHandSide(mask,w,h){
-  let left=w, right=0, top=h, bottom=0;
+function estimateSide(mask,w,h){
+  let L=w,R=0,T=h,B=0;
   for(let y=0;y<h;y++){
     for(let x=0;x<w;x++){
-      const v = mask[y*w+x];
-      if(v){
-        if(x<left) left=x;
-        if(x>right) right=x;
-        if(y<top) top=y;
-        if(y>bottom) bottom=y;
-      }
+      if(mask[y*w+x]){ if(x<L)L=x; if(x>R)R=x; if(y<T)T=y; if(y>B)B=y; }
     }
   }
-  if(right<=left) return {side:"unknown", bbox:null};
-  const bbox={left, right, top, bottom, cx:(left+right)/2, cy:(top+bottom)/2};
-  // thumb side ≈ side with larger empty margin outside bbox
-  const leftMargin  = bbox.left;
-  const rightMargin = w - bbox.right;
-  const side = leftMargin > rightMargin ? "RIGHT hand" : "LEFT hand"; // if big space on left -> thumb on left -> right hand shown
-  return {side, bbox};
+  if(R<=L) return {side:"unknown",bbox:null};
+  const bbox={L,R,T,B,w:R-L,h:B-T};
+  const side=(L>(w-R))?"RIGHT hand":"LEFT hand"; // margin heuristic
+  return {side,bbox};
+}
+function drawScanBeam(ctx,w,h,progress){
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,0.35)"; ctx.fillRect(0,0,w,h);
+  const y=progress*h;
+  const g=ctx.createLinearGradient(0,y-40,0,y+40);
+  g.addColorStop(0,"rgba(0,229,255,0)");
+  g.addColorStop(.5,"rgba(0,229,255,0.85)");
+  g.addColorStop(1,"rgba(0,229,255,0)");
+  ctx.fillStyle=g; ctx.fillRect(0,y-40,w,80);
+  ctx.restore();
 }
 
-/* ---------------- Scanner animation + analyze ---------------- */
-btnSnap.onclick = async () => {
-  // draw frame
-  overlay.width = video.videoWidth || 640;
-  overlay.height = video.videoHeight || 480;
+/* ---------------- Snap + Analyze ---------------- */
+btnSnap.onclick=async()=>{
+  overlay.width=video.videoWidth||640;
+  overlay.height=video.videoHeight||480;
   overlay.style.display="block";
-  const ctx = overlay.getContext("2d");
-  ctx.drawImage(video, 0, 0, overlay.width, overlay.height);
+  const ctx=overlay.getContext("2d");
 
-  // scanner beam anim (top -> bottom)
-  statusEl.textContent = "Analyzing…";
-  await scanBeam(ctx, overlay.width, overlay.height, 600);
+  // live frame + scan beam (600ms)
+  const start=performance.now(), dur=600;
+  status("Analyzing…");
+  await new Promise(res=>{
+    const loop=now=>{
+      const t=Math.min(1,(now-start)/dur);
+      ctx.drawImage(video,0,0,overlay.width,overlay.height);
+      drawScanBeam(ctx,overlay.width,overlay.height,t);
+      if(t<1) requestAnimationFrame(loop); else res();
+    }; requestAnimationFrame(loop);
+  });
 
-  // make a copy after beam for processing
-  const frame = ctx.getImageData(0,0,overlay.width,overlay.height);
+  // analysis
+  ctx.drawImage(video,0,0,overlay.width,overlay.height);
+  const frame=ctx.getImageData(0,0,overlay.width,overlay.height);
+  const light=Math.round(avgBrightness(frame));
+  const quality= light<40?"Very Dark":light<70?"Dim":light<120?"OK":"Bright";
 
-  // lighting quality
-  const light = Math.round(avgBrightness(frame));
-  const quality = light<40 ? "Very Dark" : light<70 ? "Dim" : light<120 ? "OK" : "Bright";
+  const mask=skinMask(ctx,overlay.width,overlay.height);
+  const {side,bbox}=estimateSide(mask,overlay.width,overlay.height);
 
-  // skin mask + side
-  const mask = skinMask(ctx, overlay.width, overlay.height);
-  const {side, bbox} = estimateHandSide(mask, overlay.width, overlay.height);
-
-  // overlay: outline bbox & pseudo line highlight
-  ctx.putImageData(frame,0,0);
-  if(bbox){
-    ctx.strokeStyle = "#00e5ff"; ctx.lineWidth = 3;
-    ctx.strokeRect(bbox.left, bbox.top, bbox.right-bbox.left, bbox.bottom-bbox.top);
-  }
-  // quick line accent: emphasize darker creases
+  // line accent
   const img=ctx.getImageData(0,0,overlay.width,overlay.height), d=img.data;
   for(let i=0;i<d.length;i+=4){
     const avg=(d[i]+d[i+1]+d[i+2])/3;
@@ -117,41 +107,34 @@ btnSnap.onclick = async () => {
   }
   ctx.putImageData(img,0,0);
 
-  // result card
-  resultEl.innerHTML = `
-    <div style="border:1px solid #16f0a7;border-radius:12px;padding:12px;background:#101820">
+  if(bbox){
+    ctx.strokeStyle="#00e5ff"; ctx.lineWidth=3;
+    ctx.strokeRect(bbox.L,bbox.T,bbox.w,bbox.h);
+  }
+
+  lastShot=overlay.toDataURL("image/png");
+  resultEl.innerHTML=`
+    <div class="card">
       <div style="font-weight:700;color:#00e5ff;margin-bottom:6px">Scan Result</div>
       <div>Hand: <b>${side}</b></div>
       <div>Lighting: <b>${quality}</b> (avg=${light})</div>
       <div>Resolution: ${overlay.width}×${overlay.height}</div>
-      <div style="opacity:.8;margin-top:6px">Tip: keep palm centered and fill frame for best detection.</div>
-    </div>
-  `;
-  statusEl.textContent = "Done";
+      <div style="opacity:.8;margin-top:6px">Tip: keep palm centered & fill the frame.</div>
+    </div>`;
+  enable(btnSave,btnReset);
+  status("Done");
 };
 
-// simple beam animation
-function scanBeam(ctx,w,h,durMs=600){
-  return new Promise(res=>{
-    const start=performance.now();
-    (function tick(now){
-      const t=Math.min(1,(now-start)/durMs);
-      ctx.save();
-      // darken
-      ctx.fillStyle="rgba(0,0,0,0.35)";
-      ctx.fillRect(0,0,w,h);
-      // beam
-      const y=t*h;
-      const grd=ctx.createLinearGradient(0,y-40,0,y+40);
-      grd.addColorStop(0,"rgba(0,229,255,0)");
-      grd.addColorStop(.5,"rgba(0,229,255,0.75)");
-      grd.addColorStop(1,"rgba(0,229,255,0)");
-      ctx.fillStyle=grd;
-      ctx.fillRect(0,y-40,w,80);
-      ctx.restore();
-      if(t<1) requestAnimationFrame(tick); else res();
-    })(start);
-  });
-}
+btnSave.onclick=()=>{
+  if(!lastShot) return;
+  const a=document.createElement("a");
+  a.href=lastShot; a.download=`palm_${Date.now()}.png`;
+  document.body.appendChild(a); a.click(); a.remove();
+};
+btnReset.onclick=()=>{
+  overlay.getContext("2d").clearRect(0,0,overlay.width,overlay.height);
+  overlay.style.display="none";
+  resultEl.innerHTML=""; lastShot=null; status("Ready");
+};
 
-console.log("Quantum Palm Analyzer v4.7+ loaded");
+console.log("Quantum Palm Analyzer v5.0 loaded");
