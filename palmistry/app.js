@@ -77,7 +77,7 @@ btnSnap.onclick=async()=>{
   overlay.style.display="block";
   const ctx=overlay.getContext("2d");
 
-  // live frame + scan beam (600ms)
+  // scanning anim (600ms)
   const start=performance.now(), dur=600;
   status("Analyzing…");
   await new Promise(res=>{
