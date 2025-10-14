@@ -1,17 +1,15 @@
-// app.js (ESM)
-const $ = (sel, root = document) => root.querySelector(sel);
+// app.js
+const $ = (s, r=document) => r.querySelector(s);
 
-const app = $("#app");
-app.innerHTML = `
+$("#app").innerHTML = `
   <h1 style="color:#00e5ff;margin:14px 0 6px">Quantum Palm Analyzer v4.6</h1>
   <p id="status" style="opacity:.9;margin:0 0 10px">Ready</p>
 
   <div style="display:grid;gap:10px;place-items:center">
     <video id="video" playsinline autoplay muted
       style="width:92vw;max-width:420px;border-radius:16px;border:2px solid #16f0a7;background:#000"></video>
-
     <canvas id="overlay"
-      style="position:absolute;inset:auto; width:92vw;max-width:420px; border-radius:16px; display:none"></canvas>
+      style="width:92vw;max-width:420px;border-radius:16px;display:none"></canvas>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
       <button id="open"  style="padding:10px 14px;border-radius:12px;border:1px solid #00e5ff;background:#0b0f16;color:#00e5ff;font-weight:600">Open Camera</button>
@@ -22,28 +20,21 @@ app.innerHTML = `
 `;
 
 const statusEl = $("#status");
-const video    = $("#video");
-const overlay  = $("#overlay");
-const btnOpen  = $("#open");
-const btnSnap  = $("#snap");
+const video = $("#video");
+const overlay = $("#overlay");
+const btnOpen = $("#open");
+const btnSnap = $("#snap");
 const btnClose = $("#close");
-
 let stream;
 
-/** Utils */
 const setStatus = (t) => (statusEl.textContent = t);
 const secureOK = () =>
-  location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  location.protocol === "https:" || ["localhost","127.0.0.1"].includes(location.hostname);
 
-/** Camera */
 async function openCamera() {
   if (!secureOK()) {
     setStatus("Camera requires HTTPS or localhost.");
-    alert("Use HTTPS (GitHub Pages/Cloudflare Pages) or run on localhost.");
-    return;
-  }
-  if (!navigator.mediaDevices?.getUserMedia) {
-    setStatus("Camera API not supported on this browser.");
+    alert("Run on HTTPS (Pages/Cloudflare) or localhost.");
     return;
   }
   try {
@@ -53,86 +44,56 @@ async function openCamera() {
       audio: false
     });
     video.srcObject = stream;
-    await video.play(); // iOS: needs user gesture (button click) – we’re in one.
-
-    btnSnap.disabled  = false;
-    btnClose.disabled = true;   // give it a sec to stabilize
-    setTimeout(() => (btnClose.disabled = false), 400);
-    setStatus("Camera ON. Hold your palm steady and fill the frame.");
-  } catch (err) {
-    console.warn(err);
-    setStatus("Camera error: " + (err.message || err));
-    alert("Camera access failed.\n" + err);
+    await video.play();
+    btnSnap.disabled = false;
+    setTimeout(()=> btnClose.disabled = false, 300);
+    setStatus("Camera ON. Hold your palm steady.");
+  } catch (e) {
+    console.warn(e);
+    setStatus("Camera error: " + (e.message||e));
   }
 }
 
 function closeCamera() {
-  if (stream) {
-    for (const t of stream.getTracks()) t.stop();
-    stream = null;
-    video.srcObject = null;
-  }
+  if (stream) { stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  video.srcObject = null;
   btnSnap.disabled = true;
   btnClose.disabled = true;
   setStatus("Camera OFF.");
 }
 
 function snapAndHighlight() {
-  if (!video.videoWidth) {
-    setStatus("Waiting for video… try again.");
-    return;
-  }
-  overlay.width  = video.videoWidth;
+  if (!video.videoWidth) { setStatus("Waiting for video…"); return; }
+  overlay.width = video.videoWidth;
   overlay.height = video.videoHeight;
   overlay.style.display = "block";
-
   const ctx = overlay.getContext("2d");
   ctx.drawImage(video, 0, 0, overlay.width, overlay.height);
 
-  // 🔎 Very simple “fake highlight” demo (edge-ish effect):
-  // Downscale -> edges -> blend neon stroke (placeholder for your real analyzer)
-  const img = ctx.getImageData(0, 0, overlay.width, overlay.height);
-  // cheap gradient magnitude on luma
-  const w = overlay.width, h = overlay.height, data = img.data;
-  const luma = new Uint8ClampedArray(w*h);
-  for (let i=0, p=0; i<data.length; i+=4, p++) {
-    luma[p] = (data[i]*0.2126 + data[i+1]*0.7152 + data[i+2]*0.0722) | 0;
-  }
+  // simple edge-ish glow (demo placeholder for real analyzer)
+  const img = ctx.getImageData(0,0,overlay.width,overlay.height);
+  const d = img.data, w = overlay.width, h = overlay.height;
+  const l = new Uint8ClampedArray(w*h);
+  for (let i=0,p=0;i<d.length;i+=4,p++) l[p]=(d[i]*.2126+d[i+1]*.7152+d[i+2]*.0722)|0;
   const edges = new Uint8ClampedArray(w*h);
-  for (let y=1; y<h-1; y++) {
-    for (let x=1; x<w-1; x++) {
-      const i = y*w + x;
-      const gx = luma[i+1] - luma[i-1];
-      const gy = luma[i+w] - luma[i-w];
-      const mag = Math.min(255, Math.abs(gx)+Math.abs(gy));
-      edges[i] = mag;
+  for (let y=1;y<h-1;y++){
+    for (let x=1;x<w-1;x++){
+      const i=y*w+x;
+      const gx=l[i+1]-l[i-1], gy=l[i+w]-l[i-w];
+      edges[i]=Math.min(255,Math.abs(gx)+Math.abs(gy));
     }
   }
-  // Draw neon lines where edges are strong
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = "#00e5ff";
-  ctx.globalAlpha = 0.9;
-  ctx.beginPath();
-  const TH = 220; // threshold
-  for (let y=1; y<h-1; y+=2) {
-    for (let x=1; x<w-1; x+=2) {
-      const i = y*w + x;
-      if (edges[i] > TH) {
-        ctx.moveTo(x, y);
-        ctx.lineTo(x+0.5, y+0.5);
-      }
-    }
-  }
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  setStatus("Snapshot captured. (Demo highlight overlay drawn)");
+  ctx.lineWidth=1.4; ctx.strokeStyle="#00e5ff"; ctx.globalAlpha=.9; ctx.beginPath();
+  const TH=220;
+  for (let y=1;y<h-1;y+=2){ for (let x=1;x<w-1;x+=2){
+    const i=y*w+x; if (edges[i]>TH){ ctx.moveTo(x,y); ctx.lineTo(x+.5,y+.5); }
+  }}
+  ctx.stroke(); ctx.globalAlpha=1;
+  setStatus("Snapshot captured (demo overlay).");
 }
 
-/** Bind */
-btnOpen.addEventListener("click", openCamera);
-btnClose.addEventListener("click", closeCamera);
-btnSnap.addEventListener("click", snapAndHighlight);
+btnOpen.onclick = openCamera;
+btnClose.onclick = closeCamera;
+btnSnap.onclick = snapAndHighlight;
 
-// Helpful console log
-console.log("✅ App loaded. If nothing shows, check Console for errors.");
+console.log("✅ App loaded");
