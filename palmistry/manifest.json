@@ -1,32 +1,12 @@
-{
-  "version": "2.6.0",
-  "required_core": "2.6.0",
-  "changelog": [
-    "ROI auto-tune & JSON-driven report",
-    "Photo-only fallback for 100% compatibility"
-  ],
-  "flags": {
-    "photo_mode_default": true,
-    "enable_plugins": true
-  },
-  "roi_overrides": {
-    "default": {
-      "heart": [0.10,0.28,0.90,0.42],
-      "head": [0.10,0.43,0.90,0.58],
-      "life": [0.05,0.50,0.45,0.95],
-      "fate": [0.45,0.20,0.55,0.85],
-      "sun": [0.65,0.35,0.72,0.90],
-      "mercury": [0.78,0.40,0.85,0.92],
-      "marriage": [0.78,0.10,0.95,0.20]
-    }
-  },
-  "modules": [
-    {"name":"analyzer-edge","path":"modules/analyzer-edge.js","sha256":"<hash>"},
-    {"name":"report","path":"modules/report.js","sha256":"<hash>"},
-    {"name":"storage","path":"modules/storage.js","sha256":"<hash>"},
-    {"name":"camera-photo","path":"modules/camera-photo.js","sha256":"<hash>"}
-  ],
-  "plugins": [
-    {"name":"sample-plugin","path":"plugins/sample-plugin/plugin.js","enabled":false}
+අ{
+  "name": "Quantum Palm Analyzer",
+  "short_name": "Palm v4.6",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0f16",
+  "theme_color": "#0b0f16",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },7
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
