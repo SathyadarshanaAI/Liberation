@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<html lang="si">
+<!-- ======================= index.html ======================= --><!DOCTYPE html><html lang="si">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Quantum Palm Analyzer v5.1c</title>
-
-  <!-- Styles -->
   <link rel="stylesheet" href="./styles.css?v=5.1c"/>
-
-  <!-- Libs -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
   <script async src="https://docs.opencv.org/4.x/opencv.js" onload="window.__cvReady=true;"></script>
 </head>
@@ -16,56 +11,71 @@
   <header class="header">
     <h1>Quantum Palm Analyzer <span class="badge">v5.1c</span></h1>
     <small>Color Overlay · Wrist Region Enhanced · Mask Tighten · Rascetta as Primary Line</small>
-  </header>
-
-  <main class="container">
+  </header>  <main class="container">
     <section class="stage">
       <div class="surface">
         <video id="video" playsinline muted></video>
-        <!-- preview tint -->
         <canvas id="preview" width="640" height="480" aria-hidden="true"></canvas>
-        <!-- colored lines -->
         <canvas id="overlay" width="640" height="480" aria-hidden="true"></canvas>
       </div>
-
-      <!-- ✅ Buttons are now above the media layers -->
       <div class="controls">
         <button class="btn" id="open">Open Camera</button>
+        <button class="btn" id="lock">Lock Frame</button>
         <button class="btn" id="snap">Snap & Analyze</button>
         <button class="btn" id="save">Save Image</button>
         <button class="btn" id="reset">Reset</button>
         <button class="btn" id="close">Close</button>
       </div>
-    </section>
+    </section><section class="grid">
+  <div class="card">
+    <h3>Scan Result</h3>
+    <div id="meta" class="note">Open the camera first.</div>
+    <div id="tip" class="note">Tip: keep wrist fully inside the frame; use plain background.</div>
+  </div>
 
-    <section class="grid">
-      <div class="card">
-        <h3>Scan Result</h3>
-        <div id="meta" class="note">—</div>
-        <div id="tip" class="note">Tip: keep wrist fully inside the frame; use plain background.</div>
-      </div>
+  <div class="card">
+    <h3>Overlay Controls</h3>
+    <label>Mask Opacity <span id="opv">0.35</span></label>
+    <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.35"/>
+    <label>Wrist Boost (px) <span id="wbv">22</span></label>
+    <input id="wboost" type="range" min="0" max="60" step="1" value="22"/>
+    <label>Edge Low/High Threshold <span id="thv">35/95</span></label>
+    <input id="t1" type="range" min="10" max="80" step="1" value="35"/>
+    <input id="t2" type="range" min="40" max="140" step="1" value="95"/>
+  </div>
 
-      <div class="card">
-        <h3>Overlay Controls</h3>
-        <label>Mask Opacity <span id="opv">0.35</span></label>
-        <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.35"/>
-        <label>Wrist Boost (px) <span id="wbv">22</span></label>
-        <input id="wboost" type="range" min="0" max="60" step="1" value="22"/>
-        <label>Edge Low/High Threshold <span id="thv">35/95</span></label>
-        <input id="t1" type="range" min="10" max="80" step="1" value="35"/>
-        <input id="t2" type="range" min="40" max="140" step="1" value="95"/>
-      </div>
+  <div class="card">
+    <h3>Wrist (Rascetta) Analysis</h3>
+    <div id="wristBox" class="note">—</div>
+  </div>
+</section>
 
-      <div class="card">
-        <h3>Wrist (Rascetta) Analysis</h3>
-        <div id="wristBox" class="note">—</div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">© Sathyadarshana · v5.1c</footer>
-
-  <!-- App -->
+  </main>  <footer class="footer">© Sathyadarshana · v5.1c</footer>
   <script src="./app.js?v=5.1c"></script>
 </body>
-</html>
+</html>/* ======================= styles.css ======================= */ :root{ --bg:#0b0f16; --ink:#e6f0ff; --neon:#00e5ff; --pri:#16f0a7; --card:#0f1624; --muted:#9fb3c8; } *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Arial} .header{padding:18px 12px;text-align:center} .header h1{margin:0;color:var(--neon);font-size:28px} .badge{display:inline-block;margin-left:6px;padding:2px 10px;border:1px solid #2a445e;border-radius:999px;background:#0e1a2b} .container{max-width:980px;margin:0 auto;padding:12px} .stage{position:relative} .surface{position:relative;display:flex;justify-content:center} video,canvas{width:92vw;max-width:460px;border-radius:18px;border:2px solid var(--pri);background:#000;display:block;margin:auto} #video{position:relative;z-index:1} #preview{position:absolute;left:0;top:0;z-index:2;opacity:.35;pointer-events:none} #overlay{position:absolute;left:0;top:0;z-index:3;opacity:.95;pointer-events:none} .controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:12px 0;position:relative;z-index:20} .btn{background:#10161f;color:var(--neon);border:1px solid var(--neon);border-radius:14px;padding:9px 14px;font-weight:700;cursor:pointer;transition:.2s} .btn:hover{background:var(--neon);color:#000} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px} .card{background:var(--card);border:1px solid #10223a;border-radius:16px;padding:12px;text-align:left} .card h3{margin:4px 0 8px;color:#9be8ff} .note{opacity:.85} label{display:block;margin:6px 0 2px} input[type=range]{width:100%} .footer{opacity:.7;text-align:center;padding:10px}
+
+// ======================= app.js ======================= const $ = id => document.getElementById(id); const el = { video: $('video'), preview: $('preview'), overlay: $('overlay'), open: $('open'), lock: $('lock'), snap: $('snap'), save: $('save'), reset: $('reset'), close: $('close'), meta: $('meta'), tip: $('tip'), opacity: $('opacity'), wboost: $('wboost'), t1: $('t1'), t2: $('t2'), thv: $('thv'), opv: $('opv'), wbv: $('wbv'), wristBox: $('wristBox'), }; let stream=null, seg=null, latestMask=null, lastPNG=null, locked=false;
+
+function setLabels(){ el.opv.textContent=parseFloat(el.opacity.value).toFixed(2); el.wbv.textContent=parseInt(el.wboost.value,10); el.thv.textContent=${el.t1.value}/${el.t2.value}; } ['opacity','wboost','t1','t2'].forEach(id=>$(id).addEventListener('input', setLabels)); setLabels();
+
+async function openCam(){ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}},audio:false}); el.video.srcObject = stream; await el.video.play(); el.meta.textContent = 'Camera open. Ready…'; } function closeCam(){ if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null;} el.video.srcObject=null; el.meta.textContent='Closed.'; } function resetAll(){ latestMask=null; lastPNG=null; [el.preview, el.overlay].forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height)); el.meta.textContent='Reset.'; el.wristBox.textContent='—'; }
+
+async function ensureSeg(){ if(seg) return seg; seg = new SelfieSegmentation({locateFile:f=>https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}}); seg.setOptions({modelSelection:1}); await seg.initialize(); return seg; }
+
+async function drawMask(frame){ const W=el.preview.width,H=el.preview.height; const ctx=el.preview.getContext('2d'); ctx.drawImage(frame,0,0,W,H); const s=await ensureSeg(); await new Promise((res)=>{ s.onResults(r=>{ const tmp=document.createElement('canvas'); tmp.width=W; tmp.height=H; const tctx=tmp.getContext('2d'); tctx.drawImage(r.segmentationMask,0,0,W,H); const id=tctx.getImageData(0,0,W,H); const d=id.data; for(let i=0;i<d.length;i+=4){ const a=d[i+3]; const on=a>90?255:0; d[i]=d[i+1]=d[i+2]=on; d[i+3]=255; } const boost=parseInt(el.wboost.value,10); if(boost>0){ for(let y=H-boost-1;y>=0;y--){ for(let x=0;x<W;x++){ const i=(y*W+x)4; if(d[i]===255){ for(let k=1;k<=boost;k++){ const yy=y+k; if(yy<H){ const j=(yyW+x)4; d[j]=d[j+1]=d[j+2]=255; } } } } } } latestMask=id; const framePix=ctx.getImageData(0,0,W,H); const fp=framePix.data; const mp=id.data; const op=parseFloat(el.opacity.value); for(let i=0;i<fp.length;i+=4){ const on=mp[i]===255; if(!on){ fp[i]=Math.max(fp[i]-10,0); fp[i+1]=Math.max(fp[i+1],220); fp[i+2]=Math.max(fp[i+2],200); fp[i+3]=Math.floor(255op);} } ctx.putImageData(framePix,0,0); res(); }); s.send({image:frame}); }); }
+
+function buildEdgesForColor(srcCtx,t1=35,t2=95){ if(!window.__cvReady||!window.cv||!cv.Mat){ return null; } const W=srcCtx.canvas.width,H=srcCtx.canvas.height; let src=cv.imread(srcCtx.canvas); cv.cvtColor(src,src,cv.COLOR_RGBA2GRAY,0); cv.equalizeHist(src,src); cv.GaussianBlur(src,src,new cv.Size(5,5),0,0,cv.BORDER_DEFAULT); let edges=new cv.Mat(); cv.Canny(src,edges,t1,t2,3,false); const k=cv.Mat.ones(3,3,cv.CV_8U); cv.morphologyEx(edges,edges,cv.MORPH_CLOSE,k); k.delete(); src.delete(); return edges; }
+
+function drawColoredPalmLines(edgesMat,ctx){ const W=ctx.canvas.width,H=ctx.canvas.height; ctx.clearRect(0,0,W,H); if(!edgesMat) return; const tmp=new cv.Mat(); cv.cvtColor(edgesMat,tmp,cv.COLOR_GRAY2RGBA,0); const img=new ImageData(new Uint8ClampedArray(tmp.data),W,H); tmp.delete(); const px=img.data; const B={heart:[Math.floor(H0.30),Math.floor(H0.42)], head:[Math.floor(H0.42),Math.floor(H0.58)], life:[Math.floor(H0.55),Math.floor(H0.90)], wrist:[Math.floor(H0.80),H-1]}; const C={heart:'#ff4ef0',head:'#ffe066',life:'#16f0a7',wrist:'#33c9ff'}; const draw=(n)=>{ const [y0,y1]=B[n]; ctx.strokeStyle=C[n]; ctx.lineWidth=(n==='wrist')?2.4:2.0; ctx.lineCap='round'; ctx.lineJoin='round'; for(let y=y0;y<=y1;y+=2){ let run=false,sx=0; ctx.beginPath(); for(let x=0;x<W;x++){ const i=(yW+x)*4; const on=px[i]>0||px[i+1]>0||px[i+2]>0; if(on&&!run){ run=true; sx=x; ctx.moveTo(x,y); } else if(on&&run){ ctx.lineTo(x,y); } else if(!on&&run){ if(x-sx>30) ctx.stroke(); run=false; ctx.beginPath(); } } if(run&&(W-sx)>30) ctx.stroke(); } }; ['heart','head','life','wrist'].forEach(draw); }
+
+function analyzeWristFromEdgeMap(edges,W,H){ if(!edges) return {count:0,quality:'n/a',peaks:[]}; const y0=Math.floor(H0.82),y1=H-1; const hist=new Array(H).fill(0); for(let y=y0;y<=y1;y++){ let row=0; for(let x=0;x<W;x++){ row+=edges.ucharPtr(y,x)[0]>0?1:0; } hist[y]=row; } const peaks=[]; const minGap=6; let y=y0; while(y<=y1){ let bestY=y,best=0; for(let k=0;k<5&&y+k<=y1;k++){ if(hist[y+k]>best){ best=hist[y+k]; bestY=y+k; } } if(best>Math.max(25,Math.floor(W0.04))){ peaks.push({y:bestY,strength:best}); y=bestY+minGap; } else y++; } const count=Math.min(4,peaks.length); const clarity=peaks.map(p=>p.strength/W).reduce((a,b)=>a+b,0)/Math.max(1,peaks.length); const quality=clarity>0.25?'strong':clarity>0.15?'moderate':'weak'; return {count,quality,peaks}; } function lifespanFromWrist(count,strength){ let base=68; if(count===1) base=62; else if(count===2) base=70; else if(count===3) base=77; else if(count>=4) base=83; const adj=Math.floor((strength||0)*6); return {min:base-5+adj,max:base+7+adj}; }
+
+function avgBrightness(ctx){ const {width:w,height:h}=ctx.canvas; const d=ctx.getImageData(0,0,w,h).data; let s=0; for(let i=0;i<d.length;i+=4){ s+=d[i]+d[i+1]+d[i+2]; } const avg=Math.round(s/(d.length/4)/3); const label=avg<90?'Dark':avg<120?'Dim':avg<170?'Bright':'Very Bright'; return {avg,label}; }
+
+function lockToggle(){ if(!el.video.srcObject){ el.meta.textContent='Open the camera first.'; return; } const W=el.preview.width,H=el.preview.height; const p=el.preview.getContext('2d'); if(!locked){ p.globalAlpha=1; p.clearRect(0,0,W,H); p.drawImage(el.video,0,0,W,H); const track=stream&&stream.getVideoTracks()[0]; if(track) track.enabled=false; locked=true; el.lock.textContent='Unlock'; el.meta.textContent='Frame locked. You can Analyze or Save.'; } else { const track=stream&&stream.getVideoTracks()[0]; if(track) track.enabled=true; locked=false; el.lock.textContent='Lock Frame'; el.meta.textContent='Live preview resumed.'; } }
+
+async function snapAnalyze(){ if(!(el.video.srcObject||locked)){ el.meta.textContent='Open the camera first.'; return; } const frameSrc = locked ? el.preview : el.video; await drawMask(frameSrc); const pctx=el.preview.getContext('2d'); const {avg,label}=avgBrightness(pctx); el.meta.innerHTML=Lighting: <b>${label}</b> (avg=${avg}) · Resolution: ${el.preview.width}×${el.preview.height}; const src=document.createElement('canvas').getContext('2d'); src.canvas.width=el.preview.width; src.canvas.height=el.preview.height; src.drawImage(frameSrc,0,0,src.canvas.width,src.canvas.height); const t1=parseInt(el.t1.value,10), t2=parseInt(el.t2.value,10); const edges=buildEdgesForColor(src,t1,t2); drawColoredPalmLines(edges, el.overlay.getContext('2d')); const rep=analyzeWristFromEdgeMap(edges, el.overlay.width, el.overlay.height); const life=lifespanFromWrist(rep.count, rep.peaks.reduce((a,b)=>a+b.strength,0)/Math.max(1,rep.peaks.length)/el.overlay.width); el.wristBox.innerHTML=Lines: <b>${rep.count}</b> (${rep.quality}) · Peaks: ${rep.peaks.map(p=>y${p.y}).join(', ')||'—'}<br/>Lifespan tendency: ${life.min}–${life.max} yrs (demo heuristic); const snap=document.createElement('canvas'); snap.width=el.preview.width; snap.height=el.preview.height; const sc=snap.getContext('2d'); sc.drawImage(frameSrc,0,0,snap.width,snap.height); sc.globalAlpha=parseFloat(el.opacity.value); sc.drawImage(el.preview,0,0); sc.globalAlpha=1; sc.drawImage(el.overlay,0,0); lastPNG=snap.toDataURL('image/png'); const img=new Image(); img.onload=()=>pctx.drawImage(img,0,0,el.preview.width,el.preview.height); img.src=lastPNG; if(edges) edges.delete(); }
+
+el.open.onclick=openCam; el.close.onclick=closeCam; el.reset.onclick=resetAll; el.snap.onclick=snapAnalyze; el.save.onclick=()=>{ if(!lastPNG){ alert('Take a Snap first.'); return; } const a=document.createElement('a'); a.href=lastPNG; a.download='palm_v5_1c.png'; a.click(); }; el.lock.onclick=lockToggle;
+
