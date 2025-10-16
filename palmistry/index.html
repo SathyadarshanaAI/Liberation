@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quantum Palm Analyzer v5.2 · Sathyadarshana</title>
+<title>Quantum Palm Analyzer v5.1 · Sathyadarshana</title>
 <meta name="theme-color" content="#0b0f16"/>
 <style>
 :root{
@@ -12,127 +12,105 @@
 *{box-sizing:border-box}
 body{
   margin:0;background:var(--bg);color:var(--text);
-  font-family:system-ui;text-align:center;
+  font-family:system-ui,Segoe UI,sans-serif;text-align:center;
 }
-h1{color:var(--neon);margin:16px 0 8px;font-size:1.8rem;}
+h1{color:var(--neon);margin:18px 0 8px;font-size:1.8rem;}
+p{opacity:.9}
 video,canvas{
-  width:92vw;max-width:420px;border-radius:16px;
-  border:2px solid var(--pri);background:#000;display:block;margin:auto;
+  width:92vw;max-width:420px;height:auto;
+  border-radius:16px;border:2px solid var(--pri);
+  display:block;margin:auto;background:#000;
 }
-.btn{padding:10px 14px;margin:6px;border-radius:12px;cursor:pointer;font-weight:700}
-.b1{border:1px solid var(--neon);color:var(--neon);background:transparent}
-.b1:hover{background:var(--neon);color:#000}
-.card{
-  background:#101820;border:1px solid #1f2a37;border-radius:10px;
-  padding:12px;margin:14px auto;max-width:420px;text-align:left;
+.btn{
+  display:inline-block;margin:8px;padding:10px 16px;
+  border-radius:10px;border:2px solid var(--neon);
+  color:var(--neon);text-decoration:none;font-weight:700;
+  background:transparent;transition:.25s;
 }
-.locked{filter:blur(4px);opacity:.5;pointer-events:none;user-select:none;}
-.unlock-btn{
-  background:transparent;border:1px solid var(--pri);color:var(--pri);
-  padding:8px 12px;border-radius:8px;font-weight:600;margin-top:6px;
-}
-.unlock-btn:hover{background:var(--pri);color:#000;}
+.btn:hover{background:var(--neon);color:#000;}
+.tip{font-size:.9rem;opacity:.7;margin-top:6px}
+.footer{margin:20px 0;font-size:.8rem;opacity:.8}
 </style>
 </head>
 <body>
 
-<h1>Quantum Palm Analyzer v5.2</h1>
-<p id="status">Ready</p>
+<h1>Quantum Palm Analyzer v5.1</h1>
+<p>AI-powered edge detection & palm analysis (Neon Edition)</p>
+
 <video id="video" autoplay playsinline></video>
 <canvas id="canvas"></canvas>
 
-<div>
-  <button id="open" class="btn b1">Open Camera</button>
-  <button id="snap" class="btn b1">Snap</button>
-  <button id="close" class="btn b1">Close</button>
-</div>
+<p>
+  <button class="btn" id="openCam">Open Camera</button>
+  <button class="btn" id="snap">Snap</button>
+  <button class="btn" id="close">Close</button>
+</p>
 
-<div id="result"></div>
+<p class="tip">Tip: Camera works only on <b>HTTPS</b> or <b>localhost</b>.</p>
+
+<hr style="border-color:#1e293b;margin:18px 0">
+
+<p>
+  <a href="/Liberation/palmistry/index.html?v=500" class="btn">🔮 Open Quantum Palm Analyzer v5</a>
+  <a href="/Liberation/index.html" class="btn">🏠 Back to Home</a>
+</p>
+
+<p class="footer">© 2025 Sathyadarshana · Light of Truth · All rights reserved.</p>
 
 <script>
-const v=document.getElementById('video'),
-      c=document.getElementById('canvas'),
-      ctx=c.getContext('2d'),
-      res=document.getElementById('result'),
-      s=document.getElementById('status');
+const video=document.getElementById('video');
+const canvas=document.getElementById('canvas');
+const snap=document.getElementById('snap');
+const openCam=document.getElementById('openCam');
+const closeBtn=document.getElementById('close');
 let stream=null;
 
-// Camera open
-document.getElementById('open').onclick=async()=>{
+// ---- Camera Controls ----
+openCam.onclick=async()=>{
  try{
    stream=await navigator.mediaDevices.getUserMedia({video:true});
-   v.srcObject=stream; s.textContent="Camera ON";
- }catch(e){s.textContent="Camera error: "+e.message;}
+   video.srcObject=stream;
+ }catch(err){
+   alert("Camera access failed: "+err);
+ }
 };
 
-// Close
-document.getElementById('close').onclick=()=>{
- if(stream){stream.getTracks().forEach(t=>t.stop());v.srcObject=null;}
- s.textContent="Camera OFF";
-};
-
-// Sobel neon overlay
+// ---- Neon Edge Detection (Sobel filter) ----
 function edgeOverlay(ctx,w,h){
- const img=ctx.getImageData(0,0,w,h),d=img.data;
- const edges=new Uint8ClampedArray(w*h);
- for(let y=1;y<h-1;y++){
-  for(let x=1;x<w-1;x++){
-    const i=(y*w+x)*4;
-    const gx=(d[i-4-w*4]+2*d[i-4]+d[i-4+w*4])-(d[i+4-w*4]+2*d[i+4]+d[i+4+w*4]);
-    const gy=(d[i-4-w*4]+2*d[i-w*4]+d[i+4-w*4])-(d[i-4+w*4]+2*d[i+w*4]+d[i+4+w*4]);
-    const mag=Math.hypot(gx,gy);
-    edges[y*w+x]=mag>60?255:0;
+  const img=ctx.getImageData(0,0,w,h), d=img.data;
+  const edges=new Uint8ClampedArray(w*h);
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=(y*w+x)*4;
+      const gx=(d[i-4-w*4]+2*d[i-4]+d[i-4+w*4])-(d[i+4-w*4]+2*d[i+4]+d[i+4+w*4]);
+      const gy=(d[i-4-w*4]+2*d[i-w*4]+d[i+4-w*4])-(d[i-4+w*4]+2*d[i+w*4]+d[i+4+w*4]);
+      const mag=Math.hypot(gx,gy);
+      edges[y*w+x]=mag>60?255:0;
+    }
   }
- }
- for(let y=0;y<h;y++){
-  for(let x=0;x<w;x++){
-    const i=(y*w+x)*4;
-    if(edges[y*w+x]){d[i]=0;d[i+1]=229;d[i+2]=255;}
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const i=(y*w+x)*4;
+      if(edges[y*w+x]){d[i]=0;d[i+1]=229;d[i+2]=255;} // neon cyan lines
+    }
   }
- }
- ctx.putImageData(img,0,0);
+  ctx.putImageData(img,0,0);
 }
 
-// Generate AI Mini Reading (Free)
-function miniReading(){
-  const lines=[
-    "💙 Heart Line: balanced and calm emotional flow.",
-    "💚 Life Line: steady vitality with resilience.",
-    "💛 Head Line: clarity and logical thought.",
-    "💜 Fate Line: independent decision maker."
-  ];
-  return lines.map(l=>`<div>${l}</div>`).join("");
-}
+// ---- Snapshot ----
+snap.onclick=()=>{
+ if(!video.srcObject)return;
+ const ctx=canvas.getContext('2d');
+ canvas.width=video.videoWidth;
+ canvas.height=video.videoHeight;
+ ctx.drawImage(video,0,0,canvas.width,canvas.height);
+ edgeOverlay(ctx,canvas.width,canvas.height);
+ console.log("Quantum Palm Analyzer v5.1 — Snapshot processed.");
+};
 
-// Full reading (Locked / Paid)
-function fullReading(){
-  return `
-  <div class='locked'>
-    <p>🔒 Full AI Reading (Paid Users)</p>
-    <p>Detailed line depth, sub-branch meanings, element influence, and time phase reading.</p>
-    <p>Available in the Premium version of Sathyadarshana.</p>
-  </div>
-  <button class="unlock-btn" onclick="alert('Please log in as Paid Member to unlock full reading.')">Unlock Full Reading</button>`;
-}
-
-// Snap photo
-document.getElementById('snap').onclick=()=>{
- if(!v.srcObject)return;
- c.width=v.videoWidth; c.height=v.videoHeight;
- ctx.drawImage(v,0,0,c.width,c.height);
- edgeOverlay(ctx,c.width,c.height);
- s.textContent="Analyzing…";
- setTimeout(()=>{
-   res.innerHTML=`
-     <div class="card">
-       <h3 style="color:#00e5ff;margin:0 0 6px;">Mini Reading (Free)</h3>
-       ${miniReading()}
-     </div>
-     <div class="card">
-       ${fullReading()}
-     </div>`;
-   s.textContent="Done ✅";
- },600);
+// ---- Close Camera ----
+closeBtn.onclick=()=>{
+ if(stream){stream.getTracks().forEach(t=>t.stop());video.srcObject=null;}
 };
 </script>
 
