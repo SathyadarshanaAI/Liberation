@@ -1,197 +1,142 @@
-// === Elements ===
-const $ = id => document.getElementById(id);
-const el = {
-  video: $('video'), preview: $('preview'), overlay: $('overlay'),
-  open: $('open'), snap: $('snap'), save: $('save'), reset: $('reset'), close: $('close'),
-  meta: $('meta'), tip: $('tip'),
-  opacity: $('opacity'), wboost: $('wboost'), t1: $('t1'), t2: $('t2'), thv: $('thv'), opv: $('opv'), wbv: $('wbv'),
-  wristBox: $('wristBox'),
+cat > app.js <<'JS'
+// Quantum Palm Analyzer v5.0
+const $=(s,r=document)=>r.querySelector(s);
+const statusEl=$("#status"),video=$("#video"),overlay=$("#overlay");
+const btnOpen=$("#open"),btnSnap=$("#snap"),btnClose=$("#close");
+const btnSave=$("#save"),btnReset=$("#reset");
+const resultEl=$("#result");
+let stream, lastShot=null;
+
+const secureOK=()=>location.hostname==="localhost"||location.hostname==="127.0.0.1"||location.protocol==="https:";
+
+/* ---------------- Camera ---------------- */
+btnOpen.onclick=async()=>{
+  if(!secureOK()){ alert("Use HTTPS or localhost"); return; }
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
+    video.srcObject=stream; await video.play();
+    enable(btnSnap,btnClose); disable(btnSave,btnReset);
+    status("Camera ON");
+  }catch(e){ status("Camera error: "+e.message); }
 };
 
-let stream=null, seg=null, latestMask=null, lastPNG=null;
-window.__cvReady = window.__cvReady || false;
-
-// === Utils ===
-function avgBrightness(ctx){
-  const {width:w,height:h} = ctx.canvas; const d = ctx.getImageData(0,0,w,h).data;
-  let s=0; for(let i=0;i<d.length;i+=4) s+=d[i]+d[i+1]+d[i+2];
-  const avg = Math.round(s/(d.length/4)/3);
-  const label = avg<90?'Dark':avg<120?'Dim':avg<170?'Bright':'Very Bright';
-  return {avg,label};
-}
-function setLabels(){
-  el.opv.textContent = parseFloat(el.opacity.value).toFixed(2);
-  el.wbv.textContent = parseInt(el.wboost.value,10);
-  el.thv.textContent = `${el.t1.value}/${el.t2.value}`;
-}
-['opacity','wboost','t1','t2'].forEach(id=>$(id).addEventListener('input', setLabels)); setLabels();
-
-// === Camera ===
-async function openCam(){
-  stream = await navigator.mediaDevices.getUserMedia({
-    video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}}, audio:false
-  });
-  el.video.srcObject = stream; await el.video.play();
-  el.meta.textContent = 'Camera open. Ready…';
-}
-function closeCam(){ if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null;} el.video.srcObject=null; el.meta.textContent='Closed.'; }
-function resetAll(){
-  latestMask=null; lastPNG=null;
-  [el.preview, el.overlay].forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height));
-  el.meta.textContent='Reset.'; el.wristBox.textContent='—';
+btnClose.onclick=stopCamera;
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  video.srcObject=null; disable(btnSnap,btnClose,btnSave,btnReset);
+  status("Camera OFF");
 }
 
-// === Segmentation (tight + wrist keep) ===
-async function ensureSeg(){
-  if(seg) return seg;
-  seg = new SelfieSegmentation({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`});
-  seg.setOptions({modelSelection:1});
-  await seg.initialize(); return seg;
+/* ---------------- Helpers ---------------- */
+const enable=(...els)=>els.forEach(el=>el.disabled=false);
+const disable=(...els)=>els.forEach(el=>el.disabled=true);
+const status=t=>statusEl.textContent=t;
+
+function avgBrightness(img){
+  const d=img.data; let s=0;
+  for(let i=0;i<d.length;i+=4){ s+= (d[i]+d[i+1]+d[i+2])/3; }
+  return s/(d.length/4);
 }
-async function drawMask(frame){
-  const W=el.preview.width, H=el.preview.height; const ctx = el.preview.getContext('2d');
-  ctx.drawImage(frame,0,0,W,H);
-  const s = await ensureSeg();
-  await new Promise((res)=>{
-    s.onResults(r=>{
-      const tmp = document.createElement('canvas'); tmp.width=W; tmp.height=H; const tctx=tmp.getContext('2d');
-      tctx.drawImage(r.segmentationMask,0,0,W,H);
-      const id = tctx.getImageData(0,0,W,H); const d=id.data;
-
-      for(let i=0;i<d.length;i+=4){ const a=d[i+3]; const on=a>90?255:0; d[i]=d[i+1]=d[i+2]=on; d[i+3]=255; }
-      const boost=parseInt(el.wboost.value,10);
-      if(boost>0){
-        for(let y=H-boost-1;y>=0;y--){
-          for(let x=0;x<W;x++){
-            const i=(y*W+x)*4;
-            if(d[i]===255){ for(let k=1;k<=boost;k++){ const yy=y+k; if(yy<H){ const j=(yy*W+x)*4; d[j]=d[j+1]=d[j+2]=255; } } }
-          }
-        }
-      }
-      latestMask = id;
-
-      // teal-tint background
-      const framePix = ctx.getImageData(0,0,W,H); const fp=framePix.data; const mp=id.data; const op=parseFloat(el.opacity.value);
-      for(let i=0;i<fp.length;i+=4){ const on = mp[i]===255; if(!on){ fp[i]=Math.max(fp[i]-10,0); fp[i+1]=Math.max(fp[i+1],220); fp[i+2]=Math.max(fp[i+2],200); fp[i+3]=Math.floor(255*op);} }
-      ctx.putImageData(framePix,0,0);
-      res();
-    });
-    s.send({image: frame});
-  });
+function skinMask(ctx,w,h){
+  const img=ctx.getImageData(0,0,w,h), d=img.data;
+  const m=new Uint8ClampedArray(w*h);
+  for(let i=0,j=0;i<d.length;i+=4,++j){
+    const r=d[i],g=d[i+1],b=d[i+2];
+    const skin=(r>95&&g>40&&b>20&&(Math.max(r,g,b)-Math.min(r,g,b))>15&&Math.abs(r-g)>15&&r>g&&r>b);
+    m[j]=skin?255:0;
+  }
+  return m;
 }
-
-// === Edge pipeline (Canny + morph close) ===
-function buildEdgesForColor(srcCtx, t1=35, t2=95){
-  if(!window.__cvReady || !window.cv || !cv.Mat){ return null; }
-  const W=srcCtx.canvas.width, H=srcCtx.canvas.height;
-  let src = cv.imread(srcCtx.canvas);
-  cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-  cv.equalizeHist(src, src);
-  cv.GaussianBlur(src, src, new cv.Size(5,5), 0, 0, cv.BORDER_DEFAULT);
-  let edges = new cv.Mat();
-  cv.Canny(src, edges, t1, t2, 3, false);
-  const k = cv.Mat.ones(3,3,cv.CV_8U); cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, k); k.delete(); src.delete();
-  return edges;
-}
-
-// === Draw colored palm lines ===
-function drawColoredPalmLines(edgesMat, overlayCtx){
-  const W=overlayCtx.canvas.width, H=overlayCtx.canvas.height;
-  overlayCtx.clearRect(0,0,W,H);
-  if(!edgesMat) return;
-
-  const tmp = new cv.Mat(); cv.cvtColor(edgesMat, tmp, cv.COLOR_GRAY2RGBA, 0);
-  const img = new ImageData(new Uint8ClampedArray(tmp.data), W, H); tmp.delete();
-  const px = img.data;
-
-  const BANDS = {
-    heart:[Math.floor(H*0.30), Math.floor(H*0.42)],
-    head: [Math.floor(H*0.42), Math.floor(H*0.58)],
-    life: [Math.floor(H*0.55), Math.floor(H*0.90)],
-    wrist:[Math.floor(H*0.80), H-1]
-  };
-  const COLORS = { heart:'#ff4ef0', head:'#ffe066', life:'#16f0a7', wrist:'#33c9ff' };
-
-  const drawBand=(name)=>{
-    const [y0,y1] = BANDS[name];
-    overlayCtx.strokeStyle = COLORS[name];
-    overlayCtx.lineWidth = (name==='wrist')?2.4:2.0; overlayCtx.lineCap='round'; overlayCtx.lineJoin='round';
-    for(let y=y0;y<=y1;y+=2){
-      let run=false, sx=0; overlayCtx.beginPath();
-      for(let x=0;x<W;x++){
-        const i=(y*W+x)*4; const on = px[i]>0 || px[i+1]>0 || px[i+2]>0;
-        if(on && !run){ run=true; sx=x; overlayCtx.moveTo(x,y); }
-        else if(on && run){ overlayCtx.lineTo(x,y); }
-        else if(!on && run){ if(x-sx>30) overlayCtx.stroke(); run=false; overlayCtx.beginPath(); }
-      }
-      if(run && (W-sx)>30) overlayCtx.stroke();
+function estimateSide(mask,w,h){
+  let L=w,R=0,T=h,B=0;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      if(mask[y*w+x]){ if(x<L)L=x; if(x>R)R=x; if(y<T)T=y; if(y>B)B=y; }
     }
-  };
-  ['heart','head','life','wrist'].forEach(drawBand);
-}
-
-// === Wrist analysis ===
-function analyzeWristFromEdgeMap(edges, W, H){
-  if(!edges) return {count:0,quality:'n/a',peaks:[]};
-  const y0 = Math.floor(H*0.82), y1 = H-1;
-  const hist = new Array(H).fill(0);
-  for(let y=y0;y<=y1;y++){
-    let row=0; for(let x=0;x<W;x++){ row += edges.ucharPtr(y,x)[0]>0 ? 1 : 0; } hist[y]=row;
   }
-  const peaks=[]; const minGap=6; let y=y0;
-  while(y<=y1){
-    let bestY=y,best=0; for(let k=0;k<5 && y+k<=y1;k++){ if(hist[y+k]>best){ best=hist[y+k]; bestY=y+k; } }
-    if(best>Math.max(25, Math.floor(W*0.04))){ peaks.push({y:bestY,strength:best}); y=bestY+minGap; } else y++;
+  if(R<=L) return {side:"unknown",bbox:null};
+  const bbox={L,R,T,B,w:R-L,h:B-T};
+  const side=(L>(w-R))?"RIGHT hand":"LEFT hand"; // margin heuristic
+  return {side,bbox};
+}
+function drawScanBeam(ctx,w,h,progress){
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,0.35)"; ctx.fillRect(0,0,w,h);
+  const y=progress*h;
+  const g=ctx.createLinearGradient(0,y-40,0,y+40);
+  g.addColorStop(0,"rgba(0,229,255,0)");
+  g.addColorStop(.5,"rgba(0,229,255,0.85)");
+  g.addColorStop(1,"rgba(0,229,255,0)");
+  ctx.fillStyle=g; ctx.fillRect(0,y-40,w,80);
+  ctx.restore();
+}
+
+/* ---------------- Snap + Analyze ---------------- */
+btnSnap.onclick=async()=>{
+  overlay.width=video.videoWidth||640;
+  overlay.height=video.videoHeight||480;
+  overlay.style.display="block";
+  const ctx=overlay.getContext("2d");
+
+  // scanning anim (600ms)
+  const start=performance.now(), dur=600;
+  status("Analyzing…");
+  await new Promise(res=>{
+    const loop=now=>{
+      const t=Math.min(1,(now-start)/dur);
+      ctx.drawImage(video,0,0,overlay.width,overlay.height);
+      drawScanBeam(ctx,overlay.width,overlay.height,t);
+      if(t<1) requestAnimationFrame(loop); else res();
+    }; requestAnimationFrame(loop);
+  });
+
+  // analysis
+  ctx.drawImage(video,0,0,overlay.width,overlay.height);
+  const frame=ctx.getImageData(0,0,overlay.width,overlay.height);
+  const light=Math.round(avgBrightness(frame));
+  const quality= light<40?"Very Dark":light<70?"Dim":light<120?"OK":"Bright";
+
+  const mask=skinMask(ctx,overlay.width,overlay.height);
+  const {side,bbox}=estimateSide(mask,overlay.width,overlay.height);
+
+  // line accent
+  const img=ctx.getImageData(0,0,overlay.width,overlay.height), d=img.data;
+  for(let i=0;i<d.length;i+=4){
+    const avg=(d[i]+d[i+1]+d[i+2])/3;
+    if(avg<60){ d[i]=0; d[i+1]=255; d[i+2]=255; }
+    else if(avg<120){ d[i]=22; d[i+1]=240; d[i+2]=167; }
   }
-  const count=Math.min(4,peaks.length);
-  const clarity=peaks.map(p=>p.strength/W).reduce((a,b)=>a+b,0)/Math.max(1,peaks.length);
-  const quality = clarity>0.25?'strong':clarity>0.15?'moderate':'weak';
-  return {count,quality,peaks};
-}
-function lifespanFromWrist(count,strength){
-  let base=68; if(count===1) base=62; else if(count===2) base=70; else if(count===3) base=77; else if(count>=4) base=83;
-  const adj=Math.floor((strength||0)*6); return {min:base-5+adj,max:base+7+adj};
-}
+  ctx.putImageData(img,0,0);
 
-// === Analyze ===
-async function snapAnalyze(){
-  if(!el.video.srcObject){ el.meta.textContent='Open the camera first.'; return; }
+  if(bbox){
+    ctx.strokeStyle="#00e5ff"; ctx.lineWidth=3;
+    ctx.strokeRect(bbox.L,bbox.T,bbox.w,bbox.h);
+  }
 
-  // 1) mask + preview tint
-  await drawMask(el.video);
-  const pctx = el.preview.getContext('2d');
-  const {avg,label}=avgBrightness(pctx);
-  el.meta.innerHTML = `Lighting: <b>${label}</b> (avg=${avg}) · Resolution: ${el.preview.width}×${el.preview.height}`;
+  lastShot=overlay.toDataURL("image/png");
+  resultEl.innerHTML=`
+    <div class="card">
+      <div style="font-weight:700;color:#00e5ff;margin-bottom:6px">Scan Result</div>
+      <div>Hand: <b>${side}</b></div>
+      <div>Lighting: <b>${quality}</b> (avg=${light})</div>
+      <div>Resolution: ${overlay.width}×${overlay.height}</div>
+      <div style="opacity:.8;margin-top:6px">Tip: keep palm centered & fill the frame.</div>
+    </div>`;
+  enable(btnSave,btnReset);
+  status("Done");
+};
 
-  // 2) edges from original frame
-  const srcCtx = document.createElement('canvas').getContext('2d');
-  srcCtx.canvas.width = el.preview.width; srcCtx.canvas.height = el.preview.height;
-  srcCtx.drawImage(el.video,0,0,srcCtx.canvas.width,srcCtx.canvas.height);
-  const t1=parseInt(el.t1.value,10), t2=parseInt(el.t2.value,10);
-  const edges = buildEdgesForColor(srcCtx, t1, t2);
+btnSave.onclick=()=>{
+  if(!lastShot) return;
+  const a=document.createElement("a");
+  a.href=lastShot; a.download=`palm_${Date.now()}.png`;
+  document.body.appendChild(a); a.click(); a.remove();
+};
+btnReset.onclick=()=>{
+  overlay.getContext("2d").clearRect(0,0,overlay.width,overlay.height);
+  overlay.style.display="none";
+  resultEl.innerHTML=""; lastShot=null; status("Ready");
+};
 
-  // 3) color overlay
-  drawColoredPalmLines(edges, el.overlay.getContext('2d'));
-
-  // 4) wrist summary
-  const rep = analyzeWristFromEdgeMap(edges, el.overlay.width, el.overlay.height);
-  const life = lifespanFromWrist(rep.count, rep.peaks.reduce((a,b)=>a+b.strength,0)/Math.max(1,rep.peaks.length)/el.overlay.width);
-  el.wristBox.innerHTML = `Lines: <b>${rep.count}</b> (${rep.quality}) · Peaks: ${rep.peaks.map(p=>`y${p.y}`).join(', ') || '—'}<br/>Lifespan tendency: ${life.min}–${life.max} yrs (demo heuristic)`;
-
-  // 5) snapshot (PNG)
-  const snap = document.createElement('canvas'); snap.width=el.preview.width; snap.height=el.preview.height;
-  const sc=snap.getContext('2d');
-  sc.drawImage(el.video,0,0,snap.width,snap.height);
-  sc.globalAlpha=parseFloat(el.opacity.value); sc.drawImage(el.preview,0,0); sc.globalAlpha=1;
-  sc.drawImage(el.overlay,0,0);
-  lastPNG = snap.toDataURL('image/png');
-
-  if(edges) edges.delete();
-}
-
-// === Wire ===
-el.open.onclick=openCam;
-el.close.onclick=closeCam;
-el.reset.onclick=resetAll;
-el.snap.onclick=snapAnalyze;
-el.save.onclick=()=>{ if(!lastPNG){ alert('Take a Snap first.'); return; } const a=document.createElement('a'); a.href=lastPNG; a.download='palm_v5_1c.png'; a.click(); };
+console.log("Quantum Palm Analyzer v5.0 loaded");
+JS
