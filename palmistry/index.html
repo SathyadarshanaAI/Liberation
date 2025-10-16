@@ -1,141 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Quantum Palm Analyzer v4.5.2</title>
-  <link rel="icon" href="./assets/favicon.png">
-  <style>
-    :root {
-      --bg: #0b0f16;
-      --card: #0f172a;
-      --neon: #00e5ff;
-      --pri: #16f0a7;
-      --mut: #a9c2da;
-    }
-    * { box-sizing: border-box }
-    body {
-      margin: 0;
-      background: radial-gradient(1200px 800px at 50% -10%, #0e2133, #0b0f16);
-      color: #e6f0ff;
-      font-family: system-ui, Segoe UI, Inter, Arial;
-      text-align: center;
-    }
-    h1 {
-      margin: 12px 0 6px;
-      text-align: center;
-      color: var(--neon);
-    }
-    .wrap {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 10px;
-    }
-    .btn, button, a {
-      background: #0d1522;
-      color: #c7e8ff;
-      border: 1px solid #1a3a55;
-      border-radius: 22px;
-      padding: 12px 16px;
-      font-weight: 800;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-    }
-    .btn:hover, button:hover, a:hover {
-      background: #00e5ff;
-      color: #001015;
-      border-color: #00e5ff;
-    }
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin: 8px 0 12px;
-    }
-    .camBox {
-      position: relative;
-      width: min(96vw, 720px);
-      aspect-ratio: 3/4;
-      border-radius: 16px;
-      border: 2px solid #00d0ff;
-      overflow: hidden;
-      background: #000;
-      margin: 0 auto;
-    }
-    video, canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 16px;
-    }
-    #video[hidden] { display: none; }
-    #status { margin-top: 10px; color: #38bdf8; font-weight: 500; }
-    .card { background: #101a2b; border: 1px solid #133149; border-radius: 16px; padding: 14px; margin-top: 12px; }
-    .lines { display: grid; gap: 8px; }
-    .row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: center; }
-    .bar { background: #0b1320; height: 12px; border-radius: 10px; overflow: hidden; }
-    .bar span { display: block; height: 100%; transform-origin: left center; transform: scaleX(0); transition: transform 0.9s ease; }
-    .h span { background: linear-gradient(90deg, #ff6b6b, #ff3b3b); }      /* Heart */
-    .hh span { background: linear-gradient(90deg, #60a5fa, #3b82f6); }    /* Mind */
-    .l span { background: linear-gradient(90deg, #34d399, #10b981); }     /* Life */
-    .f span { background: linear-gradient(90deg, #f59e0b, #fbbf24); }     /* Fate */
-    .s span { background: linear-gradient(90deg, #f97316, #fb923c); }     /* Success */
-    .hl span { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }    /* Health */
-    .mar span { background: linear-gradient(90deg, #f472b6, #ec4899); }   /* Marriage */
-    footer { color: #94a3b8; margin: 20px 0; font-size: 14px; }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Quantum Palm Analyzer v5.2 · Sathyadarshana</title>
+<meta name="theme-color" content="#0b0f16"/>
+<style>
+:root{
+  --bg:#0b0f16;--neon:#00e5ff;--pri:#16f0a7;--text:#e6f0ff;--card:#101820;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui;text-align:center;
+}
+h1{color:var(--neon);margin:16px 0 8px;font-size:1.8rem;}
+video,canvas{
+  width:92vw;max-width:420px;border-radius:16px;
+  border:2px solid var(--pri);background:#000;display:block;margin:auto;
+}
+.btn{padding:10px 14px;margin:6px;border-radius:12px;cursor:pointer;font-weight:700}
+.b1{border:1px solid var(--neon);color:var(--neon);background:transparent}
+.b1:hover{background:var(--neon);color:#000}
+.card{
+  background:#101820;border:1px solid #1f2a37;border-radius:10px;
+  padding:12px;margin:14px auto;max-width:420px;text-align:left;
+}
+.locked{filter:blur(4px);opacity:.5;pointer-events:none;user-select:none;}
+.unlock-btn{
+  background:transparent;border:1px solid var(--pri);color:var(--pri);
+  padding:8px 12px;border-radius:8px;font-weight:600;margin-top:6px;
+}
+.unlock-btn:hover{background:var(--pri);color:#000;}
+</style>
 </head>
 <body>
 
-  <h1>🖐️ Quantum Palm Analyzer v4.5.2</h1>
-  <div class="toolbar">
-    <select id="handSel">
-      <option value="left">Left (Past)</option>
-      <option value="right">Right (Present)</option>
-    </select>
-    <button id="startCam">🎥 Start Camera</button>
-    <button id="switchBtn">🔄 Switch</button>
-    <button id="flashBtn">⚡ Flash</button>
-    <button id="capture">📸 Capture</button>
-    <input type="file" id="filePick" accept="image/*" />
-    <button id="analyze">🔍 Analyze</button>
-    <button id="save">💾 Save</button>
-    <button id="summaryBtn">📑 Summary</button>
-    <button id="pdfBtn">📕 Full Report</button>
+<h1>Quantum Palm Analyzer v5.2</h1>
+<p id="status">Ready</p>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
+
+<div>
+  <button id="open" class="btn b1">Open Camera</button>
+  <button id="snap" class="btn b1">Snap</button>
+  <button id="close" class="btn b1">Close</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+const v=document.getElementById('video'),
+      c=document.getElementById('canvas'),
+      ctx=c.getContext('2d'),
+      res=document.getElementById('result'),
+      s=document.getElementById('status');
+let stream=null;
+
+// Camera open
+document.getElementById('open').onclick=async()=>{
+ try{
+   stream=await navigator.mediaDevices.getUserMedia({video:true});
+   v.srcObject=stream; s.textContent="Camera ON";
+ }catch(e){s.textContent="Camera error: "+e.message;}
+};
+
+// Close
+document.getElementById('close').onclick=()=>{
+ if(stream){stream.getTracks().forEach(t=>t.stop());v.srcObject=null;}
+ s.textContent="Camera OFF";
+};
+
+// Sobel neon overlay
+function edgeOverlay(ctx,w,h){
+ const img=ctx.getImageData(0,0,w,h),d=img.data;
+ const edges=new Uint8ClampedArray(w*h);
+ for(let y=1;y<h-1;y++){
+  for(let x=1;x<w-1;x++){
+    const i=(y*w+x)*4;
+    const gx=(d[i-4-w*4]+2*d[i-4]+d[i-4+w*4])-(d[i+4-w*4]+2*d[i+4]+d[i+4+w*4]);
+    const gy=(d[i-4-w*4]+2*d[i-w*4]+d[i+4-w*4])-(d[i-4+w*4]+2*d[i+w*4]+d[i+4+w*4]);
+    const mag=Math.hypot(gx,gy);
+    edges[y*w+x]=mag>60?255:0;
+  }
+ }
+ for(let y=0;y<h;y++){
+  for(let x=0;x<w;x++){
+    const i=(y*w+x)*4;
+    if(edges[y*w+x]){d[i]=0;d[i+1]=229;d[i+2]=255;}
+  }
+ }
+ ctx.putImageData(img,0,0);
+}
+
+// Generate AI Mini Reading (Free)
+function miniReading(){
+  const lines=[
+    "💙 Heart Line: balanced and calm emotional flow.",
+    "💚 Life Line: steady vitality with resilience.",
+    "💛 Head Line: clarity and logical thought.",
+    "💜 Fate Line: independent decision maker."
+  ];
+  return lines.map(l=>`<div>${l}</div>`).join("");
+}
+
+// Full reading (Locked / Paid)
+function fullReading(){
+  return `
+  <div class='locked'>
+    <p>🔒 Full AI Reading (Paid Users)</p>
+    <p>Detailed line depth, sub-branch meanings, element influence, and time phase reading.</p>
+    <p>Available in the Premium version of Sathyadarshana.</p>
   </div>
+  <button class="unlock-btn" onclick="alert('Please log in as Paid Member to unlock full reading.')">Unlock Full Reading</button>`;
+}
 
-  <div id="camBox" class="camBox">
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
-  </div>
-  <div id="status">Ready</div>
+// Snap photo
+document.getElementById('snap').onclick=()=>{
+ if(!v.srcObject)return;
+ c.width=v.videoWidth; c.height=v.videoHeight;
+ ctx.drawImage(v,0,0,c.width,c.height);
+ edgeOverlay(ctx,c.width,c.height);
+ s.textContent="Analyzing…";
+ setTimeout(()=>{
+   res.innerHTML=`
+     <div class="card">
+       <h3 style="color:#00e5ff;margin:0 0 6px;">Mini Reading (Free)</h3>
+       ${miniReading()}
+     </div>
+     <div class="card">
+       ${fullReading()}
+     </div>`;
+   s.textContent="Done ✅";
+ },600);
+};
+</script>
 
-  <div class="wrap">
-    <div id="conf"></div>
-    <canvas id="radar" width="300" height="300" style="margin:10px auto;display:block;"></canvas>
-    <div class="card">
-      <div class="lines">
-        <div class="row"><label>Heart line</label><div class="bar h"><span id="b0"></span></div></div>
-        <div class="row"><label>Mind line</label><div class="bar hh"><span id="b1"></span></div></div>
-        <div class="row"><label>Life line</label><div class="bar l"><span id="b2"></span></div></div>
-        <div class="row"><label>Fate line</label><div class="bar f"><span id="b3"></span></div></div>
-        <div class="row"><label>Success line</label><div class="bar s"><span id="b4"></span></div></div>
-        <div class="row"><label>Health line</label><div class="bar hl"><span id="b5"></span></div></div>
-        <div class="row"><label>Marriage line</label><div class="bar mar"><span id="b6"></span></div></div>
-      </div>
-    </div>
-    <p id="insight" style="margin-top:10px;"></p>
-  </div>
-
-  <footer>© 2025 Quantum Palm Analyzer – All rights reserved.</footer>
-
-  <!-- external JS -->
-  <script src="app.js"></script>
 </body>
 </html>
