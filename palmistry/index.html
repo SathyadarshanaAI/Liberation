@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="si">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Palmistry AI · v5.1e Final (HTTPS-safe)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Palmistry AI · v5.1e Final</title>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="./styles.css?v=5.1e"/>
+  <link rel="stylesheet" href="./styles.css" />
 
-  <!-- Libraries (deferred so DOM is ready first) -->
+  <!-- Libraries (defer: DOM ready first) -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" defer></script>
   <script src="https://docs.opencv.org/4.x/opencv.js" defer onload="window.__cvReady=true;"></script>
 </head>
+
 <body>
   <header class="header">
     <h1>Palmistry AI <span class="badge">v5.1e</span></h1>
@@ -27,7 +28,8 @@
         <canvas id="overlay" width="640" height="480" aria-hidden="true"></canvas>
         <div class="bezel"></div>
       </div>
-      <div class="controls" role="group">
+
+      <div class="controls" role="group" aria-label="Camera controls">
         <button class="btn" id="open">Open Camera</button>
         <button class="btn" id="lock">Lock Frame</button>
         <button class="btn" id="snap">Snap & Analyze</button>
@@ -48,13 +50,19 @@
       <div class="card">
         <h3>Overlay Controls</h3>
         <label>Mask Opacity <span id="opv">0.30</span></label>
-        <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.30"/>
+        <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.30" />
+
         <label>Wrist Boost (px) <span id="wbv">24</span></label>
-        <input id="wboost" type="range" min="0" max="60" step="1" value="24"/>
+        <input id="wboost" type="range" min="0" max="60" step="1" value="24" />
+
         <label>Edge Low/High Threshold <span id="thv">35/95</span></label>
-        <input id="t1" type="range" min="10" max="80" step="1" value="35"/>
-        <input id="t2" type="range" min="40" max="140" step="1" value="95"/>
-        <label class="row"><input id="a4" type="checkbox" checked/> <span>Show A4 Placement Guides</span></label>
+        <input id="t1" type="range" min="10" max="80" step="1" value="35" />
+        <input id="t2" type="range" min="40" max="140" step="1" value="95" />
+
+        <label class="row">
+          <input id="a4" type="checkbox" checked />
+          <span>Show A4 Placement Guides</span>
+        </label>
       </div>
 
       <div class="card">
@@ -65,8 +73,8 @@
       <div class="card">
         <h3>Sathyadarshana Astrology Palmistry Report</h3>
         <div class="note">
-          email: <a href="mailto:sathyadarshanananirvana@gmail.com">sathyadarshanananirvana@gmail.com</a><br/>
-          +94 75 750 0000<br/>
+          email: <a href="mailto:sathyadarshanananirvana@gmail.com">sathyadarshanananirvana@gmail.com</a><br />
+          +94 75 750 0000<br />
           Sri Lanka.
         </div>
       </div>
@@ -75,7 +83,7 @@
 
   <footer class="footer">© Sathyadarshana · v5.1e Final</footer>
 
-  <!-- App (deferred) -->
-  <script src="./app.js?v=5.1e" defer></script>
+  <!-- App -->
+  <script src="./app.js" defer></script>
 </body>
 </html>
