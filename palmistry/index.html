@@ -3,92 +3,62 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quantum Palm Analyzer v5 · Sathyadarshana</title>
+<title>Sathyadarshana · Light of Truth</title>
 <meta name="theme-color" content="#0b0f16"/>
 <style>
 :root{
-  --bg:#0b0f16;--neon:#00e5ff;--pri:#16f0a7;--text:#e6f0ff;--card:#101820;
+  --bg:#0b0f16;--pri:#16f0a7;--neon:#00e5ff;--text:#e6f0ff;
 }
 *{box-sizing:border-box}
 body{
   margin:0;background:var(--bg);color:var(--text);
   font-family:system-ui,Segoe UI,sans-serif;text-align:center;
+  line-height:1.5;
 }
 h1{color:var(--neon);margin:18px 0 8px;font-size:1.8rem;}
-h2{color:var(--pri);margin:8px 0;}
-video,canvas{
-  width:92vw;max-width:420px;height:auto;
-  border-radius:16px;border:2px solid var(--pri);
-  display:block;margin:auto;background:#000;
-}
-.btn{
-  display:inline-block;margin:8px;padding:10px 16px;
-  border-radius:10px;border:2px solid var(--neon);
+h2{color:var(--pri);margin:12px 0 4px;}
+a.btn{
+  display:inline-block;margin:10px 8px;padding:12px 18px;
+  border-radius:12px;border:2px solid var(--neon);
   color:var(--neon);text-decoration:none;font-weight:700;
-  background:transparent;transition:.25s;
+  transition:.25s;
 }
-.btn:hover{background:var(--neon);color:#000;}
-.tip{font-size:.9rem;opacity:.7;margin-top:6px}
-.footer{margin:20px 0;font-size:.8rem;opacity:.8}
+a.btn:hover{background:var(--neon);color:#000;}
+.card{
+  background:#0f172a;border:1px solid #1e293b;
+  border-radius:16px;max-width:780px;margin:20px auto;padding:20px;
+  text-align:left;
+}
+small{opacity:.85;}
 </style>
 </head>
 <body>
 
-<h1>Quantum Palm Analyzer v5</h1>
-<p>AI-powered palm reading and research edition</p>
+<h1>🌌 Sathyadarshana</h1>
+<p><i>The Light of Truth — Spiritual Intelligence for the Modern Seeker</i></p>
+<img src="logo.png" alt="Sathyadarshana Logo" width="80" style="border-radius:12px;margin:8px auto"/>
 
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas"></canvas>
+<div class="card">
+  <p><b>Sathyadarshana</b> is a modern, spiritual, and AI-powered platform designed to awaken, guide, and protect seekers on their journey.</p>
+  <p>Explore personalized astrology, the sacred library, AI wisdom, digital aura, Dharma Sabha, and more — all in one serene, secure space.</p>
+</div>
 
-<p>
-  <button class="btn" id="openCam">Open Camera</button>
-  <button class="btn" id="snap">Snap</button>
-  <button class="btn" id="close">Close</button>
+<h2>✨ Key Features</h2>
+<div class="card">
+  <ul>
+    <li>🔭 <b>Astrology Portal</b> – Vedic & KP astrology with NASA-powered planetary data and daily cosmic guidance.</li>
+    <li>📚 <b>Sacred Library</b> – Multilingual sacred texts (Tripitaka, Bible, Quran, Bhagavad Gita & more) with AI reading and audio.</li>
+    <li>🧠 <b>Doctor Buddhi</b> – Ask health or spiritual questions; receive balanced AI + ancient wisdom guidance.</li>
+    <li>🪷 <b>Dharma Sabha Mandapaya</b> – Live Zoom gatherings, teaching sessions, and global peace dialogue.</li>
+  </ul>
+</div>
+
+<p style="margin-top:24px">
+  <a href="https://arshana.netlify.app/?v=500" class="btn">🔮 Open Quantum Palm Analyzer v5</a>
+  <a href="https://sathyadarshanaai.github.io/Liberation/library.html" class="btn">📖 Visit Sacred Library</a>
 </p>
 
-<p class="tip">Tip: Camera works only on <b>HTTPS</b> or <b>localhost</b>.</p>
+<small>© 2025 Sathyadarshana · Light of Truth · All rights reserved.</small>
 
-<hr style="border-color:#1e293b;margin:18px 0">
-
-<p>
-  <a href="/Liberation/palmistry/index.html?v=500" class="btn">🔮 Open Quantum Palm Analyzer v5</a>
-  <a href="/Liberation/index.html" class="btn">🏠 Back to Home</a>
-</p>
-
-<p class="footer">© 2025 Sathyadarshana · Light of Truth · All rights reserved.</p>
-
-<script>
-const video=document.getElementById('video');
-const canvas=document.getElementById('canvas');
-const snap=document.getElementById('snap');
-const openCam=document.getElementById('openCam');
-const closeBtn=document.getElementById('close');
-let stream=null;
-
-openCam.onclick=async()=>{
- try{
-   stream=await navigator.mediaDevices.getUserMedia({video:true});
-   video.srcObject=stream;
- }catch(err){
-   alert("Camera access failed: "+err);
- }
-};
-
-snap.onclick=()=>{
- if(!video.srcObject)return;
- const ctx=canvas.getContext('2d');
- canvas.width=video.videoWidth;
- canvas.height=video.videoHeight;
- ctx.drawImage(video,0,0,canvas.width,canvas.height);
- ctx.strokeStyle="#00e5ff";
- ctx.lineWidth=3;
- ctx.strokeRect(10,10,canvas.width-20,canvas.height-20);
-};
-
-closeBtn.onclick=()=>{
- if(stream){stream.getTracks().forEach(t=>t.stop());video.srcObject=null;}
-};
-
-</script>
 </body>
 </html>
