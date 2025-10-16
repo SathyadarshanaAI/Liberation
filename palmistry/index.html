@@ -1,140 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quantum Palm Analyzer v5.2 · Sathyadarshana</title>
-<meta name="theme-color" content="#0b0f16"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Camera Mini</title>
 <style>
-:root{
-  --bg:#0b0f16;--neon:#00e5ff;--pri:#16f0a7;--text:#e6f0ff;--card:#101820;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:system-ui;text-align:center;
-}
-h1{color:var(--neon);margin:16px 0 8px;font-size:1.8rem;}
-video,canvas{
-  width:92vw;max-width:420px;border-radius:16px;
-  border:2px solid var(--pri);background:#000;display:block;margin:auto;
-}
-.btn{padding:10px 14px;margin:6px;border-radius:12px;cursor:pointer;font-weight:700}
-.b1{border:1px solid var(--neon);color:var(--neon);background:transparent}
-.b1:hover{background:var(--neon);color:#000}
-.card{
-  background:#101820;border:1px solid #1f2a37;border-radius:10px;
-  padding:12px;margin:14px auto;max-width:420px;text-align:left;
-}
-.locked{filter:blur(4px);opacity:.5;pointer-events:none;user-select:none;}
-.unlock-btn{
-  background:transparent;border:1px solid var(--pri);color:var(--pri);
-  padding:8px 12px;border-radius:8px;font-weight:600;margin-top:6px;
-}
-.unlock-btn:hover{background:var(--pri);color:#000;}
+  :root{--pri:#16f0a7;--bg:#0b0f16}
+  body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+  .wrap{
+    position:relative; width:92vw; max-width:480px; margin:16px auto;
+    border:2px solid var(--pri); border-radius:16px; overflow:hidden;
+    aspect-ratio:3/4; background:#000;
+  }
+  video,canvas{position:absolute; inset:0; width:100%; height:100%; display:block; background:#000}
+  #cv{display:none}
+  .btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:10px 0}
+  button,select{border:none; padding:.6em 1em; border-radius:10px; font-weight:700}
+  #status{max-width:480px; margin:10px auto; padding:10px; border:1px dashed #355; border-radius:10px; display:block}
 </style>
 </head>
 <body>
+<h2>Camera Mini</h2>
 
-<h1>Quantum Palm Analyzer v5.2</h1>
-<p id="status">Ready</p>
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas"></canvas>
-
-<div>
-  <button id="open" class="btn b1">Open Camera</button>
-  <button id="snap" class="btn b1">Snap</button>
-  <button id="close" class="btn b1">Close</button>
+<div class="wrap">
+  <video id="cam" playsinline muted autoplay></video>
+  <canvas id="cv"></canvas>
 </div>
 
-<div id="result"></div>
+<div class="btns">
+  <button id="startBtn">▶️ Start</button>
+  <select id="camsel"></select>
+  <button id="cycleBtn">🔁 Cycle</button>
+  <button id="flipBtn">↔️ Flip</button>
+</div>
+
+<div id="status">Ready. Click Start and Allow camera.</div>
 
 <script>
-const v=document.getElementById('video'),
-      c=document.getElementById('canvas'),
-      ctx=c.getContext('2d'),
-      res=document.getElementById('result'),
-      s=document.getElementById('status');
-let stream=null;
+const video=document.getElementById('cam');
+const canvas=document.getElementById('cv');
+const startBtn=document.getElementById('startBtn');
+const camsel=document.getElementById('camsel');
+const cycleBtn=document.getElementById('cycleBtn');
+const flipBtn=document.getElementById('flipBtn');
+let stream=null, track=null, isMirrored=false, camList=[], camIndex=0;
 
-// Camera open
-document.getElementById('open').onclick=async()=>{
- try{
-   stream=await navigator.mediaDevices.getUserMedia({video:true});
-   v.srcObject=stream; s.textContent="Camera ON";
- }catch(e){s.textContent="Camera error: "+e.message;}
-};
+function msg(t){ document.getElementById('status').textContent=t; }
+function showLive(){ video.style.display='block'; canvas.style.display='none'; }
 
-// Close
-document.getElementById('close').onclick=()=>{
- if(stream){stream.getTracks().forEach(t=>t.stop());v.srcObject=null;}
- s.textContent="Camera OFF";
-};
+async function listCams(){
+  const devs=await navigator.mediaDevices.enumerateDevices();
+  camList=devs.filter(d=>d.kind==='videoinput');
+  camsel.innerHTML='';
+  camList.forEach((c,i)=>{
+    const o=document.createElement('option');
+    o.value=c.deviceId; o.textContent=c.label||`Camera ${i+1}`;
+    camsel.appendChild(o);
+  });
+  camIndex=0; camsel.selectedIndex=0;
+}
 
-// Sobel neon overlay
-function edgeOverlay(ctx,w,h){
- const img=ctx.getImageData(0,0,w,h),d=img.data;
- const edges=new Uint8ClampedArray(w*h);
- for(let y=1;y<h-1;y++){
-  for(let x=1;x<w-1;x++){
-    const i=(y*w+x)*4;
-    const gx=(d[i-4-w*4]+2*d[i-4]+d[i-4+w*4])-(d[i+4-w*4]+2*d[i+4]+d[i+4+w*4]);
-    const gy=(d[i-4-w*4]+2*d[i-w*4]+d[i+4-w*4])-(d[i-4+w*4]+2*d[i+w*4]+d[i+4+w*4]);
-    const mag=Math.hypot(gx,gy);
-    edges[y*w+x]=mag>60?255:0;
+async function startCam(deviceId=null){
+  try{ if(stream) stream.getTracks().forEach(t=>t.stop()); }catch{}
+  const base={width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30}};
+  let constraints={video:{...base},audio:false};
+  if(deviceId && String(deviceId).length>0){
+    constraints.video.deviceId={exact:deviceId};
+  }else{
+    constraints.video.facingMode={ideal:isMirrored?'user':'environment'};
   }
- }
- for(let y=0;y<h;y++){
-  for(let x=0;x<w;x++){
-    const i=(y*w+x)*4;
-    if(edges[y*w+x]){d[i]=0;d[i+1]=229;d[i+2]=255;}
+
+  try{
+    stream=await navigator.mediaDevices.getUserMedia(constraints);
+  }catch(e){
+    msg('⚠️ gUM error: '+(e.name||'')+' '+(e.message||e)+' — trying fallback');
+    stream=await navigator.mediaDevices.getUserMedia({video:true});
   }
- }
- ctx.putImageData(img,0,0);
+
+  video.srcObject=stream;
+  await video.play().catch(e=>msg('video.play blocked: '+(e.message||e)));
+  track=stream.getVideoTracks()[0];
+
+  await new Promise(r=>{ if(video.readyState>=1) r(); else video.onloadedmetadata=r; });
+  showLive();
+  video.style.transform=isMirrored?'scaleX(-1)':'none';
+  msg('📷 '+(track.label||'Camera')+' ready');
 }
 
-// Generate AI Mini Reading (Free)
-function miniReading(){
-  const lines=[
-    "💙 Heart Line: balanced and calm emotional flow.",
-    "💚 Life Line: steady vitality with resilience.",
-    "💛 Head Line: clarity and logical thought.",
-    "💜 Fate Line: independent decision maker."
-  ];
-  return lines.map(l=>`<div>${l}</div>`).join("");
-}
-
-// Full reading (Locked / Paid)
-function fullReading(){
-  return `
-  <div class='locked'>
-    <p>🔒 Full AI Reading (Paid Users)</p>
-    <p>Detailed line depth, sub-branch meanings, element influence, and time phase reading.</p>
-    <p>Available in the Premium version of Sathyadarshana.</p>
-  </div>
-  <button class="unlock-btn" onclick="alert('Please log in as Paid Member to unlock full reading.')">Unlock Full Reading</button>`;
-}
-
-// Snap photo
-document.getElementById('snap').onclick=()=>{
- if(!v.srcObject)return;
- c.width=v.videoWidth; c.height=v.videoHeight;
- ctx.drawImage(v,0,0,c.width,c.height);
- edgeOverlay(ctx,c.width,c.height);
- s.textContent="Analyzing…";
- setTimeout(()=>{
-   res.innerHTML=`
-     <div class="card">
-       <h3 style="color:#00e5ff;margin:0 0 6px;">Mini Reading (Free)</h3>
-       ${miniReading()}
-     </div>
-     <div class="card">
-       ${fullReading()}
-     </div>`;
-   s.textContent="Done ✅";
- },600);
+startBtn.onclick=async()=>{
+  try{
+    if(navigator.permissions?.query){
+      const st=await navigator.permissions.query({name:'camera'});
+      msg('Permission: '+st.state+' — press Allow if asked.');
+    }
+  }catch{}
+  try{ await startCam(null); }catch(e){ return; }
+  await listCams();
+  const sel=camsel.value||camList[0]?.deviceId||null;
+  if(sel) await startCam(sel);
 };
+
+camsel.onchange=()=> startCam(camsel.value||null);
+cycleBtn.onclick=async()=>{
+  if(!camList.length) await listCams();
+  if(!camList.length) return msg('No cameras found.');
+  camIndex=(camIndex+1)%camList.length;
+  camsel.selectedIndex=camIndex;
+  await startCam(camList[camIndex].deviceId);
+};
+flipBtn.onclick=()=>{ isMirrored=!isMirrored; video.style.transform=isMirrored?'scaleX(-1)':'none'; };
+
+// helpful: resume on iOS when app returns to foreground
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && video.srcObject && video.paused){ video.play().catch(()=>{}); }});
 </script>
-
 </body>
 </html>
