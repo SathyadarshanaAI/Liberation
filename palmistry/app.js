@@ -1,7 +1,6 @@
-/* Palmistry AI v5.1e — Final
-   Classic 3:4 camera • Black-Glass mask • Wrist Boost • Scan Light •
-   Color overlays (Heart/Head/Life/Wrist) • Neon contour • A4 guides •
-   Lock • Torch snap • HD/4K */
+/* Palmistry AI v5.1e — Final (HTTPS-safe) */
+console.log("Palmistry v5.1e loaded");
+
 const $=id=>document.getElementById(id);
 const el={
   video:$('video'),preview:$('preview'),overlay:$('overlay'),
@@ -16,21 +15,51 @@ let __lastEdgesMat=null,scanRAF;
 function setLabels(){ el.opv.textContent=parseFloat(el.opacity.value).toFixed(2); el.wbv.textContent=parseInt(el.wboost.value,10); el.thv.textContent=`${el.t1.value}/${el.t2.value}`;}
 ['opacity','wboost','t1','t2'].forEach(id=>$(id).addEventListener('input',setLabels)); setLabels();
 
-/* Camera */
+/* ================= Camera ================= */
 async function openCam(){
-  stream=await navigator.mediaDevices.getUserMedia({
-    audio:false, video:{facingMode:'environment',width:{ideal:3840,max:3840},height:{ideal:2160,max:2160},aspectRatio:{ideal:0.75}}
-  });
-  el.video.srcObject=stream; await el.video.play();
-  const w=el.video.videoWidth||1920,h=el.video.videoHeight||1080;
-  [el.preview,el.overlay].forEach(c=>{c.width=w;c.height=h;});
-  el.meta.textContent=`Camera open ${w}×${h}. Ready…`;
+  try{
+    if (location.protocol !== "https:" && location.hostname !== "localhost") {
+      throw new Error("Use HTTPS (e.g., GitHub Pages) or a secure tunnel for camera access.");
+    }
+    const constraints={
+      audio:false,
+      video:{facingMode:'environment',width:{ideal:3840,max:3840},height:{ideal:2160,max:2160},aspectRatio:{ideal:0.75}}
+    };
+    const st=await navigator.mediaDevices.getUserMedia(constraints);
+    stream=st;
+    el.video.srcObject=stream;
+    await el.video.play();
+
+    const w=el.video.videoWidth||1920, h=el.video.videoHeight||1080;
+    [el.preview,el.overlay].forEach(c=>{c.width=w;c.height=h;});
+    el.meta.textContent=`Camera open ${w}×${h}. Ready…`;
+  }catch(err){
+    console.error(err);
+    const hint = (!navigator.mediaDevices?.getUserMedia)
+      ? "This browser does not support camera APIs."
+      : (location.protocol!=="https:" && location.hostname!=="localhost")
+        ? "Not on HTTPS. Host on GitHub Pages or use a secure tunnel."
+        : `${err.name||'Error'}: ${err.message}`;
+    el.meta.textContent="Camera failed: "+hint;
+    alert("Camera failed: "+hint);
+  }
 }
 function closeCam(){ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;} el.video.srcObject=null; el.meta.textContent='Closed.'; }
 function resetAll(){ latestMask=null; lastPNG=null; if(__lastEdgesMat){__lastEdgesMat.delete();__lastEdgesMat=null;} cancelAnimationFrame(scanRAF); [el.preview,el.overlay].forEach(c=>c.getContext('2d').clearRect(0,0,c.width,c.height)); el.meta.textContent='Reset.'; el.wristBox.textContent='—'; }
-async function trySetTorch(on){ try{const tr=stream&&stream.getVideoTracks()[0]; if(!tr) return false; const caps=tr.getCapabilities?.(); if(!caps||!('torch'in caps)) return false; await tr.applyConstraints({advanced:[{torch:!!on}]}); return true;}catch(_){return false;}}
 
-/* Segmentation */
+/* Torch (flash) toggle if supported */
+async function trySetTorch(on){
+  try{
+    const track=stream && stream.getVideoTracks()[0];
+    if(!track) return false;
+    const caps=track.getCapabilities?.();
+    if(!caps || !('torch' in caps)) return false;   // ← spacing fixed
+    await track.applyConstraints({advanced:[{torch:!!on}]});
+    return true;
+  }catch(_){ return false; }
+}
+
+/* ================= Segmentation ================= */
 async function ensureSeg(){ if(seg) return seg; seg=new SelfieSegmentation({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`}); seg.setOptions({modelSelection:1}); await seg.initialize(); return seg; }
 async function drawMask(frame){
   const W=el.preview.width,H=el.preview.height,ctx=el.preview.getContext('2d'); ctx.drawImage(frame,0,0,W,H);
@@ -51,7 +80,7 @@ async function drawMask(frame){
   });
 }
 
-/* Edge pipeline + helpers */
+/* ================= Edges & Overlays ================= */
 function buildEdgesForColor(srcCtx,t1=35,t2=95){
   if(!window.__cvReady||!window.cv||!cv.Mat) return null;
   const W=srcCtx.canvas.width,H=srcCtx.canvas.height; let src=cv.imread(srcCtx.canvas);
@@ -61,8 +90,6 @@ function buildEdgesForColor(srcCtx,t1=35,t2=95){
 }
 function unsharpTo(ctx,amt=1.1){const W=ctx.canvas.width,H=ctx.canvas.height,id=ctx.getImageData(0,0,W,H),t=id.data,blur=new Uint8ClampedArray(t.length);for(let y=1;y<H-1;y++){for(let x=1;x<W-1;x++){const i=(y*W+x)*4;let r=0,g=0,b=0;for(let yy=-1;yy<=1;yy++)for(let xx=-1;xx<=1;xx++){const j=((y+yy)*W+(x+xx))*4;r+=t[j];g+=t[j+1];b+=t[j+2];}blur[i]=r/9;blur[i+1]=g/9;blur[i+2]=b/9;blur[i+3]=255;}}for(let i=0;i<t.length;i+=4){t[i]=Math.min(255,Math.max(0,t[i]+(t[i]-blur[i])*amt));t[i+1]=Math.min(255,Math.max(0,t[i+1]+(t[i+1]-blur[i+1])*amt));t[i+2]=Math.min(255,Math.max(0,t[i+2]+(t[i+2]-blur[i+2])*amt));}ctx.putImageData(id,0,0);}
 function maskEdgesWithHand(m){ if(!latestMask||!m) return m; const W=el.preview.width,H=el.preview.height,d=latestMask.data; for(let y=0;y<H;y++)for(let x=0;x<W;x++) if(d[(y*W+x)*4]!==255) m.ucharPtr(y,x)[0]=0; return m; }
-
-/* Overlays */
 function drawColoredPalmLines(m,ctx){
   const W=ctx.canvas.width,H=ctx.canvas.height; ctx.clearRect(0,0,W,H); if(!m) return;
   const tmp=new cv.Mat(); cv.cvtColor(m,tmp,cv.COLOR_GRAY2RGBA,0); const img=new ImageData(new Uint8ClampedArray(tmp.data),W,H); tmp.delete();
@@ -82,27 +109,23 @@ function drawPalmOutlineFromMask(ctx){
 function drawA4Guides(ctx){
   if(!el.a4 || !el.a4.checked) return; const W=ctx.canvas.width,H=ctx.canvas.height,m=(W*0.04)|0, boxW=(W*0.40)|0, boxH=(H*0.44)|0;
   ctx.save();
-  // Left hand (top-left)
   ctx.globalAlpha=.16; ctx.fillStyle='#1de9b6'; rrect(ctx,m,m,boxW,boxH,16); ctx.fill();
   ctx.globalAlpha=.7; ctx.setLineDash([8,6]); ctx.lineWidth=2; ctx.strokeStyle='#00e5ff'; rrect(ctx,m,m,boxW,boxH,16); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=.85; ctx.fillStyle='#9be8ff'; ctx.font=`${(W*0.035)|0}px system-ui`; ctx.fillText('LEFT hand here (top-left)', m+14, m+32);
-  // Right hand (top-right)
   const rx=W-m-boxW, ry=m; ctx.globalAlpha=.16; ctx.fillStyle='#1de9b6'; rrect(ctx,rx,ry,boxW,boxH,16); ctx.fill();
   ctx.globalAlpha=.7; ctx.setLineDash([8,6]); ctx.lineWidth=2; ctx.strokeStyle='#00e5ff'; rrect(ctx,rx,ry,boxW,boxH,16); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=.85; ctx.fillStyle='#9be8ff'; ctx.fillText('RIGHT hand here (top-right)', rx+14, ry+32);
-  // Analysis baseline
   const baseY=m+boxH+(H*0.04|0); ctx.globalAlpha=.4; ctx.setLineDash([10,8]); ctx.lineWidth=2; ctx.strokeStyle='#00e5ff'; ctx.beginPath(); ctx.moveTo(m,baseY); ctx.lineTo(W-m,baseY); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=.8; ctx.fillStyle='#9be8ff'; ctx.fillText('Analysis notes below (semi/full)', m+12, baseY+28);
   ctx.restore();
 }
 
-/* Wrist analysis + utils */
+/* ================= Analysis & Utils ================= */
 function analyzeWristFromEdgeMap(e,W,H){ if(!e) return {count:0,quality:'n/a',peaks:[]}; const y0=H*.82|0,y1=H-1,h=new Array(H).fill(0); for(let y=y0;y<=y1;y++){let r=0;for(let x=0;x<W;x++) r+=e.ucharPtr(y,x)[0]>0?1:0; h[y]=r;} const p=[],gap=6; let y=y0; while(y<=y1){let by=y,b=0;for(let k=0;k<5&&y+k<=y1;k++){if(h[y+k]>b){b=h[y+k];by=y+k;}} if(b>Math.max(25,W*0.04|0)){p.push({y:by,strength:b}); y=by+gap;} else y++;} const c=Math.min(4,p.length),cl=p.map(v=>v.strength/W).reduce((a,b)=>a+b,0)/Math.max(1,p.length),q=cl>.25?'strong':cl>.15?'moderate':'weak'; return {count:c,quality:q,peaks:p};}
 function lifespanFromWrist(c,s){let base=68; if(c===1) base=62; else if(c===2) base=70; else if(c===3) base=77; else if(c>=4) base=83; const adj=Math.floor((s||0)*6); return {min:base-5+adj,max:base+7+adj};}
 function detectHandSideFromMask(mask,W,H){ if(!mask) return 'unknown'; const d=mask.data,y0=H*.55|0,y1=H*.90|0; let L=0,R=0; for(let y=y0;y<=y1;y++) for(let x=0;x<W;x++){const i=(y*W+x)*4;if(d[i]===255){ if(x<W*0.5) L++; else R++; } } if(L>R*1.12) return 'RIGHT hand'; if(R>L*1.12) return 'LEFT hand'; return 'unknown';}
 function avgBrightness(ctx){ const {width:w,height:h}=ctx.canvas,d=ctx.getImageData(0,0,w,h).data; let s=0; for(let i=0;i<d.length;i+=4) s+=d[i]+d[i+1]+d[i+2]; const a=Math.round(s/(d.length/4)/3); return {avg:a,label:a<90?'Dark':a<120?'Dim':a<170?'Bright':'Very Bright'}; }
 
-/* Lock */
+/* ================= Lock & Analyze ================= */
 function lockToggle(){ if(!el.video.srcObject){el.meta.textContent='Open the camera first.';return;} const W=el.preview.width,H=el.preview.height,p=el.preview.getContext('2d'); if(!locked){p.globalAlpha=1;p.clearRect(0,0,W,H);p.drawImage(el.video,0,0,W,H);const t=stream&&stream.getVideoTracks()[0]; if(t) t.enabled=false; locked=true; el.lock.textContent='Unlock'; el.meta.textContent='Frame locked.';} else {const t=stream&&stream.getVideoTracks()[0]; if(t) t.enabled=true; locked=false; el.lock.textContent='Lock Frame'; el.meta.textContent='Live preview resumed.';} }
 
-/* Analyze */
 async function snapAnalyze(){
   if(!(el.video.srcObject||locked)){ el.meta.textContent='Open the camera first.'; return; }
   const frameSrc=locked?el.preview:el.video;
