@@ -1,26 +1,95 @@
-let stream, facing = 'environment';
-const video = document.getElementById('video');
+// cam.js (ES module)
+export class CameraCard {
+  /**
+   * @param {HTMLElement} hostCard  The .camBox element (container)
+   * @param {{facingMode?: 'environment'|'user', onStatus?: (msg:string)=>void}} opts
+   */
+  constructor(hostCard, opts={}){
+    this.host = hostCard;
+    this.opts = { facingMode: opts.facingMode || 'environment', onStatus: opts.onStatus || (()=>{}) };
+    this.video = document.createElement('video');
+    Object.assign(this.video, { playsInline: true, muted: true, autoplay: true });
+    this.video.setAttribute('playsinline', ''); // iOS Safari
+    this.video.style.position = 'absolute';
+    this.video.style.inset = '0';
+    this.video.style.width = '100%';
+    this.video.style.height = '100%';
+    this.video.style.objectFit = 'cover';
+    this.video.style.borderRadius = '16px';
 
-export async function start(){
-  stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:facing } } });
-  video.srcObject = stream; video.hidden = false;
-}
-export async function switchCam(){ facing = (facing==='environment'?'user':'environment'); return start(); }
-export async function torch(){
-  const t = stream?.getVideoTracks?.()[0]; if (!t) throw new Error('No camera');
-  const caps = t.getCapabilities?.()||{}; if (!caps.torch) throw new Error('Torch unsupported');
-  const on = t.getSettings?.().torch;
-  await t.applyConstraints({ advanced:[{ torch:!on }]});
-}
-export function capture(){
-  const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
-  const r = document.getElementById('camBox').getBoundingClientRect();
-  const d = Math.min(devicePixelRatio||1, 2); canvas.width=r.width*d; canvas.height=r.height*d;
-  drawToCanvas(video, canvas, ctx); return canvas;
-}
-function drawToCanvas(src, canvas, ctx){
-  const w=canvas.width,h=canvas.height, sw=src.videoWidth||src.width, sh=src.videoHeight||src.height;
-  const CR=w/h, R=sw/sh; let sx=0,sy=0,Ssw=sw,Ssh=sh;
-  if(R>CR){ Ssh=sh; Ssw=Ssh*CR; sx=(sw-Ssw)/2; } else { Ssw=sw; Ssh=Ssw/CR; sy=(sh-Ssh)/2; }
-  ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h); ctx.drawImage(src,sx,sy,Ssw,Ssh,0,0,w,h);
+    this.host.prepend(this.video); // under canvas/aura
+    this.stream = null;
+    this.track = null;
+    this.torchOn = false;
+  }
+
+  _status(msg){ this.opts.onStatus(String(msg)); }
+
+  /** Start camera with current facingMode. Requires user gesture in many browsers. */
+  async start(){
+    await this.stop();
+    const constraints = {
+      video: {
+        facingMode: { ideal: this.opts.facingMode },
+        width: { ideal: 1280 }, height: { ideal: 720 },
+        advanced: [{ focusMode: 'continuous' }]
+      }, audio: false
+    };
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+      this.video.srcObject = this.stream;
+      this.track = this.stream.getVideoTracks()[0] || null;
+      this._status('Camera active');
+      await this.video.play().catch(()=>{});
+      return true;
+    } catch (e){
+      this._status('Camera access failed. Check site permissions & HTTPS.');
+      console.error('[CameraCard] start error', e);
+      return false;
+    }
+  }
+
+  /** Stop camera and release hardware */
+  async stop(){
+    try {
+      if (this.stream){ this.stream.getTracks().forEach(t=>t.stop()); }
+    } finally {
+      this.stream = null; this.track = null; this.video.srcObject = null;
+    }
+  }
+
+  /** Switch between front/back cameras */
+  async switch(){
+    this.opts.facingMode = this.opts.facingMode === 'environment' ? 'user' : 'environment';
+    return this.start();
+  }
+
+  /** Toggle torch if supported (Android Chrome w/ rear camera). */
+  async toggleTorch(){
+    if (!this.track) { this._status('Torch: camera not active'); return false; }
+    const caps = this.track.getCapabilities?.() || {};
+    if (!('torch' in caps)) { this._status('Torch not supported on this device'); return false; }
+    this.torchOn = !this.torchOn;
+    try {
+      await this.track.applyConstraints({ advanced: [{ torch: this.torchOn }] });
+      this._status(this.torchOn ? 'Torch ON' : 'Torch OFF');
+      return this.torchOn;
+    } catch(e){
+      this._status('Torch control failed');
+      console.error('[CameraCard] torch error', e);
+      return false;
+    }
+  }
+
+  /** Capture current video frame into a target canvas (HiDPI-aware). */
+  captureTo(targetCanvas){
+    if (!this.video.videoWidth) { this._status('No video frame yet'); return false; }
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    targetCanvas.width = this.host.clientWidth * dpr;
+    targetCanvas.height = this.host.clientHeight * dpr;
+    const g = targetCanvas.getContext('2d');
+    g.drawImage(this.video, 0, 0, targetCanvas.width, targetCanvas.height);
+    this._status('Frame captured');
+    return true;
+  }
 }
