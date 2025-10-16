@@ -45,4 +45,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe 
 .btn.ghost{color:#9bd4ff;border-color:#2a445e}
 .btn.ghost:hover{background:#2a445e33}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.card{background:var(--card);border:1px solid #10223a;border-radius:16px;padding:12px}
+.card h3{margin:4px 0 8px;color:#9be8ff}
+.note{opacity:.85}
+label{display:block;margin:6px 0 2px}
+input[type=range]{width:100%}
+.footer{opacity:.7;text-align:center;padding:10px}
