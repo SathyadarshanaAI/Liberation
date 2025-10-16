@@ -3,39 +3,27 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Palmistry AI · Quantum Palm Analyzer v5.1e</title>
-
-  <!-- Theme / Layout -->
+  <title>Palmistry AI · v5.1e Final</title>
   <link rel="stylesheet" href="./styles.css?v=5.1e"/>
-
-  <!-- Libs -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
   <script async src="https://docs.opencv.org/4.x/opencv.js" onload="window.__cvReady=true;"></script>
-
-  <meta name="description" content="Palmistry AI — Classic camera window with black-glass background, scan light, color overlays, wrist analysis, and torch-assisted snap (v5.1e)."/>
 </head>
 <body>
   <header class="header">
     <h1>Palmistry AI <span class="badge">v5.1e</span></h1>
-    <small>Classic Camera · Black-Glass · Scan Light · Wrist Boost · Lock Frame · Torch</small>
+    <small>Classic Camera · Black-Glass · Scan Light · Wrist Boost · Lock · Torch · A4 Guides</small>
   </header>
 
   <main class="container">
     <!-- CAMERA WINDOW -->
     <section class="camera">
       <div class="frame" aria-label="Camera preview area">
-        <!-- live video -->
         <video id="video" playsinline muted></video>
-        <!-- black-glass mask preview -->
         <canvas id="preview" width="640" height="480" aria-hidden="true"></canvas>
-        <!-- colored line overlays + scan bar -->
         <canvas id="overlay" width="640" height="480" aria-hidden="true"></canvas>
-        <!-- neon bezel -->
         <div class="bezel"></div>
       </div>
-
-      <!-- CONTROLS -->
-      <div class="controls" role="group" aria-label="Capture controls">
+      <div class="controls" role="group">
         <button class="btn" id="open">Open Camera</button>
         <button class="btn" id="lock">Lock Frame</button>
         <button class="btn" id="snap">Snap & Analyze</button>
@@ -50,32 +38,38 @@
       <div class="card">
         <h3>Scan Result</h3>
         <div id="meta" class="note">Open the camera first.</div>
-        <div class="note">Tip: වල්ල (wrist) පූර්ණයෙන්ම frame තුළ තබා ගන්න; පසුබිමට single-color cloth එකක් භාවිතා කරන්න.</div>
+        <div class="note">Tip: wrist තුළින් ඉදිරියට; plain cloth පසුබිම භාවිතා කරන්න.</div>
       </div>
 
       <div class="card">
         <h3>Overlay Controls</h3>
         <label>Mask Opacity <span id="opv">0.30</span></label>
         <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.30"/>
-
         <label>Wrist Boost (px) <span id="wbv">24</span></label>
         <input id="wboost" type="range" min="0" max="60" step="1" value="24"/>
-
         <label>Edge Low/High Threshold <span id="thv">35/95</span></label>
         <input id="t1" type="range" min="10" max="80" step="1" value="35"/>
         <input id="t2" type="range" min="40" max="140" step="1" value="95"/>
+        <label class="row"><input id="a4" type="checkbox" checked/> <span>Show A4 Placement Guides</span></label>
       </div>
 
       <div class="card">
         <h3>Wrist (Rascetta) Analysis</h3>
         <div id="wristBox" class="note">—</div>
       </div>
+
+      <div class="card">
+        <h3>Sathyadarshana Astrology Palmistry Report</h3>
+        <div class="note">
+          email: <a href="mailto:sathyadarshanananirvana@gmail.com">sathyadarshanananirvana@gmail.com</a><br/>
+          +94 75 750 0000<br/>
+          Sri Lanka.
+        </div>
+      </div>
     </section>
   </main>
 
-  <footer class="footer">© Sathyadarshana · Palmistry AI v5.1e</footer>
-
-  <!-- App logic -->
+  <footer class="footer">© Sathyadarshana · v5.1e Final</footer>
   <script src="./app.js?v=5.1e"></script>
 </body>
 </html>
