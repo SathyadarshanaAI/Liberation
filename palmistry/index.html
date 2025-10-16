@@ -1,64 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Sathyadarshana · Light of Truth</title>
-<meta name="theme-color" content="#0b0f16"/>
-<style>
-:root{
-  --bg:#0b0f16;--pri:#16f0a7;--neon:#00e5ff;--text:#e6f0ff;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:system-ui,Segoe UI,sans-serif;text-align:center;
-  line-height:1.5;
-}
-h1{color:var(--neon);margin:18px 0 8px;font-size:1.8rem;}
-h2{color:var(--pri);margin:12px 0 4px;}
-a.btn{
-  display:inline-block;margin:10px 8px;padding:12px 18px;
-  border-radius:12px;border:2px solid var(--neon);
-  color:var(--neon);text-decoration:none;font-weight:700;
-  transition:.25s;
-}
-a.btn:hover{background:var(--neon);color:#000;}
-.card{
-  background:#0f172a;border:1px solid #1e293b;
-  border-radius:16px;max-width:780px;margin:20px auto;padding:20px;
-  text-align:left;
-}
-small{opacity:.85;}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Quantum Palm Analyzer v5.0</title>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#0b0f16"/>
+  <style>
+    :root{--bg:#0b0f16;--neon:#00e5ff;--pri:#16f0a7}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui;text-align:center}
+    #app{padding:16px;max-width:860px;margin:auto}
+    video,canvas{width:92vw;max-width:420px;border-radius:16px;border:2px solid var(--pri);background:#000;display:block;margin:10px auto}
+    .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .btn{padding:10px 14px;border-radius:12px;background:#0b0f16;cursor:pointer}
+    .b1{border:1px solid var(--neon);color:var(--neon);font-weight:700}
+    .b2{border:1px solid var(--pri);color:var(--pri);font-weight:700}
+    .b3{border:1px solid #444;color:#ddd}
+    .sm{padding:8px 12px}
+    .card{border:1px solid #1f2a37;border-radius:12px;background:#0e131a;padding:12px;margin-top:12px;text-align:left}
+    small{opacity:.85}
+    button:disabled{opacity:.5;cursor:not-allowed}
+  </style>
 </head>
 <body>
+  <div id="app">
+    <h1 style="color:#00e5ff;margin:14px 0 6px">Quantum Palm Analyzer v5.0</h1>
+    <p id="status" style="margin:0 0 10px">Ready</p>
 
-<h1>🌌 Sathyadarshana</h1>
-<p><i>The Light of Truth — Spiritual Intelligence for the Modern Seeker</i></p>
-<img src="logo.png" alt="Sathyadarshana Logo" width="80" style="border-radius:12px;margin:8px auto"/>
+    <video id="video" playsinline autoplay muted></video>
+    <canvas id="overlay" style="display:none"></canvas>
 
-<div class="card">
-  <p><b>Sathyadarshana</b> is a modern, spiritual, and AI-powered platform designed to awaken, guide, and protect seekers on their journey.</p>
-  <p>Explore personalized astrology, the sacred library, AI wisdom, digital aura, Dharma Sabha, and more — all in one serene, secure space.</p>
-</div>
+    <div class="row" style="margin-top:6px">
+      <button id="open"  class="btn b1">Open Camera</button>
+      <button id="snap"  class="btn b2" disabled>Snap</button>
+      <button id="close" class="btn b3" disabled>Close</button>
+    </div>
 
-<h2>✨ Key Features</h2>
-<div class="card">
-  <ul>
-    <li>🔭 <b>Astrology Portal</b> – Vedic & KP astrology with NASA-powered planetary data and daily cosmic guidance.</li>
-    <li>📚 <b>Sacred Library</b> – Multilingual sacred texts (Tripitaka, Bible, Quran, Bhagavad Gita & more) with AI reading and audio.</li>
-    <li>🧠 <b>Doctor Buddhi</b> – Ask health or spiritual questions; receive balanced AI + ancient wisdom guidance.</li>
-    <li>🪷 <b>Dharma Sabha Mandapaya</b> – Live Zoom gatherings, teaching sessions, and global peace dialogue.</li>
-  </ul>
-</div>
+    <div class="row" style="margin-top:6px">
+      <button id="save"  class="btn b1 sm" disabled>Save PNG</button>
+      <button id="reset" class="btn b3 sm" disabled>Re-scan</button>
+    </div>
 
-<p style="margin-top:24px">
-  <a href="https://arshana.netlify.app/?v=500" class="btn">🔮 Open Quantum Palm Analyzer v5</a>
-  <a href="https://sathyadarshanaai.github.io/Liberation/library.html" class="btn">📖 Visit Sacred Library</a>
-</p>
+    <small>Tip: Camera needs <b>HTTPS</b> or <b>localhost</b>.</small>
+    <div id="result" class="card"></div>
+  </div>
 
-<small>© 2025 Sathyadarshana · Light of Truth · All rights reserved.</small>
-
+  <script type="module" src="./app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(console.warn);
+    }
+  </script>
 </body>
 </html>
