@@ -3,66 +3,138 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quantum Palm Analyzer v5 · Sathyadarshana</title>
+<title>Quantum Palm Analyzer v5.2 · Sathyadarshana</title>
+<meta name="theme-color" content="#0b0f16"/>
 <style>
-:root{--bg:#0b0f16;--pri:#16f0a7;--neon:#00e5ff;--card:#101820}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui}
-.header{padding:16px 12px;text-align:center}
-h1{margin:0 0 6px;color:var(--neon);font-size:1.3rem}
-small{opacity:.8}
-.container{max-width:900px;margin:0 auto;padding:10px}
-.panel{display:grid;gap:12px;justify-items:center}
-video,canvas{width:92vw;max-width:520px;border-radius:16px;border:2px solid var(--pri);background:#000}
-#overlay{display:none}
-.controls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-button{
-  background:#0d1320;border:1px solid var(--neon);color:var(--neon);
-  padding:10px 14px;border-radius:14px;font-weight:700;cursor:pointer;transition:.2s
+:root{
+  --bg:#0b0f16;--neon:#00e5ff;--pri:#16f0a7;--text:#e6f0ff;--card:#101820;
 }
-button:hover{background:var(--neon);color:#000}
-button:disabled{opacity:.45;cursor:not-allowed}
-.status{margin-top:6px;text-align:center;color:#9feaff}
-.card{background:var(--card);border:1px solid #1a2636;border-radius:16px;padding:10px;margin-top:10px;max-width:520px}
-.tip{opacity:.85;font-size:.9rem}
-footer{padding:18px 0;text-align:center;opacity:.75}
-a.quick{display:inline-block;margin:10px auto 0;text-decoration:none;border:1px dashed var(--neon);
-  color:var(--neon);padding:8px 12px;border-radius:12px}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui;text-align:center;
+}
+h1{color:var(--neon);margin:16px 0 8px;font-size:1.8rem;}
+video,canvas{
+  width:92vw;max-width:420px;border-radius:16px;
+  border:2px solid var(--pri);background:#000;display:block;margin:auto;
+}
+.btn{padding:10px 14px;margin:6px;border-radius:12px;cursor:pointer;font-weight:700}
+.b1{border:1px solid var(--neon);color:var(--neon);background:transparent}
+.b1:hover{background:var(--neon);color:#000}
+.card{
+  background:#101820;border:1px solid #1f2a37;border-radius:10px;
+  padding:12px;margin:14px auto;max-width:420px;text-align:left;
+}
+.locked{filter:blur(4px);opacity:.5;pointer-events:none;user-select:none;}
+.unlock-btn{
+  background:transparent;border:1px solid var(--pri);color:var(--pri);
+  padding:8px 12px;border-radius:8px;font-weight:600;margin-top:6px;
+}
+.unlock-btn:hover{background:var(--pri);color:#000;}
 </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Quantum Palm Analyzer v5</h1>
-    <small>Use HTTPS or localhost for camera access</small>
+
+<h1>Quantum Palm Analyzer v5.2</h1>
+<p id="status">Ready</p>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
+
+<div>
+  <button id="open" class="btn b1">Open Camera</button>
+  <button id="snap" class="btn b1">Snap</button>
+  <button id="close" class="btn b1">Close</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+const v=document.getElementById('video'),
+      c=document.getElementById('canvas'),
+      ctx=c.getContext('2d'),
+      res=document.getElementById('result'),
+      s=document.getElementById('status');
+let stream=null;
+
+// Camera open
+document.getElementById('open').onclick=async()=>{
+ try{
+   stream=await navigator.mediaDevices.getUserMedia({video:true});
+   v.srcObject=stream; s.textContent="Camera ON";
+ }catch(e){s.textContent="Camera error: "+e.message;}
+};
+
+// Close
+document.getElementById('close').onclick=()=>{
+ if(stream){stream.getTracks().forEach(t=>t.stop());v.srcObject=null;}
+ s.textContent="Camera OFF";
+};
+
+// Sobel neon overlay
+function edgeOverlay(ctx,w,h){
+ const img=ctx.getImageData(0,0,w,h),d=img.data;
+ const edges=new Uint8ClampedArray(w*h);
+ for(let y=1;y<h-1;y++){
+  for(let x=1;x<w-1;x++){
+    const i=(y*w+x)*4;
+    const gx=(d[i-4-w*4]+2*d[i-4]+d[i-4+w*4])-(d[i+4-w*4]+2*d[i+4]+d[i+4+w*4]);
+    const gy=(d[i-4-w*4]+2*d[i-w*4]+d[i+4-w*4])-(d[i-4+w*4]+2*d[i+w*4]+d[i+4+w*4]);
+    const mag=Math.hypot(gx,gy);
+    edges[y*w+x]=mag>60?255:0;
+  }
+ }
+ for(let y=0;y<h;y++){
+  for(let x=0;x<w;x++){
+    const i=(y*w+x)*4;
+    if(edges[y*w+x]){d[i]=0;d[i+1]=229;d[i+2]=255;}
+  }
+ }
+ ctx.putImageData(img,0,0);
+}
+
+// Generate AI Mini Reading (Free)
+function miniReading(){
+  const lines=[
+    "💙 Heart Line: balanced and calm emotional flow.",
+    "💚 Life Line: steady vitality with resilience.",
+    "💛 Head Line: clarity and logical thought.",
+    "💜 Fate Line: independent decision maker."
+  ];
+  return lines.map(l=>`<div>${l}</div>`).join("");
+}
+
+// Full reading (Locked / Paid)
+function fullReading(){
+  return `
+  <div class='locked'>
+    <p>🔒 Full AI Reading (Paid Users)</p>
+    <p>Detailed line depth, sub-branch meanings, element influence, and time phase reading.</p>
+    <p>Available in the Premium version of Sathyadarshana.</p>
   </div>
+  <button class="unlock-btn" onclick="alert('Please log in as Paid Member to unlock full reading.')">Unlock Full Reading</button>`;
+}
 
-  <div class="container">
-    <div class="panel">
-      <video id="video" playsinline muted></video>
-      <canvas id="overlay"></canvas>
+// Snap photo
+document.getElementById('snap').onclick=()=>{
+ if(!v.srcObject)return;
+ c.width=v.videoWidth; c.height=v.videoHeight;
+ ctx.drawImage(v,0,0,c.width,c.height);
+ edgeOverlay(ctx,c.width,c.height);
+ s.textContent="Analyzing…";
+ setTimeout(()=>{
+   res.innerHTML=`
+     <div class="card">
+       <h3 style="color:#00e5ff;margin:0 0 6px;">Mini Reading (Free)</h3>
+       ${miniReading()}
+     </div>
+     <div class="card">
+       ${fullReading()}
+     </div>`;
+   s.textContent="Done ✅";
+ },600);
+};
+</script>
 
-      <div class="controls">
-        <button id="open">Open Camera</button>
-        <button id="snap" disabled>Snap & Analyze</button>
-        <button id="close" disabled>Close</button>
-        <button id="save" disabled>Save Image</button>
-        <button id="reset" disabled>Reset</button>
-      </div>
-
-      <div id="status" class="status">Ready</div>
-      <div id="result" class="card"></div>
-
-      <!-- Quick link for your homepage/nav -->
-      <a class="quick" href="/Liberation/palmistry/index.html?v=500">🔮 Open Quantum Palm Analyzer v5</a>
-    </div>
-
-    <div class="card tip">
-      Tip: Better results with bright, even light. Keep palm centered and fill the frame.
-    </div>
-  </div>
-
-  <footer>© Sathyadarshana · v5.0</footer>
-
-  <!-- Your JS file -->
-  <script src="./app.js" defer></script>
 </body>
 </html>
