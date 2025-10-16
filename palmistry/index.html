@@ -1,81 +1,141 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Palmistry AI · v5.1e Final (HTTPS-safe)</title>
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="./styles.css?v=5.1e"/>
-
-  <!-- Libraries (deferred so DOM is ready first) -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" defer></script>
-  <script src="https://docs.opencv.org/4.x/opencv.js" defer onload="window.__cvReady=true;"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quantum Palm Analyzer v4.5.2</title>
+  <link rel="icon" href="./assets/favicon.png">
+  <style>
+    :root {
+      --bg: #0b0f16;
+      --card: #0f172a;
+      --neon: #00e5ff;
+      --pri: #16f0a7;
+      --mut: #a9c2da;
+    }
+    * { box-sizing: border-box }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 50% -10%, #0e2133, #0b0f16);
+      color: #e6f0ff;
+      font-family: system-ui, Segoe UI, Inter, Arial;
+      text-align: center;
+    }
+    h1 {
+      margin: 12px 0 6px;
+      text-align: center;
+      color: var(--neon);
+    }
+    .wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+    .btn, button, a {
+      background: #0d1522;
+      color: #c7e8ff;
+      border: 1px solid #1a3a55;
+      border-radius: 22px;
+      padding: 12px 16px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn:hover, button:hover, a:hover {
+      background: #00e5ff;
+      color: #001015;
+      border-color: #00e5ff;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 8px 0 12px;
+    }
+    .camBox {
+      position: relative;
+      width: min(96vw, 720px);
+      aspect-ratio: 3/4;
+      border-radius: 16px;
+      border: 2px solid #00d0ff;
+      overflow: hidden;
+      background: #000;
+      margin: 0 auto;
+    }
+    video, canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 16px;
+    }
+    #video[hidden] { display: none; }
+    #status { margin-top: 10px; color: #38bdf8; font-weight: 500; }
+    .card { background: #101a2b; border: 1px solid #133149; border-radius: 16px; padding: 14px; margin-top: 12px; }
+    .lines { display: grid; gap: 8px; }
+    .row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: center; }
+    .bar { background: #0b1320; height: 12px; border-radius: 10px; overflow: hidden; }
+    .bar span { display: block; height: 100%; transform-origin: left center; transform: scaleX(0); transition: transform 0.9s ease; }
+    .h span { background: linear-gradient(90deg, #ff6b6b, #ff3b3b); }      /* Heart */
+    .hh span { background: linear-gradient(90deg, #60a5fa, #3b82f6); }    /* Mind */
+    .l span { background: linear-gradient(90deg, #34d399, #10b981); }     /* Life */
+    .f span { background: linear-gradient(90deg, #f59e0b, #fbbf24); }     /* Fate */
+    .s span { background: linear-gradient(90deg, #f97316, #fb923c); }     /* Success */
+    .hl span { background: linear-gradient(90deg, #a78bfa, #8b5cf6); }    /* Health */
+    .mar span { background: linear-gradient(90deg, #f472b6, #ec4899); }   /* Marriage */
+    footer { color: #94a3b8; margin: 20px 0; font-size: 14px; }
+  </style>
 </head>
 <body>
-  <header class="header">
-    <h1>Palmistry AI <span class="badge">v5.1e</span></h1>
-    <small>Classic Camera · Black-Glass · Scan Light · Wrist Boost · Lock · Torch · A4 Guides</small>
-  </header>
 
-  <main class="container">
-    <!-- CAMERA WINDOW -->
-    <section class="camera">
-      <div class="frame" aria-label="Camera preview area">
-        <video id="video" playsinline muted></video>
-        <canvas id="preview" width="640" height="480" aria-hidden="true"></canvas>
-        <canvas id="overlay" width="640" height="480" aria-hidden="true"></canvas>
-        <div class="bezel"></div>
+  <h1>🖐️ Quantum Palm Analyzer v4.5.2</h1>
+  <div class="toolbar">
+    <select id="handSel">
+      <option value="left">Left (Past)</option>
+      <option value="right">Right (Present)</option>
+    </select>
+    <button id="startCam">🎥 Start Camera</button>
+    <button id="switchBtn">🔄 Switch</button>
+    <button id="flashBtn">⚡ Flash</button>
+    <button id="capture">📸 Capture</button>
+    <input type="file" id="filePick" accept="image/*" />
+    <button id="analyze">🔍 Analyze</button>
+    <button id="save">💾 Save</button>
+    <button id="summaryBtn">📑 Summary</button>
+    <button id="pdfBtn">📕 Full Report</button>
+  </div>
+
+  <div id="camBox" class="camBox">
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+  </div>
+  <div id="status">Ready</div>
+
+  <div class="wrap">
+    <div id="conf"></div>
+    <canvas id="radar" width="300" height="300" style="margin:10px auto;display:block;"></canvas>
+    <div class="card">
+      <div class="lines">
+        <div class="row"><label>Heart line</label><div class="bar h"><span id="b0"></span></div></div>
+        <div class="row"><label>Mind line</label><div class="bar hh"><span id="b1"></span></div></div>
+        <div class="row"><label>Life line</label><div class="bar l"><span id="b2"></span></div></div>
+        <div class="row"><label>Fate line</label><div class="bar f"><span id="b3"></span></div></div>
+        <div class="row"><label>Success line</label><div class="bar s"><span id="b4"></span></div></div>
+        <div class="row"><label>Health line</label><div class="bar hl"><span id="b5"></span></div></div>
+        <div class="row"><label>Marriage line</label><div class="bar mar"><span id="b6"></span></div></div>
       </div>
-      <div class="controls" role="group">
-        <button class="btn" id="open">Open Camera</button>
-        <button class="btn" id="lock">Lock Frame</button>
-        <button class="btn" id="snap">Snap & Analyze</button>
-        <button class="btn" id="save">Save</button>
-        <button class="btn ghost" id="reset">Reset</button>
-        <button class="btn ghost" id="close">Close</button>
-      </div>
-    </section>
+    </div>
+    <p id="insight" style="margin-top:10px;"></p>
+  </div>
 
-    <!-- PANELS -->
-    <section class="grid">
-      <div class="card">
-        <h3>Scan Result</h3>
-        <div id="meta" class="note">Open the camera first.</div>
-        <div class="note">Tip: wrist තුළින් ඉදිරියට; plain cloth පසුබිම භාවිතා කරන්න.</div>
-      </div>
+  <footer>© 2025 Quantum Palm Analyzer – All rights reserved.</footer>
 
-      <div class="card">
-        <h3>Overlay Controls</h3>
-        <label>Mask Opacity <span id="opv">0.30</span></label>
-        <input id="opacity" type="range" min="0" max="1" step="0.01" value="0.30"/>
-        <label>Wrist Boost (px) <span id="wbv">24</span></label>
-        <input id="wboost" type="range" min="0" max="60" step="1" value="24"/>
-        <label>Edge Low/High Threshold <span id="thv">35/95</span></label>
-        <input id="t1" type="range" min="10" max="80" step="1" value="35"/>
-        <input id="t2" type="range" min="40" max="140" step="1" value="95"/>
-        <label class="row"><input id="a4" type="checkbox" checked/> <span>Show A4 Placement Guides</span></label>
-      </div>
-
-      <div class="card">
-        <h3>Wrist (Rascetta) Analysis</h3>
-        <div id="wristBox" class="note">—</div>
-      </div>
-
-      <div class="card">
-        <h3>Sathyadarshana Astrology Palmistry Report</h3>
-        <div class="note">
-          email: <a href="mailto:sathyadarshanananirvana@gmail.com">sathyadarshanananirvana@gmail.com</a><br/>
-          +94 75 750 0000<br/>
-          Sri Lanka.
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">© Sathyadarshana · v5.1e Final</footer>
-
-  <!-- App (deferred) -->
-  <script src="./app.js?v=5.1e" defer></script>
+  <!-- external JS -->
+  <script src="app.js"></script>
 </body>
 </html>
