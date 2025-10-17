@@ -1,29 +1,115 @@
-:root{--bg:#0b0f16;--card:#0f172a;--neon:#00e5ff;--pri:#16f0a7;--mut:#a9c2da}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(1200px 800px at 50% -10%,#0e2133,#0b0f16);color:#e6f0ff;font-family:system-ui,Segoe UI,Inter,Arial}
-h1{margin:12px 0 6px;text-align:center;color:var(--neon)}
-.wrap{max-width:960px;margin:0 auto;padding:10px}
-.btn,button,a{background:#0d1522;color:#c7e8ff;border:1px solid #1a3a55;border-radius:22px;padding:12px 16px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;gap:8px;align-items:center}
-.btn:hover,button:hover,a:hover{background:#00e5ff;color:#001015;border-color:#00e5ff}
-.toolbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:8px 0 12px}
-.camWrap{display:grid;place-items:center}
-.camBox{position:relative;width:min(96vw,720px);aspect-ratio:3/4;border-radius:16px;border:2px solid #00d0ff;overflow:hidden;background:#000}
-.camBox canvas,.camBox .aura{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:16px}
-.aura{mix-blend-mode:screen;background:conic-gradient(from 0deg,#00e5ff88,#16f0a788,#9a6bff88,#00e5ff88);animation:spin 6s linear infinite;opacity:.7}
-@keyframes spin{to{transform:rotate(360deg)}}
-.card{background:linear-gradient(180deg,#101a2b,#0c1320);border:1px solid #133149;border-radius:16px;padding:14px;margin-top:12px}
-.lines{display:grid;grid-template-columns:1fr;gap:8px}
-.row{display:grid;grid-template-columns:260px 1fr;gap:10px;align-items:center}
-.label{display:flex;align-items:center;gap:8px;font-weight:600;color:#d7e8ff}
-.sw{width:14px;height:14px;border-radius:4px;display:inline-block}
-.bar{background:#0b1320;height:12px;border-radius:10px;overflow:hidden}
-.bar>span{display:block;height:100%;transform-origin:left center;transform:scaleX(0);transition:transform 900ms ease}
-.bar.h>span{background:linear-gradient(90deg,#ff6b6b,#ff3b3b)}
-.bar.hh>span{background:linear-gradient(90deg,#60a5fa,#3b82f6)}
-.bar.l>span{background:linear-gradient(90deg,#34d399,#10b981)}
-.bar.f>span{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
-.bar.s>span{background:linear-gradient(90deg,#f97316,#fb923c)}
-.bar.hl>span{background:linear-gradient(90deg,#a78bfa,#8b5cf6)}
-.bar.mar>span{background:linear-gradient(90deg,#f472b6,#ec4899)}
-#radar{display:block;margin:10px auto;background:#0b1320;border:1px solid #17324a;border-radius:12px}
-.badge{display:inline-block;padding:6px 10px;border:1px solid #17324a;border-radius:10px;background:#0b1320}
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #222;
+    color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+}
+h1 {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 2rem;
+    color: #00e7ff;
+    letter-spacing: 2px;
+}
+.wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px;
+}
+.camWrap {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.camCol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 240px;
+    flex: 1 1 300px;
+}
+.camBox {
+    width: 270px;
+    height: 370px;
+    border: 2px solid #00e7ff;
+    border-radius: 18px;
+    background: #1a1a1a;
+    position: relative;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 16px;
+    background: #222;
+}
+.camBtns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+.toolbar {
+    margin: 18px auto 12px auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    align-items: center;
+}
+.btn {
+    background: #00e7ff;
+    color: #222;
+    padding: 7px 20px;
+    border: none;
+    border-radius: 7px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn:hover {
+    background: #009cb6;
+    color: #fff;
+}
+#status {
+    margin: 18px 0 6px 0;
+    color: #ffeb3b;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.1em;
+}
+#insight {
+    background: #191919;
+    border-radius: 8px;
+    padding: 12px;
+    min-height: 80px;
+    color: #fff;
+    font-size: 1.07em;
+    white-space: pre-wrap;
+    margin: 0 auto;
+    max-width: 900px;
+}
+
+@media (max-width: 850px) {
+    .camWrap {
+        flex-direction: column;
+        align-items: center;
+    }
+    .camBox {
+        width: 92vw;
+        height: 60vw;
+        min-width: 190px;
+        min-height: 200px;
+    }
+    .camCol {
+        min-width: 0;
+        width: 100%;
+    }
+}
