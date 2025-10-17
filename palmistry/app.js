@@ -1,22 +1,24 @@
-// app.js (ESM Main Orchestrator)
+// app.js
 import { CameraCard } from './modules/camera.js';
-// import { analyzePalm } from './modules/analyzer.js'; // future: AI analysis
-// import { exportPDF } from './modules/pdf.js';        // future: PDF export
+import { analyzePalm } from './modules/analyzer.js';
+import { saveNote, getNotes } from './modules/storage.js';
+import { exportPDF } from './modules/pdf.js';
+import { updateApp } from './modules/updater.js';
 
-const $ = (sel, r=document) => r.querySelector(sel);
-
+const $ = (s, r=document) => r.querySelector(s);
 const statusEl = $("#status");
 const canvas = $("#canvas");
 const camBox = $("#camBox");
+const resultEl = $("#insight");
 const btnStart = $("#startCam");
 const btnSwitch = $("#switchCam");
 const btnTorch = $("#toggleTorch");
 const btnCapture = $("#capture");
 const btnAnalyze = $("#analyze");
 const btnPdf = $("#dlPdf");
-const resultEl = $("#insight");
 
 let camera = null;
+let lastHand = "right"; // default
 
 function setStatus(msg) { statusEl.textContent = msg; }
 
@@ -27,20 +29,16 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   btnStart.onclick = async () => { await camera.start(); };
-  btnSwitch.onclick = async () => { await camera.switch(); };
+  btnSwitch.onclick = async () => { lastHand = lastHand === "right" ? "left" : "right"; await camera.switch(); setStatus(`Scanning: ${lastHand} hand`); };
   btnTorch.onclick = async () => { await camera.toggleTorch(); };
-  btnCapture.onclick = () => {
-    camera.captureTo(canvas);
-    setStatus('Image captured. Now you can analyze.');
+  btnCapture.onclick = () => { camera.captureTo(canvas); setStatus('Image captured. Analyze to continue.'); };
+
+  btnAnalyze.onclick = async () => {
+    setStatus('Analyzing palm...');
+    const analysis = await analyzePalm(canvas, lastHand);
+    resultEl.textContent = JSON.stringify(analysis, null, 2); // You can format nicely
+    saveNote({ hand: lastHand, analysis, date: new Date().toISOString() });
   };
 
-  btnAnalyze.onclick = () => {
-    // Future: Actually call analyzePalm(canvas) for AI analysis
-    resultEl.textContent = 'Palm analysis in progress... (AI logic goes here)';
-  };
-
-  btnPdf.onclick = () => {
-    // Future: Actually call exportPDF(canvas) to download PDF
-    setStatus('PDF download not yet implemented');
-  };
+  btnPdf.onclick = () => { exportPDF(canvas, getNotes()); setStatus('PDF generated.'); };
 });
