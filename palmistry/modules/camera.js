@@ -6,7 +6,7 @@ export class CameraCard {
     Object.assign(this.video, { playsInline: true, muted: true, autoplay: true });
     this.video.setAttribute('playsinline', '');
     this.video.style.position = 'absolute';
-    this.video.style.objectFit = 'contain'; // Prevents distortion!
+    this.video.style.objectFit = 'contain';
     this.video.style.width = '100%';
     this.video.style.height = '100%';
     this.video.style.borderRadius = '16px';
@@ -15,19 +15,11 @@ export class CameraCard {
     this.track = null;
     this.torchOn = false;
   }
-
-  _status(msg) {
-    this.opts.onStatus(String(msg));
-  }
-
+  _status(msg) { this.opts.onStatus(String(msg)); }
   async start() {
     await this.stop();
     const constraints = {
-      video: {
-        facingMode: { ideal: this.opts.facingMode },
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      },
+      video: { facingMode: { ideal: this.opts.facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
     };
     try {
@@ -42,29 +34,14 @@ export class CameraCard {
       return false;
     }
   }
-
   async stop() {
-    if (this.stream) {
-      this.stream.getTracks().forEach(t => t.stop());
-    }
-    this.stream = null;
-    this.track = null;
-    this.video.srcObject = null;
+    if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); }
+    this.stream = null; this.track = null; this.video.srcObject = null;
   }
-
-  async switch() {
-    this.opts.facingMode = this.opts.facingMode === 'environment' ? 'user' : 'environment';
-    return this.start();
-  }
-
   async toggleTorch() {
-    if (!this.track) {
-      this._status('Torch: camera not active');
-      return false;
-    }
-    const caps = this.track.getCapabilities?.');
-      return false;
-    }
+    if (!this.track) { this._status('Torch: camera not active'); return false; }
+    const caps = this.track.getCapabilities?.() || {};
+    if (!('torch' in caps)) { this._status('Torch not supported'); return false; }
     this.torchOn = !this.torchOn;
     try {
       await this.track.applyConstraints({ advanced: [{ torch: this.torchOn }] });
@@ -75,22 +52,16 @@ export class CameraCard {
       return false;
     }
   }
-
   captureTo(targetCanvas) {
-    if (!this.video.videoWidth) {
-      this._status('No video frame yet');
-      return false;
-    }
+    if (!this.video.videoWidth) { this._status('No video frame yet'); return false; }
     const vw = this.video.videoWidth;
     const vh = this.video.videoHeight;
-    const tw = vw;
-    const th = vh;
-    targetCanvas.width = tw;
-    targetCanvas.height = th;
+    targetCanvas.width = vw;
+    targetCanvas.height = vh;
     const ctx = targetCanvas.getContext('2d');
     ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, tw, th);
-    ctx.drawImage(this.video, 0, 0, tw, th);
+    ctx.fillRect(0, 0, vw, vh);
+    ctx.drawImage(this.video, 0, 0, vw, vh);
     this._status('Frame captured');
     return true;
   }
