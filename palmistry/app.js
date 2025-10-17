@@ -29,9 +29,16 @@ window.addEventListener('DOMContentLoaded', () => {
     setStatus("Left hand captured.");
   };
   document.getElementById("torchLeft").onclick = async () => {
-    await camLeftById("uploadLeft").onclick = () => fileUpload(canvasLeft);
+    await camLeft.toggleTorch();
+  };
+  document.getElementById("uploadLeft").onclick = () => fileUpload(canvasLeft);
 
-  // Camera controls {
+  // Camera controls RIGHT
+  document.getElementById("startCamRight").onclick = async () => {
+    await camRight.start();
+    setStatus("Right hand camera started.");
+  };
+  document.getElementById("captureRight").onclick = () => {
     camRight.captureTo(canvasRight);
     setStatus("Right hand captured.");
   };
@@ -88,7 +95,11 @@ window.addEventListener('DOMContentLoaded', () => {
   langSel.onchange = () => { lastLang = langSel.value; };
 });
 
-// File upload handler";
+// File upload handler
+function fileUpload(canvas) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
   input.onchange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
