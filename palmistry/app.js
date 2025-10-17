@@ -1,196 +1,130 @@
-// Sathyadarshana Quantum Palm Analyzer V5.1 - app.js
+// Sathyadarshana Quantum Palm Analyzer V5.1
 import { CameraCard } from './modules/camera.js';
-// import { exportPDF } from './modules/pdf.js'; // PDF support future-ready
+import { analyzePalm } from './modules/analyzer.js';
+import { exportPalmPDF, LANGUAGES } from './modules/pdf.js';
 
 const $ = (s, r=document) => r.querySelector(s);
-
-// UI Elements
 const statusEl = $("#status");
-const canvas = $("#canvas");
-const camBox = $("#camBox");
-const btnStart = $("#startCam");
+const canvasLeft = $("#canvasLeft");
+const canvasRight = $("#canvasRight");
+const camBoxLeft = $("#camBoxLeft");
+const camBoxRight = $("#camBoxRight");
+const btnStartCamLeft = $("#startCamLeft");
+const btnStartCamRight = $("#startCamRight");
 const btnSwitch = $("#switchCam");
 const btnTorch = $("#toggleTorch");
-const btnCapture = $("#capture");
-const btnUpload = $("#filePick");
+const btnCaptureLeft = $("#captureLeft");
+const btnCaptureRight = $("#captureRight");
+const btnUploadLeft = $("#uploadLeft");
+const btnUploadRight = $("#uploadRight");
 const btnAnalyze = $("#analyze");
-const btnFullReport = $("#dlPdf");
-const btnMiniReport = document.createElement("button");
-btnMiniReport.className = "btn";
-btnMiniReport.textContent = "Mini Report";
-btnFullReport.textContent = "Full Report";
+const btnMiniReport = $("#miniReport");
+const btnFullReport = $("#fullReport");
+const btnSpeak = $("#speak");
 const insightEl = $("#insight");
+const langSel = $("#language");
 
-// Remove 7 lines analyzer area if present
-const linesArea = $(".lines");
-if (linesArea) linesArea.style.display = "none"; // Hide the 7 lines bar
+let cameraLeft = null, cameraRight = null;
+let lastAnalysisLeft = null, lastAnalysisRight = null;
+let lastHand = "right";
+let lastLang = "en";
 
-// Add Mini Report button next to Full Report
-btnFullReport.parentNode.insertBefore(btnMiniReport, btnFullReport);
-
-// Analyzer protected area: just reserve the space
-const analyzerCard = insightEl.parentElement;
-analyzerCard.style.minHeight = "220px"; // Reserve area for analysis output
-
-// Palmistry logic
-const palmLineInfo = [
-  {
-    key: "heart",
-    name: "Heart Line",
-    insight: "Emotions, affection, compassion. Deep line: warm-hearted; wavy: sensitive.",
-  },
-  {
-    key: "head",
-    name: "Head Line",
-    insight: "Intellect, decision-making, creativity. Straight: logical; curved: imaginative.",
-  },
-  {
-    key: "life",
-    name: "Life Line",
-    insight: "Vitality, life changes, energy. Long: robust health; faint: caution.",
-  },
-  {
-    key: "fate",
-    name: "Fate Line",
-    insight: "Career, destiny, direction. Deep: strong purpose; breaks: changes.",
-  },
-  {
-    key: "success",
-    name: "Success (Apollo) Line",
-    insight: "Talent, fame, creativity. Clear: recognition; weak: modesty.",
-  },
-  {
-    key: "health",
-    name: "Health (Mercury) Line",
-    insight: "Health, business sense, communication. Defined: good skills.",
-  },
-  {
-    key: "marriage",
-    name: "Marriage Line",
-    insight: "Relationships, partnership. Deep: lasting bond; multiple: complexity.",
-  },
-  {
-    key: "manikhanda",
-    name: "Manikhanda (Wrist/Bangle) Line",
-    insight: "Fortune, stability, longevity. Clear: good fortune; chained: challenges.",
-  },
-];
-
-// Personality descriptions
-const handPersonality = {
-  left: "Previous Life Traits: Reveals subconscious patterns and inherited qualities from past lives.",
-  right: "Current Life Traits: Reflects conscious choices, present achievements, and destiny shaping."
-};
-
-// App state
-let camera = null;
-let lastHand = "right"; // default
-let lastAnalysis = null;
-
-// Helpers
 function setStatus(msg) { statusEl.textContent = msg; }
-function showInsight(report, mode="full") {
-  let out = `Sathyadarshana Quantum Palm Analyzer V5.1\n\n`;
-  out += `Hand: ${report.hand === "left" ? "Left" : "Right"}\n`;
-  out += (report.hand === "left" ? handPersonality.left : handPersonality.right) + "\n\n";
-  if (mode === "full") {
-    out += "Palm Lines:\n";
-    report.lines.forEach((line, i) => {
-      const info = palmLineInfo.find(p => p.key === line.type);
-      out += `• ${info ? info.name : line.type}: ${info ? info.insight : line.info}\n  Confidence: ${(line.confidence*100).toFixed(1)}%\n`;
-    });
-    out += "\nTips: Palmistry is interpreted differently in various cultures.\n";
-  } else {
-    out += "Mini Report:\n";
-    const topLine = report.lines.reduce((max, line) => line.confidence > max.confidence ? line : max, report.lines[0]);
-    const info = palmLineInfo.find(p => p.key === topLine.type);
-    out += `Most prominent line: ${info ? info.name : topLine.type}\n`;
-    out += `• Insight: ${info ? info.insight : topLine.info}\n`;
-    out += `• Confidence: ${(topLine.confidence*100).toFixed(1)}%\n`;
-  }
-  insightEl.textContent = out;
-}
 
-// Camera + Analyzer logic
 window.addEventListener('DOMContentLoaded', () => {
-  camera = new CameraCard(camBox, {
-    facingMode: 'environment',
-    onStatus: setStatus
-  });
+  cameraLeft = new CameraCard(camBoxLeft, { facingMode: 'environment', onStatus: setStatus });
+  cameraRight = new CameraCard(camBoxRight, { facingMode: 'environment', onStatus: setStatus });
 
-  // Start camera
-  btnStart.onclick = async () => {
-    await camera.start();
-    setStatus('Camera started');
-  };
+  btnStartCamLeft.onclick = async () => { await cameraLeft.start(); setStatus("Left hand camera started."); };
+  btnStartCamRight.onclick = async () => { await cameraRight.start(); setStatus("Right hand camera started."); };
 
-  // Switch hand/camera
   btnSwitch.onclick = async () => {
-    lastHand = (lastHand === "right") ? "left" : "right";
-    await camera.switch();
-    setStatus(`Switched to ${lastHand === "right" ? "Right" : "Left"} hand`);
+    lastHand = lastHand === "right" ? "left" : "right";
+    if (lastHand === "right") await cameraRight.switch();
+    else await cameraLeft.switch();
+    setStatus(`Switched to ${lastHand} hand.`);
   };
 
-  // Torch
-  btnTorch.onclick = async () => { await camera.toggleTorch(); };
-
-  // Capture
-  btnCapture.onclick = () => {
-    camera.captureTo(canvas);
-    setStatus('Image captured – now you can analyze.');
+  btnTorch.onclick = async () => {
+    if (lastHand === "right") await cameraRight.toggleTorch();
+    else await cameraLeft.toggleTorch();
   };
 
-  // Upload photo
-  btnUpload.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const img = new Image();
-      img.onload = function() {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext('2d').drawImage(img, 0, 0);
-        setStatus('Photo loaded – now you can analyze.');
+  btnCaptureLeft.onclick = () => {
+    cameraLeft.captureTo(canvasLeft);
+    setStatus("Left hand captured.");
+  };
+
+  btnCaptureRight.onclick = () => {
+    cameraRight.captureTo(canvasRight);
+    setStatus("Right hand captured.");
+  };
+
+  btnUploadLeft.onclick = () => fileUpload(canvasLeft);
+  btnUploadRight.onclick = () => fileUpload(canvasRight);
+
+  function fileUpload(canvas) {
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = "image/*";
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const img = new Image();
+        img.onload = function() {
+          canvas.width = img.width; canvas.height = img.height;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          setStatus("Photo loaded.");
+        };
+        img.src = ev.target.result;
       };
-      img.src = ev.target.result;
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
-  };
+    input.click();
+  }
 
-  // Analyze (with scan beam animation)
   btnAnalyze.onclick = async () => {
-    setStatus('Analyzing palm...');
-    await animateScan(canvas);
-    // Simulate analysis (future: call analyzer module/AI/worker)
-    lastAnalysis = {
-      hand: lastHand,
-      lines: palmLineInfo.map(line => ({
-        type: line.key,
-        confidence: Math.random()*0.5 + 0.5, // random 50-100%
-        info: line.insight
-      })),
-      tips: "Palmistry is interpreted differently in various cultures."
-    };
-    showInsight(lastAnalysis, "full");
-    setStatus('Analysis complete!');
+    setStatus("Analyzing palms...");
+    await animateScan(canvasLeft);
+    await animateScan(canvasRight);
+
+    lastAnalysisLeft = await analyzePalm(canvasLeft, "left");
+    lastAnalysisRight = await analyzePalm(canvasRight, "right");
+    showInsight(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
+    setStatus("Analysis complete!");
   };
 
-  // Mini Report
   btnMiniReport.onclick = () => {
-    if (lastAnalysis) showInsight(lastAnalysis, "mini");
-    else setStatus("No analysis available.");
+    if (lastAnalysisLeft && lastAnalysisRight) showInsight(lastAnalysisLeft, lastAnalysisRight, "mini", lastLang);
+    else setStatus("No analysis yet.");
   };
 
-  // Full Report
   btnFullReport.onclick = () => {
-    if (lastAnalysis) showInsight(lastAnalysis, "full");
-    else setStatus("No analysis available.");
-    // Future: exportPDF(canvas, lastAnalysis);
+    if (lastAnalysisLeft && lastAnalysisRight) {
+      exportPalmPDF({
+        leftCanvas: canvasLeft,
+        rightCanvas: canvasRight,
+        leftReport: lastAnalysisLeft,
+        rightReport: lastAnalysisRight,
+        mode: "full"
+      });
+      setStatus("PDF downloaded.");
+    } else setStatus("No analysis yet.");
   };
+
+  btnSpeak.onclick = () => {
+    if (lastAnalysisLeft && lastAnalysisRight) {
+      const text = getReportText(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
+      speakPalmReport(text, lastLang);
+    }
+  };
+
+  langSel.onchange = () => { lastLang = langSel.value; };
+
 });
 
-// Scan Beam Animation
+// Scan Beam Animation (visual feedback)
 async function animateScan(canvas) {
   const ctx = canvas.getContext('2d');
   const start = performance.now(), dur = 800;
@@ -217,4 +151,42 @@ function drawScanBeam(ctx, w, h, progress) {
   ctx.fillStyle = g;
   ctx.fillRect(0, y-40, w, 80);
   ctx.restore();
+}
+
+// Speech Synthesis (AI speech-friendly)
+function speakPalmReport(text, lang="en") {
+  if ('speechSynthesis' in window) {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = lang;
+    window.speechSynthesis.speak(msg);
+  } else {
+    alert("Speech synthesis not supported on this device.");
+  }
+}
+
+// Show Insight (multi-language ready, full/mini)
+function showInsight(left, right, mode="full", lang="en") {
+  insightEl.textContent = getReportText(left, right, mode, lang);
+}
+
+// Report generator (multi-language stub)
+function getReportText(left, right, mode, lang) {
+  // For demo, only English; can be extended with multi-language objects
+  let out = `Sathya Darshana Palm Analyzer V5.1\n\nemail: sathyadarshana2025@gmail.com\nphone: +94757500000\nSri Lanka\n\n`;
+  out += `Left Hand: ${left.hand === "left" ? "Previous Life Traits" : ""}\n${left.summary}\n\n`;
+  out += `Right Hand: ${right.hand === "right" ? "Current Life Traits" : ""}\n${right.summary}\n\n`;
+  if (mode === "full") {
+    out += "------ Left Hand Detailed ------\n";
+    left.lines.forEach(l => { out += `• ${l.name}: ${l.insight} (${(l.confidence*100).toFixed(1)}%)\n`; });
+    out += "\n------ Right Hand Detailed ------\n";
+    right.lines.forEach(l => { out += `• ${l.name}: ${l.insight} (${(l.confidence*100).toFixed(1)}%)\n`; });
+  } else {
+    out += "Mini Report (Most prominent lines):\n";
+    const topLeft = left.lines.reduce((max, l) => l.confidence > max.confidence ? l : max, left.lines[0]);
+    const topRight = right.lines.reduce((max, l) => l.confidence > max.confidence ? l : max, right.lines[0]);
+    out += `Left: ${topLeft.name} (${(topLeft.confidence*100).toFixed(1)}%) - ${topLeft.insight}\n`;
+    out += `Right: ${topRight.name} (${(topRight.confidence*100).toFixed(1)}%) - ${topRight.insight}\n`;
+  }
+  out += "\nPalmistry interpreted differently in various cultures.\n";
+  return out;
 }
