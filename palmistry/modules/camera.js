@@ -21,10 +21,7 @@ export class CameraCard {
   }
 
   async start() {
-    await this.stop();
-    const constraints = {
-      video: {
-        facingMode: { ideal: this.opts.facingMode },
+   : { ideal: this.opts.facingMode },
         width: { ideal: 3840, min: 1280 },
         height: { ideal: 5120, min: 1706 }
       },
@@ -38,10 +35,7 @@ export class CameraCard {
       await this.video.play();
       return true;
     } catch (e) {
-      this._status('Camera access failed. Check permissions & HTTPS.');
-      return false;
-    }
-  }
+      this._status('Camera access failed. Check permissions & HTTPS }
 
   async stop() {
     if (this.stream) {
@@ -79,7 +73,7 @@ export class CameraCard {
       return false;
     }
     // Lock to 3:4 aspect ratio, crop center if needed
-    const aspect = 3 / 4;
+    const aspect = 3/4;
     let vw = this.video.videoWidth, vh = this.video.videoHeight;
     let tw = vw, th = vh;
     if (vw / vh > aspect) {
@@ -92,7 +86,7 @@ export class CameraCard {
     const ctx = targetCanvas.getContext('2d');
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, tw, th);
-    ctx.drawImage(this.video, (vw - tw) / 2, (vh - th) / 2, tw, th, 0, 0, tw, th);
+    ctx.drawImage(this.video, (vw-tw)/2, (vh-th)/2, tw, th, 0, 0, tw, th);
     this._status('Frame captured');
     return true;
   }
