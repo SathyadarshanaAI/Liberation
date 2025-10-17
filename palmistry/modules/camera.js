@@ -25,7 +25,7 @@ export class CameraCard {
     const constraints = {
       video: {
         facingMode: { ideal: this.opts.facingMode },
-        width: { ideal: 3840, min: 1280 }, // 4K ideal, fallback to HD
+        width: { ideal: 3840, min: 1280 },
         height: { ideal: 2160, min: 720 }
       },
       audio: false
