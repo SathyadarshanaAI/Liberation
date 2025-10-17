@@ -1,9 +1,6 @@
-// PDF එකට canvas image දෙක (left/right), summary, lines, details add කරන function එක
 export function exportPalmPDF({ leftCanvas, rightCanvas, leftReport, rightReport, mode = 'full' }) {
-  // jsPDF object එක (window.jspdf CDN එකෙන්)
+  // Use jsPDF global from CDN (make sure <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> is in your HTML!)
   const pdf = window.jspdf ? new window.jspdf.jsPDF("p", "pt", "a4") : new window.jsPDF("p", "pt", "a4");
-
-  // canvas දෙක image එකක් වශයෙන්
   const leftImg = leftCanvas.toDataURL("image/png");
   const rightImg = rightCanvas.toDataURL("image/png");
 
@@ -19,7 +16,7 @@ export function exportPalmPDF({ leftCanvas, rightCanvas, leftReport, rightReport
   pdf.text("Left Hand", 60, 130);
   pdf.text("Right Hand", 320, 130);
 
-  // Canvas images
+  // Canvas images (hand photos)
   pdf.addImage(leftImg, "PNG", 40, 145, 200, 260);
   pdf.addImage(rightImg, "PNG", 310, 145, 200, 260);
 
