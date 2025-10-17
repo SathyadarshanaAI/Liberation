@@ -33,18 +33,23 @@ h1 {
     flex: 1 1 300px;
 }
 .camBox {
-    width: 270px;
-    height: 370px;
+    width: 360px;
+    aspect-ratio: 3/4;
+    max-width: 98vw;
+    background: #1a1a1a;
     border: 2px solid #00e7ff;
     border-radius: 18px;
-    background: #1a1a1a;
-    position: relative;
-    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
+    margin-bottom: 8px;
+    position: relative;
 }
-canvas {
+canvas, video {
     width: 100%;
     height: 100%;
+    object-fit: contain;
     display: block;
     border-radius: 16px;
     background: #222;
@@ -104,9 +109,9 @@ canvas {
     }
     .camBox {
         width: 92vw;
-        height: 60vw;
+        height: 120vw;
         min-width: 190px;
-        min-height: 200px;
+        min-height: 220px;
     }
     .camCol {
         min-width: 0;
