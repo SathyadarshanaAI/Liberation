@@ -1,8 +1,5 @@
 import { CameraCard } from './modules/camera.js';
-import { analyzePalm } from './modules/analyzer.js';
-import { exportPalmPDF } from './modules/pdf.js';
 
-// DOM refs
 const camBoxLeft = document.getElementById("camBoxLeft");
 const camBoxRight = document.getElementById("camBoxRight");
 const canvasLeft = document.getElementById("canvasLeft");
@@ -54,8 +51,8 @@ window.addEventListener('DOMContentLoaded', () => {
     setStatus("Analyzing palms...");
     await animateScan(canvasLeft);
     await animateScan(canvasRight);
-    lastAnalysisLeft = await analyzePalm(canvasLeft, "left");
-    lastAnalysisRight = await analyzePalm(canvasRight, "right");
+    lastAnalysisLeft = await fakeAnalyze(canvasLeft, "left");
+    lastAnalysisRight = await fakeAnalyze(canvasRight, "right");
     showInsight(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
     setStatus("Palm analysis complete!");
   };
@@ -69,20 +66,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Full Report (PDF)
+  // Full Report (PDF) - Stub
   document.getElementById("fullReport").onclick = () => {
-    if (lastAnalysisLeft && lastAnalysisRight) {
-      exportPalmPDF({
-        leftCanvas: canvasLeft,
-        rightCanvas: canvasRight,
-        leftReport: lastAnalysisLeft,
-        rightReport: lastAnalysisRight,
-        mode: "full"
-      });
-      setStatus("PDF report generated.");
-    } else {
-      setStatus("Please capture/analyze both hands first.");
-    }
+    setStatus("PDF export requires modules/pdf.js implementation.");
   };
 
   // Speak
@@ -148,6 +134,33 @@ function drawScanBeam(ctx, w, h, progress) {
   ctx.fillStyle = g;
   ctx.fillRect(0, y-40, w, 80);
   ctx.restore();
+}
+
+// Fake palm analyzer logic (replace with your real analyzer module)
+async function fakeAnalyze(canvas, hand="right") {
+  const PALM_LINES = [
+    { key: "heart", name: "Heart Line", insight: "Emotions, affection, compassion." },
+    { key: "head", name: "Head Line", insight: "Intellect, decision-making, creativity." },
+    { key: "life", name: "Life Line", insight: "Vitality, life changes, energy." },
+    { key: "fate", name: "Fate Line", insight: "Career, destiny, direction." },
+    { key: "success", name: "Success Line", insight: "Talent, fame, creativity." },
+    { key: "health", name: "Health Line", insight: "Health, business sense, communication." },
+    { key: "marriage", name: "Marriage Line", insight: "Relationships, partnership." },
+    { key: "manikhanda", name: "Manikhanda (Wrist)", insight: "Fortune, stability, longevity." }
+  ];
+  const lines = PALM_LINES.map(l => ({
+    ...l,
+    confidence: Math.random()*0.4+0.6,
+    details: hand==="left" ? "Reflects inherited traits, subconscious, or previous life influences." : "Shows present-life actions, choices, and conscious personality."
+  }));
+  return {
+    hand,
+    summary: hand==="left"
+      ? "Previous Life Traits: Reveals subconscious patterns and inherited qualities from past lives."
+      : "Current Life Traits: Reflects conscious choices, present achievements, and how you shape your destiny.",
+    lines,
+    tips: "Palmistry is interpreted differently in various cultures."
+  };
 }
 
 // Insight/report display
