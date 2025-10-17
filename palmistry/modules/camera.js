@@ -21,7 +21,10 @@ export class CameraCard {
   }
 
   async start() {
-   : { ideal: this.opts.facingMode },
+    await this.stop();
+    const constraints = {
+      video: {
+        facingMode: { ideal: this.opts.facingMode },
         width: { ideal: 3840, min: 1280 },
         height: { ideal: 5120, min: 1706 }
       },
@@ -35,7 +38,10 @@ export class CameraCard {
       await this.video.play();
       return true;
     } catch (e) {
-      this._status('Camera access failed. Check permissions & HTTPS }
+      this._status('Camera access failed. Check permissions & HTTPS.');
+      return false;
+    }
+  }
 
   async stop() {
     if (this.stream) {
