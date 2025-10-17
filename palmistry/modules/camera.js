@@ -11,7 +11,7 @@ export class CameraCard {
     this.video.style.height = '100%';
     this.video.style.objectFit = 'cover';
     this.video.style.borderRadius = '16px';
-    this.host.prepend(this.video);
+    this.host.prepend(this.video); // video under canvas
 
     this.stream = null;
     this.track = null;
@@ -19,9 +19,54 @@ export class CameraCard {
   }
 
   _status(msg){ this.opts.onStatus(String(msg)); }
-  async start(){ /* same as previous code */ }
-  async stop(){ /* same as previous code */ }
-  async switch(){ /* same as previous code */ }
-  async toggleTorch(){ /* same as previous code */ }
-  captureTo(targetCanvas){ /* same as previous code */ }
+  async start(){
+    await this.stop();
+    const constraints = {
+      video: { facingMode: { ideal: this.opts.facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    };
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+      this.video.srcObject = this.stream;
+      this.track = this.stream.getVideoTracks()[0] || null;
+      this._status('Camera active');
+      await this.video.play();
+      return true;
+    } catch (e) {
+      this._status('Camera access failed. Check permissions & HTTPS.');
+      return false;
+    }
+  }
+  async stop() {
+    if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); }
+    this.stream = null; this.track = null; this.video.srcObject = null;
+  }
+  async switch() {
+    this.opts.facingMode = this.opts.facingMode === 'environment' ? 'user' : 'environment';
+    return this.start();
+  }
+  async toggleTorch() {
+    if (!this.track) { this._status('Torch: camera not active'); return false; }
+    const caps = this.track.getCapabilities?.() || {};
+    if (!('torch' in caps)) { this._status('Torch not supported'); return false; }
+    this.torchOn = !this.torchOn;
+    try {
+      await this.track.applyConstraints({ advanced: [{ torch: this.torchOn }] });
+      this._status(this.torchOn ? 'Torch ON' : 'Torch OFF');
+      return this.torchOn;
+    } catch(e){
+      this._status('Torch control failed');
+      return false;
+    }
+  }
+  captureTo(targetCanvas) {
+    if (!this.video.videoWidth) { this._status('No video frame yet'); return false; }
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    targetCanvas.width = this.host.clientWidth * dpr;
+    targetCanvas.height = this.host.clientHeight * dpr;
+    const g = targetCanvas.getContext('2d');
+    g.drawImage(this.video, 0, 0, targetCanvas.width, targetCanvas.height);
+    this._status('Frame captured');
+    return true;
+  }
 }
