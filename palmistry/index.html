@@ -3,59 +3,57 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quantum Palm Analyzer v5.1 (Modular)</title>
+  <title>Sathya Darshana Quantum Palm Analyzer V5.1</title>
   <link rel="stylesheet" href="./styles.css" />
-  <!-- iOS inline playback + permissions hints -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta http-equiv="Permissions-Policy" content="camera=*, microphone=()">
 </head>
 <body>
-  <h1>Quantum Palm Analyzer v5.1</h1>
-
+  <h1>Sathya Darshana Quantum Palm Analyzer V5.1</h1>
   <div class="toolbar">
-    <a class="btn" href="../astrology.html">← Back</a>
-    <button class="btn" id="startCam">📷 Start Camera</button>
-    <button class="btn" id="switchCam" title="Switch front/back">🔁 Switch</button>
-    <button class="btn" id="toggleTorch" title="Toggle torch">💡 Torch</button>
-    <button class="btn" id="capture">Capture</button>
-    <label class="btn" for="filePick">Upload Photo</label>
-    <input id="filePick" type="file" accept="image/*" hidden />
+    <button class="btn" id="startCamLeft">📷 Left Hand Camera</button>
+    <button class="btn" id="startCamRight">📷 Right Hand Camera</button>
+    <button class="btn" id="switchCam">🔁 Switch</button>
+    <button class="btn" id="toggleTorch">💡 Torch</button>
+    <button class="btn" id="captureLeft">Capture Left</button>
+    <button class="btn" id="captureRight">Capture Right</button>
+    <button class="btn" id="uploadLeft">Upload Left Photo</button>
+    <button class="btn" id="uploadRight">Upload Right Photo</button>
     <button class="btn" id="analyze">Analyze</button>
-    <button class="btn" id="dlPdf">⬇️ Download Full Report (PDF)</button>
+    <button class="btn" id="miniReport">Mini Report</button>
+    <button class="btn" id="fullReport">Full Report (PDF)</button>
+    <button class="btn" id="speak">🔊 Speak</button>
+    <select id="language">
+      <option value="en">English</option>
+      <option value="si">Sinhala</option>
+      <option value="ta">Tamil</option>
+      <option value="fr">French</option>
+      <option value="de">German</option>
+      <option value="es">Spanish</option>
+      <option value="zh-cn">Chinese (Simplified)</option>
+      <option value="hi">Hindi</option>
+      <option value="ar">Arabic</option>
+      <option value="ja">Japanese</option>
+      <option value="ru">Russian</option>
+      <option value="pt">Portuguese</option>
+      <option value="ko">Korean</option>
+      <option value="it">Italian</option>
+      <option value="tr">Turkish</option>
+      <option value="id">Indonesian</option>
+      <option value="nl">Dutch</option>
+      <option value="sv">Swedish</option>
+    </select>
   </div>
-
   <div class="wrap">
-    <div class="card">
-      <div class="camWrap">
-        <!-- ★ Camera Card: markup stable; video is created by cam.js -->
-        <div class="camBox" id="camBox">
-          <canvas id="canvas"></canvas>
-          <div class="aura" aria-hidden="true"></div>
-        </div>
+    <div class="camWrap">
+      <div class="camBox" id="camBoxLeft">
+        <canvas id="canvasLeft"></canvas>
       </div>
-      <div style="text-align:center;margin-top:6px" id="status">No image yet</div>
-    </div>
-
-    <div class="card">
-      <div class="badge" id="conf">Confidence —</div>
-      <div class="lines">
-        <div class="row"><div class="label"><span class="sw h"></span>Heart line</div><div class="bar h"><span id="b0"></span></div></div>
-        <div class="row"><div class="label"><span class="sw hh"></span>Mind line</div><div class="bar hh"><span id="b1"></span></div></div>
-        <div class="row"><div class="label"><span class="sw l"></span>Life line</div><div class="bar l"><span id="b2"></span></div></div>
-        <div class="row"><div class="label"><span class="sw f"></span>Fate line</div><div class="bar f"><span id="b3"></span></div></div>
-        <div class="row"><div class="label"><span class="sw s"></span>Success line</div><div class="bar s"><span id="b4"></span></div></div>
-        <div class="row"><div class="label"><span class="sw hl"></span>Health line</div><div class="bar hl"><span id="b5"></span></div></div>
-        <div class="row"><div class="label"><span class="sw mar"></span>Marriage line</div><div class="bar mar"><span id="b6"></span></div></div>
+      <div class="camBox" id="camBoxRight">
+        <canvas id="canvasRight"></canvas>
       </div>
     </div>
-
-    <div class="card">
-      <canvas id="radar" width="320" height="240"></canvas>
-      <pre id="insight" style="white-space:pre-wrap;text-align:left;margin:6px auto;max-width:720px">🜁 Run Analyze to generate insight…</pre>
-    </div>
+    <div id="status">Ready</div>
+    <pre id="insight"></pre>
   </div>
-
   <script type="module" src="./app.js"></script>
 </body>
 </html>
