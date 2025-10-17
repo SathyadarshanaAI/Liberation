@@ -15,11 +15,19 @@ export class CameraCard {
     this.track = null;
     this.torchOn = false;
   }
-  _status(msg) { this.opts.onStatus(String(msg)); }
+
+  _status(msg) {
+    this.opts.onStatus(String(msg));
+  }
+
   async start() {
     await this.stop();
     const constraints = {
-      video: { facingMode: { ideal: this.opts.facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: {
+        facingMode: { ideal: this.opts.facingMode },
+        width: { ideal: 3840, min: 1280 }, // 4K ideal, fallback to HD
+        height: { ideal: 2160, min: 720 }
+      },
       audio: false
     };
     try {
@@ -34,14 +42,26 @@ export class CameraCard {
       return false;
     }
   }
+
   async stop() {
-    if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); }
-    this.stream = null; this.track = null; this.video.srcObject = null;
+    if (this.stream) {
+      this.stream.getTracks().forEach(t => t.stop());
+    }
+    this.stream = null;
+    this.track = null;
+    this.video.srcObject = null;
   }
+
   async toggleTorch() {
-    if (!this.track) { this._status('Torch: camera not active'); return false; }
+    if (!this.track) {
+      this._status('Torch: camera not active');
+      return false;
+    }
     const caps = this.track.getCapabilities?.() || {};
-    if (!('torch' in caps)) { this._status('Torch not supported'); return false; }
+    if (!('torch' in caps) || !caps.torch) {
+      this._status('Torch not supported on this device/browser');
+      return false;
+    }
     this.torchOn = !this.torchOn;
     try {
       await this.track.applyConstraints({ advanced: [{ torch: this.torchOn }] });
@@ -52,8 +72,12 @@ export class CameraCard {
       return false;
     }
   }
+
   captureTo(targetCanvas) {
-    if (!this.video.videoWidth) { this._status('No video frame yet'); return false; }
+    if (!this.video.videoWidth) {
+      this._status('No video frame yet');
+      return false;
+    }
     const vw = this.video.videoWidth;
     const vh = this.video.videoHeight;
     targetCanvas.width = vw;
