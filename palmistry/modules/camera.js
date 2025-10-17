@@ -7,12 +7,7 @@ export class CameraCard {
     this.video.setAttribute('playsinline', '');
     this.video.style.position = 'absolute';
     this.video.style.objectFit = 'contain';
-    this.video.style.width = '100%';
-    this.video.style.height = '100%';
-    this.video.style.borderRadius = '16px';
-    this.host.prepend(this.video);
-    this.stream = null;
-    this.track = null;
+    this.video.style.width this.track = null;
     this.torchOn = false;
   }
 
@@ -26,7 +21,7 @@ export class CameraCard {
       video: {
         facingMode: { ideal: this.opts.facingMode },
         width: { ideal: 3840, min: 1280 },
-        height: { ideal: 2160, min: 720 }
+        height: { ideal: 5120, min: 1706 } // 3:4 aspect for 4K, fallback for HD
       },
       audio: false
     };
@@ -78,14 +73,25 @@ export class CameraCard {
       this._status('No video frame yet');
       return false;
     }
-    const vw = this.video.videoWidth;
-    const vh = this.video.videoHeight;
-    targetCanvas.width = vw;
-    targetCanvas.height = vh;
+    // Always lock to 3:4 aspect ratio, crop center if needed
+    const aspect = 3/4;
+    let vw = this.video.videoWidth, vh = this.video.videoHeight;
+    let tw = vw, th = vh;
+    if (vw/vh > aspect) {
+      tw = vh*aspect; th = vh;
+    } else {
+      tw = vw; th = vw/aspect;
+    }
+    targetCanvas.width = tw;
+    targetCanvas.height = th;
     const ctx = targetCanvas.getContext('2d');
     ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, vw, vh);
-    ctx.drawImage(this.video, 0, 0, vw, vh);
+    ctx.fillRect(0,0,tw,th);
+    ctx.drawImage(
+      this.video,
+      (vw-tw)/2, (vh-th)/2, tw, th,
+      0, 0, tw, th
+    );
     this._status('Frame captured');
     return true;
   }
