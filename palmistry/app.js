@@ -1,4 +1,5 @@
 import { CameraCard } from './modules/camera.js';
+import { exportPalmPDF } from './modules/pdf.js'; // If you have PDF export
 
 const camBoxLeft = document.getElementById("camBoxLeft");
 const camBoxRight = document.getElementById("camBoxRight");
@@ -28,16 +29,9 @@ window.addEventListener('DOMContentLoaded', () => {
     setStatus("Left hand captured.");
   };
   document.getElementById("torchLeft").onclick = async () => {
-    await camLeft.toggleTorch();
-  };
-  document.getElementById("uploadLeft").onclick = () => fileUpload(canvasLeft);
+    await camLeftById("uploadLeft").onclick = () => fileUpload(canvasLeft);
 
-  // Camera controls RIGHT
-  document.getElementById("startCamRight").onclick = async () => {
-    await camRight.start();
-    setStatus("Right hand camera started.");
-  };
-  document.getElementById("captureRight").onclick = () => {
+  // Camera controls {
     camRight.captureTo(canvasRight);
     setStatus("Right hand captured.");
   };
@@ -46,7 +40,7 @@ window.addEventListener('DOMContentLoaded', () => {
   };
   document.getElementById("uploadRight").onclick = () => fileUpload(canvasRight);
 
-  // Analyze
+  // Analyze (demo logic)
   document.getElementById("analyze").onclick = async () => {
     setStatus("Analyzing palms...");
     await animateScan(canvasLeft);
@@ -66,9 +60,20 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Full Report (PDF) - Stub
+  // Full Report (PDF)
   document.getElementById("fullReport").onclick = () => {
-    setStatus("PDF export requires modules/pdf.js implementation.");
+    if (lastAnalysisLeft && lastAnalysisRight && typeof exportPalmPDF === "function") {
+      exportPalmPDF({
+        leftCanvas: canvasLeft,
+        rightCanvas: canvasRight,
+        leftReport: lastAnalysisLeft,
+        rightReport: lastAnalysisRight,
+        mode: "full"
+      });
+      setStatus("PDF report generated.");
+    } else {
+      setStatus("Please capture/analyze both hands first.");
+    }
   };
 
   // Speak
@@ -83,11 +88,7 @@ window.addEventListener('DOMContentLoaded', () => {
   langSel.onchange = () => { lastLang = langSel.value; };
 });
 
-// File upload handler (canvas target)
-function fileUpload(canvas) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
+// File upload handler";
   input.onchange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
