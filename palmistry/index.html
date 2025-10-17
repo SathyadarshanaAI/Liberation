@@ -8,6 +8,7 @@
 </head>
 <body>
     <h1>Sathya Darshana Quantum Palm Analyzer V5.1</h1>
+    <div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
     <div class="wrap">
         <div class="camWrap">
             <!-- Left Hand -->
@@ -67,6 +68,18 @@
         <div id="status">Ready</div>
         <pre id="insight"></pre>
     </div>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <script type="module" src="./app.js"></script>
+    <script>
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+          pageLanguage: 'en',
+          includedLanguages: 'en,si,ta,fr,de,es,zh-CN,hi,ar,ja,ru,pt,ko,it,tr,id,nl,sv',
+          layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+      }
+    </script>
+    <!-- jsPDF CDN for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
