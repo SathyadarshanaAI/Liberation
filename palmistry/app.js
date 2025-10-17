@@ -1,5 +1,5 @@
 import { CameraCard } from './modules/camera.js';
-import { exportPalmPDF } from './modules/pdf.js'; // If you have PDF export
+import { exportPalmPDF } from './modules/pdf.js';
 
 const camBoxLeft = document.getElementById("camBoxLeft");
 const camBoxRight = document.getElementById("camBoxRight");
@@ -47,7 +47,7 @@ window.addEventListener('DOMContentLoaded', () => {
   };
   document.getElementById("uploadRight").onclick = () => fileUpload(canvasRight);
 
-  // Analyze (demo logic)
+  // Analyze
   document.getElementById("analyze").onclick = async () => {
     setStatus("Analyzing palms...");
     await animateScan(canvasLeft);
@@ -69,7 +69,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Full Report (PDF)
   document.getElementById("fullReport").onclick = () => {
-    if (lastAnalysisLeft && lastAnalysisRight && typeof exportPalmPDF === "function") {
+    if (lastAnalysisLeft && lastAnalysisRight) {
       exportPalmPDF({
         leftCanvas: canvasLeft,
         rightCanvas: canvasRight,
@@ -88,6 +88,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (lastAnalysisLeft && lastAnalysisRight) {
       const text = getReportText(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
       speakPalmReport(text, lastLang);
+    } else {
+      setStatus("Analyze both hands first!");
     }
   };
 
@@ -107,9 +109,21 @@ function fileUpload(canvas) {
     reader.onload = function(ev) {
       const img = new Image();
       img.onload = function() {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext('2d').drawImage(img, 0, 0);
+        // Lock canvas to 3:4 aspect ratio
+        let iw = img.width, ih = img.height;
+        const aspect = 3/4;
+        let tw = iw, th = ih;
+        if (iw/ih > aspect) {
+          tw = ih * aspect; th = ih;
+        } else {
+          tw = iw; th = iw / aspect;
+        }
+        canvas.width = tw;
+        canvas.height = th;
+        let ctx = canvas.getContext('2d');
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, tw, th);
+        ctx.drawImage(img, (iw-tw)/2, (ih-th)/2, tw, th, 0, 0, tw, th);
         setStatus("Photo loaded.");
       };
       img.src = ev.target.result;
