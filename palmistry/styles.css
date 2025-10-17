@@ -101,7 +101,14 @@ canvas, video {
     margin: 0 auto;
     max-width: 900px;
 }
+strong {
+    color: #00e7ff;
+    font-size: 1.08em;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
 
+/* Responsive styles for mobile/tablet */
 @media (max-width: 850px) {
     .camWrap {
         flex-direction: column;
@@ -111,10 +118,36 @@ canvas, video {
         width: 92vw;
         height: 120vw;
         min-width: 190px;
-        min-height: 220px;
+        min-height: 240px;
     }
     .camCol {
         min-width: 0;
         width: 100%;
+    }
+    .wrap {
+        padding: 6px;
+    }
+}
+@media (max-width: 500px) {
+    h1 {
+        font-size: 1.3em;
+        margin-top: 10px;
+    }
+    .camBox {
+        width: 98vw;
+        height: 132vw;
+        min-width: 140px;
+        min-height: 180px;
+    }
+    #insight {
+        font-size: 0.97em;
+        padding: 6px;
+    }
+    .btn {
+        padding: 6px 11px;
+        font-size: 0.98em;
+    }
+    .toolbar {
+        gap: 9px;
     }
 }
