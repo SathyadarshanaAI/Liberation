@@ -25,24 +25,16 @@ window.addEventListener('DOMContentLoaded', () => {
     setStatus("Left hand camera started.");
   };
   document.getElementById("captureLeft").onclick = async () => {
-    camLeft.captureTo(canvasLeft);
-    setStatus("Left hand captured.");
-    await autoPalmAI(canvasLeft, "left");
-  };
-  document.getElementById("uploadLeft").onclick = () => fileUpload(canvasLeft, () => autoPalmAI(canvasLeft, "left"));
-  document.getElementById("torchLeft").onclick =.toggleTorch(); };
+ document.getElementById("uploadLeft").onclick = () => fileUpload(canvasLeft, () => autoPalmAI(canvasLeft, "left"));
+  document.getElementById("torchLeft").onclick = async () => { await camLeft.toggleTorch(); };
 
   // RIGHT HAND
-  document.getElementById("startCamRight").onclick = async () => {
-    await camRight.start();
-    setStatus("Right hand camera started.");
+  document.getElementById("startCamcaptureRight").onclick = async () => {
+    camRight.captureTo(canvasRight);
+    setStatus("Right hand captured.");
+    await autoPalmAI(canvasRight, "right");
   };
-  document.getElementById("captureRight").onclick = async () => {
-    camRight.captureTo(canvasRight").onclick = () => fileUpload(canvasRight, () => autoPalmAI(canvasRight, "right"));
-  document.getElementById("torchRight").onclick = async () => { await camRight.toggleTorch(); };
-
-  // Analyze (full report)
-  document.getElementById("analyze").onclick = () => {
+  document.getElementById("uploadRight").onclick = () => fileUpload(canvasRight, () => autoPalmAI(canvasRight, "  document.getElementById("analyze").onclick = () => {
     if (leftPalmAI && rightPalmAI) {
       showPalmInsight(leftPalmAI, rightPalmAI, "full");
     } else {
@@ -51,9 +43,7 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   // Mini report
-  document.getElementById("miniReport").onclick = () => {
-    if (leftPalmAI && rightPalmAI) {
-      showPalmInsight(leftPalmAI, rightPalmAI, "mini");
+  documentPalmAI, "mini");
     } else {
       setStatus("Please capture/upload both hands first!");
     }
@@ -64,9 +54,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function autoPalmAI(canvas, hand) {
   setStatus("Detecting palm lines...");
-  const aiResult = await fakePalmAI(canvas, hand);   // Replace with real AI call if needed
-  drawPalmLinesOnCanvas(canvas, aiResult.lines);
-  if (hand === "left") leftPalmAI = call) ---
+  const aiResult = await fakePalm, aiResult.lines);
+  if (hand === "left") leftPalmAI = aiResult;
+  else rightPalmAI = aiResult;
+  setStatus("Palm lines auto-drawn.");
+}
+
+// --- DEMO AI "palm line" detection (replace with real AI/model or API call) ---
 async function fakePalmAI(canvas, hand="right") {
   const w = canvas.width, h = canvas.height;
   // Demo: 3 main lines, 2 minor
@@ -77,25 +71,14 @@ async function fakePalmAI(canvas, hand="right") {
     { name: "Health",     color: "#789", main: false, points: [[w*0.52,h*0.4],[w*0.6,h*0.7]] },
     { name: "Marriage",   color: "#555", main: false, points: [[w*0.7,h*0.2],[w*0.73,h*0.28]] }
   ];
-  // Demo "reading": random but plausible
-  const reading = [
-    "Heart Line: Indicates strong emotions and empathy.",
-    "Head Line: Suggests high intellect and curiosity.",
-    "Life Line: Shows good vitality and adaptability.",
-    ...(hand==="left" ? ["Past influences are strong."] : ["Active, creative present life."])
-  ];
-  return { hand, lines, reading };
-}
-
-// --- DRAW LINES ON CANVAS ---
-function drawPalmLinesOnCanvas(canvas, palmLines) {
+  // Demo "(canvas, palmLines) {
   const ctx = canvas.getContext('2d');
   ctx.save();
   palmLines.forEach(line => {
     ctx.save();
     ctx.strokeStyle = line.color;
     ctx.lineWidth = line.main ? 5 : 2;
-    ctx.globalAlpha = line.main ? 1.0 : 0.7;
+    ctx.globalAlpha = line.main ? 1.0 : 07;
     if (!line.main) ctx.setLineDash([5, 5]);
     ctx.beginPath();
     line.points.forEach(([x, y], i) => {
@@ -118,12 +101,14 @@ function fileUpload(canvas, callback) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(ev) {
-4 aspect ratio
+      const img = new Image();
+      img.onload = function() {
+        // Lock canvas to 3:4 aspect ratio
         let iw = img.width, ih = img.height;
         const aspect = 3/4;
         let tw = iw, th = ih;
         if (iw/ih > aspect) { tw = ih * aspect; th = ih; }
-        else { tw = iw; th = iw / aspect; }
+        else { tw = iw; th; }
         canvas.width = tw; canvas.height = th;
         let ctx = canvas.getContext('2d');
         ctx.fillStyle = "#fff";
@@ -145,10 +130,9 @@ function showPalmInsight(left, right, mode="full") {
   txt += `Left Hand:\n${left.reading.join("\n")}\n\n`;
   txt += `Right Hand:\n${right.reading.join("\n")}\n\n`;
   if (mode==="mini") {
-    txt += "Mini Report: Most prominentetection & drawing** (demo AI)
-- **Palm reading report** (mini/full)
-- **No syntax errors**
-
----
-
-**තව error/functionality/help/debug ඕන නම්, මෙතැන paste කරන්න!**
+    txt += "Mini Report: Most prominent lines analyzed above.\n";
+  } else {
+    txt += "Full Report: See above for all detected lines.\n";
+  }
+  insightEl.textContent = txt;
+}
