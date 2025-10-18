@@ -1,173 +1,174 @@
-import { CameraCard } from './modules/camara.js';
+// modules/camara.js
+// Mobile-friendly camera helper for Palm Analyzer (back camera, torch, crop capture)
 
-// ---------- ELEMENTS ----------
-const camBoxLeft  = document.getElementById("camBoxLeft");
-const camBoxRight = document.getElementById("camBoxRight");
-const canvasLeft  = document.getElementById("canvasLeft");
-const canvasRight = document.getElementById("canvasRight");
-const statusEl    = document.getElementById("status");
-const insightEl   = document.getElementById("insight");
+export class CameraCard {
+  /**
+   * @param {HTMLElement} container - where to place the <video>
+   * @param {{facingMode?: 'environment'|'user', onStatus?: (msg:string)=>void}} opts
+   */
+  constructor(container, opts = {}) {
+    this.container   = container;
+    this.onStatus    = opts.onStatus || (()=>{});
+    this.facingMode  = opts.facingMode || 'environment';
+    this.stream      = null;
+    this.video       = document.createElement('video');
 
-// ---------- HELPERS ----------
-function setStatus(msg) {
-  if (typeof window.statusMsg === "function") window.statusMsg(msg);
-  statusEl.textContent = msg;
-  console.log("[STATUS]", msg);
-}
+    // Mobile autoplay requirements
+    this.video.setAttribute('playsinline', '');
+    this.video.setAttribute('muted', 'true');
+    this.video.muted = true;
+    this.video.autoplay = true;
+    this.video.style.width  = '100%';
+    this.video.style.height = '100%';
+    this.video.style.objectFit = 'cover';
+    this.video.style.display = 'block';
+    this.video.style.background = '#000';
 
-// ---------- CAMERA INSTANCES ----------
-let camLeft, camRight;
-let leftPalmAI = null, rightPalmAI = null;
-
-// ---------- MAIN ----------
-window.addEventListener("DOMContentLoaded", () => {
-  camLeft  = new CameraCard(camBoxLeft,  { facingMode: "environment", onStatus: setStatus });
-  camRight = new CameraCard(camBoxRight, { facingMode: "environment", onStatus: setStatus });
-
-  // --- LEFT HAND ---
-  document.getElementById("startCamLeft").onclick = async () => {
-    await camLeft.start();
-    setStatus("Left hand camera started.");
-  };
-
-  document.getElementById("captureLeft").onclick = async () => {
-    camLeft.captureTo(canvasLeft);
-    setStatus("Left hand captured.");
-    await autoPalmAI(canvasLeft, "left");
-  };
-
-  document.getElementById("uploadLeft").onclick = () =>
-    fileUpload(canvasLeft, () => autoPalmAI(canvasLeft, "left"));
-
-  document.getElementById("torchLeft").onclick = async () => {
-    await camLeft.toggleTorch();
-  };
-
-  // --- RIGHT HAND ---
-  document.getElementById("startCamRight").onclick = async () => {
-    await camRight.start();
-    setStatus("Right hand camera started.");
-  };
-
-  document.getElementById("captureRight").onclick = async () => {
-    camRight.captureTo(canvasRight);
-    setStatus("Right hand captured.");
-    await autoPalmAI(canvasRight, "right");
-  };
-
-  document.getElementById("uploadRight").onclick = () =>
-    fileUpload(canvasRight, () => autoPalmAI(canvasRight, "right"));
-
-  document.getElementById("torchRight").onclick = async () => {
-    await camRight.toggleTorch();
-  };
-
-  // --- ANALYZE (FULL REPORT) ---
-  document.getElementById("analyze").onclick = () => {
-    if (leftPalmAI && rightPalmAI) {
-      showPalmInsight(leftPalmAI, rightPalmAI, "full");
-    } else {
-      setStatus("Please capture/upload both hands first!");
+    // mount once
+    if (!this.container.querySelector('video')) {
+      this.container.appendChild(this.video);
     }
-  };
 
-  // --- MINI REPORT ---
-  document.getElementById("miniReport").onclick = () => {
-    if (leftPalmAI && rightPalmAI) {
-      showPalmInsight(leftPalmAI, rightPalmAI, "mini");
-    } else {
-      setStatus("Please capture/upload both hands first!");
+    this.torchOn = false;
+    this.track   = null;
+  }
+
+  _log(tag, ...args) { try { console.tag?.(tag, ...args) ?? console.log(`[${tag}]`, ...args); } catch {} }
+  _status(msg) { try { this.onStatus(msg); } catch {} }
+
+  async _pickBackCamera() {
+    try {
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      const videos = devs.filter(d => d.kind === 'videoinput');
+      // prefer "back"/"rear" camera if available
+      const back = videos.find(v => /back|rear|environment/i.test(v.label));
+      return back?.deviceId || videos[0]?.deviceId || null;
+    } catch (e) {
+      this._log('camera', 'enumerateDevices failed', e);
+      return null;
     }
-  };
-});
+  }
 
-// ---------- PALM AI ----------
-async function autoPalmAI(canvas, hand) {
-  setStatus(`Detecting ${hand} palm lines...`);
-  const aiResult = await fakePalmAI(canvas, hand);
-  drawPalmLinesOnCanvas(canvas, aiResult.lines);
-  if (hand === "left") leftPalmAI = aiResult; else rightPalmAI = aiResult;
-  setStatus(`${hand} palm lines auto-drawn.`);
-}
+  async start() {
+    // stop previous
+    await this.stop();
 
-// ---------- DEMO AI ----------
-async function fakePalmAI(canvas, hand = "right") {
-  const w = canvas.width, h = canvas.height;
-  const lines = [
-    { name: "Heart Line", color: "red",   main: true,  points: [[w*0.2,h*0.25],[w*0.8,h*0.27]] },
-    { name: "Head Line",  color: "blue",  main: true,  points: [[w*0.28,h*0.4],[w*0.7,h*0.5]] },
-    { name: "Life Line",  color: "green", main: true,  points: [[w*0.38,h*0.78],[w*0.2,h*0.98],[w*0.45,h*0.99]] },
-    { name: "Health",     color: "#789",  main: false, points: [[w*0.52,h*0.4],[w*0.6,h*0.7]] },
-    { name: "Marriage",   color: "#555",  main: false, points: [[w*0.7,h*0.2],[w*0.73,h*0.28]] }
-  ];
-  const reading = [
-    "Heart Line: Indicates strong emotions and empathy.",
-    "Head Line: Suggests high intellect and curiosity.",
-    "Life Line: Shows good vitality and adaptability.",
-    ...(hand === "left" ? ["Past influences are strong."] : ["Active, creative present life."])
-  ];
-  return { hand, lines, reading };
-}
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      this._status('Camera requires HTTPS (use Netlify/GitHub Pages).');
+      this._log('camera', 'blocked: not https');
+      throw new Error('getUserMedia requires HTTPS on mobile');
+    }
 
-// ---------- DRAW PALM LINES ----------
-function drawPalmLinesOnCanvas(canvas, palmLines) {
-  const ctx = canvas.getContext("2d");
-  ctx.save();
-  palmLines.forEach(line => {
-    ctx.save();
-    ctx.strokeStyle = line.color;
-    ctx.lineWidth = line.main ? 5 : 2;
-    ctx.globalAlpha = line.main ? 1.0 : 0.7;
-    if (!line.main) ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    line.points.forEach(([x, y], i) => {
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-  });
-  ctx.restore();
-}
-
-// ---------- FILE UPLOAD ----------
-function fileUpload(canvas, callback) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const img = new Image();
-      img.onload = function() {
-        let iw = img.width, ih = img.height;
-        const aspect = 3 / 4;
-        let tw = iw, th = ih;
-        if (iw / ih > aspect) { tw = ih * aspect; th = ih; }
-        else { tw = iw; th = iw / aspect; }
-        canvas.width = tw; canvas.height = th;
-        const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, tw, th);
-        ctx.drawImage(img, (iw - tw)/2, (ih - th)/2, tw, th, 0, 0, tw, th);
-        setStatus("Photo loaded.");
-        if (callback) callback();
-      };
-      img.src = ev.target.result;
+    // Try to get environment camera with constraints
+    let constraints = {
+      video: {
+        facingMode: this.facingMode,       // 'environment' or 'user'
+        width:  { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 }
+      },
+      audio: false
     };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
 
-// ---------- REPORT OUTPUT ----------
-function showPalmInsight(left, right, mode = "full") {
-  let txt = `Sathya Darshana Quantum Palm Analyzer\n\n`;
-  txt += `Left Hand:\n${left.reading.join("\n")}\n\n`;
-  txt += `Right Hand:\n${right.reading.join("\n")}\n\n`;
-  if (mode === "mini") txt += "Mini Report: Most prominent lines analyzed above.\n";
-  else txt += "Full Report: See above for all detected lines.\n";
-  insightEl.textContent = txt;
+    try {
+      this._status('Requesting camera…');
+      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (err1) {
+      // fallback by deviceId (some phones ignore facingMode)
+      this._log('camera', 'facingMode getUserMedia failed, fallback by deviceId', err1?.name);
+      const id = await this._pickBackCamera();
+      if (!id) { this._status('No camera found'); throw err1; }
+      constraints = { video: { deviceId: { exact: id } }, audio: false };
+      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+    }
+
+    this.video.srcObject = this.stream;
+    await this.video.play().catch(()=>{});
+    // cache track for torch
+    this.track = this.stream.getVideoTracks()[0] || null;
+
+    // Resize container video nicely after metadata ready
+    await new Promise(res=>{
+      const r = ()=>res();
+      if (this.video.readyState >= 2) return res();
+      this.video.onloadedmetadata = r;
+      setTimeout(r, 500);
+    });
+
+    this._status('🎥 Camera ready');
+    this._log('camera', 'ready', {
+      width:  this.video.videoWidth,
+      height: this.video.videoHeight,
+      label:  this.track?.label
+    });
+    return true;
+  }
+
+  async stop() {
+    if (this.stream) {
+      this.stream.getTracks().forEach(t => t.stop());
+      this.stream = null;
+      this.track = null;
+      this._log('camera', 'stopped');
+    }
+  }
+
+  /**
+   * Draw a centered crop of the live video onto target canvas (3:4 “portrait” look)
+   */
+  captureTo(targetCanvas) {
+    if (!this.video || !this.video.videoWidth) {
+      this._status('Camera not ready for capture.');
+      this._log('capture', 'blocked: no video frames');
+      return;
+    }
+    // Target aspect 3:4
+    const aspect = 3/4;
+    const vw = this.video.videoWidth;
+    const vh = this.video.videoHeight;
+    let sw = vw, sh = vh;
+
+    // center-crop to match aspect
+    if (vw / vh > aspect) { // too wide -> crop width
+      sh = vh;
+      sw = Math.round(vh * aspect);
+    } else { // too tall -> crop height
+      sw = vw;
+      sh = Math.round(vw / aspect);
+    }
+    const sx = Math.floor((vw - sw) / 2);
+    const sy = Math.floor((vh - sh) / 2);
+
+    targetCanvas.width  = sw;
+    targetCanvas.height = sh;
+
+    const ctx = targetCanvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, sw, sh);
+    ctx.drawImage(this.video, sx, sy, sw, sh, 0, 0, sw, sh);
+
+    this._log('capture', 'frame drawn', {sw, sh, sx, sy});
+  }
+
+  /**
+   * Toggle torch if supported (Android Chrome + back camera)
+   */
+  async toggleTorch() {
+    if (!this.track) { this._status('Torch: camera not started'); return; }
+    const caps = this.track.getCapabilities?.();
+    if (!caps || !('torch' in caps)) {
+      this._status('Torch not supported on this device');
+      this._log('torch', 'not supported');
+      return;
+    }
+    this.torchOn = !this.torchOn;
+    try {
+      await this.track.applyConstraints({ advanced: [{ torch: this.torchOn }] });
+      this._status(this.torchOn ? '🔦 Torch ON' : '💡 Torch OFF');
+      this._log('torch', 'state', this.torchOn);
+    } catch (e) {
+      this._status('Torch toggle failed');
+      this._log('torch', 'applyConstraints failed', e);
+    }
+  }
 }
