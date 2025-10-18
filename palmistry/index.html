@@ -8,7 +8,9 @@
 </head>
 <body>
     <h1>Sathya Darshana Quantum Palm Analyzer V5.1</h1>
+
     <div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
+
     <div class="wrap">
         <div class="camWrap">
             <!-- Left Hand -->
@@ -24,6 +26,7 @@
                     <button class="btn" id="torchLeft">💡 Torch</button>
                 </div>
             </div>
+
             <!-- Right Hand -->
             <div class="camCol">
                 <strong>Right Hand</strong>
@@ -38,6 +41,7 @@
                 </div>
             </div>
         </div>
+
         <!-- Shared Controls -->
         <div class="toolbar">
             <button class="btn" id="analyze">Analyze</button>
@@ -65,13 +69,32 @@
                 <option value="sv">Swedish</option>
             </select>
         </div>
+
         <div id="status">Ready</div>
         <pre id="insight"></pre>
     </div>
 
     <!-- Google Translate Script -->
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <!-- ✅ Early helpers so app.js can use them immediately -->
+    <script>
+      (function(){
+        if(!console.tag){
+          console.tag = (tag, ...args)=> console.log(`[${String(tag).toUpperCase()}]`, ...args);
+        }
+        if(!window.statusMsg){
+          window.statusMsg = (msg)=>{
+            try{ document.getElementById('status').textContent = msg; }catch(e){}
+            console.tag('status', msg);
+          };
+        }
+      })();
+    </script>
+
+    <!-- Your main module -->
     <script type="module" src="./app.js"></script>
+
     <script>
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
@@ -81,6 +104,7 @@
             }, 'google_translate_element');
         }
     </script>
+
     <!-- jsPDF CDN for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -121,7 +145,9 @@
       const btnC  = document.getElementById('f12Clear');
       const btnCp = document.getElementById('f12Copy');
 
-      // helpers
+      const PAD = 64;                       // bottom safe area when panel is open
+      const key = 'f12-collapsed';          // remember state between reloads
+
       const ts = ()=> new Date().toLocaleTimeString();
       const fmt = (v)=>{
         try {
@@ -138,11 +164,24 @@
         wrap.scrollTop = wrap.scrollHeight;
       };
       const setInfo = ()=>{
-        info.textContent = `${screen.width}×${screen.height}` + (performance?.memory ? ` | mem: ${Math.round(performance.memory.usedJSHeapSize/1048576)}MB` : '');
+        const mem = (performance && performance.memory) ? ` | mem: ${Math.round(performance.memory.usedJSHeapSize/1048576)}MB` : '';
+        info.textContent = `${screen.width}×${screen.height}${mem}`;
       };
 
+      // restore state
+      if (localStorage.getItem(key)==='0') {
+        box.classList.remove('collapsed');
+        document.body.style.paddingBottom = PAD + 'px';
+        btnT.textContent = 'Hide';
+      }
+
       // panel controls
-      btnT.onclick = ()=>{ box.classList.toggle('collapsed'); btnT.textContent = box.classList.contains('collapsed')?'Show':'Hide'; };
+      btnT.onclick = ()=>{
+        const isCol = box.classList.toggle('collapsed');
+        btnT.textContent = isCol ? 'Show' : 'Hide';
+        document.body.style.paddingBottom = isCol ? '' : PAD + 'px';
+        localStorage.setItem(key, isCol ? '1' : '0');
+      };
       btnC.onclick = ()=>{ wrap.textContent=''; };
       btnCp.onclick= async ()=>{
         const txt = Array.from(wrap.querySelectorAll('.row')).map(r=>r.textContent).join('\n');
@@ -150,11 +189,15 @@
         catch { push('W','Copy failed'); }
       };
 
-      // hook console
-      ['log','warn','error'].forEach(type=>{
-        const old = console[type].bind(console);
+      // hook console methods
+      ['log','warn','error','debug'].forEach(type=>{
+        const old = (console[type]||console.log).bind(console);
         console[type] = (...msgs)=>{ try{ old(...msgs);}catch{}; push(type[0].toUpperCase(), ...msgs); };
       });
+
+      // upgrade helpers defined earlier
+      console.tag = (tag, ...args)=> console.log(`[${String(tag).toUpperCase()}]`, ...args);
+      window.statusMsg = (msg)=>{ try{ document.getElementById('status').textContent = msg; }catch{}; console.tag('status', msg); };
 
       // global errors
       window.addEventListener('error', e=>{
@@ -165,14 +208,23 @@
         push('E','Unhandled Promise Rejection:', e.reason);
       });
 
-      // log fetch/XHR
+      // log fetch/XHR with mute list
       const _fetch = window.fetch;
       window.fetch = async function(input, init){
         const url = (typeof input==='string')? input : (input?.url||'');
+        const mute = [
+          'translate.googleapis.com/element/log',
+          'translate.googleapis.com/gen204',
+          'google-analytics.com',
+          'g.doubleclick.net'
+        ];
+        if (url && mute.some(s => url.includes(s))) {
+          return _fetch(input, init); // pass-through without logging
+        }
         push('N','fetch ►', url);
         try{
           const res = await _fetch(input, init);
-          push('N','fetch ✓', url, res.status, res.statusText);
+          push('N','fetch ✓', url, res.status, res.statusText || '');
           return res;
         }catch(err){
           push('E','fetch ✗', url, err?.message||String(err));
@@ -180,12 +232,24 @@
         }
       };
 
-      // quick sanity line
+      // double-tap left-bottom corner toggles panel
+      let lastTap = 0;
+      window.addEventListener('touchend', (e)=>{
+        if (!e.changedTouches || !e.changedTouches[0]) return;
+        const t = Date.now();
+        const y = e.changedTouches[0].clientY;
+        const x = e.changedTouches[0].clientX;
+        const nearBottom = (window.innerHeight - y) < 80;
+        const nearLeft   = x < 80;
+        if (nearBottom && nearLeft && (t - lastTap) < 350) btnT.click();
+        lastTap = t;
+      }, {passive:true});
+
+      // ready
       push('L','✅ Mobile F12 ready');
       setInfo();
     })();
     </script>
     <!-- 🔸 /In-Page F12 Console -->
-
 </body>
 </html>
