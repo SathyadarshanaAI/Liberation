@@ -66,7 +66,7 @@ export class CameraCard {
   // FULL-FIT + LOCK: draw full frame (contain) into canvas, then freeze preview
   captureTo(targetCanvas){
     if (!this.video.videoWidth){ this._status('No video frame yet'); return false; }
-
+වවවවවව
     // canvas size = camBox size (HiDPI)
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const W = Math.max(1, Math.round(this.host.clientWidth  * dpr));
