@@ -1,40 +1,90 @@
-export async function analyzePalm(canvas, hand = "right") {
-  // Main palmistry lines & insights (extend as needed)
-  const PALM_LINES = [
-    { key: "heart", name: "Heart Line", insight: "Emotions, affection, compassion." },
-    { key: "head", name: "Head Line", insight: "Intellect, decision-making, creativity." },
-    { key: "life", name: "Life Line", insight: "Vitality, life changes, energy." },
-    { key: "fate", name: "Fate Line", insight: "Career, destiny, direction." },
-    { key: "success", name: "Success Line", insight: "Talent, fame, creativity." },
-    { key: "health", name: "Health Line", insight: "Health, business sense, communication." },
-    { key: "marriage", name: "Marriage Line", insight: "Relationships, partnership." },
-    { key: "manikhanda", name: "Manikhanda (Wrist)", insight: "Fortune, stability, longevity." }
-    // Add more lines or marks if needed
-  ];
+window.addEventListener('DOMContentLoaded', () => {
+  camLeft  = new CameraCard(camBoxLeft,  { facingMode: 'environment', onStatus: setStatus });
+  camRight = new CameraCard(camBoxRight, { facingMode: 'environment', onStatus: setStatus });
 
-  // For now: Simulate detection. Plug in AI/ML for real detection.
-  const lines = PALM_LINES.map(l => ({
-    ...l,
-    confidence: Math.random() * 0.4 + 0.6, // 60% - 100% confidence (demo)
-    details: hand === "left"
-      ? "Reflects inherited traits, subconscious, or previous life influences."
-      : "Shows present-life actions, choices, and conscious personality."
-  }));
+  // initial canvas size (prevents zero-size analyze)
+  fitCanvas(camBoxLeft,  canvasLeft,  false);
+  fitCanvas(camBoxRight, canvasRight, false);
+  new ResizeObserver(()=>fitCanvas(camBoxLeft,  canvasLeft,  lockedL)).observe(camBoxLeft);
+  new ResizeObserver(()=>fitCanvas(camBoxRight, canvasRight, lockedR)).observe(camBoxRight);
 
-  const marks = [
-    // For research mode, can detect and add: cross, star, island, chain, square, etc.
-    // Example (randomized for demo):
-    ...(Math.random() > 0.8 ? [{ type: "cross", position: "on fate line", info: "Significant event or obstacle." }] : []),
-    ...(Math.random() > 0.9 ? [{ type: "star", position: "at mount of Jupiter", info: "Sudden fortune or leadership." }] : [])
-  ];
-
-  return {
-    hand,
-    summary: hand === "left"
-      ? "Previous Life Traits: Reveals subconscious patterns and inherited qualities from past lives."
-      : "Current Life Traits: Reflects conscious choices, present achievements, and how you shape your destiny.",
-    lines,
-    marks,
-    tips: "Palmistry is interpreted differently in various cultures."
+  // LEFT controls
+  document.getElementById("startCamLeft").onclick = async () => {
+    unlockCanvas(camBoxLeft, canvasLeft, 'L');
+    await camLeft.start();
+    setStatus("Left hand camera started.");
   };
-}
+  document.getElementById("captureLeft").onclick = () => {
+    if (camLeft.captureTo(canvasLeft)) { lockCanvas('L'); setStatus("Left hand captured."); }
+  };
+  document.getElementById("uploadLeft").onclick = () => fileUpload(camBoxLeft, canvasLeft, 'L');
+  document.getElementById("torchLeft").onclick  = () => camLeft.toggleTorch();
+
+  // RIGHT controls
+  document.getElementById("startCamRight").onclick = async () => {
+    unlockCanvas(camBoxRight, canvasRight, 'R');
+    await camRight.start();
+    setStatus("Right hand camera started.");
+  };
+  document.getElementById("captureRight").onclick = () => {
+    if (camRight.captureTo(canvasRight)) { lockCanvas('R'); setStatus("Right hand captured."); }
+  };
+  document.getElementById("uploadRight").onclick = () => fileUpload(camBoxRight, canvasRight, 'R');
+  document.getElementById("torchRight").onclick  = () => camRight.toggleTorch();
+
+  // ANALYZE (→ uses moduler.js)
+  document.getElementById("analyze").onclick = async () => {
+    if (!canvasLeft.width  || !canvasLeft.height)  return setStatus("Left hand: Capture or Upload first.");
+    if (!canvasRight.width || !canvasRight.height) return setStatus("Right hand: Capture or Upload first.");
+
+    setStatus("Analyzing palms...");
+    try {
+      await animateScan(canvasLeft);
+      await animateScan(canvasRight);
+
+      // call your analyze module
+      lastAnalysisLeft  = await analyzeHand(canvasLeft,  'left');
+      lastAnalysisRight = await analyzeHand(canvasRight, 'right');
+
+      insightEl.textContent = buildReport(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
+      setStatus("Palm analysis complete!");
+    } catch (e) {
+      console.error(e);
+      setStatus("Analyze failed. Check console.");
+    }
+  };
+
+  // MINI REPORT
+  document.getElementById("miniReport").onclick = () => {
+    if (lastAnalysisLeft && lastAnalysisRight) {
+      insightEl.textContent = buildReport(lastAnalysisLeft, lastAnalysisRight, "mini", lastLang);
+    } else setStatus("Please capture/analyze both hands first.");
+  };
+
+  // PDF
+  document.getElementById("fullReport").onclick = () => {
+    if (!(lastAnalysisLeft && lastAnalysisRight)) return setStatus("Please capture/analyze both hands first.");
+    if (typeof exportPalmPDF === 'function') {
+      exportPalmPDF({
+        leftCanvas:  canvasLeft,
+        rightCanvas: canvasRight,
+        leftReport:  lastAnalysisLeft,
+        rightReport: lastAnalysisRight,
+        mode: "full"
+      });
+      setStatus("PDF report generated.");
+    } else {
+      setStatus("PDF module missing.");
+    }
+  };
+
+  // SPEAK
+  document.getElementById("speak").onclick = () => {
+    if (!(lastAnalysisLeft && lastAnalysisRight)) return setStatus("Analyze both hands first!");
+    const text = buildReport(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
+    speakReport(text, lastLang);
+  };
+
+  // LANG
+  langSel.onchange = () => { lastLang = langSel.value; };
+});
