@@ -16,47 +16,40 @@ let lastLang = "en";
 function setStatus(msg) { statusEl.textContent = msg; }
 
 window.addEventListener('DOMContentLoaded', () => {
-  camLeft = new CameraCard(camBoxLeft, { facingMode: 'environment', onStatus: setStatus });
+  camLeft = new CameraBoxLeft, { facingMode: 'environment', onStatus: setStatus });
   camRight = new CameraCard(camBoxRight, { facingMode: 'environment', onStatus: setStatus });
 
   // Camera controls LEFT
   document.getElementById("startCamLeft").onclick = async () => {
-    await camLeft.start();
-    setStatus("Left hand camera started.");
-  };
-  document.getElementById("captureLeft").onclick = () => {
+    await cam  document.getElementById("captureLeft").onclick = async () => {
     camLeft.captureTo(canvasLeft);
     setStatus("Left hand captured.");
-    overlayPalmLines(canvasLeft); // draw palm lines after capture
+    await autoDrawPalmLines(canvasLeft); // <-- Auto-draw after capture
   };
   document.getElementById("torchLeft").onclick = async () => {
     await camLeft.toggleTorch();
   };
-  document.getElementById("uploadLeft").onclick = () => fileUpload(canvasLeft, () => overlayPalmLines(canvasLeft));
+  document.getElementById("uploadLeft").onclick = () => fileUpload(canvasLeft, () => autoDrawPalmLines(canvasLeft));
 
   // Camera controls RIGHT
   document.getElementById("startCamRight").onclick = async () => {
     await camRight.start();
     setStatus("Right hand camera started.");
   };
-  document.getElementById("captureRight").onclick = () => {
+  document.getElementById("captureRight").onclick = async () => {
     camRight.captureTo(canvasRight);
     setStatus("Right hand captured.");
-    overlayPalmLines(canvasRight); // draw palm lines after capture
+    await autoDrawPalmLines(canvasRight); // <-- Auto-draw after capture
   };
   document.getElementById("torchRight").onclick = async () => {
     await camRight.toggleTorch();
   };
-  document.getElementById("uploadRight").onclick = () => fileUpload(canvasRight, () => overlayPalmLines(canvasRight));
+  document.getElementById("uploadRight").onclick = () => fileUpload(canvasRight, () => autoDrawPalmLines(canvasRight));
 
   // Analyze
   document.getElementById("analyze").onclick = async () => {
     setStatus("Analyzing palms...");
-    await animateScan(canvasLeft);
-    await animateScan(canvasRight);
-    lastAnalysisLeft = await fakeAnalyze(canvasLeft, "left");
-    lastAnalysisRight = await fakeAnalyze(canvasRight, "right");
-    showInsight(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
+    await animateScan(canvas "full", lastLang);
     setStatus("Palm analysis complete!");
   };
 
@@ -101,45 +94,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // File upload handler (with callback for overlay lines)
 function fileUpload(canvas, callback) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const img = new Image();
-      img.onload = function() {
-        // Lock canvas to 3:4 aspect ratio
-        let iw = img.width, ih = img.height;
-        const aspect = 3/4;
-        let tw = iw, th = ih;
-        if (iw/ih > aspect) {
-          tw = ih * aspect; th = ih;
-        } else {
-          tw = iw; th = iw / aspect;
-        }
-        canvas.width = tw;
-        canvas.height = th;
-        let ctx = canvas.getContext('2d');
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, tw, th);
-        ctx.drawImage(img, (iw-tw)/2, (ih-th)/2, tw, th, 0, 0, tw, th);
-        setStatus("Photo loaded.");
-        if (callback) callback();
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
-
-// Scan animation (optional, for effect)
-async function animateScan(canvas) {
-  const ctx = canvas.getContext('2d');
-  const start = performance.now(), dur = 800;
+  const input dur = 800;
   const frame = ctx.getImageData(0,0,canvas.width,canvas.height);
   await new Promise(res => {
     function loop(now) {
@@ -153,8 +108,7 @@ async function animateScan(canvas) {
 }
 function drawScanBeam(ctx, w, h, progress) {
   ctx.save();
-  ctx.fillStyle = "rgba(0,0,0,0.15)";
-  ctx.fillRect(0,0,w,h);
+  ctx.fillStyle = "rgba);
   const y = progress * h;
   const g = ctx.createLinearGradient(0, y-40, 0, y+40);
   g.addColorStop(0,"rgba(0,229,255,0)");
@@ -165,19 +119,20 @@ function drawScanBeam(ctx, w, h, progress) {
   ctx.restore();
 }
 
-// Palm lines (main/other) demo overlay
-function getDemoPalmLines(canvas) {
+// 🟢 AUTO PALM LINE DETECTION + DRAW (Replace with real AI for production!)
+async function autoDrawPalmLines(canvas) {
+  // Simulate AI palm line detection (replace this with real AI detection)
   const w = canvas.width, h = canvas.height;
-  return [
-    // Main lines (bold color)
-    { name: "Heart", color: "red",    main: true,  points: [[w*0.22,h*0.18],[w*0.72,h*0.26]] },
-    { name: "Head",  color: "blue",   main: true,  points: [[w*0.28,h*0.38],[w*0.78,h*0.48]] },
-    { name: "Life",  color: "green",  main: true,  points: [[w*0.36,h*0.72],[w*0.28,h*0.95],[w*0.48,h*0.98]] },
+  const lines = [
+    // Main lines (thick, colored)
+    { name: "Heart", color: "red",    main: true,  points: [[w*0.17,h*0.24],[w*0.8,h*0.28]] },
+    { name: "Head",  color: "blue",   main: true,  points: [[w*0.22,h*0.38],[w*0.7,h*0.46]] },
+    { name: "Life",  color: "green",  main: true,  points: [[w*0.38,h*0.78],[w*0.21,h*0.95],[w*0.45,h*0.99]] },
     // Other lines (thin/dashed)
     { name: "Health",     color: "#789", main: false, points: [[w*0.5,h*0.3],[w*0.52,h*0.59]] },
-    { name: "Marriage",   color: "#555", main: false, points: [[w*0.68,h*0.2],[w*0.7,h*0.28]] },
-    { name: "Manikhanda", color: "#aaa", main: false, points: [[w*0.46,h*0.96],[w*0.58,h*0.99]] }
+    { name: "Marriage",   color: "#555", main: false, points: [[w*0.68,h*0.2],[w*0.7,h*0.28]] }
   ];
+  drawPalmLinesOnCanvas(canvas, lines);
 }
 function drawPalmLinesOnCanvas(canvas, palmLines) {
   const ctx = canvas.getContext('2d');
@@ -195,10 +150,6 @@ function drawPalmLinesOnCanvas(canvas, palmLines) {
     ctx.setLineDash([]);
     ctx.restore();
   });
-}
-function overlayPalmLines(canvas) {
-  const palmLines = getDemoPalmLines(canvas);
-  drawPalmLinesOnCanvas(canvas, palmLines);
 }
 
 // Fake palm analyzer logic (replace with your real analyzer module)
