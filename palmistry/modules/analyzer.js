@@ -1,90 +1,96 @@
-window.addEventListener('DOMContentLoaded', () => {
-  camLeft  = new CameraCard(camBoxLeft,  { facingMode: 'environment', onStatus: setStatus });
-  camRight = new CameraCard(camBoxRight, { facingMode: 'environment', onStatus: setStatus });
+// module/analizer.js
 
-  // initial canvas size (prevents zero-size analyze)
-  fitCanvas(camBoxLeft,  canvasLeft,  false);
-  fitCanvas(camBoxRight, canvasRight, false);
-  new ResizeObserver(()=>fitCanvas(camBoxLeft,  canvasLeft,  lockedL)).observe(camBoxLeft);
-  new ResizeObserver(()=>fitCanvas(camBoxRight, canvasRight, lockedR)).observe(camBoxRight);
+// (Assume you have AI models or rule functions for palm feature extraction and interpretation)
+// Also assume you have globalDataCompare(lineType, marks) function for database cross-reference
 
-  // LEFT controls
-  document.getElementById("startCamLeft").onclick = async () => {
-    unlockCanvas(camBoxLeft, canvasLeft, 'L');
-    await camLeft.start();
-    setStatus("Left hand camera started.");
-  };
-  document.getElementById("captureLeft").onclick = () => {
-    if (camLeft.captureTo(canvasLeft)) { lockCanvas('L'); setStatus("Left hand captured."); }
-  };
-  document.getElementById("uploadLeft").onclick = () => fileUpload(camBoxLeft, canvasLeft, 'L');
-  document.getElementById("torchLeft").onclick  = () => camLeft.toggleTorch();
+function analyzePastLives(leftHandData) {
+    // AI logic for left hand (past lives)
+    const pastKarma = extractKarmaPatterns(leftHandData);
+    const spiritualTendencies = extractSpiritualTendencies(leftHandData);
+    const inheritedTalents = extractTalents(leftHandData);
+    const majorEvents = extractMajorPastEvents(leftHandData);
 
-  // RIGHT controls
-  document.getElementById("startCamRight").onclick = async () => {
-    unlockCanvas(camBoxRight, canvasRight, 'R');
-    await camRight.start();
-    setStatus("Right hand camera started.");
-  };
-  document.getElementById("captureRight").onclick = () => {
-    if (camRight.captureTo(canvasRight)) { lockCanvas('R'); setStatus("Right hand captured."); }
-  };
-  document.getElementById("uploadRight").onclick = () => fileUpload(camBoxRight, canvasRight, 'R');
-  document.getElementById("torchRight").onclick  = () => camRight.toggleTorch();
+    // Compare with global data
+    const compared = globalDataCompare('left', leftHandData);
 
-  // ANALYZE (→ uses moduler.js)
-  document.getElementById("analyze").onclick = async () => {
-    if (!canvasLeft.width  || !canvasLeft.height)  return setStatus("Left hand: Capture or Upload first.");
-    if (!canvasRight.width || !canvasRight.height) return setStatus("Right hand: Capture or Upload first.");
+    return (
+        `**Karmic Patterns:**\n${pastKarma}\n\n` +
+        `**Spiritual Tendencies:**\n${spiritualTendencies}\n\n` +
+        `**Inherited Talents & Challenges:**\n${inheritedTalents}\n\n` +
+        `**Significant Past Life Events:**\n${majorEvents}\n\n` +
+        `**Comparison with Global Data:**\n${compared}\n`
+    );
+}
 
-    setStatus("Analyzing palms...");
-    try {
-      await animateScan(canvasLeft);
-      await animateScan(canvasRight);
+function analyzeCurrentLife(rightHandData) {
+    // AI logic for right hand (current + future)
+    const personality = extractPersonality(rightHandData);
+    const health = extractHealth(rightHandData);
+    const career = extractCareer(rightHandData);
+    const relationships = extractRelationships(rightHandData);
+    const future = extractFutureTrends(rightHandData);
 
-      // call your analyze module
-      lastAnalysisLeft  = await analyzeHand(canvasLeft,  'left');
-      lastAnalysisRight = await analyzeHand(canvasRight, 'right');
+    // Compare with global data
+    const compared = globalDataCompare('right', rightHandData);
 
-      insightEl.textContent = buildReport(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
-      setStatus("Palm analysis complete!");
-    } catch (e) {
-      console.error(e);
-      setStatus("Analyze failed. Check console.");
+    return (
+        `**Personality & Current Path:**\n${personality}\n\n` +
+        `**Health Indicators:**\n${health}\n\n` +
+        `**Career & Success:**\n${career}\n\n` +
+        `**Relationships:**\n${relationships}\n\n` +
+        `**Future Trends:**\n${future}\n\n` +
+        `**Comparison with Global Data:**\n${compared}\n`
+    );
+}
+
+function analyzeSpecialMarks(leftHandData, rightHandData) {
+    // Detect rare marks in both hands
+    const leftMarks = extractSpecialMarks(leftHandData);
+    const rightMarks = extractSpecialMarks(rightHandData);
+    return (
+        `**Left Hand Special Marks:**\n${leftMarks}\n\n` +
+        `**Right Hand Special Marks:**\n${rightMarks}\n`
+    );
+}
+
+function analyzeComparativeInsights(leftHandData, rightHandData) {
+    // Analyze how past (left) influences present/future (right)
+    return compareHandsInsights(leftHandData, rightHandData);
+}
+
+// Main function to generate the full report
+function generateFullAIReport(leftHandData, rightHandData) {
+    let report = "Sathya Darshana Quantum Palm Analyzer V5.1 - Full AI Report\n\n";
+
+    if (leftHandData) {
+        report += "1. LEFT HAND – Past Lives Analysis\n";
+        report += "----------------------------------\n";
+        report += analyzePastLives(leftHandData) + "\n";
     }
-  };
 
-  // MINI REPORT
-  document.getElementById("miniReport").onclick = () => {
-    if (lastAnalysisLeft && lastAnalysisRight) {
-      insightEl.textContent = buildReport(lastAnalysisLeft, lastAnalysisRight, "mini", lastLang);
-    } else setStatus("Please capture/analyze both hands first.");
-  };
-
-  // PDF
-  document.getElementById("fullReport").onclick = () => {
-    if (!(lastAnalysisLeft && lastAnalysisRight)) return setStatus("Please capture/analyze both hands first.");
-    if (typeof exportPalmPDF === 'function') {
-      exportPalmPDF({
-        leftCanvas:  canvasLeft,
-        rightCanvas: canvasRight,
-        leftReport:  lastAnalysisLeft,
-        rightReport: lastAnalysisRight,
-        mode: "full"
-      });
-      setStatus("PDF report generated.");
-    } else {
-      setStatus("PDF module missing.");
+    if (rightHandData) {
+        report += "2. RIGHT HAND – Current Life & Future Predictions\n";
+        report += "------------------------------------------------\n";
+        report += analyzeCurrentLife(rightHandData) + "\n";
     }
-  };
 
-  // SPEAK
-  document.getElementById("speak").onclick = () => {
-    if (!(lastAnalysisLeft && lastAnalysisRight)) return setStatus("Analyze both hands first!");
-    const text = buildReport(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
-    speakReport(text, lastLang);
-  };
+    if (leftHandData && rightHandData) {
+        report += "3. Comparative Insights (Past & Present/Future)\n";
+        report += "----------------------------------------------\n";
+        report += analyzeComparativeInsights(leftHandData, rightHandData) + "\n";
+    }
 
-  // LANG
-  langSel.onchange = () => { lastLang = langSel.value; };
-});
+    report += "4. Special Marks and Rare Signs\n";
+    report += "-------------------------------\n";
+    report += analyzeSpecialMarks(leftHandData, rightHandData) + "\n";
+
+    report += "5. Expert Note\n";
+    report += "-------------\n";
+    report += "This report is generated by AI using advanced palmistry and the latest global data. For the best results, keep your software up-to-date and use the 'Speak' feature for deeper clarification.\n";
+
+    return report;
+}
+
+module.exports = {
+    generateFullAIReport
+};
