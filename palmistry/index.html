@@ -3,13 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sathya Darshana Quantum Palm Analyzer V5.2</title>
+  <title>Sathya Darshana Quantum Palm Analyzer V5.3</title>
+
+  <!-- jsPDF for auto-download PDF (no popups) -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
   <style>
     :root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui,Segoe UI,Arial}
     header{padding:14px;text-align:center}
-    h1{margin:6px 0;color:var(--neon);font-size:1.4rem}
+    h1{margin:6px 0;color:#00e5ff;font-size:1.3rem}
     .wrap{max-width:1000px;margin:auto;padding:12px}
     .row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
     .card{background:var(--card);border:1px solid #123;border-radius:14px;padding:12px}
@@ -24,9 +28,9 @@
 </head>
 <body>
   <header>
-    <h1>Sathya Darshana Quantum Palm Analyzer V5.2</h1>
+    <h1 id="title">Sathya Darshana Quantum Palm Analyzer V5.3</h1>
     <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">
-      <label for="language">Language:</label>
+      <label for="language" id="lblLanguage">Language:</label>
       <select id="language">
         <option value="en">English</option>
         <option value="si">සිංහල (Sinhala)</option>
@@ -48,7 +52,7 @@
   <div class="wrap">
     <div class="row">
       <div class="card">
-        <h3>Left Hand</h3>
+        <h3 id="h3Left">Left Hand</h3>
         <div class="camBox" id="camBoxLeft">
           <canvas id="canvasLeft" width="720" height="960"></canvas>
         </div>
@@ -61,7 +65,7 @@
       </div>
 
       <div class="card">
-        <h3>Right Hand</h3>
+        <h3 id="h3Right">Right Hand</h3>
         <div class="camBox" id="camBoxRight">
           <canvas id="canvasRight" width="720" height="960"></canvas>
         </div>
