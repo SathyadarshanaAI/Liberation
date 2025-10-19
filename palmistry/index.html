@@ -44,6 +44,7 @@
             <button class="btn" id="miniReport">Mini Report</button>
             <button class="btn" id="fullReport">Full Report (PDF)</button>
             <button class="btn" id="speak">🔊 Speak</button>
+            <button class="btn" id="backHome">🏠 Back to Home</button>
             <select id="language">
                 <option value="en">English</option>
                 <option value="si">Sinhala</option>
@@ -79,6 +80,17 @@
                 layout: google.translate.TranslateElement.InlineLayout.SIMPLE
             }, 'google_translate_element');
         }
+
+        // Back to Home button functionality + Console log
+        document.addEventListener('DOMContentLoaded', function() {
+            var backHomeBtn = document.getElementById('backHome');
+            if (backHomeBtn) {
+                backHomeBtn.addEventListener('click', function() {
+                    console.log('Back to Home button clicked!');
+                    window.location.href = '/'; // Change to 'index.html' if needed
+                });
+            }
+        });
     </script>
     <!-- jsPDF CDN for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
