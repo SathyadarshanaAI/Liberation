@@ -1,130 +1,185 @@
-import { CameraCard } from './modules/camera.js';
-import { exportPalmPDF } from './modules/pdf.js';
+// app.js — Sathya Darshana Quantum Palm Analyzer V5.1
+// Import universal camera (make sure the file name matches)
+import { CameraCard } from './modules/camera.clean.js';
 
-const camBoxLeft = document.getElementById("camBoxLeft");
-const camBoxRight = document.getElementById("camBoxRight");
-const canvasLeft = document.getElementById("canvasLeft");
-const canvasRight = document.getElementById("canvasRight");
-const statusEl = document.getElementById("status");
-const insightEl = document.getElementById("insight");
-const langSel = document.getElementById("language");
+// ---------- Element Refs ----------
+const camBoxLeft   = document.getElementById('camBoxLeft');
+const camBoxRight  = document.getElementById('camBoxRight');
+const canvasLeft   = document.getElementById('canvasLeft');
+const canvasRight  = document.getElementById('canvasRight');
+const statusEl     = document.getElementById('status');
+const insightEl    = document.getElementById('insight');
+const langSelect   = document.getElementById('language');
 
+// Buttons
+const btnStartL    = document.getElementById('startCamLeft');
+const btnStartR    = document.getElementById('startCamRight');
+const btnCapL      = document.getElementById('captureLeft');
+const btnCapR      = document.getElementById('captureRight');
+const btnUpL       = document.getElementById('uploadLeft');
+const btnUpR       = document.getElementById('uploadRight');
+const btnTorchL    = document.getElementById('torchLeft');
+const btnTorchR    = document.getElementById('torchRight');
+const btnAnalyze   = document.getElementById('analyze');
+const btnMini      = document.getElementById('miniReport');
+const btnFullPDF   = document.getElementById('fullReport');
+const btnSpeak     = document.getElementById('speak');
+
+// ---------- State ----------
 let camLeft, camRight;
-let lastAnalysisLeft = null, lastAnalysisRight = null;
-let lastLang = "en";
+let leftPalmAI = null, rightPalmAI = null;
 
-function setStatus(msg) { statusEl.textContent = msg; }
+// ---------- Utils ----------
+function setStatus(msg){ if(statusEl) statusEl.textContent = msg; console.log('[STATUS]', msg); }
 
+function ensureCanvasCoverStyles(cnv){
+  Object.assign(cnv.style, {
+    position:'absolute', inset:0, width:'100%', height:'100%', borderRadius:'16px', zIndex:2
+  });
+}
+
+// ---------- App Init ----------
 window.addEventListener('DOMContentLoaded', () => {
-  camLeft = new CameraCard(camBoxLeft, { facingMode: 'environment', onStatus: setStatus });
-  camRight = new CameraCard(camBoxRight, { facingMode: 'environment', onStatus: setStatus });
+  // Camera instances
+  camLeft  = new CameraCard(camBoxLeft,  { facingMode:'environment', onStatus:setStatus });
+  camRight = new CameraCard(camBoxRight, { facingMode:'environment', onStatus:setStatus });
 
-  // Camera controls LEFT
-  document.getElementById("startCamLeft").onclick = async () => {
-    await camLeft.start();
-    setStatus("Left hand camera started.");
-  };
-  document.getElementById("captureLeft").onclick = () => {
-    camLeft.captureTo(canvasLeft);
-    setStatus("Left hand captured.");
-  };
-  document.getElementById("torchLeft").onclick = async () => {
-    await camLeft.toggleTorch();
-  };
-  document.getElementById("uploadLeft").onclick = () => fileUpload(canvasLeft);
+  // Framing & portrait
+  camLeft.setFramePad(0.90);  camLeft.setOffsetY(-0.05);  camLeft.forcePortrait  = true;
+  camRight.setFramePad(0.90); camRight.setOffsetY(-0.05); camRight.forcePortrait = true;
 
-  // Camera controls RIGHT
-  document.getElementById("startCamRight").onclick = async () => {
-    await camRight.start();
-    setStatus("Right hand camera started.");
-  };
-  document.getElementById("captureRight").onclick = () => {
-    camRight.captureTo(canvasRight);
-    setStatus("Right hand captured.");
-  };
-  document.getElementById("torchRight").onclick = async () => {
-    await camRight.toggleTorch();
-  };
-  document.getElementById("uploadRight").onclick = () => fileUpload(canvasRight);
+  // Start buttons
+  btnStartL.onclick = async ()=>{ await camLeft.start();  setStatus('Left hand camera started.'); };
+  btnStartR.onclick = async ()=>{ await camRight.start(); setStatus('Right hand camera started.'); };
 
-  // Analyze
-  document.getElementById("analyze").onclick = async () => {
-    setStatus("Analyzing palms...");
-    await animateScan(canvasLeft);
-    await animateScan(canvasRight);
-    lastAnalysisLeft = await fakeAnalyze(canvasLeft, "left");
-    lastAnalysisRight = await fakeAnalyze(canvasRight, "right");
-    showInsight(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
-    setStatus("Palm analysis complete!");
+  // Capture (Hi-Res + auto-portrait)
+  btnCapL.onclick = async ()=>{
+    await camLeft.captureHiRes(canvasLeft);
+    ensureCanvasCoverStyles(canvasLeft);
+    setStatus('Left hand captured.');
+    await autoPalmAI(canvasLeft, 'left');
   };
 
-  // Mini Report
-  document.getElementById("miniReport").onclick = () => {
-    if (lastAnalysisLeft && lastAnalysisRight) {
-      showInsight(lastAnalysisLeft, lastAnalysisRight, "mini", lastLang);
-    } else {
-      setStatus("Please capture/analyze both hands first.");
-    }
+  btnCapR.onclick = async ()=>{
+    await camRight.captureHiRes(canvasRight);
+    ensureCanvasCoverStyles(canvasRight);
+    setStatus('Right hand captured.');
+    await autoPalmAI(canvasRight, 'right');
   };
 
-  // Full Report (PDF)
-  document.getElementById("fullReport").onclick = () => {
-    if (lastAnalysisLeft && lastAnalysisRight) {
-      exportPalmPDF({
-        leftCanvas: canvasLeft,
-        rightCanvas: canvasRight,
-        leftReport: lastAnalysisLeft,
-        rightReport: lastAnalysisRight,
-        mode: "full"
-      });
-      setStatus("PDF report generated.");
-    } else {
-      setStatus("Please capture/analyze both hands first.");
-    }
+  // Uploads
+  btnUpL.onclick = ()=> fileUpload(canvasLeft, async ()=>{ ensureCanvasCoverStyles(canvasLeft); await autoPalmAI(canvasLeft,'left'); });
+  btnUpR.onclick = ()=> fileUpload(canvasRight, async ()=>{ ensureCanvasCoverStyles(canvasRight); await autoPalmAI(canvasRight,'right'); });
+
+  // Torch buttons not used (hide safely)
+  if (btnTorchL) btnTorchL.style.display = 'none';
+  if (btnTorchR) btnTorchR.style.display = 'none';
+
+  // Reports
+  btnAnalyze.onclick = ()=>{
+    if (leftPalmAI && rightPalmAI) showPalmInsight(leftPalmAI, rightPalmAI, 'full');
+    else setStatus('Please capture/upload both hands first!');
+  };
+
+  btnMini.onclick = ()=>{
+    if (leftPalmAI && rightPalmAI) showPalmInsight(leftPalmAI, rightPalmAI, 'mini');
+    else setStatus('Please capture/upload both hands first!');
+  };
+
+  btnFullPDF.onclick = async ()=>{
+    if (!(leftPalmAI && rightPalmAI)) { setStatus('Please capture/upload both hands first!'); return; }
+    await exportPDF();
   };
 
   // Speak
-  document.getElementById("speak").onclick = () => {
-    if (lastAnalysisLeft && lastAnalysisRight) {
-      const text = getReportText(lastAnalysisLeft, lastAnalysisRight, "full", lastLang);
-      speakPalmReport(text, lastLang);
-    } else {
-      setStatus("Analyze both hands first!");
-    }
-  };
-
-  // Language selector
-  langSel.onchange = () => { lastLang = langSel.value; };
+  btnSpeak.onclick = ()=> speakText(insightEl?.textContent || '');
 });
 
-// File upload handler
-function fileUpload(canvas) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.onchange = (e) => {
-    const file = e.target.files[0];
+// ---------- Palm Line AI (demo) ----------
+async function autoPalmAI(canvas, hand){
+  try{
+    setStatus('Detecting palm lines…');
+    const aiResult = await fakePalmAI(canvas, hand);
+    drawPalmLinesOnCanvas(canvas, aiResult.lines);
+    if (hand==='left') leftPalmAI = aiResult; else rightPalmAI = aiResult;
+    setStatus('Palm lines auto-drawn.');
+  }catch(e){
+    console.error(e);
+    setStatus('Palm detection failed.');
+  }
+}
+
+// Demo AI: generates sample lines + reading
+async function fakePalmAI(canvas, hand='right'){
+  const w = canvas.width || canvas.clientWidth || 600;
+  const h = canvas.height || canvas.clientHeight || 800;
+  const lines = [
+    { name:'Heart Line', color:'#e11d48', main:true,  points:[[w*0.18,h*0.25],[w*0.82,h*0.27]] },
+    { name:'Head Line',  color:'#2563eb', main:true,  points:[[w*0.25,h*0.42],[w*0.75,h*0.52]] },
+    { name:'Life Line',  color:'#16a34a', main:true,  points:[[w*0.36,h*0.78],[w*0.22,h*0.98],[w*0.48,h*0.98]] },
+    { name:'Fate Line',  color:'#7c3aed', main:false, points:[[w*0.50,h*0.20],[w*0.52,h*0.80]] },
+    { name:'Marriage',   color:'#64748b', main:false, points:[[w*0.72,h*0.18],[w*0.75,h*0.26]] }
+  ];
+  const reading = [
+    'Heart Line: Emotions, affection, compassion.',
+    'Head Line: Intellect, decision-making, creativity.',
+    'Life Line: Vitality, life changes, energy.',
+    ...(hand==='left' ? ['Previous Life Traits: subconscious patterns, inheritances.']
+                      : ['Current Life Traits: conscious choices and present path.'])
+  ];
+  return { hand, lines, reading };
+}
+
+// ---------- Drawing ----------
+function drawPalmLinesOnCanvas(canvas, palmLines){
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  // keep the already-drawn photo; draw overlay lines
+  ctx.save();
+  palmLines.forEach(line=>{
+    ctx.save();
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth   = line.main ? 5 : 2;
+    ctx.globalAlpha = line.main ? 1.0 : 0.75;
+    if (!line.main) ctx.setLineDash([6,6]);
+    ctx.beginPath();
+    line.points.forEach(([x,y],i)=> i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+    ctx.stroke();
+    ctx.restore();
+  });
+  ctx.restore();
+}
+
+// ---------- File Upload ----------
+function fileUpload(targetCanvas, callback){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e=>{
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(ev) {
+    reader.onload = ev=>{
       const img = new Image();
-      img.onload = function() {
-        // Lock canvas to 3:4 aspect ratio
-        let iw = img.width, ih = img.height;
-        const aspect = 3/4;
-        let tw = iw, th = ih;
-        if (iw/ih > aspect) {
-          tw = ih * aspect; th = ih;
-        } else {
-          tw = iw; th = iw / aspect;
-        }
-        canvas.width = tw;
-        canvas.height = th;
-        let ctx = canvas.getContext('2d');
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, tw, th);
-        ctx.drawImage(img, (iw-tw)/2, (ih-th)/2, tw, th, 0, 0, tw, th);
-        setStatus("Photo loaded.");
+      img.onload = ()=>{
+        // draw photo into canvas (contain fit into current camBox size)
+        const boxW = targetCanvas.parentElement.clientWidth  || img.width;
+        const boxH = targetCanvas.parentElement.clientHeight || img.height;
+        const dpr  = Math.min(window.devicePixelRatio||1, 2);
+        const W = Math.max(1, Math.round(boxW*dpr));
+        const H = Math.max(1, Math.round(boxH*dpr));
+        targetCanvas.width = W; targetCanvas.height = H;
+        ensureCanvasCoverStyles(targetCanvas);
+
+        const ctx = targetCanvas.getContext('2d');
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+        const s  = Math.min(W/img.width, H/img.height)*0.92; // small pad
+        const dw = Math.round(img.width*s), dh = Math.round(img.height*s);
+        const dx = Math.floor((W-dw)/2),  dy = Math.floor((H-dh)/2);
+        ctx.drawImage(img, 0,0,img.width,img.height, dx,dy,dw,dh);
+
+        setStatus('Photo loaded.');
+        callback && callback();
       };
       img.src = ev.target.result;
     };
@@ -133,95 +188,77 @@ function fileUpload(canvas) {
   input.click();
 }
 
-// Scan animation (optional, for effect)
-async function animateScan(canvas) {
-  const ctx = canvas.getContext('2d');
-  const start = performance.now(), dur = 800;
-  const frame = ctx.getImageData(0,0,canvas.width,canvas.height);
-  await new Promise(res => {
-    function loop(now) {
-      const t = Math.min(1, (now - start) / dur);
-      ctx.putImageData(frame,0,0);
-      drawScanBeam(ctx, canvas.width, canvas.height, t);
-      if (t < 1) requestAnimationFrame(loop); else res();
+// ---------- Insight / Reports ----------
+function showPalmInsight(left, right, mode='full'){
+  let txt = 'Sathya Darshana Quantum Palm Analyzer V5.1\n\n';
+  txt += 'Left Hand: Previous Life Traits\n';
+  txt += left.reading.join('\n') + '\n\n';
+  txt += 'Right Hand: Current Life Traits\n';
+  txt += right.reading.join('\n') + '\n\n';
+  if (mode==='mini') {
+    txt += 'Mini Report: Most prominent lines analyzed above.\n';
+  } else {
+    txt += 'Full Report: See above for all detected lines.\n';
+  }
+  insightEl.textContent = txt;
+}
+
+async function exportPDF(){
+  try{
+    const jsPDF = window.jspdf?.jsPDF || window.jspdf?.default?.jsPDF || window.jsPDF;
+    if (!jsPDF) { setStatus('PDF library not loaded.'); return; }
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+
+    // Title
+    doc.setFontSize(16);
+    doc.text('Sathya Darshana Quantum Palm Analyzer V5.1', 40, 40);
+
+    // Insert canvases (if present)
+    const yImg = 60, gap = 20, imgW = 240, imgH = 320;
+    if (canvasLeft.width && canvasLeft.height) {
+      const dataL = canvasLeft.toDataURL('image/jpeg', 0.9);
+      doc.text('Left Hand', 40, yImg - 8);
+      doc.addImage(dataL, 'JPEG', 40, yImg, imgW, imgH);
     }
-    requestAnimationFrame(loop);
-  });
-}
-function drawScanBeam(ctx, w, h, progress) {
-  ctx.save();
-  ctx.fillStyle = "rgba(0,0,0,0.15)";
-  ctx.fillRect(0,0,w,h);
-  const y = progress * h;
-  const g = ctx.createLinearGradient(0, y-40, 0, y+40);
-  g.addColorStop(0,"rgba(0,229,255,0)");
-  g.addColorStop(.5,"rgba(0,229,255,0.85)");
-  g.addColorStop(1,"rgba(0,229,255,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, y-40, w, 80);
-  ctx.restore();
+    if (canvasRight.width && canvasRight.height) {
+      const dataR = canvasRight.toDataURL('image/jpeg', 0.9);
+      doc.text('Right Hand', 300, yImg - 8);
+      doc.addImage(dataR, 'JPEG', 300, yImg, imgW, imgH);
+    }
+
+    // Insight text
+    const textY = yImg + imgH + gap;
+    const txt = insightEl.textContent || '';
+    doc.setFontSize(12);
+    const lines = doc.splitTextToSize(txt, 515);
+    doc.text(lines, 40, textY);
+
+    doc.save('Palmistry_Report.pdf');
+    setStatus('PDF exported.');
+  }catch(e){
+    console.error(e);
+    setStatus('PDF export failed.');
+  }
 }
 
-// Fake palm analyzer logic (replace with your real analyzer module)
-async function fakeAnalyze(canvas, hand="right") {
-  const PALM_LINES = [
-    { key: "heart", name: "Heart Line", insight: "Emotions, affection, compassion." },
-    { key: "head", name: "Head Line", insight: "Intellect, decision-making, creativity." },
-    { key: "life", name: "Life Line", insight: "Vitality, life changes, energy." },
-    { key: "fate", name: "Fate Line", insight: "Career, destiny, direction." },
-    { key: "success", name: "Success Line", insight: "Talent, fame, creativity." },
-    { key: "health", name: "Health Line", insight: "Health, business sense, communication." },
-    { key: "marriage", name: "Marriage Line", insight: "Relationships, partnership." },
-    { key: "manikhanda", name: "Manikhanda (Wrist)", insight: "Fortune, stability, longevity." }
-  ];
-  const lines = PALM_LINES.map(l => ({
-    ...l,
-    confidence: Math.random()*0.4+0.6,
-    details: hand==="left" ? "Reflects inherited traits, subconscious, or previous life influences." : "Shows present-life actions, choices, and conscious personality."
-  }));
-  return {
-    hand,
-    summary: hand==="left"
-      ? "Previous Life Traits: Reveals subconscious patterns and inherited qualities from past lives."
-      : "Current Life Traits: Reflects conscious choices, present achievements, and how you shape your destiny.",
-    lines,
-    tips: "Palmistry is interpreted differently in various cultures."
+// ---------- Speech ----------
+function speakText(text){
+  if (!text) { setStatus('Nothing to speak.'); return; }
+  if (!('speechSynthesis' in window)) { setStatus('Speech not supported on this browser.'); return; }
+  // Map language select → BCP-47 lang tag
+  const langMap = {
+    'en':'en-US','si':'si-LK','ta':'ta-IN','fr':'fr-FR','de':'de-DE','es':'es-ES',
+    'zh-cn':'zh-CN','hi':'hi-IN','ar':'ar-SA','ja':'ja-JP','ru':'ru-RU','pt':'pt-PT',
+    'ko':'ko-KR','it':'it-IT','tr':'tr-TR','id':'id-ID','nl':'nl-NL','sv':'sv-SE'
   };
+  const code = langMap[(langSelect && langSelect.value) || 'en'] || 'en-US';
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = code;
+  u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+  speechSynthesis.speak(u);
+  setStatus('Speaking…');
 }
 
-// Insight/report display
-function showInsight(left, right, mode="full", lang="en") {
-  insightEl.textContent = getReportText(left, right, mode, lang);
-}
-
-// Report text generator (expand with multi-language if needed)
-function getReportText(left, right, mode, lang) {
-  let out = `Sathya Darshana Palm Analyzer V5.1\n\nemail: sathyadarshana2025@gmail.com\nphone: +94757500000\nSri Lanka\n\n`;
-  out += `Left Hand: ${left.hand === "left" ? "Previous Life Traits" : ""}\n${left.summary}\n\n`;
-  out += `Right Hand: ${right.hand === "right" ? "Current Life Traits" : ""}\n${right.summary}\n\n`;
-  if (mode === "full") {
-    out += "------ Left Hand Detailed ------\n";
-    left.lines.forEach(l => { out += `• ${l.name}: ${l.insight} (${(l.confidence*100).toFixed(1)}%)\n`; });
-    out += "\n------ Right Hand Detailed ------\n";
-    right.lines.forEach(l => { out += `• ${l.name}: ${l.insight} (${(l.confidence*100).toFixed(1)}%)\n`; });
-  } else {
-    out += "Mini Report (Most prominent lines):\n";
-    const topLeft = left.lines.reduce((max, l) => l.confidence > max.confidence ? l : max, left.lines[0]);
-    const topRight = right.lines.reduce((max, l) => l.confidence > max.confidence ? l : max, right.lines[0]);
-    out += `Left: ${topLeft.name} (${(topLeft.confidence*100).toFixed(1)}%) - ${topLeft.insight}\n`;
-    out += `Right: ${topRight.name} (${(topRight.confidence*100).toFixed(1)}%) - ${topRight.insight}\n`;
-  }
-  out += "\nPalmistry interpreted differently in various cultures.\n";
-  return out;
-}
-
-// Speech Synthesis (AI speech-friendly)
-function speakPalmReport(text, lang="en") {
-  if ('speechSynthesis' in window) {
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = lang;
-    window.speechSynthesis.speak(msg);
-  } else {
-    alert("Speech synthesis not supported on this device.");
-  }
-}
+// ---------- Optional: simple mobile F12 hook (if you use your logger) ----------
+try{ console.log('✅ app.js ready'); }catch{}
