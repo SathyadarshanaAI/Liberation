@@ -3,7 +3,7 @@ import { exportPalmPDF } from './modules/pdf.js';
 
 const el = (id)=>document.getElementById(id);
 
-// DOM
+// ── DOM refs ─────────────────────────────────────────────────────────
 const canvasLeft  = el("canvasLeft");
 const canvasRight = el("canvasRight");
 const statusEl    = el("status");
@@ -14,12 +14,12 @@ const h3Right     = el("h3Right");
 const titleEl     = el("title");
 const lblLang     = el("lblLanguage");
 
-// State
+// ── State ─────────────────────────────────────────────────────────────
 let camLeft, camRight;
 let lastAnalysisLeft = null, lastAnalysisRight = null;
 let lastLang = "en";
 
-// ===== 12-language I18N (UI + report strings) =====
+// ── I18N (12 languages) ──────────────────────────────────────────────
 const SUPPORTED_LANGS = ['en','si','ta','hi','bn','ar','es','fr','de','ru','ja','zh-CN'];
 const TTS_LANG_MAP = {
   'en':'en-US','si':'si-LK','ta':'ta-IN','hi':'hi-IN','bn':'bn-IN','ar':'ar-SA',
@@ -34,13 +34,13 @@ const UI_I18N = {
       lines:{Heart:'Heart',Head:'Head',Life:'Life',Fate:'Fate',Health:'Health',Marriage:'Marriage'},
       reportTitle:'Palm Report', leftHdr:'Left', rightHdr:'Right', details:'Details'},
   si:{title:'සත්‍ය දර්ශන පෑම් විශ්ලේෂකය V5.3', lang:'භාෂාව:', left:'වම් අත', right:'දකුණු අත',
-      start:'ආරම්භ', cap:'සටහන්', torch:'ටෝච්', upload:'ඡායාරූපය',
-      analyze:'විශ්ලේෂණය', mini:'ක්ෂුද්‍ර වාර්තාව', full:'සම්පූර්ණ PDF', speak:'කියවන්න', ready:'සಿದ್ಧ.',
-      inherited:'පැරෙන ලක්ෂණ', present:'වත්මන් ක්‍රියා', 
-      lines:{Heart:'හෘද',Head:'ශිරස්',Life:'ජීවිත',Fate:'නියත',Health:'සෞඛ්‍ය',Marriage:'ව්වාහ'},
-      reportTitle:'පෑම් වාර්තාව', leftHdr:'වම්', rightHdr:'දකුණු', details:'විස්තර'},
+      start:'ආරම්භ', cap:'ග්‍රහණය', torch:'ටෝර්ච්', upload:'ඡායාරූපය',
+      analyze:'විශ්ලේෂණය', mini:'ක්ෂුද්‍ර වාර්තාව', full:'සම්පූර්ණ PDF', speak:'කියවන්න', ready:'සූදානම්.',
+      inherited:'පාරම්පරාවෙන් ලැබුණු ප්‍රවණතා', present:'වත්මන් ක්‍රියාකාරකම්',
+      lines:{Heart:'හෘද',Head:'ශිරස්',Life:'ජීවිත',Fate:'නියත',Health:'සෞඛ්‍ය',Marriage:'විවාහ'},
+      reportTitle:'අත විශ්ලේෂණ වාර්තාව', leftHdr:'වම්', rightHdr:'දකුණු', details:'විස්තර'},
   ta:{title:'சத்தியதர்ஷன கைரேகை பகுப்பாய்வு V5.3', lang:'மொழி:', left:'இடக் கை', right:'வலக் கை',
-      start:'தொடங்கு', cap:'படம்பிடி', torch:'டார்ச்', upload:'பதிவேற்று',
+      start:'தொடங்கு', cap:'பிடி', torch:'டார்ச்', upload:'பதிவேற்று',
       analyze:'பகுப்பு', mini:'சிறு அறிக்கை', full:'முழு PDF', speak:'பேசு', ready:'தயார்.',
       inherited:'பாரம்பரிய குணங்கள்', present:'தற்போதைய செயற்பாடுகள்',
       lines:{Heart:'இதயம்',Head:'தலை',Life:'வாழ்க்கை',Fate:'விதி',Health:'ஆரோக்கியம்',Marriage:'திருமணம்'},
@@ -106,29 +106,35 @@ function t(path) {
   return path.split('.').reduce((o,k)=>o&&o[k], dict) ?? path;
 }
 
+// apply UI + RTL if needed
 function applyUI() {
+  document.documentElement.lang = lastLang;
+  document.body.dir = (lastLang === 'ar') ? 'rtl' : 'ltr';
+
   titleEl.textContent = t('title');
   lblLang.textContent = t('lang');
   h3Left.textContent = t('left');
   h3Right.textContent = t('right');
+
   el('startCamLeft').textContent  = t('start');
   el('captureLeft').textContent   = t('cap');
   el('torchLeft').textContent     = t('torch');
   el('uploadLeft').textContent    = t('upload');
+
   el('startCamRight').textContent = t('start');
   el('captureRight').textContent  = t('cap');
   el('torchRight').textContent    = t('torch');
   el('uploadRight').textContent   = t('upload');
+
   el('analyze').textContent       = t('analyze');
   el('miniReport').textContent    = t('mini');
   el('fullReport').textContent    = t('full');
   el('speak').textContent         = t('speak');
   statusEl.textContent            = t('ready');
 }
+const setStatus = (msg)=> statusEl.textContent = msg;
 
-function setStatus(msg){ statusEl.textContent = msg; }
-
-// ==== Init ====
+// ── Init ─────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   applyUI();
 
@@ -162,7 +168,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (lastAnalysisLeft && lastAnalysisRight) showInsight(lastAnalysisLeft, lastAnalysisRight, "mini");
   };
 
-  // PDF (auto download)
+  // PDF (auto download via modules/pdf.js)
   el("fullReport").onclick = ()=>{
     if (!(lastAnalysisLeft && lastAnalysisRight)) return setStatus('…');
     const text = getReportText(lastAnalysisLeft, lastAnalysisRight, "full");
@@ -175,23 +181,26 @@ window.addEventListener('DOMContentLoaded', () => {
     setStatus('PDF ✓');
   };
 
-  // Speak
+  // Speak — wait for voices if needed
   el("speak").onclick = ()=>{
     if (!(lastAnalysisLeft && lastAnalysisRight)) return;
     const text = getReportText(lastAnalysisLeft, lastAnalysisRight, "full");
-    speakPalmReport(text);
+    if (speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = ()=> speakPalmReport(text);
+    } else {
+      speakPalmReport(text);
+    }
   };
 
-  // Language
+  // Language change
   langSel.onchange = ()=>{
     lastLang = SUPPORTED_LANGS.includes(langSel.value) ? langSel.value : 'en';
     applyUI();
-    // Re-render report box in new language (if data exists)
     if (lastAnalysisLeft && lastAnalysisRight) showInsight(lastAnalysisLeft, lastAnalysisRight, "full");
   };
 });
 
-// ==== Helpers ====
+// ── Helpers ──────────────────────────────────────────────────────────
 function fileUpload(canvas){
   const input=document.createElement("input");
   input.type="file"; input.accept="image/*";
@@ -237,14 +246,18 @@ async function animateScan(canvas){
   });
 }
 
-// Fake analyzer — plug your real one later
+// Fake analyzer — plug the real one when ready
 async function fakeAnalyze(canvas, hand){
   const L = UI_I18N[lastLang].lines;
   const names = [L.Heart, L.Head, L.Life, L.Fate, L.Health, L.Marriage];
   return {
     hand,
     summary: hand==="left" ? t('inherited') : t('present'),
-    lines: names.map(n=>({ name:n, confidence: Math.random()*0.4+0.6, insight: `${n} — ${t('details')}` }))
+    lines: names.map(n=>({
+      name:n,
+      confidence: Math.random()*0.4+0.6,
+      insight: `${n} — ${t('details')}`
+    }))
   };
 }
 
