@@ -1,5 +1,4 @@
-// >>> CHANGED: use the new universal camera
-import { CameraCard } from './modules/camera.clean.js';
+import { CameraCard } from './modules/camera.js';
 import { exportPalmPDF } from './modules/pdf.js';
 
 const camBoxLeft = document.getElementById("camBoxLeft");
@@ -16,37 +15,22 @@ let lastLang = "en";
 
 function setStatus(msg) { statusEl.textContent = msg; }
 
-// helper: keep canvas filling the cam box
-function coverCanvas(cnv){
-  Object.assign(cnv.style, {
-    position:'absolute', inset:0, width:'100%', height:'100%',
-    borderRadius:'16px', zIndex:2
-  });
-}
-
 window.addEventListener('DOMContentLoaded', () => {
-  camLeft = new CameraCard(camBoxLeft,  { facingMode: 'environment', onStatus: setStatus });
+  camLeft = new CameraCard(camBoxLeft, { facingMode: 'environment', onStatus: setStatus });
   camRight = new CameraCard(camBoxRight, { facingMode: 'environment', onStatus: setStatus });
-
-  // >>> ADDED: safer framing + ensure portrait for hi-res stills
-  camLeft.setFramePad(0.90);  camLeft.setOffsetY(-0.05);  camLeft.forcePortrait  = true;
-  camRight.setFramePad(0.90); camRight.setOffsetY(-0.05); camRight.forcePortrait = true;
 
   // Camera controls LEFT
   document.getElementById("startCamLeft").onclick = async () => {
     await camLeft.start();
     setStatus("Left hand camera started.");
   };
-  // >>> CHANGED: hi-res capture (ImageCapture) with auto-portrait; was captureTo(...)
-  document.getElementById("captureLeft").onclick = async () => {
-    await camLeft.captureHiRes(canvasLeft);
-    coverCanvas(canvasLeft);
+  document.getElementById("captureLeft").onclick = () => {
+    camLeft.captureTo(canvasLeft);
     setStatus("Left hand captured.");
   };
-  // >>> REMOVED torch (not supported in camera.clean.js). Hide button instead:
-  const torchL = document.getElementById("torchLeft");
-  if (torchL) torchL.style.display = "none";
-
+  document.getElementById("torchLeft").onclick = async () => {
+    await camLeft.toggleTorch();
+  };
   document.getElementById("uploadLeft").onclick = () => fileUpload(canvasLeft);
 
   // Camera controls RIGHT
@@ -54,16 +38,13 @@ window.addEventListener('DOMContentLoaded', () => {
     await camRight.start();
     setStatus("Right hand camera started.");
   };
-  // >>> CHANGED: hi-res capture (ImageCapture) with auto-portrait; was captureTo(...)
-  document.getElementById("captureRight").onclick = async () => {
-    await camRight.captureHiRes(canvasRight);
-    coverCanvas(canvasRight);
+  document.getElementById("captureRight").onclick = () => {
+    camRight.captureTo(canvasRight);
     setStatus("Right hand captured.");
   };
-  // >>> REMOVED torch + hide
-  const torchR = document.getElementById("torchRight");
-  if (torchR) torchR.style.display = "none";
-
+  document.getElementById("torchRight").onclick = async () => {
+    await camRight.toggleTorch();
+  };
   document.getElementById("uploadRight").onclick = () => fileUpload(canvasRight);
 
   // Analyze
@@ -116,7 +97,7 @@ window.addEventListener('DOMContentLoaded', () => {
   langSel.onchange = () => { lastLang = langSel.value; };
 });
 
-// File upload handler (unchanged)
+// File upload handler
 function fileUpload(canvas) {
   const input = document.createElement("input");
   input.type = "file";
@@ -143,7 +124,6 @@ function fileUpload(canvas) {
         ctx.fillStyle = "#fff";
         ctx.fillRect(0, 0, tw, th);
         ctx.drawImage(img, (iw-tw)/2, (ih-th)/2, tw, th, 0, 0, tw, th);
-        coverCanvas(canvas);
         setStatus("Photo loaded.");
       };
       img.src = ev.target.result;
@@ -153,7 +133,7 @@ function fileUpload(canvas) {
   input.click();
 }
 
-// Scan animation (unchanged)
+// Scan animation (optional, for effect)
 async function animateScan(canvas) {
   const ctx = canvas.getContext('2d');
   const start = performance.now(), dur = 800;
@@ -182,7 +162,7 @@ function drawScanBeam(ctx, w, h, progress) {
   ctx.restore();
 }
 
-// Fake palm analyzer (unchanged)
+// Fake palm analyzer logic (replace with your real analyzer module)
 async function fakeAnalyze(canvas, hand="right") {
   const PALM_LINES = [
     { key: "heart", name: "Heart Line", insight: "Emotions, affection, compassion." },
@@ -209,10 +189,12 @@ async function fakeAnalyze(canvas, hand="right") {
   };
 }
 
-// Insight/report (unchanged)
+// Insight/report display
 function showInsight(left, right, mode="full", lang="en") {
   insightEl.textContent = getReportText(left, right, mode, lang);
 }
+
+// Report text generator (expand with multi-language if needed)
 function getReportText(left, right, mode, lang) {
   let out = `Sathya Darshana Palm Analyzer V5.1\n\nemail: sathyadarshana2025@gmail.com\nphone: +94757500000\nSri Lanka\n\n`;
   out += `Left Hand: ${left.hand === "left" ? "Previous Life Traits" : ""}\n${left.summary}\n\n`;
@@ -233,7 +215,7 @@ function getReportText(left, right, mode, lang) {
   return out;
 }
 
-// Speech (unchanged)
+// Speech Synthesis (AI speech-friendly)
 function speakPalmReport(text, lang="en") {
   if ('speechSynthesis' in window) {
     const msg = new SpeechSynthesisUtterance(text);
