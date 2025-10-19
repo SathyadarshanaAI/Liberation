@@ -1,208 +1,155 @@
 // modules/camara.js
-// Ultra-robust mobile camera helper (environment camera, fallbacks, tap-to-start)
+// CameraCard — start() එකෙන් stream ගත්තම track capabilities බලලා width/height = max apply කරයි.
+// captureTo() එකෙන් VIDEO හි native max frame size එකටම capture කරයි.
 
 export class CameraCard {
-  /**
-   * @param {HTMLElement} container
-   * @param {{facingMode?: 'environment'|'user', onStatus?: (msg:string)=>void}} opts
-   */
-  constructor(container, opts = {}) {
-    this.container  = container;
-    this.onStatus   = opts.onStatus || (()=>{});
-    this.facingMode = opts.facingMode || 'environment';
-    this.stream     = null;
-    this.track      = null;
-    this.video      = document.createElement('video');
+  constructor(host, opts = {}) {
+    this.host = host;
+    this.opts = {
+      facingMode: opts.facingMode || "environment",
+      onStatus: opts.onStatus || (() => {})
+    };
 
-    // style & attrs for mobile autoplay
-    this.video.setAttribute('playsinline', '');
-    this.video.setAttribute('muted', 'true');
-    this.video.muted = true;
-    this.video.autoplay = true;
-    this.video.style.width = '100%';
-    this.video.style.height = '100%';
-    this.video.style.objectFit = 'cover';
-    this.video.style.display = 'block';
-    this.video.style.background = '#000';
-
-    // ensure container is visible (height!)
-    this.container.style.position ||= 'relative';
-    if (!this.container.style.minHeight) this.container.style.minHeight = '320px';
-    if (!this.container.querySelector('video')) this.container.appendChild(this.video);
-
-    // tap-to-start overlay (for autoplay blocks)
-    this.overlay = document.createElement('button');
-    this.overlay.textContent = '▶ Tap to Start Camera';
-    Object.assign(this.overlay.style, {
-      position:'absolute', inset:'0', margin:'auto', width:'70%', height:'48px',
-      maxWidth:'420px', borderRadius:'10px', border:'1px solid #22d3ee',
-      background:'#0b0f16', color:'#e2e8f0', fontSize:'16px', display:'none', zIndex:'5'
-    });
-    this.container.appendChild(this.overlay);
-    this.overlay.addEventListener('click', async () => {
-      try { await this.video.play(); this.overlay.style.display = 'none'; this._status('🎥 Camera playing'); }
-      catch (e) { this._status('Tap failed, try again'); this._log('camera','tap play failed', e?.name); }
+    // live preview <video>
+    this.video = document.createElement("video");
+    Object.assign(this.video, { autoplay: true, playsInline: true, muted: true });
+    this.video.setAttribute("playsinline", "");
+    Object.assign(this.video.style, {
+      position: "absolute", inset: 0, width: "100%", height: "100%",
+      objectFit: "cover", borderRadius: "16px", zIndex: 1, background: "#000"
     });
 
-    this.torchOn = false;
+    if (getComputedStyle(this.host).position === "static") this.host.style.position = "relative";
+    this.host.prepend(this.video);
+
+    this.stream = null;
+    this.track  = null;
+    this.torch  = false;
   }
 
-  _log(tag, ...args) { try { (console.tag ? console.tag(tag, ...args) : console.log(`[${tag}]`, ...args)); } catch {} }
-  _status(msg){ try { this.onStatus(msg); } catch {} }
-
-  async _enumerateVideoId(preferBack=true) {
-    try {
-      const devs   = await navigator.mediaDevices.enumerateDevices();
-      const videos = devs.filter(d => d.kind === 'videoinput');
-      if (videos.length === 0) return null;
-      if (!preferBack) return videos[0].deviceId;
-      const back = videos.find(v => /back|rear|environment/i.test(v.label));
-      return (back?.deviceId) || videos[0].deviceId;
-    } catch (e) {
-      this._log('camera','enumerateDevices error', e?.name || e);
-      return null;
-    }
-  }
-
-  async _tryGet(constraints, label) {
-    try {
-      this._log('camera','getUserMedia try', label, constraints);
-      const s = await navigator.mediaDevices.getUserMedia(constraints);
-      this._log('camera','getUserMedia OK', label);
-      return s;
-    } catch (e) {
-      this._log('camera','getUserMedia FAIL', label, e?.name || e);
-      throw e;
-    }
-  }
+  _status(msg){ try{ this.opts.onStatus(String(msg)); }catch{} }
+  _log(...a){ try{ (console.tag ? console.tag('camera', ...a) : console.log('[camera]', ...a)); }catch{} }
 
   async start() {
-    // stop previous
-    await this.stop();
+    // stop old
+    this.stop();
 
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-      this._status('Camera requires HTTPS (use Netlify/GitHub Pages).');
-      this._log('camera','blocked: not https');
-      throw new Error('HTTPS required');
-    }
+    // initial request (get permission + any camera)
+    const baseConstraints = {
+      video: {
+        facingMode: { ideal: this.opts.facingMode },
+        // give a hint, but we will push to max after stream
+        width:  { ideal: 1920 },
+        height: { ideal: 1080 }
+      },
+      audio: false
+    };
 
-    this._status('Requesting camera…');
-
-    // 1) facingMode=environment
-    let stream = null;
     try {
-      stream = await this._tryGet({
-        video: {
-          facingMode: this.facingMode, width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:30}
-        },
-        audio:false
-      }, 'facingMode');
+      this._status("Requesting camera…");
+      this.stream = await navigator.mediaDevices.getUserMedia(baseConstraints);
     } catch (e1) {
-      // 2) fallback by deviceId (prefer back)
-      try {
-        const id = await this._enumerateVideoId(true);
-        if (!id) throw e1;
-        stream = await this._tryGet({ video:{ deviceId:{ exact:id } }, audio:false }, 'deviceId(back)');
-      } catch (e2) {
-        // 3) last resort: any camera
-        stream = await this._tryGet({ video:true, audio:false }, 'video:any');
-      }
+      // fallback: very permissive
+      this._log('getUserMedia fail (base)', e1?.name || e1);
+      this.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
     }
 
-    this.stream = stream;
-    this.video.srcObject = stream;
-    this.track = stream.getVideoTracks()[0] || null;
+    this.video.hidden = false;
+    this.video.srcObject = this.stream;
+    this.track = this.stream.getVideoTracks()[0] || null;
 
-    // Wait until metadata/size is ready, then attempt play
-    await new Promise(res => {
-      let done = false;
-      const finish = ()=>{ if (!done){ done=true; res(); } };
-      const t = setTimeout(finish, 1500);
-      this.video.onloadedmetadata = ()=>{ clearTimeout(t); finish(); };
-    });
-
+    // Try to push track to its MAX resolution
     try {
-      await this.video.play();
-      this.overlay.style.display = 'none';
-    } catch (e) {
-      // Autoplay blocked → show overlay
-      this.overlay.style.display = 'block';
-      this._log('camera','video.play blocked', e?.name || e);
-    }
-
-    // If still no frames, wait a bit longer
-    await new Promise(r => setTimeout(r, 300));
-    const hasFrame = this.video.videoWidth > 0 && this.video.videoHeight > 0;
-
-    if (!hasFrame) {
-      this._status('Camera attached, waiting for frames…');
-      // One more wait round
-      await new Promise(r => setTimeout(r, 800));
-    }
-
-    this._status('🎥 Camera ready');
-    this._log('camera','ready', {
-      width:  this.video.videoWidth,
-      height: this.video.videoHeight,
-      label:  this.track?.label || 'n/a'
-    });
-
-    // If page returns to foreground, try to keep playing
-    document.addEventListener('visibilitychange', async ()=>{
-      if (document.visibilityState === 'visible' && this.video.paused) {
-        try { await this.video.play(); this.overlay.style.display='none'; } catch {}
+      const caps = this.track?.getCapabilities?.() || {};
+      const desired = {};
+      if (caps.width && caps.height) {
+        desired.width  = caps.width.max;
+        desired.height = caps.height.max;
       }
-    }, { passive:true });
+      // keep frameRate sane for mobile heat/battery
+      if (caps.frameRate) desired.frameRate = Math.min(30, caps.frameRate.max || 30);
+
+      if (Object.keys(desired).length) {
+        this._log('applyConstraints → max', desired);
+        // First try simple
+        await this.track.applyConstraints(desired).catch(async () => {
+          // Some browsers prefer advanced[]
+          await this.track.applyConstraints({ advanced: [desired] });
+        });
+      }
+    } catch (e2) {
+      this._log('applyConstraints(max) failed', e2?.name || e2);
+      // continue with current settings
+    }
+
+    // play video
+    await this.video.play().catch(()=>{});
+    // Wait a moment to ensure settings updated
+    await new Promise(r => setTimeout(r, 200));
+
+    const st = this.track?.getSettings?.() || {};
+    this._log('settings', st);
+    this._status(`Camera active ${st.width || this.video.videoWidth}×${st.height || this.video.videoHeight}`);
 
     return true;
   }
 
-  async stop() {
+  stop() {
     if (this.stream) {
       this.stream.getTracks().forEach(t => t.stop());
-      this.stream = null;
-      this.track  = null;
-      this._log('camera','stopped');
+      this.stream = null; this.track = null;
     }
-  }
-
-  captureTo(targetCanvas) {
-    if (!this.video || !this.video.videoWidth) {
-      this._status('Camera not ready for capture.');
-      this._log('capture','blocked: no frame');
-      return;
-    }
-    const aspect = 3/4;
-    const vw = this.video.videoWidth, vh = this.video.videoHeight;
-    let sw = vw, sh = vh;
-    if (vw / vh > aspect) { sh = vh; sw = Math.round(vh * aspect); }
-    else { sw = vw; sh = Math.round(vw / aspect); }
-    const sx = Math.floor((vw - sw)/2), sy = Math.floor((vh - sh)/2);
-
-    targetCanvas.width = sw; targetCanvas.height = sh;
-    const ctx = targetCanvas.getContext('2d');
-    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,sw,sh);
-    ctx.drawImage(this.video, sx, sy, sw, sh, 0, 0, sw, sh);
-
-    this._log('capture','frame', { sw, sh, sx, sy });
+    this.video.srcObject = null;
   }
 
   async toggleTorch() {
-    if (!this.track) { this._status('Torch: camera not started'); return; }
-    const caps = this.track.getCapabilities?.();
-    if (!caps || !('torch' in caps)) {
-      this._status('Torch not supported on this device');
-      this._log('torch','unsupported');
-      return;
-    }
     try {
-      this.torchOn = !this.torchOn;
-      await this.track.applyConstraints({ advanced: [{ torch: this.torchOn }] });
-      this._status(this.torchOn ? '🔦 Torch ON' : '💡 Torch OFF');
-      this._log('torch','state', this.torchOn);
+      if (!this.track) { this._status("Torch: camera not active"); return false; }
+      const caps = this.track.getCapabilities?.() || {};
+      if (!('torch' in caps)) { this._status("Torch not supported on this device/browser"); return false; }
+      this.torch = !this.torch;
+      await this.track.applyConstraints({ advanced: [{ torch: this.torch }] });
+      this._status(this.torch ? "🔦 Torch ON" : "💡 Torch OFF");
+      return this.torch;
     } catch (e) {
-      this._status('Torch toggle failed');
-      this._log('torch','applyConstraints fail', e?.name || e);
+      this._status("Torch control failed");
+      this._log('torch fail', e?.name || e);
+      return false;
     }
+  }
+
+  // Capture at NATIVE (max) resolution of the current video frame
+  captureTo(targetCanvas) {
+    const vw = this.video.videoWidth;
+    const vh = this.video.videoHeight;
+    if (!vw || !vh) { this._status("No video frame yet"); return false; }
+
+    // Prefer track settings (after max-constraints) if available
+    const st = this.track?.getSettings?.() || {};
+    const W = st.width  || vw;
+    const H = st.height || vh;
+
+    // Canvas pixels = native frame size (max)
+    targetCanvas.width  = W;
+    targetCanvas.height = H;
+
+    // Canvas CSS still fit the box nicely
+    Object.assign(targetCanvas.style, {
+      position: "absolute", inset: 0, width: "100%", height: "100%",
+      borderRadius: "16px", zIndex: 2
+    });
+
+    const ctx = targetCanvas.getContext("2d");
+    // Draw the raw frame 1:1 (no crop/scale)
+    ctx.drawImage(this.video, 0, 0, W, H);
+
+    // Freeze preview for UX (optional)
+    this.stop();
+    this.video.hidden = true;
+    this.host.style.backgroundImage = "none";
+
+    this._status(`Frame captured (${W}×${H})`);
+    this._log('capture', { W, H });
+    return true;
   }
 }
