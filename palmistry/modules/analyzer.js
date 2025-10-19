@@ -1,100 +1,80 @@
-    // modules/analyzer.js
-
-// Placeholder: Import your deep AI/model functions as needed
-// import { analyzeLines, compareWithGlobalDB } from './model-logic.js';
-
-function analyzePastLives(leftHandData) {
-    // --- AI logic for left hand (Past Lives) ---
-    const karma = leftHandData ? leftHandData.karma || "Detected karmic trends from palm lines." : "No data.";
-    const spirit = leftHandData ? leftHandData.spiritual || "Spiritual tendencies observed." : "No data.";
-    const talents = leftHandData ? leftHandData.talents || "Inherited talents/weaknesses detected." : "No data.";
-    const events = leftHandData ? leftHandData.events || "Major past life events inferred." : "No data.";
-
-    // Compare with global DB if available
-    const global = leftHandData && leftHandData.globalCompare ? leftHandData.globalCompare : "Compared with global palmistry data.";
-
-    return [
-        `**Karmic Patterns:**\n${karma}`,
-        `**Spiritual Tendencies:**\n${spirit}`,
-        `**Inherited Talents & Challenges:**\n${talents}`,
-        `**Significant Past Life Events:**\n${events}`,
-        `**Comparison with Global Data:**\n${global}`
-    ].join('\n\n');
-}
-
-function analyzeCurrentLife(rightHandData) {
-    // --- AI logic for right hand (Current/Future) ---
-    const personality = rightHandData ? rightHandData.personality || "Current personality analyzed." : "No data.";
-    const health = rightHandData ? rightHandData.health || "Health indicators detected." : "No data.";
-    const career = rightHandData ? rightHandData.career || "Career trends analyzed." : "No data.";
-    const relationships = rightHandData ? rightHandData.relationships || "Relationship lines interpreted." : "No data.";
-    const future = rightHandData ? rightHandData.future || "Future predictions from palm lines." : "No data.";
-
-    // Compare with global DB if available
-    const global = rightHandData && rightHandData.globalCompare ? rightHandData.globalCompare : "Compared with global palmistry data.";
-
-    return [
-        `**Personality & Current Path:**\n${personality}`,
-        `**Health Indicators:**\n${health}`,
-        `**Career & Success:**\n${career}`,
-        `**Relationships:**\n${relationships}`,
-        `**Future Trends:**\n${future}`,
-        `**Comparison with Global Data:**\n${global}`
-    ].join('\n\n');
-}
-
-function analyzeSpecialMarks(leftHandData, rightHandData) {
-    // --- Detect rare marks in both hands ---
-    const leftMarks = leftHandData && leftHandData.specialMarks ? leftHandData.specialMarks : "No special marks detected on left hand.";
-    const rightMarks = rightHandData && rightHandData.specialMarks ? rightHandData.specialMarks : "No special marks detected on right hand.";
-    return [
-        `**Left Hand Special Marks:**\n${leftMarks}`,
-        `**Right Hand Special Marks:**\n${rightMarks}`
-    ].join('\n\n');
-}
-
-function analyzeComparativeInsights(leftHandData, rightHandData) {
-    // --- Compare how past (left) influences present/future (right) ---
-    if (leftHandData && rightHandData) {
-        return leftHandData.comparative || "Your past life lessons (left hand) are influencing your current experiences (right hand) in meaningful ways.";
-    }
-    return "Comparative insights available when both hands are analyzed.";
-}
+// modules/analyzer.js
 
 /**
- * Main export: Generate full AI palmistry report
- * @param {object|null} leftHandData  - Analyzed features from left hand (or null)
- * @param {object|null} rightHandData - Analyzed features from right hand (or null)
- * @returns {string} - Full formatted palmistry report (English)
+ * Generate a Full AI Palmistry Report (returns Markdown/HTML string)
+ * @param {object|null} leftHandData
+ * @param {object|null} rightHandData
+ * @param {string} [language='en']
+ * @param {string} [version='5.1']
+ * @returns {string}
  */
-export function generateFullAIReport(leftHandData, rightHandData) {
-    let report = "Sathya Darshana Quantum Palm Analyzer V5.1\nFull AI Palmistry Report\n\n";
+export function generateFullAIReport(leftHandData, rightHandData, language = 'en', version = '5.1') {
+    const notProvided = '<span style="color:#888;">Not Provided</span>';
 
+    function section(title, body) {
+        return `<h2>${title}</h2>\n${body}\n`;
+    }
+
+    function block(title, value) {
+        return `<b>${title}</b><br>${value || notProvided}<br>`;
+    }
+
+    // 1. Left Hand (Past Lives)
+    let leftSection = '';
     if (leftHandData) {
-        report += "1. LEFT HAND – Past Lives Analysis\n";
-        report += "----------------------------------\n";
-        report += analyzePastLives(leftHandData) + "\n\n";
+        leftSection += block("Karmic Patterns", leftHandData.karma);
+        leftSection += block("Spiritual Tendencies", leftHandData.spiritual);
+        leftSection += block("Inherited Talents & Challenges", leftHandData.talents);
+        leftSection += block("Significant Past Life Events", leftHandData.events);
+        leftSection += block("Comparison with Global Data", leftHandData.globalCompare);
+    } else {
+        leftSection = notProvided;
     }
 
+    // 2. Right Hand (Current & Future)
+    let rightSection = '';
     if (rightHandData) {
-        report += "2. RIGHT HAND – Current Life & Future Predictions\n";
-        report += "------------------------------------------------\n";
-        report += analyzeCurrentLife(rightHandData) + "\n\n";
+        rightSection += block("Personality & Current Path", rightHandData.personality);
+        rightSection += block("Health Indicators", rightHandData.health);
+        rightSection += block("Career & Success", rightHandData.career);
+        rightSection += block("Relationships", rightHandData.relationships);
+        rightSection += block("Future Trends", rightHandData.future);
+        rightSection += block("Comparison with Global Data", rightHandData.globalCompare);
+    } else {
+        rightSection = notProvided;
     }
 
+    // 3. Comparative Insights
+    let compareSection = '';
     if (leftHandData && rightHandData) {
-        report += "3. Comparative Insights (Past & Present/Future)\n";
-        report += "----------------------------------------------\n";
-        report += analyzeComparativeInsights(leftHandData, rightHandData) + "\n\n";
+        compareSection = block("Past & Present/Future Balance", leftHandData.comparative || "Your past life patterns are influencing your current and future experiences.");
+    } else {
+        compareSection = notProvided;
     }
 
-    report += "4. Special Marks and Rare Signs\n";
-    report += "-------------------------------\n";
-    report += analyzeSpecialMarks(leftHandData, rightHandData) + "\n\n";
+    // 4. Special Marks
+    let marksSection = '';
+    marksSection += block("Left Hand Special Marks", leftHandData?.specialMarks);
+    marksSection += block("Right Hand Special Marks", rightHandData?.specialMarks);
 
-    report += "5. Expert Note\n";
-    report += "-------------\n";
-    report += "This report is generated by AI using advanced palmistry and the latest global data. For the best results, keep your software up-to-date and use the 'Speak' feature for deeper clarification.\n";
+    // 5. Expert Note
+    const noteSection = `
+<b>Expert Note:</b>
+This report is generated by AI using advanced palmistry and the latest global data. 
+For the best results, keep your software up-to-date and use the <b>Speak</b> feature for deeper clarification.<br>
+<span style="font-size:small;color:#888;">
+Version: ${version} | Language: ${language === 'en' ? 'English' : language}
+</span>
+`;
 
-    return report;
+    // Final Report (HTML/Markdown)
+    return `
+<h1>Sathya Darshana Quantum Palm Analyzer V${version}</h1>
+<h3>Full AI Palmistry Report</h3>
+${section('1. LEFT HAND – Past Lives Analysis', leftSection)}
+${section('2. RIGHT HAND – Current Life & Future Predictions', rightSection)}
+${section('3. Comparative Insights', compareSection)}
+${section('4. Special Marks and Rare Signs', marksSection)}
+${section('5. Expert Note', noteSection)}
+    `;
 }
