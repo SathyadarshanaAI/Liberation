@@ -1,46 +1,47 @@
-// modules/pdf.js  — popupless auto-PDF (no browser settings)
-export async function exportPalmPDF({ leftCanvas, rightCanvas, reportText, fileName = 'Palm_Report.pdf' }) {
-  // 1) Load jsPDF on demand (small, no build step)
-  const { jsPDF } = await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+// modules/pdf.js — Auto-download PDF using jsPDF loaded in index.html
+export function exportPalmPDF({ leftCanvas, rightCanvas, reportText, fileName = 'Palm_Report.pdf' }) {
+  // Ensure jsPDF is available from the global UMD bundle
+  const jsPDF = window.jspdf && window.jspdf.jsPDF;
+  if (!jsPDF) {
+    alert('PDF engine not loaded.');
+    return;
+  }
 
-  // 2) New doc
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   const M = 36;
 
-  // 3) Title
+  // Title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.text('Sathya Darshana Palm Report', M, M);
 
-  // 4) Images (stacked)
+  // Images
   const maxImgW = W - M*2;
-  const leftData = leftCanvas.toDataURL('image/jpeg', 0.92);
+  const leftData  = leftCanvas.toDataURL('image/jpeg', 0.92);
   const rightData = rightCanvas.toDataURL('image/jpeg', 0.92);
 
   let y = M + 18;
-  const addImageBlock = (label, data) => {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text(label, M, y += 20);
-    const imgW = maxImgW, imgH = imgW * (leftCanvas.height/leftCanvas.width);
+  const addImage = (label, data, width, height) => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    y += 20; doc.text(label, M, y);
+    const imgW = maxImgW, imgH = imgW * (height/width);
     if (y + imgH + 20 > H - M) { doc.addPage(); y = M; }
-    doc.addImage(data, 'JPEG', M, y, imgW, imgH, undefined, 'FAST');
-    y += imgH;
+    doc.addImage(data, 'JPEG', M, y + 6, imgW, imgH, undefined, 'FAST');
+    y += imgH + 6;
   };
-  addImageBlock('Left Hand', leftData);
-  addImageBlock('Right Hand', rightData);
+  addImage('Left Hand',  leftData,  leftCanvas.width,  leftCanvas.height);
+  addImage('Right Hand', rightData, rightCanvas.width, rightCanvas.height);
 
-  // 5) Analysis text (multi-page aware)
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
+  // Text
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
   const lines = doc.splitTextToSize(reportText, maxImgW);
-  for (let i = 0; i < lines.length; i++) {
+  for (let i=0;i<lines.length;i++){
     if (y + 16 > H - M) { doc.addPage(); y = M; }
-    doc.text(lines[i], M, y += 14);
+    y += 14; doc.text(lines[i], M, y);
   }
 
-  // 6) Save — no popups, direct download
+  // Save
   doc.save(fileName);
 }
