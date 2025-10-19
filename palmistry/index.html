@@ -1,149 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="si">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sathya Darshana Quantum Palm Analyzer V5.1</title>
-    <link rel="stylesheet" href="./styles.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dual Camera · Left & Mirrored Right</title>
+<style>
+  :root{--bg:#0b0f16;--card:#101820;--pri:#16f0a7}
+  *{box-sizing:border-box}  body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui}
+  header{padding:12px 16px;text-align:center}
+  .wrap{max-width:980px;margin:0 auto;padding:10px}
+  .grid{display:grid;gap:12px;grid-template-columns:1fr;align-items:start}
+  @media (min-width:720px){ .grid{grid-template-columns:1fr 1fr} }
+  .card{background:var(--card);border-radius:16px;padding:10px;border:1px solid #1e2a3a}
+  .title{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}
+  canvas{width:100%;height:auto;border-radius:12px;background:#000}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  button{background:var(--pri);border:none;color:#001b12;padding:10px 14px;border-radius:12px;font-weight:700}
+  small{opacity:.85}
+  .note{margin:10px 0 0;font-size:13px;opacity:.9}
+  /* right view is mirrored via drawing, but keep label hint */
+  .label{font-weight:700;color:#9be8cf}
+</style>
 </head>
 <body>
-    <h1>Sathya Darshana Quantum Palm Analyzer V5.1</h1>
-    <div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
+  <header>
+    <h2>Left view + Mirrored Right view (no app.js)</h2>
+  </header>
 
-    <div class="wrap">
-        <div class="camWrap">
-            <!-- Left Hand -->
-            <div class="camCol">
-                <strong>Left Hand</strong>
-                <div class="camBox" id="camBoxLeft">
-                    <canvas id="canvasLeft"></canvas>
-                </div>
-                <div class="camBtns">
-                    <button class="btn" id="startCamLeft">📷 Start</button>
-                    <button class="btn" id="captureLeft">Capture</button>
-                    <button class="btn" id="uploadLeft">Upload Photo</button>
-                    <button class="btn" id="torchLeft">💡 Torch</button>
-                    <!-- NEW: no app.js changes needed -->
-                    <button class="btn" id="cleanLeft">🧹 Clean</button>
-                </div>
-            </div>
-
-            <!-- Right Hand -->
-            <div class="camCol">
-                <strong>Right Hand</strong>
-                <div class="camBox" id="camBoxRight">
-                    <canvas id="canvasRight"></canvas>
-                </div>
-                <div class="camBtns">
-                    <button class="btn" id="startCamRight">📷 Start</button>
-                    <button class="btn" id="captureRight">Capture</button>
-                    <button class="btn" id="uploadRight">Upload Photo</button>
-                    <button class="btn" id="torchRight">💡 Torch</button>
-                    <!-- NEW: no app.js changes needed -->
-                    <button class="btn" id="cleanRight">🧹 Clean</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Shared Controls -->
-        <div class="toolbar">
-            <button class="btn" id="analyze">Analyze</button>
-            <button class="btn" id="miniReport">Mini Report</button>
-            <button class="btn" id="fullReport">Full Report (PDF)</button>
-            <button class="btn" id="speak">🔊 Speak</button>
-            <select id="language">
-                <option value="en">English</option>
-                <option value="si">Sinhala</option>
-                <option value="ta">Tamil</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="es">Spanish</option>
-                <option value="zh-cn">Chinese (Simplified)</option>
-                <option value="hi">Hindi</option>
-                <option value="ar">Arabic</option>
-                <option value="ja">Japanese</option>
-                <option value="ru">Russian</option>
-                <option value="pt">Portuguese</option>
-                <option value="ko">Korean</option>
-                <option value="it">Italian</option>
-                <option value="tr">Turkish</option>
-                <option value="id">Indonesian</option>
-                <option value="nl">Dutch</option>
-                <option value="sv">Swedish</option>
-            </select>
-        </div>
-
-        <div id="status">Ready</div>
-        <pre id="insight"></pre>
+  <div class="wrap">
+    <div class="btns">
+      <button id="startBtn">📷 Start camera</button>
+      <button id="stopBtn" disabled>■ Stop</button>
     </div>
+    <p class="note">අනෙකුත් browser වලදී “Allow camera” දෙන්න. Android හි zoom/rotate නැතිව <i>playsinline</i> භාවිතා කරමින් çizනවා.</p>
 
-    <!-- Google Translate Script -->
-    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    <script>
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,si,ta,fr,de,es,zh-CN,hi,ar,ja,ru,pt,ko,it,tr,id,nl,sv',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-            }, 'google_translate_element');
-        }
-    </script>
+    <div class="grid">
+      <div class="card">
+        <div class="title"><span class="label">LEFT — Normal</span><small id="wh1">–</small></div>
+        <canvas id="left"></canvas>
+      </div>
+      <div class="card">
+        <div class="title"><span class="label">RIGHT — Mirrored (Flip)</span><small id="wh2">–</small></div>
+        <canvas id="right"></canvas>
+      </div>
+    </div>
+  </div>
 
-    <!-- Keep your main app module untouched -->
-    <script type="module" src="./app.js"></script>
+  <!-- hidden video only to read the camera frames -->
+  <video id="src" autoplay playsinline muted style="display:none"></video>
 
-    <!-- Inline helpers JUST for Clean buttons (no app.js edits) -->
-    <script>
-      (function () {
-        const statusEl = document.getElementById('status');
-        const leftCanvas  = document.getElementById('canvasLeft');
-        const rightCanvas = document.getElementById('canvasRight');
+<script>
+(() => {
+  const video = document.getElementById('src');
+  const cLeft = document.getElementById('left');
+  const cRight = document.getElementById('right');
+  const wh1 = document.getElementById('wh1');
+  const wh2 = document.getElementById('wh2');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn  = document.getElementById('stopBtn');
+  let stream = null, rafId = 0, running = false;
 
-        function clearCanvas(canvas) {
-          if (!canvas) return;
-          const w = canvas.width || canvas.getBoundingClientRect().width || 0;
-          const h = canvas.height || canvas.getBoundingClientRect().height || 0;
+  async function start() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }, audio: false
+      });
+      video.srcObject = stream;
+      await video.play();
 
-          // Ensure intrinsic size exists so clearRect actually clears pixels
-          if (!canvas.width || !canvas.height) {
-            // snapshot CSS pixels → set backing store
-            const rect = canvas.getBoundingClientRect();
-            canvas.width  = Math.max(1, Math.round(rect.width));
-            canvas.height = Math.max(1, Math.round(rect.height));
-          }
+      const w = video.videoWidth || 1280;
+      const h = video.videoHeight || 720;
+      [cLeft, cRight].forEach(c => { c.width = w; c.height = h; });
+      wh1.textContent = `${w}×${h}`;
+      wh2.textContent = `${w}×${h}`;
 
-          const ctx = canvas.getContext('2d');
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+      running = true;
+      startBtn.disabled = true; stopBtn.disabled = false;
+      draw();
+    } catch (e) {
+      alert("Camera error: " + e.message);
+    }
+  }
 
-          // Optional faint placeholder grid (visual cue that it's cleared)
-          // comment these three lines if you want pure transparent
-          // ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-          // ctx.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
-          // ctx.setLineDash([6, 6]), ctx.stroke();
+  function stop() {
+    running = false;
+    cancelAnimationFrame(rafId);
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    startBtn.disabled = false; stopBtn.disabled = true;
+  }
 
-          // Brief flash to show action (no CSS dependency)
-          canvas.style.transition = 'opacity .15s ease';
-          canvas.style.opacity = '0.6';
-          setTimeout(() => (canvas.style.opacity = ''), 120);
-        }
+  function draw() {
+    if (!running) return;
+    const L = cLeft.getContext('2d');
+    const R = cRight.getContext('2d');
+    const w = cLeft.width, h = cLeft.height;
 
-        function setStatus(msg) {
-          if (statusEl) statusEl.textContent = msg;
-        }
+    // LEFT: normal
+    L.drawImage(video, 0, 0, w, h);
 
-        document.getElementById('cleanLeft')?.addEventListener('click', () => {
-          clearCanvas(leftCanvas);
-          setStatus('Cleared left hand.');
-        });
+    // RIGHT: mirrored (flip horizontally)
+    R.save();
+    R.scale(-1, 1);           // mirror
+    R.drawImage(video, -w, 0, w, h);
+    R.restore();
 
-        document.getElementById('cleanRight')?.addEventListener('click', () => {
-          clearCanvas(rightCanvas);
-          setStatus('Cleared right hand.');
-        });
-      })();
-    </script>
+    rafId = requestAnimationFrame(draw);
+  }
 
-    <!-- jsPDF CDN for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  startBtn.addEventListener('click', start);
+  stopBtn.addEventListener('click', stop);
+})();
+</script>
 </body>
 </html>
