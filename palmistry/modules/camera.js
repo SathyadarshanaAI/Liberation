@@ -1,7 +1,7 @@
-// modules/camara.js
-// Universal CameraCard: Android/iOS/desktop support, autoplay-safe overlay,
-// max-resolution applyConstraints, hi-res still capture (ImageCapture),
-// and no-crop "contain" capture with optional padding/vertical offset.
+// modules/camera.clean.js
+// Universal CameraCard: Android/iOS/desktop, autoplay overlay,
+// max-res applyConstraints, hi-res still capture (ImageCapture) + auto-rotate to portrait,
+// and no-crop "contain" capture with padding/offset.
 
 export class CameraCard {
   /**
@@ -13,24 +13,21 @@ export class CameraCard {
     this.onStatus   = opts.onStatus || (()=>{});
     this.facingMode = opts.facingMode || 'environment';
 
-    // ---- Live <video> preview (NO-CROP) ----
+    // Live preview <video> (no-crop)
     this.video = document.createElement('video');
-    this.video.setAttribute('playsinline', '');       // iOS inline playback
+    this.video.setAttribute('playsinline',''); // iOS inline
     Object.assign(this.video, { autoplay:true, muted:true, playsInline:true });
     Object.assign(this.video.style, {
       position:'absolute', inset:0, width:'100%', height:'100%',
-      objectFit:'contain',                // 👈 no-crop preview
-      objectPosition:'50% 50%',           // center
-      background:'#000',
-      borderRadius:'16px', zIndex:1
+      objectFit:'contain', objectPosition:'50% 50%',
+      background:'#000', borderRadius:'16px', zIndex:1
     });
 
-    // Ensure host can position children and has a visible area
     if (getComputedStyle(this.host).position === 'static') this.host.style.position = 'relative';
     if (!this.host.style.minHeight) this.host.style.minHeight = '320px';
     this.host.prepend(this.video);
 
-    // Tap-to-start overlay (for autoplay blocks on iOS/Android)
+    // Tap-to-start overlay (for autoplay blocks)
     this.overlay = document.createElement('button');
     this.overlay.textContent = '▶ Tap to Start Camera';
     Object.assign(this.overlay.style, {
@@ -44,21 +41,23 @@ export class CameraCard {
       catch { this._status('Tap again to start'); }
     });
 
-    // Stream/track state
+    // State
     this.stream = null;
     this.track  = null;
 
-    // Capture tuning (no-crop + small safe margin)
-    this.pad = 0.92;   // 0.75..1 (lower = zoom-out; more margin to avoid edges being cut)
-    this.offsetY = 0;  // -0.3..0.3 (shift image up/down fraction of canvas height)
+    // Framing tweaks
+    this.pad = 0.92;     // 0.75..1 (lower = zoom-out, safer margins)
+    this.offsetY = 0;    // -0.3..0.3 (up/down shift of image inside canvas)
+
+    // Ensure portrait output for hi-res stills (auto-rotate if landscape)
+    this.forcePortrait = true;
   }
 
-  // ---------------- Helpers ----------------
+  // ---------- helpers ----------
   _status(m){ try{ this.onStatus(String(m)); }catch{} }
   _log(tag, obj){ try{ (console.tag?console.tag(tag,obj):console.log(`[${tag}]`,obj)); }catch{} }
-
-  setFramePad(p = 0.92){ this.pad = Math.max(0.75, Math.min(1, p)); }
-  setOffsetY(v = 0){ this.offsetY = Math.max(-0.3, Math.min(0.3, v)); }
+  setFramePad(p=0.92){ this.pad = Math.max(0.75, Math.min(1, p)); }
+  setOffsetY(v=0){ this.offsetY = Math.max(-0.3, Math.min(0.3, v)); }
 
   async _pickDeviceId(preferBack=true){
     try{
@@ -71,59 +70,54 @@ export class CameraCard {
     }catch{return null;}
   }
 
-  async _maximizeResolution() {
-    try {
-      if (!this.track || !this.track.getCapabilities) return;
+  async _maximizeResolution(){
+    try{
+      if (!this.track?.getCapabilities) return;
       const caps = this.track.getCapabilities();
       const want = {};
-      if (caps.width && caps.height) {
-        // safety clamp (avoid extreme 8K): browsers will clamp further if needed
+      if (caps.width && caps.height){
         const MAXW = Math.min(caps.width.max, 4096);
         const MAXH = Math.min(caps.height.max, 4096);
-        want.width  = MAXW;
-        want.height = MAXH;
+        want.width = MAXW; want.height = MAXH;
       }
       if (caps.frameRate) want.frameRate = Math.min(30, caps.frameRate.max || 30);
-
-      if (Object.keys(want).length) {
+      if (Object.keys(want).length){
         this._log('CAMERA', { step:'applyConstraints → max', want });
-        await this.track.applyConstraints(want).catch(async ()=>{
+        await this.track.applyConstraints(want).catch(async()=> {
           await this.track.applyConstraints({ advanced:[want] });
         });
-        await new Promise(r=>setTimeout(r,150)); // settle
+        await new Promise(r=>setTimeout(r,150));
       }
-    } catch (e) {
+    }catch(e){
       this._log('CAMERA', { step:'applyConstraints fail', err:e?.name||e });
     }
   }
 
-  // ---------------- Lifecycle ----------------
-  async start() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  // ---------- lifecycle ----------
+  async start(){
+    if (!navigator.mediaDevices?.getUserMedia){
       this._status('Camera API not available. Use Upload Photo.');
       return false;
     }
-
     await this.stop();
     this._status('Requesting camera…');
 
-    // 1) Try facingMode (works on most modern browsers)
+    // Try facingMode first
     let constraints = {
       video:{ facingMode:this.facingMode, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:30} },
       audio:false
     };
-    try {
+    try{
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (e1) {
-      this._log('CAMERA',{step:'facingMode fail', err:e1?.name||e1});
-      // 2) Fallback: choose deviceId (tries to prefer back camera)
-      try {
+    }catch(e1){
+      this._log('CAMERA', { step:'facingMode fail', err:e1?.name||e1 });
+      try{
         const id = await this._pickDeviceId(true);
         if (id) this.stream = await navigator.mediaDevices.getUserMedia({ video:{ deviceId:{ exact:id } }, audio:false });
         else    this.stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
-      } catch (e2) {
+      }catch(e2){
         this._status('Camera permission denied or not found');
-        this._log('CAMERA',{step:'fallback fail', err:e2?.name||e2});
+        this._log('CAMERA', { step:'fallback fail', err:e2?.name||e2 });
         return false;
       }
     }
@@ -132,18 +126,15 @@ export class CameraCard {
     this.video.srcObject = this.stream;
     this.track = this.stream.getVideoTracks()[0] || null;
 
-    // Try to push to max resolution
     await this._maximizeResolution();
 
-    // Try to play (may be blocked → overlay)
-    try { await this.video.play(); }
-    catch { this.overlay.style.display = 'block'; }
+    try{ await this.video.play(); }
+    catch{ this.overlay.style.display='block'; }
 
-    // Small wait for metadata
     await new Promise(r=>setTimeout(r,200));
     const st = this.track?.getSettings?.() || {};
     this._log('CAMERA', { step:'settings', st });
-    this._status(`Camera active ${st.width || this.video.videoWidth}×${st.height || this.video.videoHeight}`);
+    this._status(`Camera active ${st.width||this.video.videoWidth}×${st.height||this.video.videoHeight}`);
     return true;
   }
 
@@ -156,8 +147,7 @@ export class CameraCard {
     }
   }
 
-  // ---------------- Capture (video frame) ----------------
-  // CONTAIN capture (no-crop), with small zoom-out pad & optional vertical offset
+  // ---------- capture (video frame, contain, pad/offset) ----------
   captureTo(canvas){
     const vw=this.video.videoWidth, vh=this.video.videoHeight;
     if (!vw || !vh){ this._status('No video frame yet'); return false; }
@@ -172,8 +162,7 @@ export class CameraCard {
     const ctx = canvas.getContext('2d');
     ctx.fillStyle='#000'; ctx.fillRect(0,0,BW,BH);
 
-    // contain fit + safe pad + vertical offset
-    const s  = Math.min(BW/vw, BH/vh) * this.pad;
+    const s  = Math.min(BW/vw, BH/vh) * this.pad; // contain + padding
     const dw = Math.round(vw*s);
     const dh = Math.round(vh*s);
     let dx   = Math.floor((BW-dw)/2);
@@ -188,20 +177,18 @@ export class CameraCard {
     return true;
   }
 
-  // ---------------- Capture (hi-res still) ----------------
-  // Uses ImageCapture to grab a native photo (often 2–4K), then draws 1:1 on canvas.
-  // Gracefully falls back to captureTo() if unsupported.
-  async captureHiRes(canvas) {
+  // ---------- capture (hi-res still via ImageCapture; fallback to captureTo) ----------
+  async captureHiRes(canvas){
     const track = this.track;
-    if (!track) { this._status('Camera not active'); return false; }
+    if (!track){ this._status('Camera not active'); return false; }
 
-    if ('ImageCapture' in window) {
-      try {
+    if ('ImageCapture' in window){
+      try{
         const ic = new ImageCapture(track);
 
-        // Try photoCapabilities for max hints (optional)
-        if (ic.getPhotoCapabilities) {
-          try {
+        // Try capabilities (optional hints)
+        if (ic.getPhotoCapabilities){
+          try{
             const pc = await ic.getPhotoCapabilities();
             this._log('CAMERA', { step:'photoCapabilities', pc });
             const want = {};
@@ -211,28 +198,27 @@ export class CameraCard {
             await this._drawBlobToCanvas(blob, canvas);
             this._status('Captured (hi-res photo)');
             return true;
-          } catch { /* fallback to plain takePhoto */ }
+          }catch{/* fall back */}
         }
 
         const blob = await ic.takePhoto();
         await this._drawBlobToCanvas(blob, canvas);
         this._status('Captured (hi-res photo)');
         return true;
-      } catch (e) {
-        this._log('CAPTURE', { step:'ImageCapture failed', err: e?.name || e });
+      }catch(e){
+        this._log('CAPTURE', { step:'ImageCapture failed', err:e?.name||e });
       }
     }
 
-    // Fallback to video-frame capture
+    // Fallback to video frame
     return this.captureTo(canvas);
   }
 
-  // Draws a Blob/Bitmap to canvas at native resolution (no-crop)
-  async _drawBlobToCanvas(blob, canvas) {
-    let bmp = null;
-    try {
-      bmp = await createImageBitmap(blob);
-    } catch {
+  // Draw Blob/Bitmap to canvas 1:1 + auto-rotate portrait if needed
+  async _drawBlobToCanvas(blob, canvas){
+    let bmp=null;
+    try{ bmp = await createImageBitmap(blob); }
+    catch{
       bmp = await new Promise((res, rej)=>{
         const img = new Image();
         img.onload = ()=>res(img);
@@ -240,21 +226,29 @@ export class CameraCard {
         img.src = URL.createObjectURL(blob);
       });
     }
-    const iw = bmp.width, ih = bmp.height;
-    canvas.width  = iw;
-    canvas.height = ih;
+    const iw0 = bmp.width, ih0 = bmp.height;
+
+    const needRotate = this.forcePortrait && iw0 > ih0; // landscape -> portrait
+    if (!needRotate) {
+      canvas.width = iw0; canvas.height = ih0;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, iw0, ih0);
+      this._log('CAPTURE', { mode:'hires', iw:iw0, ih:ih0, rotated:false });
+    } else {
+      canvas.width = ih0;        // swap
+      canvas.height = iw0;
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.translate(canvas.width/2, canvas.height/2);
+      ctx.rotate(90 * Math.PI/180);       // rotate clockwise
+      ctx.drawImage(bmp, -iw0/2, -ih0/2, iw0, ih0);
+      ctx.restore();
+      this._log('CAPTURE', { mode:'hires', iw:ih0, ih:iw0, rotated:true });
+    }
 
     Object.assign(canvas.style, {
       position:'absolute', inset:0, width:'100%', height:'100%',
       borderRadius:'16px', zIndex:2
     });
-
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(bmp, 0, 0, iw, ih);
-
-    if (bmp instanceof Image && bmp.src && String(bmp.src).startsWith('blob:')) {
-      try { URL.revokeObjectURL(bmp.src); } catch {}
-    }
-    this._log('CAPTURE', { mode:'hires', iw, ih });
   }
 }
