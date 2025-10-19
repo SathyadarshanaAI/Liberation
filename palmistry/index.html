@@ -1,98 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sathya Darshana Quantum Palm Analyzer V5.1</title>
-    <link rel="stylesheet" href="./styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sathya Darshana Quantum Palm Analyzer V5.1</title>
+  <style>
+    :root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui,Segoe UI,Arial}
+    header{padding:14px 12px;text-align:center}
+    h1{margin:6px 0;color:var(--neon);font-size:1.2rem}
+    .wrap{max-width:1000px;margin:0 auto;padding:12px}
+    .row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+    .card{background:var(--card);border:1px solid #123;border-radius:14px;padding:12px}
+    .camBox{position:relative;display:grid;place-items:center;background:#000;border:1px solid #222;border-radius:12px;overflow:hidden;min-height:360px}
+    canvas{width:100%;height:auto;max-height:70vh;background:#000}
+    .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    button, select{background:#0e1624;color:#dff;border:1px solid var(--neon);border-radius:12px;padding:8px 12px;font-weight:600}
+    button:hover{background:var(--neon);color:#001}
+    #status{margin:10px 0 0 0;opacity:.9}
+    pre#insight{white-space:pre-wrap;background:#071018;border:1px solid #123;border-radius:12px;padding:10px;min-height:140px}
+  </style>
 </head>
 <body>
+  <header>
     <h1>Sathya Darshana Quantum Palm Analyzer V5.1</h1>
-    <div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
-    <div class="wrap">
-        <div class="camWrap">
-            <!-- Left Hand -->
-            <div class="camCol">
-                <strong>Left Hand</strong>
-                <div class="camBox" id="camBoxLeft">
-                    <canvas id="canvasLeft"></canvas>
-                </div>
-                <div class="camBtns">
-                    <button class="btn" id="startCamLeft">📷 Start</button>
-                    <button class="btn" id="captureLeft">Capture</button>
-                    <button class="btn" id="uploadLeft">Upload Photo</button>
-                    <button class="btn" id="torchLeft">💡 Torch</button>
-                </div>
-            </div>
-            <!-- Right Hand -->
-            <div class="camCol">
-                <strong>Right Hand</strong>
-                <div class="camBox" id="camBoxRight">
-                    <canvas id="canvasRight"></canvas>
-                </div>
-                <div class="camBtns">
-                    <button class="btn" id="startCamRight">📷 Start</button>
-                    <button class="btn" id="captureRight">Capture</button>
-                    <button class="btn" id="uploadRight">Upload Photo</button>
-                    <button class="btn" id="torchRight">💡 Torch</button>
-                </div>
-            </div>
-        </div>
-        <!-- Shared Controls -->
-        <div class="toolbar">
-            <button class="btn" id="analyze">Analyze</button>
-            <button class="btn" id="miniReport">Mini Report</button>
-            <button class="btn" id="fullReport">Full Report (PDF)</button>
-            <button class="btn" id="speak">🔊 Speak</button>
-            <button class="btn" id="backHome">🏠 Back to Home</button>
-            <select id="language">
-                <option value="en">English</option>
-                <option value="si">Sinhala</option>
-                <option value="ta">Tamil</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="es">Spanish</option>
-                <option value="zh-cn">Chinese (Simplified)</option>
-                <option value="hi">Hindi</option>
-                <option value="ar">Arabic</option>
-                <option value="ja">Japanese</option>
-                <option value="ru">Russian</option>
-                <option value="pt">Portuguese</option>
-                <option value="ko">Korean</option>
-                <option value="it">Italian</option>
-                <option value="tr">Turkish</option>
-                <option value="id">Indonesian</option>
-                <option value="nl">Dutch</option>
-                <option value="sv">Swedish</option>
-            </select>
-        </div>
-        <div id="status">Ready</div>
-        <pre id="insight"></pre>
+    <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">
+      <label for="language">Language:</label>
+      <select id="language">
+        <option value="en" selected>English</option>
+        <option value="si">සිංහල (Sinhala)</option>
+        <option value="ta">தமிழ் (Tamil)</option>
+      </select>
+      <span id="status">Ready.</span>
     </div>
-    <!-- Google Translate Script -->
-    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    <script type="module" src="./app.js"></script>
-    <script>
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,si,ta,fr,de,es,zh-CN,hi,ar,ja,ru,pt,ko,it,tr,id,nl,sv',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-            }, 'google_translate_element');
-        }
+  </header>
 
-        // Back to Home button functionality + Console log
-        document.addEventListener('DOMContentLoaded', function() {
-            var backHomeBtn = document.getElementById('backHome');
-            if (backHomeBtn) {
-                backHomeBtn.addEventListener('click', function() {
-                    console.log('Back to Home button clicked!');
-                    window.location.href = '/'; // Change to 'index.html' if needed
-                });
-            }
-        });
-    </script>
-    <!-- jsPDF CDN for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <div class="wrap">
+    <div class="row">
+      <!-- Left Hand -->
+      <div class="card">
+        <h3>Left Hand</h3>
+        <div class="camBox" id="camBoxLeft">
+          <canvas id="canvasLeft" width="720" height="960"></canvas>
+        </div>
+        <div class="btns">
+          <button id="startCamLeft">📷 Start</button>
+          <button id="captureLeft">📸 Capture</button>
+          <button id="torchLeft">🔦 Torch</button>
+          <button id="uploadLeft">🖼️ Upload</button>
+        </div>
+      </div>
+
+      <!-- Right Hand -->
+      <div class="card">
+        <h3>Right Hand</h3>
+        <div class="camBox" id="camBoxRight">
+          <canvas id="canvasRight" width="720" height="960"></canvas>
+        </div>
+        <div class="btns">
+          <button id="startCamRight">📷 Start</button>
+          <button id="captureRight">📸 Capture</button>
+          <button id="torchRight">🔦 Torch</button>
+          <button id="uploadRight">🖼️ Upload</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="btns" style="justify-content:center">
+        <button id="analyze">✨ Analyze</button>
+        <button id="miniReport">🗒️ Mini Report</button>
+        <button id="fullReport">📄 Full Report (PDF)</button>
+        <button id="speak">🔊 Speak</button>
+      </div>
+      <pre id="insight"></pre>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
