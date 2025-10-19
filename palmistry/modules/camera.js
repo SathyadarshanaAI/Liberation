@@ -1,80 +1,91 @@
-// Simple camera helper with capture and torch toggle
-// Usage: const cam = new CameraCard(containerEl, { facingMode:'environment', onStatus:fn })
-
+// modules/camera.js
 export class CameraCard {
-  constructor(container, opts={}) {
-    this.container = container;
-    this.opts = opts;
+  constructor(hostEl, { facingMode = 'environment', onStatus = () => {} } = {}) {
+    this.host = hostEl;
+    this.facingMode = facingMode;
+    this.onStatus = onStatus;
     this.stream = null;
     this.video = document.createElement('video');
-    this.video.playsInline = true;
     this.video.autoplay = true;
-    this.video.muted = true;
+    this.video.muted = true;          // autoplay policy
+    this.video.playsInline = true;    // iOS Safari
+    this.video.setAttribute('playsinline','');
     this.video.style.width = '100%';
     this.video.style.height = 'auto';
-    this.video.style.maxHeight = '70vh';
-    this.container.appendChild(this.video);
-    this._onStatus = typeof opts.onStatus === 'function' ? opts.onStatus : ()=>{};
-    this._torchOn = false;
+    this.host.innerHTML = '';
+    this.host.appendChild(this.video);
   }
-
-  _status(msg){ this._onStatus(msg); }
 
   async start() {
-    // Stop old
-    this.stop();
-    const constraints = {
-      audio: false,
-      video: {
-        facingMode: this.opts.facingMode || 'environment',
-        width: { ideal: 1920 }, height: { ideal: 1080 },
-        advanced: [{ focusMode: 'continuous' }]
-      }
-    };
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-      this.video.srcObject = this.stream;
-      await this.video.play();
-      this._status('✅ Camera open');
-    } catch (e) {
-      this._status('❌ Camera error: ' + e.message);
-      console.error(e);
+    // guard: secure origin only
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      throw new Error('Camera requires HTTPS (GitHub Pages is OK).');
     }
+    // try exact → user → environment fallbacks
+    const tries = [
+      { video: { facingMode: { exact: this.facingMode }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false },
+      { video: { facingMode: this.facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false },
+      { video: true, audio: false }
+    ];
+    let lastErr;
+    for (const c of tries) {
+      try {
+        this.stream = await navigator.mediaDevices.getUserMedia(c);
+        break;
+      } catch (e) { lastErr = e; }
+    }
+    if (!this.stream) {
+      this.onStatus('Camera unavailable'); 
+      throw lastErr || new Error('No camera');
+    }
+    this.video.srcObject = this.stream;
+    await this.video.play().catch(()=>{});
+    this.onStatus('Camera started');
+    this._initTrack(); // setup track & imageCapture for torch
   }
 
-  stop(){
-    if (!this.stream) return;
-    for (const t of this.stream.getTracks()) t.stop();
-    this.stream = null;
+  _initTrack() {
+    this.track = this.stream.getVideoTracks()[0];
+    try {
+      this.imageCapture = ('ImageCapture' in window) ? new ImageCapture(this.track) : null;
+    } catch { this.imageCapture = null; }
   }
 
-  captureTo(canvas){
-    if (!this.video.videoWidth) { this._status('Video not ready'); return; }
-    // 3:4 canvas sizing kept by the page; draw fitted
-    const vw = this.video.videoWidth, vh = this.video.videoHeight;
-    const aspect = 3/4; // width/height
-    let tw = vw, th = vh;
-    if (vw/vh > aspect) { tw = vh * aspect; th = vh; } else { tw = vw; th = vw/aspect; }
+  stop() {
+    if (this.stream) {
+      this.stream.getTracks().forEach(t => t.stop());
+      this.stream = null;
+    }
+    this.onStatus('Camera stopped');
+  }
+
+  captureTo(canvas) {
+    if (!this.video.videoWidth) { this.onStatus('No frame yet'); return; }
+    // lock 3:4 canvas like your UI
+    const w = this.video.videoWidth;
+    const h = this.video.videoHeight;
+    const aspect = 3/4;
+    let tw, th, sx, sy;
+    if (w/h > aspect) { th = h; tw = h*aspect; sx = (w-tw)/2; sy = 0; }
+    else { tw = w; th = w/aspect; sx = 0; sy = (h-th)/2; }
     canvas.width = tw; canvas.height = th;
     const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(this.video, (vw-tw)/2, (vh-th)/2, tw, th, 0, 0, tw, th);
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,tw,th);
+    ctx.drawImage(this.video, sx, sy, tw, th, 0, 0, tw, th);
+    this.onStatus('Captured');
   }
 
-  async toggleTorch(){
-    if (!this.stream) { this._status('Start camera first'); return; }
-    const track = this.stream.getVideoTracks()[0];
-    const cap = track.getCapabilities ? track.getCapabilities() : {};
-    if (cap.torch) {
-      this._torchOn = !this._torchOn;
-      try {
-        await track.applyConstraints({ advanced: [{ torch: this._torchOn }] });
-        this._status(this._torchOn ? '🔦 Torch ON' : '🔦 Torch OFF');
-      } catch (e) {
-        this._status('Torch not allowed: ' + e.message);
-      }
-    } else {
-      this._status('Torch not supported on this device/browser');
+  async toggleTorch() {
+    // Only some Android devices support torch over WebRTC
+    try {
+      const cap = this.track.getCapabilities?.();
+      if (!cap || !cap.torch) { this.onStatus('Torch not supported'); return; }
+      const settings = this.track.getSettings?.() || {};
+      const newVal = !settings.torch;
+      await this.track.applyConstraints({ advanced: [{ torch: newVal }] });
+      this.onStatus(newVal ? 'Torch ON' : 'Torch OFF');
+    } catch {
+      this.onStatus('Torch not supported');
     }
   }
 }
