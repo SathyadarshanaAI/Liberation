@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sathya Darshana Quantum Palm Analyzer V5.1</title>
+  <title>Sathya Darshana Quantum Palm Analyzer V5.2</title>
   <style>
     :root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui,Segoe UI,Arial}
-    header{padding:14px 12px;text-align:center}
-    h1{margin:6px 0;color:var(--neon);font-size:1.2rem}
-    .wrap{max-width:1000px;margin:0 auto;padding:12px}
+    header{padding:14px;text-align:center}
+    h1{margin:6px 0;color:var(--neon);font-size:1.4rem}
+    .wrap{max-width:1000px;margin:auto;padding:12px}
     .row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
     .card{background:var(--card);border:1px solid #123;border-radius:14px;padding:12px}
     .camBox{position:relative;display:grid;place-items:center;background:#000;border:1px solid #222;border-radius:12px;overflow:hidden;min-height:360px}
@@ -24,13 +24,22 @@
 </head>
 <body>
   <header>
-    <h1>Sathya Darshana Quantum Palm Analyzer V5.1</h1>
+    <h1>Sathya Darshana Quantum Palm Analyzer V5.2</h1>
     <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">
       <label for="language">Language:</label>
       <select id="language">
-        <option value="en" selected>English</option>
+        <option value="en">English</option>
         <option value="si">සිංහල (Sinhala)</option>
         <option value="ta">தமிழ் (Tamil)</option>
+        <option value="hi">हिन्दी (Hindi)</option>
+        <option value="bn">বাংলা (Bengali)</option>
+        <option value="ar">العربية (Arabic)</option>
+        <option value="es">Español (Spanish)</option>
+        <option value="fr">Français (French)</option>
+        <option value="de">Deutsch (German)</option>
+        <option value="ru">Русский (Russian)</option>
+        <option value="ja">日本語 (Japanese)</option>
+        <option value="zh-CN">简体中文 (Chinese)</option>
       </select>
       <span id="status">Ready.</span>
     </div>
@@ -38,41 +47,39 @@
 
   <div class="wrap">
     <div class="row">
-      <!-- Left Hand -->
       <div class="card">
         <h3>Left Hand</h3>
         <div class="camBox" id="camBoxLeft">
           <canvas id="canvasLeft" width="720" height="960"></canvas>
         </div>
         <div class="btns">
-          <button id="startCamLeft">📷 Start</button>
-          <button id="captureLeft">📸 Capture</button>
-          <button id="torchLeft">🔦 Torch</button>
-          <button id="uploadLeft">🖼️ Upload</button>
+          <button id="startCamLeft">Start</button>
+          <button id="captureLeft">Capture</button>
+          <button id="torchLeft">Torch</button>
+          <button id="uploadLeft">Upload</button>
         </div>
       </div>
 
-      <!-- Right Hand -->
       <div class="card">
         <h3>Right Hand</h3>
         <div class="camBox" id="camBoxRight">
           <canvas id="canvasRight" width="720" height="960"></canvas>
         </div>
         <div class="btns">
-          <button id="startCamRight">📷 Start</button>
-          <button id="captureRight">📸 Capture</button>
-          <button id="torchRight">🔦 Torch</button>
-          <button id="uploadRight">🖼️ Upload</button>
+          <button id="startCamRight">Start</button>
+          <button id="captureRight">Capture</button>
+          <button id="torchRight">Torch</button>
+          <button id="uploadRight">Upload</button>
         </div>
       </div>
     </div>
 
     <div class="card" style="margin-top:12px">
       <div class="btns" style="justify-content:center">
-        <button id="analyze">✨ Analyze</button>
-        <button id="miniReport">🗒️ Mini Report</button>
-        <button id="fullReport">📄 Full Report (PDF)</button>
-        <button id="speak">🔊 Speak</button>
+        <button id="analyze">Analyze</button>
+        <button id="miniReport">Mini Report</button>
+        <button id="fullReport">Full Report (PDF)</button>
+        <button id="speak">Speak</button>
       </div>
       <pre id="insight"></pre>
     </div>
