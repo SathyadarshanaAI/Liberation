@@ -1,66 +1,55 @@
-export function exportPalmPDF({ leftCanvas, rightCanvas, leftReport, rightReport, mode = 'full' }) {
-  // Use jsPDF global from CDN (make sure <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> is in your HTML!)
-  const pdf = window.jspdf ? new window.jspdf.jsPDF("p", "pt", "a4") : new window.jsPDF("p", "pt", "a4");
-  const leftImg = leftCanvas.toDataURL("image/png");
-  const rightImg = rightCanvas.toDataURL("image/png");
+// Lightweight PDF: open a print-friendly window and let user "Save as PDF"
+// Works consistently on mobile/desktop without external libs.
 
-  // Title & Contact
-  pdf.setFontSize(18);
-  pdf.text("Sathya Darshana Palm Analyzer Report", 40, 40);
-  pdf.setFontSize(11);
-  pdf.text("email: sathyadarshana2025@gmail.com", 40, 60);
-  pdf.text("phone: +94757500000", 40, 75);
-  pdf.text("Sri Lanka", 40, 90);
+export function exportPalmPDF({ leftCanvas, rightCanvas, leftReport, rightReport, mode='full' }) {
+  const leftData = leftCanvas.toDataURL('image/jpeg', 0.92);
+  const rightData = rightCanvas.toDataURL('image/jpeg', 0.92);
 
-  // Hand labels
-  pdf.text("Left Hand", 60, 130);
-  pdf.text("Right Hand", 320, 130);
+  const reportText = buildText(leftReport, rightReport, mode);
 
-  // Canvas images (hand photos)
-  pdf.addImage(leftImg, "PNG", 40, 145, 200, 260);
-  pdf.addImage(rightImg, "PNG", 310, 145, 200, 260);
+  const w = window.open('', '_blank');
+  if (!w) { alert('Popup blocked. Please allow popups for this site.'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/>
+  <title>Palm Report</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;margin:24px;color:#111}
+    h1{margin:0 0 12px 0}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    img{width:100%;height:auto;border:1px solid #999;border-radius:8px}
+    pre{white-space:pre-wrap;background:#f6f7fb;border:1px solid #ddd;border-radius:8px;padding:12px}
+    .meta{margin-top:10px;font-size:.9rem;color:#333}
+    @media print { body{color:#000} }
+  </style>
+  </head><body>
+    <h1>Sathya Darshana Palm Report</h1>
+    <div class="meta">Generated: ${new Date().toLocaleString()}</div>
+    <div class="grid">
+      <div><h3>Left Hand</h3><img src="${leftData}"/></div>
+      <div><h3>Right Hand</h3><img src="${rightData}"/></div>
+    </div>
+    <h3>Analysis</h3>
+    <pre>${escapeHtml(reportText)}</pre>
+    <script>window.onload = ()=> setTimeout(()=>window.print(), 600);</script>
+  </body></html>`);
+  w.document.close();
+}
 
-  // Summary/Short report
-  pdf.setFontSize(12);
-  let y = 420;
-  pdf.text(leftReport.summary, 40, y);
-  pdf.text(rightReport.summary, 310, y);
-
-  // Full details (all palm lines) - only if mode === 'full'
-  if (mode === 'full') {
-    // Left Hand Details
-    pdf.addPage();
-    pdf.setFontSize(16);
-    pdf.text("Left Hand Details", 40, 40);
-    let yLeft = 70;
-    leftReport.lines.forEach(line => {
-      pdf.text(`${line.name}: ${line.insight} (${(line.confidence*100).toFixed(1)}%)`, 40, yLeft);
-      yLeft += 18;
-      if (line.details) {
-        pdf.setFontSize(11);
-        pdf.text(line.details, 60, yLeft);
-        yLeft += 14;
-        pdf.setFontSize(16);
-      }
-    });
-
-    // Right Hand Details
-    pdf.addPage();
-    pdf.setFontSize(16);
-    pdf.text("Right Hand Details", 40, 40);
-    let yRight = 70;
-    rightReport.lines.forEach(line => {
-      pdf.text(`${line.name}: ${line.insight} (${(line.confidence*100).toFixed(1)}%)`, 40, yRight);
-      yRight += 18;
-      if (line.details) {
-        pdf.setFontSize(11);
-        pdf.text(line.details, 60, yRight);
-        yRight += 14;
-        pdf.setFontSize(16);
-      }
-    });
+function buildText(left, right, mode){
+  let out = 'Sathya Darshana Palm Analyzer V5.1\n\n';
+  out += `Left: ${left.summary}\nRight: ${right.summary}\n\n`;
+  if (mode==='full'){
+    out += 'Left details:\n';
+    left.lines.forEach(l=> out += ` • ${l.name}: ${(l.confidence*100).toFixed(1)}% — ${l.insight}\n`);
+    out += '\nRight details:\n';
+    right.lines.forEach(l=> out += ` • ${l.name}: ${(l.confidence*100).toFixed(1)}% — ${l.insight}\n`);
   }
+  out += '\nPalmistry is culturally interpretive.';
+  return out;
+}
 
-  // Download PDF
-  pdf.save("SathyaDarshana_Palm_Report.pdf");
+function escapeHtml(s){
+  return String(s)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;');
 }
