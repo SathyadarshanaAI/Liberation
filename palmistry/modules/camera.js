@@ -1,13 +1,8 @@
 // modules/camera.clean.js
-// Universal CameraCard: Android/iOS/desktop, autoplay overlay,
-// max-res applyConstraints, hi-res still capture (ImageCapture) + auto-rotate to portrait,
-// and no-crop "contain" capture with padding/offset.
+// Universal CameraCard: autoplay overlay, max-res push, hi-res still (ImageCapture),
+// and no-crop "contain" capture with padding/offset. Torch/flash code නැහැ.
 
 export class CameraCard {
-  /**
-   * @param {HTMLElement} host
-   * @param {{facingMode?: 'environment'|'user', onStatus?: (msg:string)=>void}} opts
-   */
   constructor(host, opts = {}) {
     this.host       = host;
     this.onStatus   = opts.onStatus || (()=>{});
@@ -15,7 +10,7 @@ export class CameraCard {
 
     // Live preview <video> (no-crop)
     this.video = document.createElement('video');
-    this.video.setAttribute('playsinline',''); // iOS inline
+    this.video.setAttribute('playsinline','');
     Object.assign(this.video, { autoplay:true, muted:true, playsInline:true });
     Object.assign(this.video.style, {
       position:'absolute', inset:0, width:'100%', height:'100%',
@@ -27,7 +22,7 @@ export class CameraCard {
     if (!this.host.style.minHeight) this.host.style.minHeight = '320px';
     this.host.prepend(this.video);
 
-    // Tap-to-start overlay (for autoplay blocks)
+    // Tap-to-start overlay (autoplay blocks)
     this.overlay = document.createElement('button');
     this.overlay.textContent = '▶ Tap to Start Camera';
     Object.assign(this.overlay.style, {
@@ -41,16 +36,12 @@ export class CameraCard {
       catch { this._status('Tap again to start'); }
     });
 
-    // State
     this.stream = null;
     this.track  = null;
 
     // Framing tweaks
-    this.pad = 0.92;     // 0.75..1 (lower = zoom-out, safer margins)
-    this.offsetY = 0;    // -0.3..0.3 (up/down shift of image inside canvas)
-
-    // Ensure portrait output for hi-res stills (auto-rotate if landscape)
-    this.forcePortrait = true;
+    this.pad = 0.92;   // 0.75..1 (lower = zoom-out)
+    this.offsetY = 0;  // -0.3..0.3
   }
 
   // ---------- helpers ----------
@@ -162,7 +153,7 @@ export class CameraCard {
     const ctx = canvas.getContext('2d');
     ctx.fillStyle='#000'; ctx.fillRect(0,0,BW,BH);
 
-    const s  = Math.min(BW/vw, BH/vh) * this.pad; // contain + padding
+    const s  = Math.min(BW/vw, BH/vh) * this.pad;
     const dw = Math.round(vw*s);
     const dh = Math.round(vh*s);
     let dx   = Math.floor((BW-dw)/2);
@@ -186,7 +177,6 @@ export class CameraCard {
       try{
         const ic = new ImageCapture(track);
 
-        // Try capabilities (optional hints)
         if (ic.getPhotoCapabilities){
           try{
             const pc = await ic.getPhotoCapabilities();
@@ -210,11 +200,10 @@ export class CameraCard {
       }
     }
 
-    // Fallback to video frame
     return this.captureTo(canvas);
   }
 
-  // Draw Blob/Bitmap to canvas 1:1 + auto-rotate portrait if needed
+  // Draw Blob/Bitmap to canvas 1:1
   async _drawBlobToCanvas(blob, canvas){
     let bmp=null;
     try{ bmp = await createImageBitmap(blob); }
@@ -226,29 +215,20 @@ export class CameraCard {
         img.src = URL.createObjectURL(blob);
       });
     }
-    const iw0 = bmp.width, ih0 = bmp.height;
-
-    const needRotate = this.forcePortrait && iw0 > ih0; // landscape -> portrait
-    if (!needRotate) {
-      canvas.width = iw0; canvas.height = ih0;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(bmp, 0, 0, iw0, ih0);
-      this._log('CAPTURE', { mode:'hires', iw:iw0, ih:ih0, rotated:false });
-    } else {
-      canvas.width = ih0;        // swap
-      canvas.height = iw0;
-      const ctx = canvas.getContext('2d');
-      ctx.save();
-      ctx.translate(canvas.width/2, canvas.height/2);
-      ctx.rotate(90 * Math.PI/180);       // rotate clockwise
-      ctx.drawImage(bmp, -iw0/2, -ih0/2, iw0, ih0);
-      ctx.restore();
-      this._log('CAPTURE', { mode:'hires', iw:ih0, ih:iw0, rotated:true });
-    }
+    const iw = bmp.width, ih = bmp.height;
+    canvas.width = iw; canvas.height = ih;
 
     Object.assign(canvas.style, {
       position:'absolute', inset:0, width:'100%', height:'100%',
       borderRadius:'16px', zIndex:2
     });
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bmp, 0, 0, iw, ih);
+
+    if (bmp instanceof Image && bmp.src && String(bmp.src).startsWith('blob:')) {
+      try{ URL.revokeObjectURL(bmp.src); }catch{}
+    }
+    this._log('CAPTURE', { mode:'hires', iw, ih });
   }
 }
