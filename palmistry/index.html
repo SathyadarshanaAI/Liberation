@@ -1,254 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sathya Darshana Quantum Palm Analyzer V5.1</title>
-    <link rel="stylesheet" href="./styles.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sathya Darshana Quantum Palm Analyzer V5.1</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .btn.danger {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+    .btn.danger:hover {
+      background: #ef4444;
+      color: #0b0f16;
+    }
+  </style>
 </head>
 <body>
-    <h1>Sathya Darshana Quantum Palm Analyzer V5.1</h1>
+  <h1>Sathya Darshana Quantum Palm Analyzer V5.1</h1>
 
-    <div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
+  <div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
 
-    <div class="wrap">
-        <div class="camWrap">
-            <!-- Left Hand -->
-            <div class="camCol">
-                <strong>Left Hand</strong>
-                <div class="camBox" id="camBoxLeft">
-                    <canvas id="canvasLeft"></canvas>
-                </div>
-                <div class="camBtns">
-                    <button class="btn" id="startCamLeft">📷 Start</button>
-                    <button class="btn" id="captureLeft">Capture</button>
-                    <button class="btn" id="uploadLeft">Upload Photo</button>
-                    <button class="btn" id="torchLeft">💡 Torch</button>
-                </div>
-            </div>
-
-            <!-- Right Hand -->
-            <div class="camCol">
-                <strong>Right Hand</strong>
-                <div class="camBox" id="camBoxRight">
-                    <canvas id="canvasRight"></canvas>
-                </div>
-                <div class="camBtns">
-                    <button class="btn" id="startCamRight">📷 Start</button>
-                    <button class="btn" id="captureRight">Capture</button>
-                    <button class="btn" id="uploadRight">Upload Photo</button>
-                    <button class="btn" id="torchRight">💡 Torch</button>
-                </div>
-            </div>
+  <div class="wrap">
+    <div class="camWrap">
+      <!-- Left Hand -->
+      <div class="camCol">
+        <strong>Left Hand</strong>
+        <div class="camBox" id="camBoxLeft">
+          <canvas id="canvasLeft"></canvas>
         </div>
-
-        <!-- Shared Controls -->
-        <div class="toolbar">
-            <button class="btn" id="analyze">Analyze</button>
-            <button class="btn" id="miniReport">Mini Report</button>
-            <button class="btn" id="fullReport">Full Report (PDF)</button>
-            <button class="btn" id="speak">🔊 Speak</button>
-            <select id="language">
-                <option value="en">English</option>
-                <option value="si">Sinhala</option>
-                <option value="ta">Tamil</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="es">Spanish</option>
-                <option value="zh-cn">Chinese (Simplified)</option>
-                <option value="hi">Hindi</option>
-                <option value="ar">Arabic</option>
-                <option value="ja">Japanese</option>
-                <option value="ru">Russian</option>
-                <option value="pt">Portuguese</option>
-                <option value="ko">Korean</option>
-                <option value="it">Italian</option>
-                <option value="tr">Turkish</option>
-                <option value="id">Indonesian</option>
-                <option value="nl">Dutch</option>
-                <option value="sv">Swedish</option>
-            </select>
+        <div class="camBtns">
+          <button class="btn" id="startCamLeft">📷 Start</button>
+          <button class="btn" id="captureLeft">Capture</button>
+          <button class="btn" id="uploadLeft">Upload Photo</button>
+          <button class="btn" id="torchLeft">💡 Torch</button>
         </div>
-
-        <div id="status">Ready</div>
-        <pre id="insight"></pre>
-    </div>
-
-    <!-- Google Translate Script -->
-    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-ච so app.js can use them immediately -->
-    <script>
-      (function(){
-        if(!console.tag){
-          console.tag = (tag, ...args)=> console.log(`[${String(tag).toUpperCase()}]`, ...args);
-        }
-        if(!window.statusMsg){
-          window.statusMsg = (msg)=>{
-            try{ document.getElementById('status').textContent = msg; }catch(e){}
-            console.tag('status', msg);
-          };
-        }
-      })();
-    </script>
-
-    <!-- Your main module -->
-    <script type="module" src="./app.js"></script>
-
-    <script>
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,si,ta,fr,de,es,zh-CN,hi,ar,ja,ru,pt,ko,it,tr,id,nl,sv',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-            }, 'google_translate_element');
-        }
-    </script>
-
-    <!-- jsPDF CDN for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-    <!-- 🔸 In-Page F12 Console (Mobile) -->
-    <style>
-      #f12 {position:fixed;left:0;right:0;bottom:0;background:#0b0f16;color:#d9f99d;
-            font:12px/1.3 ui-monospace,monospace;border-top:1px solid #22d3ee;z-index:999999}
-      #f12 .bar{display:flex;gap:8px;align-items:center;padding:6px 8px;background:#081018}
-      #f12 .bar b{color:#22d3ee}
-      #f12 .bar button{font:11px ui-sans-serif;padding:4px 8px;border:1px solid #22d3ee;
-            background:#0b0f16;color:#e2e8f0;border-radius:8px}
-      #f12 .wrap{max-height:36vh;overflow:auto;padding:8px}
-      #f12 .row{padding:4px 0;border-bottom:1px solid #0f172a;word-break:break-word;white-space:pre-wrap}
-      #f12 .L{color:#a7f3d0}  /* log   */
-      #f12 .W{color:#fde68a}  /* warn  */
-      #f12 .E{color:#fecaca}  /* error */
-      #f12 .N{color:#93c5fd}  /* network */
-      #f12.collapsed .wrap{display:none}
-    </style>
-
-    <div id="f12" class="collapsed" role="region" aria-label="Mobile Dev Console">
-      <div class="bar">
-        <b>F12</b>
-        <button id="f12Toggle">Show</button>
-        <button id="f12Clear">Clear</button>
-        <button id="f12Copy">Copy</button>
-        <span id="f12Info" style="margin-left:auto;opacity:.75"></span>
       </div>
-      <div class="wrap" id="f12Wrap" aria-live="polite"></div>
+
+      <!-- Right Hand -->
+      <div class="camCol">
+        <strong>Right Hand</strong>
+        <div class="camBox" id="camBoxRight">
+          <canvas id="canvasRight"></canvas>
+        </div>
+        <div class="camBtns">
+          <button class="btn" id="startCamRight">📷 Start</button>
+          <button class="btn" id="captureRight">Capture</button>
+          <button class="btn" id="uploadRight">Upload Photo</button>
+          <button class="btn" id="torchRight">💡 Torch</button>
+          <button class="btn danger" id="cleanRight">🧹 Clean</button>
+        </div>
+      </div>
     </div>
 
-    <script>
+    <!-- Shared Controls -->
+    <div class="toolbar">
+      <button class="btn" id="analyze">Analyze</button>
+      <button class="btn" id="miniReport">Mini Report</button>
+      <button class="btn" id="fullReport">Full Report (PDF)</button>
+      <button class="btn" id="speak">🔊 Speak</button>
+      <select id="language">
+        <option value="en">English</option>
+        <option value="si">Sinhala</option>
+        <option value="ta">Tamil</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="es">Spanish</option>
+        <option value="zh-cn">Chinese (Simplified)</option>
+        <option value="hi">Hindi</option>
+        <option value="ar">Arabic</option>
+        <option value="ja">Japanese</option>
+        <option value="ru">Russian</option>
+        <option value="pt">Portuguese</option>
+        <option value="ko">Korean</option>
+        <option value="it">Italian</option>
+        <option value="tr">Turkish</option>
+        <option value="id">Indonesian</option>
+        <option value="nl">Dutch</option>
+        <option value="sv">Swedish</option>
+      </select>
+    </div>
+
+    <div id="status">Ready</div>
+    <pre id="insight"></pre>
+  </div>
+
+  <!-- Google Translate Script -->
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  <script>
     (function(){
-      const box   = document.getElementById('f12');
-      const wrap  = document.getElementById('f12Wrap');
-      const info  = document.getElementById('f12Info');
-      const btnT  = document.getElementById('f12Toggle');
-      const btnC  = document.getElementById('f12Clear');
-      const btnCp = document.getElementById('f12Copy');
-
-      const PAD = 64;                       // bottom safe area when panel is open
-      const key = 'f12-collapsed';          // remember state between reloads
-
-      const ts = ()=> new Date().toLocaleTimeString();
-      const fmt = (v)=>{
-        try {
-          if (typeof v === 'string') return v;
-          return JSON.stringify(v, (k,val)=> (val instanceof Error)? {name:val.name,message:val.message,stack:val.stack}: val, 2);
-        } catch { return String(v); }
-      };
-      const push = (kind, ...args)=>{
-        const row = document.createElement('div');
-        row.className = 'row ' + kind;
-        const tag = {L:'LOG',W:'WARN',E:'ERR',N:'NET'}[kind] || 'LOG';
-        row.innerHTML = `[${ts()}] <span class="${kind}">${tag}</span> — ` + args.map(fmt).join(' ');
-        wrap.appendChild(row);
-        wrap.scrollTop = wrap.scrollHeight;
-      };
-      const setInfo = ()=>{
-        const mem = (performance && performance.memory) ? ` | mem: ${Math.round(performance.memory.usedJSHeapSize/1048576)}MB` : '';
-        info.textContent = `${screen.width}×${screen.height}${mem}`;
-      };
-
-      // restore state
-      if (localStorage.getItem(key)==='0') {
-        box.classList.remove('collapsed');
-        document.body.style.paddingBottom = PAD + 'px';
-        btnT.textContent = 'Hide';
+      if(!console.tag){
+        console.tag = (tag, ...args)=> console.log(`[${String(tag).toUpperCase()}]`, ...args);
       }
-
-      // panel controls
-      btnT.onclick = ()=>{
-        const isCol = box.classList.toggle('collapsed');
-        btnT.textContent = isCol ? 'Show' : 'Hide';
-        document.body.style.paddingBottom = isCol ? '' : PAD + 'px';
-        localStorage.setItem(key, isCol ? '1' : '0');
-      };
-      btnC.onclick = ()=>{ wrap.textContent=''; };
-      btnCp.onclick= async ()=>{
-        const txt = Array.from(wrap.querySelectorAll('.row')).map(r=>r.textContent).join('\n');
-        try { await navigator.clipboard.writeText(txt); push('L','📋 Copied logs to clipboard'); }
-        catch { push('W','Copy failed'); }
-      };
-
-      // hook console methods
-      ['log','warn','error','debug'].forEach(type=>{
-        const old = (console[type]||console.log).bind(console);
-        console[type] = (...msgs)=>{ try{ old(...msgs);}catch{}; push(type[0].toUpperCase(), ...msgs); };
-      });
-
-      // upgrade helpers defined earlier
-      console.tag = (tag, ...args)=> console.log(`[${String(tag).toUpperCase()}]`, ...args);
-      window.statusMsg = (msg)=>{ try{ document.getElementById('status').textContent = msg; }catch{}; console.tag('status', msg); };
-
-      // global errors
-      window.addEventListener('error', e=>{
-        push('E', e.message, e.filename+':'+e.lineno+':'+e.colno);
-        if (e.error && e.error.stack) push('E', e.error.stack);
-      });
-      window.addEventListener('unhandledrejection', e=>{
-        push('E','Unhandled Promise Rejection:', e.reason);
-      });
-
-      // log fetch/XHR with mute list
-      const _fetch = window.fetch;
-      window.fetch = async function(input, init){
-        const url = (typeof input==='string')? input : (input?.url||'');
-        const mute = [
-          'translate.googleapis.com/element/log',
-          'translate.googleapis.com/gen204',
-          'google-analytics.com',
-          'g.doubleclick.net'
-        ];
-        if (url && mute.some(s => url.includes(s))) {
-          return _fetch(input, init); // pass-through without logging
-        }
-        push('N','fetch ►', url);
-        try{
-          const res = await _fetch(input, init);
-          push('N','fetch ✓', url, res.status, res.statusText || '');
-          return res;
-        }catch(err){
-          push('E','fetch ✗', url, err?.message||String(err));
-          throw err;
-        }
-      };
-
-      // double-tap left-bottom corner toggles panel
-      let lastTap = 0;
-      window.addEventListener('touchend', (e)=>{
-        if (!e.changedTouches || !e.changedTouches[0]) return;
-        const t = Date.now();
-        const y = e.changedTouches[0].clientY;
-        const x = e.changedTouches[0].clientX;
-        const nearBottom = (window.innerHeight - y) < 80;
-        const nearLeft   = x < 80;
-        if (nearBottom && nearLeft && (t - lastTap) < 350) btnT.click();
-        lastTap = t;
-      }, {passive:true});
-
-      // ready
-      push('L','✅ Mobile F12 ready');
-      setInfo();
+      if(!window.statusMsg){
+        window.statusMsg = (msg)=>{
+          try{ document.getElementById('status').textContent = msg; }catch(e){}
+          console.tag('status', msg);
+        };
+      }
     })();
-    </script>
-    <!-- 🔸 /In-Page F12 Console -->
+  </script>
+
+  <!-- Main module -->
+  <script type="module" src="./app.js"></script>
+
+  <script>
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,si,ta,fr,de,es,zh-CN,hi,ar,ja,ru,pt,ko,it,tr,id,nl,sv',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
+  </script>
+
+  <!-- jsPDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- 🧹 Clean Button Logic (Right Hand Only) -->
+  <script>
+  (function(){
+    const btn = document.getElementById('cleanRight');
+    if(!btn) return;
+    btn.addEventListener('click', ()=>{
+      const cvs = document.getElementById('canvasRight');
+      if(cvs && cvs.getContext){
+        const ctx = cvs.getContext('2d', {willReadFrequently:true});
+        ctx.clearRect(0, 0, cvs.width, cvs.height);
+      }
+      const insight = document.getElementById('insight');
+      if(insight) insight.textContent = '';
+      if(window.statusMsg) statusMsg('🧹 Right hand canvas cleared');
+      console.log('[CLEAN] Right hand canvas cleared');
+    });
+  })();
+  </script>
+
 </body>
 </html>
