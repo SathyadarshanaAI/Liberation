@@ -1,3 +1,44 @@
+// --- Module Health Check (UI) ---
+(async function moduleHealth() {
+  const status = document.getElementById('status');
+  const v = 'v=20251019b'; // cache-buster for imports
+
+  // global traps so errors UI එකට එයි
+  window.addEventListener('error',  e => {
+    status.textContent = `Error: ${e.message}`;
+    status.style.color = '#ff6b6b';
+    console.error(e.error || e.message);
+  });
+  window.addEventListener('unhandledrejection', e => {
+    status.textContent = `Promise error: ${e.reason?.message || e.reason}`;
+    status.style.color = '#ff6b6b';
+    console.error(e.reason);
+  });
+
+  try {
+    const [features, teachings, fusion, why, sideboot] = await Promise.all([
+      import(`./modules/features.js?${v}`),
+      import(`./modules/teachings.js?${v}`),
+      import(`./modules/fusion.js?${v}`),
+      import(`./modules/why.js?${v}`),
+      import(`./modules/sideboot.js?${v}`)
+    ]);
+
+    // quick smoke: call named exports if exist (won’t crash if missing)
+    features?.extractAllFeatures?.({});
+    await teachings?.loadTeachings?.();
+    fusion?.defaultTraitMap?.();
+    why?.showWhy?.({summary:'health-check'});
+
+    status.textContent = 'Modules: OK';
+    status.style.color = '#16f0a7'; // green
+    console.log('✅ Module health passed');
+  } catch (err) {
+    status.textContent = `Modules error: ${err.message || err}`;
+    status.style.color = '#ff6b6b';
+    console.error('❌ Module linking failed:', err);
+  }
+})();
 import { CameraCard } from './modules/camera.js';
 import { exportPalmPDF } from './modules/pdf.js';
 
