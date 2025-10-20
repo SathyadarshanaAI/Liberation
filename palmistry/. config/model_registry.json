@@ -1,0 +1,30 @@
+{
+  "registry_version": "1.0",
+  "last_update": "2025-10-20T00:00:00Z",
+  "models": [
+    {
+      "id": "palmnet_v1",
+      "version": "1.0.0",
+      "file": "models/palmnet_v1.onnx",
+      "sha256": "e5d2d8ff19ac6b3b1b6c2a...example...",
+      "size_mb": 24.7,
+      "updated": "2025-10-10T00:00:00Z",
+      "description": "Primary palm line CNN classifier trained on 3,000 labeled samples.",
+      "source": "Sathyadarshana Research Core",
+      "status": "active"
+    }
+  ],
+  "rulesets": [
+    {
+      "id": "classical_v1",
+      "file": "ontology/ruleset.yml",
+      "version": "1.0",
+      "sha256": "32ee3a92bf...example...",
+      "status": "active"
+    }
+  ],
+  "features": {
+    "autoUpdate": true,
+    "remoteEndpoint": "https://sathyadarshanaai.github.io/palmistry/config/model_registry.json"
+  }
+}
