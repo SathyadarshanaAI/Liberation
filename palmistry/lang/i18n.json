@@ -1,0 +1,25 @@
+{
+  "en": {
+    "app_title": "Quantum Palm Analyzer",
+    "welcome": "Welcome to the Light of Truth",
+    "analyze": "Analyze Palm",
+    "capture": "Capture Hand",
+    "left_hand": "Left Hand",
+    "right_hand": "Right Hand",
+    "start": "Start",
+    "stop": "Stop",
+    "save": "Save Report",
+    "speak": "Speak Insight",
+    "language": "Language",
+    "result_title": "Palm Analysis Results",
+    "no_data": "No palm data detected."
+  },
+  "si": {
+    "app_title": "සත්‍යදර්ශන හස්ත විශ්ලේෂකය",
+    "welcome": "සත්‍යයේ ආලෝකයට සාදරයෙන් පිළිගනිමු",
+    "analyze": "අත් විශ්ලේෂණය කරන්න",
+    "capture": "අත ලබාගන්න",
+    "left_hand": "වම් අත",
+    "right_hand": "දකුණු අත",
+    "start": "ආරම්භ කරන්න",
+    "stop":
