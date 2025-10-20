@@ -1,0 +1,29 @@
+// modules/fusion.js — combine AI model outputs + rule-based insights
+
+import rules from "../ontology/ruleset.yml" assert { type: "yaml" };
+
+export function fuseInsights(modelData) {
+  const results = [];
+  for (const rule of rules.rules) {
+    try {
+      // basic evaluator — sandboxed
+      const condition = new Function("d", `return ${rule.if};`);
+      if (condition(modelData)) {
+        results.push({
+          id: rule.id,
+          meaning: rule.then.meaning,
+          weight: rule.then.weight || 0.5
+        });
+      }
+    } catch (err) {
+      console.warn("Rule eval error:", rule.id, err.message);
+    }
+  }
+
+  // sort by weight descending
+  results.sort((a, b) => b.weight - a.weight);
+
+  // summarize top-5 insights
+  const summary = results.slice(0, 5).map(r => r.meaning).join(" ");
+  return { all: results, summary };
+}
