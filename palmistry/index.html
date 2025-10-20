@@ -90,5 +90,50 @@
   </div>
 
   <script type="module" src="./app.js"></script>
-</body>
+</body><script type="module">
+(async()=>{
+  console.log("🧠 Palmistry modular link test running...");
+
+  // try imports
+  try {
+    const sideboot = await import('./modules/sideboot.js');
+    console.log("✅ sideboot.js loaded:", sideboot);
+
+    const [features, teachings, fusion, why] = await Promise.all([
+      import('./modules/features.js'),
+      import('./modules/teachings.js'),
+      import('./modules/fusion.js'),
+      import('./modules/why.js')
+    ]);
+    console.log("✅ Core modules OK");
+
+    // quick data mock
+    const polylines = {
+      heart:{ poly:[[30,180],[90,170],[150,165],[220,160]] },
+      fate: { poly:[[320,500],[320,430],[320,360],[320,300]] }
+    };
+    const structures = { lines:{ heart:{depth:'deep'}, fate:{origin:'luna'} } };
+
+    // run minimal flow
+    const feats = features.extractAllFeatures(polylines);
+    const rules = await teachings.loadTeachings();
+    const evid = teachings.matchRules({ lines:structures.lines }, feats, rules);
+    const fused = fusion.fuseEvidences(evid, { traitMap: fusion.defaultTraitMap() });
+
+    console.log("✅ Features:", feats);
+    console.log("✅ Evidence:", evid);
+    console.log("✅ Fusion:", fused);
+
+    // show Why drawer if working
+    if(why.showWhy){
+      why.showWhy({ ...fused, scanMeta:{ hand:'Right' }, evidences:evid });
+      console.log("✅ Why drawer shown.");
+    }
+
+    console.log("🎉 All modules connected successfully!");
+  } catch(err){
+    console.error("❌ Module linking failed:", err);
+  }
+})();
+</script>
 </html>
