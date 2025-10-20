@@ -140,6 +140,22 @@ $('speak').onclick = ()=>{
     setStatus('Modules: OK (no-sideboot)');
   }
 })();
+// --- Modular smoke test ---
+import("./logic12.js").then(m => {
+  const demo = {
+    left:{density:4.43, life:"strong", head:"balanced", heart:"moderate", fate:"present", sun:"visible", health:"steady", marriage:"clear", manikanda:3},
+    right:{density:5.59, life:"strong", head:"balanced", heart:"moderate", fate:"present", sun:"visible", health:"steady", marriage:"clear", manikanda:3},
+    name:"Test"
+  };
+  const out = m.generateMiniReport(demo, "si");
+  console.log("MODULE OK →", out);
+  document.getElementById("insight").textContent = "MODULE OK → " + out;
+}).catch(err => {
+  console.error("MODULE FAIL:", err);
+  document.getElementById("insight").textContent = "MODULE FAIL → " + err.message;
+});
 
 // init
+
+
 setupCams();
