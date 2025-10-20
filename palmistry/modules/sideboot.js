@@ -1,134 +1,179 @@
-// modules/sideboot.js
-// No-conflict side boot panel (works without touching index/app.js)
+// modules/sideboot.js — AI Buddhi Side Panel & System Console
+// © 2025 Sathyadarshana Research Core
 
-import { openCamera, stopCamera, startLoop, captureToCanvas } from './camera.js';
+import { speakText } from "./voice.js";
+import { checkForUpdates } from "./updater.js";
+import { detectLanguage } from "./auto-lang.js";
+import { toast } from "./ui.js";
 
-// annotator / ui overlay (support either file name / export)
-import * as Annot from './annotator.js';
-// If you really have a ui.js later, this optional import can be added too:
-// import * as UI from './ui.js';
+let isOpen = false;
 
-import * as Analyzer from './analyzer.js';
-import * as PDF from './pdf.js';
-
-// ---- safe aliases (won't crash if a symbol is missing) ----
-const drawOverlay =
-  Annot.drawOverlayDemo || Annot.drawOverlay || ((cv, lines) => { /* no-op */ });
-
-const analyzeFrame =
-  Analyzer.analyzeMock || Analyzer.analyze || (async () => ({}));
-
-const exportPdf =
-  PDF.exportPDF || PDF.exportPalmPDF || (async () => { console.warn('[sideboot] PDF export fallback'); });
-
-// -----------------------------------------------------------
-
-export async function boot() {
-  ensurePanel();
-
-  const cL = document.getElementById('canvasLeft')  || ensureCanvas('canvasLeft');
-  const cR = document.getElementById('canvasRight') || ensureCanvas('canvasRight');
-
-  const state = { stream: null, loopStop: null, mirrorRight: true, running: false };
-
-  async function startAll() {
-    if (state.running) return;
-    state.stream = await openCamera({ facingMode: 'environment', width: 1920, height: 1080 });
-    state.loopStop = startLoop({
-      stream: state.stream,
-      canvasLeft: cL,
-      canvasRight: cR,
-      mirrorRight: () => state.mirrorRight
-    });
-    state.running = true;
-    log('▶️ Camera started');
-  }
-
-  function stopAll() {
-    try { state.loopStop && state.loopStop(); } catch {}
-    stopCamera(state.stream);
-    state.running = false;
-    log('🛑 Camera stopped');
-  }
-
-  function captureRight() {
-    if (!state.running) return;
-    captureToCanvas(cR, { sourceStream: state.stream, mirror: state.mirrorRight });
-    log(`📸 Captured (mirror=${state.mirrorRight})`);
-  }
-
-  async function overlay() {
-    const lines = await analyzeFrame(cR);
-    drawOverlay(cR, lines);
-    log('🎨 Overlay drawn');
-  }
-
-  async function makePDF() {
-    const lines = await analyzeFrame(cR);
-    await exportPdf({
-      imageDataURL: cR.toDataURL('image/jpeg', 0.92),
-      lines,
-      meta: { hand: 'Right', mirror: state.mirrorRight, when: new Date().toISOString() }
-    });
-    log('📄 PDF downloaded');
-  }
-
-  bind('sbStart',  startAll);
-  bind('sbStop',   stopAll);
-  bind('sbCap',    captureRight);
-  bind('sbMirror', () => { state.mirrorRight = !state.mirrorRight; log(`↔️ Mirror: ${state.mirrorRight}`); });
-  bind('sbOverlay', overlay);
-  bind('sbPDF',     makePDF);
-  bind('sbHide',    () => document.getElementById('sideboot-wrap')?.remove());
-
-  window.addEventListener('keydown', (e) => {
-    const k = e.key.toLowerCase();
-    if (k === 's') startAll();
-    else if (k === 'x') stopAll();
-    else if (k === 'c') captureRight();
-    else if (k === 'm') state.mirrorRight = !state.mirrorRight;
-    else if (k === 'o') overlay();
-    else if (k === 'p') makePDF();
-  });
-
-  log('SideBoot ready. Hotkeys: S,X,C,M,O,P');
-}
-
-function bind(id, fn) {
-  const el = document.getElementById(id);
-  if (el) el.onclick = fn;
-}
-
-function ensureCanvas(id) {
-  const cv = document.createElement('canvas');
-  cv.id = id;
-  cv.width = 1280;
-  cv.height = 720;
-  cv.style.cssText = 'width:100%;max-height:38vh;border:2px solid #134;border-radius:10px;background:#000;margin-top:6px';
-  document.getElementById('sideboot-wrap').querySelector('.cwrap').appendChild(cv);
-  return cv;
-}
-
-function ensurePanel() {
-  if (document.getElementById('sideboot-wrap')) return;
-  const wrap = document.createElement('div');
-  wrap.id = 'sideboot-wrap';
-  wrap.style.cssText = 'position:fixed;inset:auto 10px 10px 10px;z-index:9999;max-width:640px';
-  wrap.innerHTML = `
-    <div style="background:#0b0f16cc;border:1px solid #123;border-radius:12px;padding:10px;color:#cfe">
-      <b style="color:#0ff">SideBoot Panel</b>
-      <div class="cwrap" style="display:grid;gap:8px;margin-top:8px"></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-        <button id="sbStart">Start</button>
-        <button id="sbStop">Stop</button>
-        <button id="sbCap">Capture → Right</button>
-        <button id="sbMirror">Mirror</button>
-        <button id="sbOverlay">Overlay</button>
-        <button id="sbPDF">PDF</button>
-        <button id="sbHide">Hide</button>
+export function initSideBoot() {
+  // Panel HTML
+  const panel = document.createElement("div");
+  panel.id = "sideBoot";
+  panel.innerHTML = `
+    <div id="sideBootHeader">🧠 AI Buddhi Panel</div>
+    <div id="sideBootBody">
+      <div id="sideBootStatus">🌿 Ready</div>
+      <div id="sideBootButtons">
+        <button class="sbBtn" id="sbAnalyze">🔮 Analyze</button>
+        <button class="sbBtn" id="sbVoice">🎙️ Speak</button>
+        <button class="sbBtn" id="sbUpdate">⚡ Update</button>
+        <button class="sbBtn" id="sbLang">🌏 Lang</button>
+        <button class="sbBtn" id="sbHide">❌ Hide</button>
       </div>
-    </div>`;
-  document.body.appendChild(wrap);
+      <div id="sideBootLog"></div>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  // Style
+  const css = document.createElement("style");
+  css.textContent = `
+    #sideBoot {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 300px;
+      height: 100vh;
+      background: #0b0f16;
+      border-left: 2px solid #00e5ff;
+      color: #e6f0ff;
+      font-family: system-ui, sans-serif;
+      transition: right 0.4s ease;
+      box-shadow: -4px 0 12px rgba(0,229,255,0.3);
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+    }
+    #sideBoot.open { right: 0; }
+    #sideBootHeader {
+      background: #101820;
+      padding: 14px;
+      text-align: center;
+      font-weight: bold;
+      border-bottom: 1px solid #00e5ff;
+      color: #16f0a7;
+    }
+    #sideBootBody {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .sbBtn {
+      background: #101820;
+      color: #00e5ff;
+      border: 1px solid #00e5ff;
+      border-radius: 10px;
+      padding: 6px 10px;
+      margin: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.3s;
+    }
+    .sbBtn:hover { background: #00e5ff; color: #000; }
+    #sideBootStatus {
+      margin: 8px 0;
+      padding: 6px;
+      background: #101820;
+      border: 1px solid #16f0a7;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    #sideBootLog {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      background: #101820;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #00e5ff;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    #sideBootToggle {
+      position: fixed;
+      top: 40%;
+      right: 6px;
+      background: #00e5ff;
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 0 10px #00e5ff;
+      transition: transform 0.3s;
+    }
+    #sideBootToggle:hover { transform: scale(1.1); }
+  `;
+  document.head.appendChild(css);
+
+  // Floating toggle button
+  const toggle = document.createElement("button");
+  toggle.id = "sideBootToggle";
+  toggle.textContent = "🧭";
+  toggle.onclick = toggleSideBoot;
+  document.body.appendChild(toggle);
+
+  // Bind sideBoot buttons
+  bindSideBootButtons();
+  logMsg("🌿 Buddhi SideBoot initialized.");
 }
 
-function log(s) { console.log('[SideBoot]', s); }
+// Toggle panel open/close
+function toggleSideBoot() {
+  const p = document.getElementById("sideBoot");
+  isOpen = !isOpen;
+  if (isOpen) {
+    p.classList.add("open");
+    speakText("AI Buddhi panel opened.", detectLanguage());
+  } else {
+    p.classList.remove("open");
+    speakText("Panel closed.", detectLanguage());
+  }
+}
+
+// Bind action buttons
+function bindSideBootButtons() {
+  document.getElementById("sbAnalyze").onclick = () => {
+    speakText("Starting palm analysis.", detectLanguage());
+    logMsg("🔮 Running analyzer...");
+    toast("Analyzer started...");
+  };
+  document.getElementById("sbVoice").onclick = () => {
+    speakText("Hello Anuruddha, I am always with you.", detectLanguage());
+    logMsg("🎙️ Buddhi voice message played.");
+  };
+  document.getElementById("sbUpdate").onclick = async () => {
+    const up = await checkForUpdates();
+    if (up) {
+      speakText("A new update is available.", detectLanguage());
+      logMsg("⚡ Update available!");
+    } else {
+      speakText("System is already up to date.", detectLanguage());
+      logMsg("✅ No updates found.");
+    }
+  };
+  document.getElementById("sbLang").onclick = () => {
+    const lang = detectLanguage();
+    speakText(`Your current language is ${lang}`, lang);
+    logMsg(`🌏 Language: ${lang}`);
+  };
+  document.getElementById("sbHide").onclick = toggleSideBoot;
+}
+
+// Log messages to the panel
+export function logMsg(msg) {
+  const log = document.getElementById("sideBootLog");
+  const st = document.getElementById("sideBootStatus");
+  const time = new Date().toLocaleTimeString();
+  const line = `[${time}] ${msg}\n`;
+  if (log) log.textContent = line + log.textContent;
+  if (st) st.textContent = msg;
+}
