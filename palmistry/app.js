@@ -1,145 +1,296 @@
-// app.js  (place in /palmistry/app.js)
-import { CameraCard, captureToCanvas } from './modules/camera.js';
+// app.js — Quantum Palm Analyzer V5.3 (no external bundler)
+// Features: dual camera (left/right), mirror draw on right, capture, upload,
+// torch (where supported), simple Analyze → JSON, Mini Report (12-lang via logic12.js),
+// Full Report (PDF via jsPDF), Speak (Web Speech API).
 
-const $ = (id)=>document.getElementById(id);
-const statusEl = $('status');
-const leftCv   = $('canvasLeft');
-const rightCv  = $('canvasRight');
+import { generateMiniReport } from "./logic12.js";
 
-function setStatus(msg, ok=true){
-  statusEl.textContent = msg;
-  statusEl.style.color = ok ? '#16f0a7' : '#ff6b6b';
-}
+const $ = (id) => document.getElementById(id);
 
-// --- setup cameras ---
-let camLeft, camRight;
-function setupCams(){
-  camLeft  = new CameraCard($('camBoxLeft'),  { facingMode:'environment', onStatus:setStatus });
-  camRight = new CameraCard($('camBoxRight'), { facingMode:'environment', onStatus:setStatus });
-
-  $('startCamLeft').onclick  = ()=> camLeft.start();
-  $('startCamRight').onclick = ()=> camRight.start();
-
-  $('captureLeft').onclick  = ()=> camLeft.captureTo(leftCv,  { mirror:false, cover:true });
-  $('captureRight').onclick = ()=> camRight.captureTo(rightCv, { mirror:true,  cover:true });
-
-  $('torchLeft').onclick  = ()=> camLeft.toggleTorch();
-  $('torchRight').onclick = ()=> camRight.toggleTorch();
-
-  // upload → draw to canvas
-  $('uploadLeft').onclick = ()=> filePickToCanvas(leftCv);
-  $('uploadRight').onclick= ()=> filePickToCanvas(rightCv);
-}
-
-async function filePickToCanvas(cv){
-  const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = 'image/*';
-  inp.onchange = async ()=>{
-    const f = inp.files?.[0]; if(!f) return;
-    const img = new Image(); img.onload = ()=>{
-      cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-      setStatus('🖼️ Image loaded');
-    };
-    img.src = URL.createObjectURL(f);
-  };
-  inp.click();
-}
-
-// --- Analyze / Reports (placeholder logic you can swap with real one) ---
-function analyzeCanvas(cv){
-  // very simple mock: returns line strengths by edge density
-  const ctx = cv.getContext('2d');
-  const { width:w, height:h } = cv;
-  if(!w || !h){ return { ok:false, msg:'No image' }; }
-  const img = ctx.getImageData(0,0,w,h).data;
-  let sum=0;
-  for(let i=0;i<img.length;i+=4){
-    // crude edge-ish metric: high contrast channel
-    const v = (img[i]*0.3+img[i+1]*0.59+img[i+2]*0.11);
-    sum += (v<90?1:0);
-  }
-  const density = (sum/(w*h))*100;
-  return {
-    ok:true,
-    metrics:{ density: +density.toFixed(2) },
-    traits:{
-      heart: density>18?'strong':'moderate',
-      head:  density>22?'deep':'balanced',
-      life:  density>26?'bold':'fine',
-      fate:  density>20?'present':'subtle'
-    },
-    report:`Lines density ~ ${density.toFixed(2)}%`
-  };
-}
-
-$('analyze').onclick = ()=>{
-  const L = analyzeCanvas(leftCv);
-  const R = analyzeCanvas(rightCv);
-  let out = '';
-  if(L.ok) out += `LEFT → ${L.report}\n${JSON.stringify(L.traits)}\n\n`;
-  if(R.ok) out += `RIGHT → ${R.report}\n${JSON.stringify(R.traits)}\n`;
-  $('insight').textContent = out || 'No image(s) to analyze.';
-  setStatus('✅ Analyzed');
+// DOM
+const statusEl = $("status");
+const langSel  = $("language");
+const canvasL  = $("canvasLeft");
+const canvasR  = $("canvasRight");
+const btns = {
+  startL: $("startCamLeft"),
+  capL:   $("captureLeft"),
+  torchL: $("torchLeft"),
+  uplL:   $("uploadLeft"),
+  startR: $("startCamRight"),
+  capR:   $("captureRight"),
+  torchR: $("torchRight"),
+  uplR:   $("uploadRight"),
+  analyze:$("analyze"),
+  mini:   $("miniReport"),
+  full:   $("fullReport"),
+  speak:  $("speak"),
 };
+const insightEl = $("insight");
 
-$('miniReport').onclick = ()=>{
-  const txt = $('insight').textContent.trim();
-  $('insight').textContent = txt ? txt : 'No analysis yet. Capture or Upload first.';
-};
+// State
+let streamL=null, streamR=null;
+let rafL=0, rafR=0;
+let liveL=false, liveR=false;
+let lastAnalysis = null; // save last JSON
 
-$('fullReport').onclick = ()=>{
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit:'pt', format:'a4' });
-  doc.setFont('helvetica','bold'); doc.setFontSize(16);
-  doc.text('Sathya Darshana · Quantum Palm Analyzer V5.3', 40, 50);
+// Utils
+function msg(txt){ statusEl.textContent = txt; }
+function ctx(c){ return c.getContext("2d", { willReadFrequently:true }); }
+function clearRAF(side){ if(side==="L"){ cancelAnimationFrame(rafL); rafL=0; } else { cancelAnimationFrame(rafR); rafR=0; } }
+function stopStream(str){ try{ str?.getTracks()?.forEach(t=>t.stop()); }catch(e){} }
 
-  const addImg = (cv, y, label)=>{
-    if(!cv.width) return y;
-    const data = cv.toDataURL('image/jpeg',0.92);
-    doc.setFont('helvetica','normal'); doc.setFontSize(12);
-    doc.text(label, 40, y); y+=8;
-    const maxW = 515, maxH = 360;
-    const r = Math.min(maxW/cv.width, maxH/cv.height);
-    const w = cv.width*r, h = cv.height*r;
-    doc.addImage(data,'JPEG',40,y,w,h); y+=h+16;
-    return y;
-  };
+function mapLang(val){
+  // Map UI language select to logic12 registry
+  const m = { "si":"si","en":"en","ta":"ta","hi":"hi","ar":"ar","ja":"ja","zh-CN":"zh","bn":"en","es":"en","fr":"en","de":"en","ru":"en" };
+  return m[val] || "en";
+}
 
-  let y = 80;
-  y = addImg(leftCv,  y, 'Left Hand');
-  y = addImg(rightCv, y, 'Right Hand');
-  const txt = $('insight').textContent || '';
-  doc.setFont('helvetica','bold'); doc.text('Insight', 40, y); y+=12;
-  doc.setFont('helvetica','normal'); 
-  const split = doc.splitTextToSize(txt, 515);
-  doc.text(split, 40, y);
-  doc.save('PalmReport.pdf');
-  setStatus('📄 PDF saved');
-};
-
-$('speak').onclick = ()=>{
-  const text = ($('insight').textContent || 'No analysis yet.').replace(/\s+/g,' ').trim();
+// Camera Start
+async function startCam(side){
   try{
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = (document.getElementById('language').value || 'en');
-    speechSynthesis.cancel(); speechSynthesis.speak(u);
-    setStatus('🔊 Speaking…');
-  }catch(e){ setStatus('Speech not supported', false); }
-};
+    const useRear = { facingMode: "environment" };
+    const str = await navigator.mediaDevices.getUserMedia({ video: useRear, audio:false });
+    const video = document.createElement("video");
+    video.autoplay = true; video.muted = true; video.playsInline = true;
+    video.srcObject = str;
+    await video.play();
 
-// --- Optional: SideBoot panel (no-crash if missing) ---
-(async ()=>{
-  const v='v=20251020a';
-  try{
-    const sideboot = await import(`./modules/sideboot.js?${v}`);
-    await sideboot.boot?.();
-    setStatus('Modules: OK');
+    const w = video.videoWidth || 1280;
+    const h = video.videoHeight|| 720;
+    const target = side==="L"?canvasL:canvasR;
+    target.width=w; target.height=h;
+
+    function draw(){
+      const C = ctx(target);
+      if(side==="L"){
+        // normal
+        C.drawImage(video, 0, 0, w, h);
+        rafL = requestAnimationFrame(draw);
+      }else{
+        // RIGHT: mirror horizontally
+        C.save();
+        C.scale(-1,1);
+        C.drawImage(video, -w, 0, w, h);
+        C.restore();
+        rafR = requestAnimationFrame(draw);
+      }
+    }
+    draw();
+
+    if(side==="L"){ streamL=str; liveL=true; } else { streamR=str; liveR=true; }
+    msg(`✅ Camera ${side==="L"?"LEFT":"RIGHT"} ${w}×${h}.`);
   }catch(e){
-    console.warn('SideBoot not loaded (optional):', e);
-    setStatus('Modules: OK (no-sideboot)');
+    msg("Camera error: " + e.message);
   }
-})();
+}
 
-// init
-setupCams();
+function capture(side){
+  // just stop the RAF → freeze current frame on canvas
+  if(side==="L"){ clearRAF("L"); liveL=false; }
+  else { clearRAF("R"); liveR=false; }
+  msg(`🖼 Captured ${side==="L"?"LEFT":"RIGHT"}.`);
+}
+
+async function torch(side){
+  try{
+    const str = side==="L" ? streamL : streamR;
+    if(!str){ return msg("Start camera first."); }
+    const track = str.getVideoTracks()[0];
+    const caps = track.getCapabilities?.() || {};
+    if(!("torch" in caps)){ return msg("💡 Torch not supported on this device."); }
+    const settings = track.getSettings?.() || {};
+    const next = !settings.torch;
+    await track.applyConstraints({ advanced:[{ torch: next }] });
+    msg(`🔦 Torch ${next?"ON":"OFF"} (${side==="L"?"LEFT":"RIGHT"})`);
+  }catch(e){
+    msg("Torch error: " + e.message);
+  }
+}
+
+function uploadToCanvas(side){
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = "image/*";
+  input.onchange = () => {
+    const file = input.files?.[0]; if(!file) return;
+    const img = new Image();
+    img.onload = ()=>{
+      const c = side==="L"?canvasL:canvasR;
+      const C = ctx(c);
+      // fit contain
+      c.width = img.width; c.height = img.height;
+      C.drawImage(img, 0, 0, c.width, c.height);
+      msg(`📷 Uploaded → ${side==="L"?"LEFT":"RIGHT"} (${img.width}×${img.height})`);
+    };
+    img.src = URL.createObjectURL(file);
+  };
+  input.click();
+}
+
+// Simple line-density estimator (dark-pixel ratio after threshold)
+function estimateDensity(cnv){
+  const C = ctx(cnv);
+  const { width:w, height:h } = cnv;
+  if(w*h===0) return 0;
+  const img = C.getImageData(0,0,w,h).data;
+  let dark=0, total=w*h;
+  // Fast sample: every 4th pixel row and col to speed
+  const stride = 4;
+  for(let y=0; y<h; y+=2){
+    for(let x=0; x<w; x+=2){
+      const i = (y*w + x) * 4;
+      const r=img[i], g=img[i+1], b=img[i+2];
+      const lum = 0.2126*r + 0.7152*g + 0.0722*b;
+      if(lum < 96) dark++;
+    }
+  }
+  const sampled = Math.ceil((h/2)*(w/2));
+  const ratio = (dark / sampled) * 100;
+  return Number(ratio.toFixed(2));
+}
+
+// Map densities to qualitative tags (very simple heuristic)
+function tagsFromDensity(dL, dR){
+  const life   = dR > 4.5 ? "strong" : (dR < 2.5 ? "faint" : "strong");
+  const head   = dR >= dL ? "balanced" : "strong";
+  const heart  = dR >= 5.5 ? "deep" : (dR >= 3.5 ? "moderate" : "faint");
+  const fate   = dR >= 3.0 ? "present" : "weak";
+  const sun    = dR >= 3.5 ? "visible" : "absent";
+  const health = dR < 7.5 ? "steady" : "sensitive";
+  const marriage = dR >= 6.5 ? "multiple" : "clear";
+  const manikanda = 3; // placeholder; measurable later from wrist region
+  return { life, head, heart, fate, sun, health, marriage, manikanda };
+}
+
+function analyze(){
+  // compute densities from both canvases
+  const dL = estimateDensity(canvasL);
+  const dR = estimateDensity(canvasR);
+  const t  = tagsFromDensity(dL, dR);
+
+  const data = {
+    left:  { density:dL, life:t.life, head:"balanced", heart:"moderate", fate:t.fate, sun:t.sun, health:t.health, marriage:t.marriage, manikanda:t.manikanda },
+    right: { density:dR, life:t.life, head:t.head, heart:t.heart, fate:t.fate, sun:t.sun, health:t.health, marriage:t.marriage, manikanda:t.manikanda },
+    name: "User",
+    locale: langSel.value,
+    captured_at: new Date().toISOString().slice(0,19).replace("T"," ")
+  };
+  lastAnalysis = data;
+  insightEl.textContent = JSON.stringify(data, null, 2);
+  msg("✅ Analyze complete.");
+  return data;
+}
+
+function miniReport(){
+  const data = lastAnalysis || analyze();
+  const lang = mapLang(langSel.value);
+  const txt  = generateMiniReport(data, lang);
+  insightEl.textContent = txt;
+  msg("📝 Mini Report ready.");
+}
+
+function buildFullText(d){
+  // Long form (≈1000–1500 words possible). For performance, we keep concise but substantial (~1000+ chars).
+  // Sections adapted from previous spec; language-aware header simple.
+  const L = d.left, R = d.right;
+  const lang = mapLang(d.locale||"en");
+  const head =
+`SATHYADARSHANA · PALMISTRY FULL REPORT
+Name: ${d.name||"User"}   Date: ${d.captured_at}   Left Density: ${L.density}%   Right Density: ${R.density}%`;
+
+  const body =
+`ROLE & METHOD
+This document interprets palm structures using observational palmistry with computational cues (line density, contrast patterns). It is not fatalistic prediction but a reflective mirror of tendencies.
+
+LIFE LINE
+Your life line trends ${R.life}. This suggests robust stamina with renewal capacity. Periodic rest cycles keep vitality steady.
+
+HEAD (MIND) LINE
+Marked as ${R.head}. Reasoning and intuition co-operate; planning improves outcomes.
+
+HEART LINE
+Emotion reads ${R.heart}. This indicates dependable affection with measured expression.
+
+FATE LINE
+${R.fate === "present" ? "Purpose consolidates; career vectors clarify." : "Purpose is refocusing; explore fresh directions with small experiments."}
+
+SUN LINE
+${R.sun === "visible" ? "Recognition arises through service or creativity; your name grows with contribution." : "Schedule deliberate creative output to kindle recognition."}
+
+HEALTH & MANIKANDA
+Health is ${R.health}. Manikanda bracelets ${R.manikanda} indicate grounded base and spiritual fortune.
+
+COMPARISON (LEFT vs RIGHT)
+Left ${L.density}% reflects inner memory and prior conditioning; Right ${R.density}% shows present action and outward momentum.
+
+GUIDANCE
+Walk with a joined heart and mind. Keep a three-step habit: attentive listening, reflective writing hour, and small, rapid implementations.`;
+
+  return head + "\n\n" + body;
+}
+
+function fullReportPDF(){
+  const d = lastAnalysis || analyze();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"pt", format:"a4" }); // 595x842
+  const margin = 40, width = 595 - margin*2;
+  let y = margin;
+
+  function para(text, size=12, gap=12){
+    doc.setFont("Times","normal");
+    doc.setFontSize(size);
+    const lines = doc.splitTextToSize(text, width);
+    lines.forEach(ln => { y += 16; doc.text(ln, margin, y); });
+    y += gap;
+    if (y > 842 - margin - 40){ doc.addPage(); y = margin; }
+  }
+
+  // Title
+  doc.setFont("Times","bold"); doc.setFontSize(20);
+  doc.text("SATHYADARSHANA · PALMISTRY FULL REPORT", margin, y); y += 24;
+  doc.setFont("Times","normal"); doc.setFontSize(11);
+  doc.text(`Generated: ${d.captured_at}   Name: ${d.name||"User"}   L:${d.left.density}%  R:${d.right.density}%`, margin, y); y += 12;
+  doc.setDrawColor(40); doc.line(margin, y, margin+width, y); y += 12;
+
+  // Body
+  para(buildFullText(d), 12, 6);
+
+  // Footer
+  y = 842 - 24;
+  doc.setFontSize(10); doc.setTextColor(150);
+  doc.text("© Sathyadarshana · For personal guidance only", margin, y);
+
+  doc.save(`Palmistry-Full-Report-${(d.name||"User")}.pdf`);
+  msg("📄 Full Report (PDF) downloaded.");
+}
+
+// Speak (Web Speech API)
+function speak(){
+  const data = lastAnalysis || analyze();
+  const lang = mapLang(langSel.value);
+  const text = generateMiniReport(data, lang);
+  if(!("speechSynthesis" in window)) return msg("🔈 Speech not supported.");
+  const u = new SpeechSynthesisUtterance(text);
+  // Try basic locale mapping
+  const langMap = { si:"si-LK", en:"en-US", ta:"ta-IN", hi:"hi-IN", ar:"ar-SA", ja:"ja-JP", zh:"zh-CN" };
+  u.lang = langMap[lang] || "en-US";
+  u.rate = 1.0; u.pitch=1.0;
+  window.speechSynthesis.speak(u);
+  msg("🔊 Speaking mini report…");
+}
+
+// Bindings
+btns.startL.onclick = ()=> startCam("L");
+btns.startR.onclick = ()=> startCam("R");
+btns.capL.onclick   = ()=> capture("L");
+btns.capR.onclick   = ()=> capture("R");
+btns.torchL.onclick = ()=> torch("L");
+btns.torchR.onclick = ()=> torch("R");
+btns.uplL.onclick   = ()=> uploadToCanvas("L");
+btns.uplR.onclick   = ()=> uploadToCanvas("R");
+btns.analyze.onclick= ()=> analyze();
+btns.mini.onclick   = ()=> miniReport();
+btns.full.onclick   = ()=> fullReportPDF();
+btns.speak.onclick  = ()=> speak();
+
+msg("Ready.");
