@@ -3,28 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sathya Darshana Quantum Palm Analyzer V5.3</title>
+  <title>Sathya Darshana Quantum Palm Analyzer V5.4</title>
 
   <base href="/palmistry/">
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
-    :root {
-      --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7;
-    }
+    :root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
     *{box-sizing:border-box;}
     body{
       margin:0; background:var(--bg); color:#e6f0ff;
-      font-family:system-ui,Segoe UI,Arial;
-      text-align:center;
+      font-family:system-ui,Segoe UI,Arial; text-align:center;
     }
     h1{color:#00e5ff;margin:20px 0 4px;}
     select{
-      background:#111; color:#fff; border:2px solid #ffb300;
-      border-radius:10px; padding:5px 8px; font-size:15px;
+      background:#111;color:#fff;border:2px solid #ffb300;
+      border-radius:10px;padding:5px 8px;font-size:15px;
     }
-    .panel{max-width:450px;margin:0 auto;background:#111a22;padding:12px;border-radius:14px;}
-    canvas{width:100%;border-radius:14px;background:#000;display:block;margin:8px auto;}
+    .panel{
+      max-width:450px;margin:0 auto;background:#111a22;
+      padding:12px;border-radius:14px;position:relative;
+    }
+    canvas{
+      width:100%;border-radius:14px;background:#000;
+      display:block;margin:8px auto;position:relative;
+    }
     button{
       background:#101820;color:#00e5ff;border:1px solid #00e5ff;
       border-radius:10px;padding:6px 12px;margin:4px;
@@ -32,12 +35,47 @@
     }
     button:hover{background:#00e5ff;color:#000;}
     #status{margin:10px;font-size:15px;color:#16f0a7;}
-    pre{white-space:pre-wrap;text-align:left;background:#0e141b;padding:8px;border-radius:8px;}
+    pre{
+      white-space:pre-wrap;text-align:left;background:#0e141b;
+      padding:8px;border-radius:8px;max-width:900px;margin:0 auto;
+      color:#fff;
+    }
+
+    /* === Scan Overlay + Laser Animation === */
+    .scan-overlay {
+      mix-blend-mode: screen;
+      animation: glow 1.2s ease-in-out infinite alternate;
+      border-radius: 14px;
+      pointer-events: none;
+    }
+    @keyframes glow {
+      from { box-shadow: 0 0 8px #00ff88; }
+      to   { box-shadow: 0 0 22px #16f0a7; }
+    }
+
+    .scan-beam {
+      position:absolute;
+      left:0;
+      width:100%;
+      height:40px;
+      background:linear-gradient(to bottom,
+        rgba(0,255,0,0),
+        rgba(0,255,0,0.8),
+        rgba(0,255,0,0));
+      animation: scan-line 1.5s linear forwards;
+      mix-blend-mode:screen;
+      filter:blur(1px);
+      border-radius:4px;
+    }
+    @keyframes scan-line {
+      0%   { transform:translateY(0);   opacity:1; }
+      100% { transform:translateY(100%);opacity:0; }
+    }
   </style>
 </head>
 <body>
 
-  <h1 id="title">Sathya Darshana Quantum Palm Analyzer V5.3</h1>
+  <h1 id="title">Sathya Darshana Quantum Palm Analyzer V5.4</h1>
 
   <label id="lblLanguage">Language:</label>
   <select id="language">
@@ -89,7 +127,7 @@
 
   <pre id="insight"></pre>
 
-  <!-- load app AFTER DOM -->
+  <!-- Load app AFTER DOM -->
   <script type="module">
     import './app.js?v=534';
   </script>
