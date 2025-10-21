@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sathya Darshana Quantum Palm Analyzer V5.3</title>
 
-  <!-- Ensure relative imports resolve under /palmistry/ -->
   <base href="/palmistry/">
-
-  <!-- jsPDF for Full Report -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
@@ -92,7 +89,12 @@
     </div>
   </div>
 
-  <!-- App entry -->
   <script type="module" src="./app.js"></script>
+
+  <!-- SideBoot AI Panel link -->
+  <script type="module">
+    import { initSideBoot } from './modules/sideboot.js';
+    initSideBoot();
+  </script>
 </body>
 </html>
