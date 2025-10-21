@@ -1,6 +1,17 @@
-// app.js  (place in /palmistry/app.js)
+// --- Optional: SideBoot panel (no-crash if missing) ---
+(async ()=>{
+  const v='v=20251020a';
+  try{
+    const sideboot = await import(`./modules/sideboot.js?${v}`);
+    await sideboot.boot?.();
+    setStatus('Modules: OK');
+  }catch(e){
+    console.warn('SideBoot not loaded (optional):', e);
+    setStatus('Modules: OK (no-sideboot)');
+  }
+})();
+ // app.js  (place in /palmistry/app.js)
 import { CameraCard, captureToCanvas } from './modules/camera.js';
-
 const $ = (id)=>document.getElementById(id);
 const statusEl = $('status');
 const leftCv   = $('canvasLeft');
