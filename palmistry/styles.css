@@ -1,122 +1,116 @@
+/* === GENERAL PAGE STYLE === */
 body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #222;
-    color: #f2f2f2;
-    margin: 0;
-    padding: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #0b0f16;
+  color: #e6f0ff;
+  margin: 0;
+  padding: 0;
+  text-align: center;
 }
+
 h1 {
-    text-align: center;
-    margin-top: 18px;
-    font-size: 2rem;
-    color: #00e7ff;
-    letter-spacing: 2px;
+  color: #00e7ff;
+  margin: 20px 0 4px;
+  font-size: 1.8em;
+  letter-spacing: 1px;
 }
-.wrap {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 16px;
+
+select {
+  background: #111;
+  color: #fff;
+  border: 2px solid #ffb300;
+  border-radius: 10px;
+  padding: 5px 8px;
+  font-size: 15px;
 }
-.camWrap {
-    display: flex;
-    gap: 24px;
-    justify-content: center;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
+
+.panel {
+  max-width: 450px;
+  margin: 12px auto;
+  background: #111a22;
+  padding: 12px;
+  border-radius: 14px;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.15);
 }
-.camCol {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 240px;
-    flex: 1 1 300px;
+
+canvas {
+  width: 100%;
+  border-radius: 14px;
+  background: #000;
+  display: block;
+  margin: 8px auto;
+  position: relative;
 }
-.camBox {
-    width: 360px;
-    aspect-ratio: 3/4;
-    max-width: 98vw;
-    background: #1a1a1a;
-    border: 2px solid #00e7ff;
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    margin-bottom: 8px;
-    position: relative;
+
+button {
+  background: #101820;
+  color: #00e5ff;
+  border: 1px solid #00e5ff;
+  border-radius: 10px;
+  padding: 6px 12px;
+  margin: 4px;
+  font-weight: 600;
+  transition: 0.25s;
 }
-canvas, video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-    border-radius: 16px;
-    background: #222;
+
+button:hover {
+  background: #00e5ff;
+  color: #000;
 }
-.camBtns {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    margin-bottom: 12px;
-}
-.toolbar {
-    margin: 18px auto 12px auto;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    justify-content: center;
-    align-items: center;
-}
-.btn {
-    background: #00e7ff;
-    color: #222;
-    padding: 7px 20px;
-    border: none;
-    border-radius: 7px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.btn:hover {
-    background: #009cb6;
-    color: #fff;
-}
+
 #status {
-    margin: 18px 0 6px 0;
-    color: #ffeb3b;
-    font-weight: bold;
-    text-align: center;
-    font-size: 1.1em;
+  margin: 10px;
+  font-size: 15px;
+  color: #16f0a7;
+  font-weight: bold;
 }
-#insight {
-    background: #191919;
-    border-radius: 8px;
-    padding: 12px;
-    min-height: 80px;
-    color: #fff;
-    font-size: 1.07em;
-    white-space: pre-wrap;
-    margin: 0 auto;
-    max-width: 900px;
+
+pre {
+  white-space: pre-wrap;
+  text-align: left;
+  background: #0e141b;
+  padding: 8px;
+  border-radius: 8px;
+  max-width: 900px;
+  margin: 0 auto;
+  color: #fff;
 }
-strong {
-    color: #00e7ff;
-    font-size: 1.08em;
-    margin-bottom: 4px;
-    letter-spacing: 1px;
+
+/* === SCAN OVERLAY ANIMATION === */
+.scan-overlay {
+  mix-blend-mode: screen;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  overflow: hidden;
+  animation: glow 1.2s ease-in-out infinite alternate;
 }
-@media (max-width: 850px) {
-    .camWrap { flex-direction: column; align-items: center; }
-    .camBox { width: 92vw; height: 120vw; min-width: 190px; min-height: 240px; }
-    .camCol { min-width: 0; width: 100%; }
-    .wrap { padding: 6px; }
+
+@keyframes glow {
+  from { box-shadow: 0 0 8px #00ff88; }
+  to { box-shadow: 0 0 22px #16f0a7; }
 }
-@media (max-width: 500px) {
-    h1 { font-size: 1.3em; margin-top: 10px; }
-    .camBox { width: 98vw; height: 132vw; min-width: 140px; min-height: 180px; }
-    #insight { font-size: 0.97em; padding: 6px; }
-    .btn { padding: 6px 11px; font-size: 0.98em; }
-    .toolbar { gap: 9px; }
+
+/* === SCAN BEAM LINE EFFECT === */
+@keyframes scan-line {
+  0%   { transform: translateY(0); opacity: 0.8; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.scan-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(to bottom,
+    rgba(0,255,0,0),
+    rgba(0,255,0,0.7),
+    rgba(0,255,0,0));
+  animation: scan-line 1.5s linear forwards;
+  mix-blend-mode: screen;
+  filter: blur(1px);
+  border-radius: 4px;
 }
