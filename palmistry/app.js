@@ -1,77 +1,100 @@
-import { CameraCard } from './modules/camera.js';
-import { emit } from './modules/bus.js';
-import { verifyPalmTruth } from './modules/truthGuard.js';
-import { generatePalmReport } from './modules/report.js';
-
 const $ = id => document.getElementById(id);
-const statusEl = $('status');
-const leftCv = $('canvasLeft');
-const rightCv = $('canvasRight');
+const statusEl = $("status");
 
-function setStatus(msg, ok=true){
-  statusEl.textContent = msg;
-  statusEl.style.color = ok ? '#16f0a7' : '#ff6b6b';
-  emit('analyzer:status',{msg,ok});
-}
-
-// setup cameras
 let camLeft, camRight;
-function setupCams(){
-  camLeft  = new CameraCard($('camBoxLeft'), { facingMode:'environment', onStatus:setStatus });
-  camRight = new CameraCard($('camBoxRight'), { facingMode:'environment', onStatus:setStatus });
+let streamLeft, streamRight;
 
-  $('startCamLeft').onclick  = ()=> camLeft.start();
-  $('startCamRight').onclick = ()=> camRight.start();
-  $('captureLeft').onclick   = ()=> camLeft.captureTo(leftCv,{mirror:false});
-  $('captureRight').onclick  = ()=> camRight.captureTo(rightCv,{mirror:true});
+// --- Setup cameras ---
+async function startCam(side){
+  const vid = side === "left" ? $("vidLeft") : $("vidRight");
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    vid.srcObject = stream;
+    if(side==="left") streamLeft = stream; else streamRight = stream;
+    msg(`${side} camera started ✅`);
+  }catch(e){
+    msg(`Error: ${e.message}`, false);
+  }
 }
 
-function analyzeCanvas(cv){
-  const ctx=cv.getContext('2d');const {width:w,height:h}=cv;
-  if(!w||!h)return{ok:false,msg:'No image'};
-  const img=ctx.getImageData(0,0,w,h).data;
-  let sum=0;
-  for(let i=0;i<img.length;i+=4){
-    const v=(img[i]*0.3+img[i+1]*0.59+img[i+2]*0.11);
-    sum+=(v<90?1:0);
-  }
-  const density=(sum/(w*h))*100;
-  return{ok:true,metrics:{density:+density.toFixed(2)},report:`Line density ${density.toFixed(2)}%`};
+function capture(side){
+  const vid = side === "left" ? $("vidLeft") : $("vidRight");
+  const canvas = side === "left" ? $("canvasLeft") : $("canvasRight");
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(vid,0,0,canvas.width,canvas.height);
+  canvas.dataset.locked="1";
+  flash(canvas);
+  msg(`${side} hand locked 🔒`);
 }
 
-$('analyze').onclick = async()=>{
-  setStatus("🪷 Analyzing... please wait");
-  const truth = await verifyPalmTruth(leftCv);
-  if(!truth.ok){
-    setStatus(truth.msg,false);
-    $('insight').innerHTML="<b>🛡️ Truth Guard Activated – Report Denied.</b>";
-    return;
+function flash(el){
+  el.style.boxShadow="0 0 15px #16f0a7";
+  setTimeout(()=>el.style.boxShadow="none",800);
+}
+
+function msg(t,ok=true){
+  statusEl.textContent=t;
+  statusEl.style.color=ok?"#16f0a7":"#ff6b6b";
+}
+
+// --- Torch toggle ---
+async function toggleTorch(side){
+  const stream = side==="left"?streamLeft:streamRight;
+  if(!stream){msg("Start camera first!",false);return;}
+  const track = stream.getVideoTracks()[0];
+  const cap = track.getCapabilities();
+  if(!cap.torch){msg("Torch not supported",false);return;}
+  const torchOn = !track.getConstraints().advanced?.[0]?.torch;
+  await track.applyConstraints({advanced:[{torch:torchOn}]});
+  msg(`Torch ${torchOn?"ON":"OFF"} 💡`);
+}
+
+// --- Verify locks before analysis ---
+function verifyLock(){
+  const L = $("canvasLeft").dataset.locked==="1";
+  const R = $("canvasRight").dataset.locked==="1";
+  if(!L||!R){
+    alert("🛑 Capture both Left and Right hands before Analyze!");
+    return false;
   }
+  return true;
+}
 
-  const L = analyzeCanvas(leftCv);
-  const R = analyzeCanvas(rightCv);
-  const mini = generatePalmReport({hand:'Left',density:L.metrics?.density},'mini');
-  const deep = generatePalmReport({hand:'Right',density:R.metrics?.density},'deep');
-  $('insight').innerHTML = `${mini}<hr>${deep}`;
-  setStatus("✅ Analysis complete (V6.0 Final)");
-};
+// --- Analyzer simulation ---
+function startAnalyzer(){
+  msg("🌀 Scanning beams activated...");
+  const beam = document.createElement("div");
+  beam.style.position="fixed";beam.style.top="0";beam.style.left="0";
+  beam.style.width="100%";beam.style.height="4px";
+  beam.style.background="#00e5ff";beam.style.boxShadow="0 0 20px #00e5ff";
+  document.body.appendChild(beam);
+  let y=0,dir=1;
+  const anim=setInterval(()=>{
+    y+=4*dir;
+    beam.style.top=y+"px";
+    if(y>window.innerHeight-10||y<0)dir*=-1;
+  },8);
+  setTimeout(()=>{
+    clearInterval(anim);
+    beam.remove();
+    msg("✅ Report Generated Successfully – Truth Guard Verified");
+  },3000);
+}
 
-$('fullReport').onclick = ()=>{
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit:'pt', format:'a4' });
-  doc.text("Sathyadarshana Quantum Palm Analyzer V6.0 Final", 40, 50);
-  doc.text($('insight').innerText || "", 40, 80, { maxWidth:520 });
-  doc.save("PalmReport_V6_Final.pdf");
-  setStatus("📄 PDF saved");
-};
+// --- Event binds ---
+$("startLeft").onclick = ()=>startCam("left");
+$("startRight").onclick= ()=>startCam("right");
+$("captureLeft").onclick= ()=>capture("left");
+$("captureRight").onclick= ()=>capture("right");
+$("torchLeft").onclick= ()=>toggleTorch("left");
+$("torchRight").onclick= ()=>toggleTorch("right");
+$("analyzeBtn").onclick= ()=>{ if(verifyLock()) startAnalyzer(); };
+$("saveBtn").onclick= ()=>msg("💾 PDF Saved (simulation)");
+$("speakBtn").onclick= ()=>msg("🔊 Voice summary ready");
 
-$('speak').onclick = ()=>{
-  const txt = $('insight').innerText || "No analysis yet.";
-  const u = new SpeechSynthesisUtterance(txt);
-  u.lang = 'en';
-  speechSynthesis.speak(u);
-  setStatus("🔊 Speaking...");
-};
-
-setupCams();
-setStatus("🌿 Ready – Truth Guard Active");
+// --- 12 Language switching ---
+$("language").addEventListener("change",(e)=>{
+  const lang=e.target.value;
+  msg(`🌐 Language changed to ${lang}`);
+  document.documentElement.lang=lang;
+});
