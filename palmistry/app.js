@@ -1,5 +1,5 @@
 // === Quantum Palm Analyzer V6.2 ===
-// Truth Guard Multilingual Edition
+// Truth Guarud Multilingual Edition
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
 
