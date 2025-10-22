@@ -1,5 +1,5 @@
-// === Quantum Palm Analyzer V6.1b ===
-// Truth Guard Enhanced Edition
+// === Quantum Palm Analyzer V6.1c ===
+// Truth Guard · Dual Mode (Full + Partial)
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
 
@@ -58,15 +58,21 @@ async function toggleTorch(side){
 function verifyLock(){
   const L = $("canvasLeft").dataset.locked === "1";
   const R = $("canvasRight").dataset.locked === "1";
-  if(!L || !R){
-    alert("🛑 Capture both Left and Right hands before Analyze!");
-    return false;
+
+  if(!L && !R){
+    alert("🛑 Please capture at least one hand before Analyze!");
+    msg("⚠️ No hand captured", false);
+    return "none";
   }
-  return true;
+  if(L && R) return "both";
+  return L ? "left" : "right";
 }
 
 // ====== Analyzer Animation ======
 function startAnalyzer(){
+  const mode = verifyLock();
+  if(mode === "none") return;
+
   msg("🌀 Scanning beams activated...");
   const beam = document.createElement("div");
   beam.style = `
@@ -80,32 +86,66 @@ function startAnalyzer(){
     beam.style.top = y + "px";
     if (y > window.innerHeight - 8 || y < 0) dir *= -1;
   }, 10);
+
   setTimeout(() => {
     clearInterval(anim);
     beam.remove();
     msg("✅ Report Generated Successfully – Truth Guard Verified");
+    showReport(mode);
   }, 3500);
 }
 
-// ====== Base Event Binds ======
+// ====== Report Generator ======
+function showReport(mode){
+  let div = document.getElementById("report");
+  if(!div){
+    div = document.createElement("div");
+    div.id = "report";
+    div.style = `
+      background:#101820;color:#e6f0ff;padding:15px;border-radius:10px;
+      width:80%;margin:20px auto;box-shadow:0 0 12px #00e5ff;line-height:1.6;
+    `;
+    document.body.appendChild(div);
+  }
+
+  if(mode === "both"){
+    div.innerHTML = `
+      <h3 style="color:#00e5ff;">Full Report</h3>
+      <p>🖐️ Both hands analyzed successfully.</p>
+      <p>Balance of intellect and intuition detected — strong personality stability and clear future direction.</p>
+      <p>Truth Guard Result: ✅ Balanced and Harmonized.</p>`;
+  } else {
+    div.innerHTML = `
+      <h3 style="color:#00e5ff;">Partial Report (${mode === "left" ? "Left Hand" : "Right Hand"})</h3>
+      <p>Only one hand analyzed.</p>
+      <p>${mode === "left"
+        ? "Left hand indicates past emotions, spiritual depth, and inner reflection."
+        : "Right hand indicates current drive, willpower, and life strength."}</p>
+      <p>Truth Guard Result: ⚠️ Partial Analysis (Awaiting other hand).</p>`;
+  }
+
+  // Auto voice
+  const text = div.innerText;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en";
+  speechSynthesis.speak(u);
+  msg("🔊 Voice summary ready");
+}
+
+// ====== Event Bindings ======
 $("startLeft").onclick = () => startCam("left");
 $("startRight").onclick = () => startCam("right");
 $("captureLeft").onclick = () => capture("left");
 $("captureRight").onclick = () => capture("right");
 $("torchLeft").onclick = () => toggleTorch("left");
 $("torchRight").onclick = () => toggleTorch("right");
-$("analyzeBtn").onclick = () => { if(verifyLock()) startAnalyzer(); };
+$("analyzeBtn").onclick = startAnalyzer;
 $("saveBtn").onclick = () => msg("💾 PDF Saved (simulation)");
-$("speakBtn").onclick = () => msg("🔊 Voice summary ready");
-
-// ====== 12-Language System ======
-$("language").addEventListener("change", (e) => {
-  const lang = e.target.value;
-  document.documentElement.lang = lang;
-  msg(`🌐 Language set to ${lang}`);
+$("language").addEventListener("change", e => {
+  msg(`🌐 Language set to ${e.target.value}`);
 });
 
-// ====== .add() Modular Registry ======
+// ====== Registry ======
 App.add("torch", toggleTorch);
 App.add("analyzer", startAnalyzer);
 App.add("capture", capture);
@@ -113,5 +153,4 @@ App.add("verify", verifyLock);
 App.add("camera", startCam);
 App.add("message", msg);
 
-// test log
 console.log("Modules loaded:", Object.keys(App.modules));
