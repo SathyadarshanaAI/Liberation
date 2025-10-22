@@ -1,11 +1,8 @@
-බ// app.js — Sathyadarshana Quantum Palm Analyzer V5.6
+// app.js — Sathyadarshana Quantum Palm Analyzer V5.7
 import { CameraCard } from './modules/camera.js';
 import { I18N } from './modules/i18n.js';
 
-// DOM helper
 const $ = id => document.getElementById(id);
-window.$ = $;
-
 const statusEl = $('status');
 const leftCv = $('canvasLeft');
 const rightCv = $('canvasRight');
@@ -37,12 +34,8 @@ function setupCams() {
     setStatus("📷 Right camera started");
   };
 
-  $('captureLeft').onclick = () => {
-    captureAndScan(camLeft, leftCv, "left");
-  };
-  $('captureRight').onclick = () => {
-    captureAndScan(camRight, rightCv, "right");
-  };
+  $('captureLeft').onclick = () => captureAndScan(camLeft, leftCv, "left");
+  $('captureRight').onclick = () => captureAndScan(camRight, rightCv, "right");
 
   $('torchLeft').onclick = () => camLeft.toggleTorch();
   $('torchRight').onclick = () => camRight.toggleTorch();
@@ -70,7 +63,7 @@ async function filePickToCanvas(cv) {
   inp.click();
 }
 
-// ==== CAPTURE + SCAN (main camera stays visible) ====
+// ==== CAPTURE + SCAN (main camera visible) ====
 function captureAndScan(cam, cv, side) {
   cam.captureTo(cv, { mirror: side === 'right', cover: false });
   showScanOverlay(cam.container);
@@ -80,19 +73,27 @@ function captureAndScan(cam, cv, side) {
   }, 1800);
 }
 
-// ==== SCAN OVERLAY (beam + glow animation) ====
+// ==== SCAN OVERLAY ====
 function showScanOverlay(container) {
   const overlay = document.createElement('div');
   overlay.className = 'scan-overlay';
   overlay.style.position = 'absolute';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
+  overlay.style.top = 0;
+  overlay.style.left = 0;
   overlay.style.width = '100%';
   overlay.style.height = '100%';
+  overlay.style.background = 'rgba(0,255,255,0.05)';
   container.appendChild(overlay);
 
   const beam = document.createElement('div');
   beam.className = 'scan-beam';
+  beam.style.position = 'absolute';
+  beam.style.top = '0';
+  beam.style.left = '0';
+  beam.style.width = '100%';
+  beam.style.height = '4px';
+  beam.style.background = 'linear-gradient(90deg,transparent,#00e5ff,transparent)';
+  beam.style.animation = 'beam 2s linear infinite';
   overlay.appendChild(beam);
 
   setTimeout(() => overlay.remove(), 2000);
@@ -125,7 +126,7 @@ $('analyze').onclick = () => {
 $('fullReport').onclick = () => {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  doc.text("Sathya Darshana · Quantum Palm Analyzer V5.6", 40, 50);
+  doc.text("Sathya Darshana · Quantum Palm Analyzer V5.7", 40, 50);
   doc.text($('insight').textContent || 'No data.', 40, 80);
   doc.save('PalmReport.pdf');
   setStatus('📄 PDF saved');
@@ -143,7 +144,7 @@ $('speak').onclick = () => {
 // ==== TRANSLATION ====
 function updateUI(lang) {
   const ui = I18N[lang]?.ui || I18N.en.ui;
-  $('title').textContent = ui.title + " V5.6";
+  $('title').textContent = ui.title + " V5.7";
   $('lblLanguage').textContent = ui.lang + ":";
   $('h3Left').textContent = ui.left;
   $('h3Right').textContent = ui.right;
@@ -176,3 +177,24 @@ window.addEventListener('DOMContentLoaded', () => {
   setupCams();
   setStatus('🌿 Ready');
 });
+
+// ==== FULLSCREEN CAMERA MODE ====
+function makeFullScreenCam(camBox, camObj){
+  const fsWrap = document.createElement('div');
+  fsWrap.className = 'fullscreenCam';
+  const btn = document.createElement('button');
+  btn.className = 'fullscreenBtn';
+  btn.textContent = '× Close';
+  fsWrap.appendChild(btn);
+
+  const vidClone = camObj.video.cloneNode(true);
+  fsWrap.appendChild(vidClone);
+  document.body.appendChild(fsWrap);
+  btn.onclick = () => fsWrap.remove();
+}
+
+// double-tap for fullscreen
+const leftBox = $('camBoxLeft');
+const rightBox = $('camBoxRight');
+leftBox.addEventListener('dblclick', () => makeFullScreenCam(leftBox, camLeft));
+rightBox.addEventListener('dblclick', () => makeFullScreenCam(rightBox, camRight));
