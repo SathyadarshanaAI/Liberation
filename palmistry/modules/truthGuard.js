@@ -1,8 +1,7 @@
-// modules/truthGuard.js — Truth Guard layer (V6.0 Final)
 export async function verifyPalmTruth(cv){
   const ctx=cv.getContext('2d');
   const {width:w,height:h}=cv;
-  if(!w||!h) return {ok:false,msg:"No image"};
+  if(!w||!h)return{ok:false,msg:"No image"};
   const data=ctx.getImageData(0,0,w,h).data;
   let variance=0,prev=0;
   for(let i=0;i<data.length;i+=4){
@@ -11,11 +10,11 @@ export async function verifyPalmTruth(cv){
   }
   const clarity=variance/(w*h);
   const truthful=clarity>25;
-  return {
+  return{
     ok:truthful,
     clarity:+clarity.toFixed(2),
     msg:truthful
       ?"🪷 Palm verified – truth level high."
-      :"⚠️ Unverified / manipulated palm image detected."
+      :"⚠️ Unverified or manipulated palm image."
   };
 }
