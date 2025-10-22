@@ -1,104 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Sathya Darshana Quantum Palm Analyzer V5.7</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sathya Darshana Quantum Palm Analyzer V5.3</title>
+
   <base href="/palmistry/">
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
-    :root {
-      --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7;
-    }
-    *{box-sizing:border-box;}
-    body{margin:0;background:var(--bg);color:#e6f0ff;
-      font-family:system-ui,Segoe UI,Arial;text-align:center;}
-    h1{color:var(--neon);margin:16px 0 4px;}
-    select{background:#111;color:#fff;border:2px solid #ffb300;
-      border-radius:10px;padding:5px 8px;font-size:15px;}
-    .panel{max-width:450px;margin:0 auto;background:#111a22;padding:12px;
-      border-radius:14px;}
-    .camBox{width:100%;aspect-ratio:3/5;background:#000;border:2px solid var(--neon);
-      border-radius:18px;overflow:hidden;position:relative;}
-    video,canvas{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
-    button{background:#101820;color:#00e5ff;border:1px solid #00e5ff;
-      border-radius:10px;padding:6px 12px;margin:4px;font-weight:600;transition:0.25s;}
-    button:hover{background:#00e5ff;color:#000;}
-    #status{margin:10px;font-size:15px;color:#16f0a7;}
-    pre{white-space:pre-wrap;text-align:left;background:#0e141b;padding:8px;border-radius:8px;}
-
-    /* Fullscreen mode */
-    .fullscreenCam{position:fixed;top:0;left:0;width:100vw;height:100vh;
-      background:#000;display:flex;align-items:center;justify-content:center;
-      z-index:9999;}
-    .fullscreenCam video,.fullscreenCam canvas{width:100vw;height:100vh;object-fit:contain;}
-    .fullscreenBtn{position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.4);
-      color:var(--neon);border:1px solid var(--neon);padding:6px 10px;border-radius:10px;
-      font-weight:bold;z-index:10000;}
-
-    /* Scan overlay */
-    .scan-overlay{position:absolute;inset:0;background:rgba(0,255,255,0.05);
-      overflow:hidden;}
-    .scan-beam{position:absolute;top:0;left:0;width:100%;height:4px;
-      background:linear-gradient(90deg,transparent,var(--neon),transparent);
-      animation:beam 2s linear infinite;}
-    @keyframes beam{0%{top:0;}100%{top:100%;}}
+    :root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:#e6f0ff;font-family:system-ui,Segoe UI,Arial}
+    header{padding:14px;text-align:center}
+    h1{margin:6px 0;color:var(--neon);font-size:1.3rem}
+    .wrap{max-width:1000px;margin:auto;padding:12px}
+    .row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+    .card{background:var(--card);border:1px solid #123;border-radius:14px;padding:12px}
+    .camBox{position:relative;display:grid;place-items:center;background:#000;border:1px solid #222;border-radius:12px;overflow:hidden;min-height:360px}
+    canvas{width:100%;height:auto;max-height:70vh;background:#000}
+    .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    button, select{background:#0e1624;color:#dff;border:1px solid var(--neon);border-radius:12px;padding:8px 12px;font-weight:600}
+    button:hover{background:var(--neon);color:#001}
+    #status{margin:10px 0 0 0;opacity:.9}
+    pre#insight{white-space:pre-wrap;background:#071018;border:1px solid #123;border-radius:12px;padding:10px;min-height:140px}
   </style>
 </head>
-
 <body>
-  <h1 id="title">Sathya Darshana Quantum Palm Analyzer V5.7</h1>
-  <label id="lblLanguage">Language:</label>
-  <select id="language">
-    <option value="en">English</option>
-    <option value="si">සිංහල (Sinhala)</option>
-    <option value="ta">தமிழ் (Tamil)</option>
-    <option value="hi">हिन्दी (Hindi)</option>
-    <option value="es">Español (Spanish)</option>
-    <option value="fr">Français (French)</option>
-    <option value="de">Deutsch (German)</option>
-    <option value="ru">Русский (Russian)</option>
-    <option value="ja">日本語 (Japanese)</option>
-    <option value="zh-CN">中文 (Chinese)</option>
-  </select>
-
-  <div id="status">Modules: OK</div>
-
-  <div class="panel">
-    <h3 id="h3Left">Left Hand</h3>
-    <div id="camBoxLeft" class="camBox">
-      <canvas id="canvasLeft"></canvas>
+  <header>
+    <h1 id="title">Sathya Darshana Quantum Palm Analyzer V5.3</h1>
+    <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">
+      <label for="language" id="lblLanguage">Language:</label>
+      <select id="language">
+        <option value="en">English</option>
+        <option value="si">සිංහල (Sinhala)</option>
+        <option value="ta">தமிழ் (Tamil)</option>
+        <option value="hi">हिन्दी (Hindi)</option>
+        <option value="bn">বাংলা (Bengali)</option>
+        <option value="ar">العربية (Arabic)</option>
+        <option value="es">Español (Spanish)</option>
+        <option value="fr">Français (French)</option>
+        <option value="de">Deutsch (German)</option>
+        <option value="ru">Русский (Russian)</option>
+        <option value="ja">日本語 (Japanese)</option>
+        <option value="zh-CN">简体中文 (Chinese)</option>
+      </select>
+      <span id="status">Ready.</span>
     </div>
-    <div>
-      <button id="startCamLeft">Start</button>
-      <button id="captureLeft">Capture</button>
-      <button id="torchLeft">Torch</button>
-      <button id="uploadLeft">Upload</button>
+  </header>
+
+  <div class="wrap">
+    <div class="row">
+      <div class="card">
+        <h3 id="h3Left">Left Hand</h3>
+        <div class="camBox" id="camBoxLeft">
+          <canvas id="canvasLeft" width="720" height="960"></canvas>
+        </div>
+        <div class="btns">
+          <button id="startCamLeft">Start</button>
+          <button id="captureLeft">Capture</button>
+          <button id="torchLeft">Torch</button>
+          <button id="uploadLeft">Upload</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 id="h3Right">Right Hand</h3>
+        <div class="camBox" id="camBoxRight">
+          <canvas id="canvasRight" width="720" height="960"></canvas>
+        </div>
+        <div class="btns">
+          <button id="startCamRight">Start</button>
+          <button id="captureRight">Capture</button>
+          <button id="torchRight">Torch</button>
+          <button id="uploadRight">Upload</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="btns" style="justify-content:center">
+        <button id="analyze">Analyze</button>
+        <button id="miniReport">Mini Report</button>
+        <button id="fullReport">Full Report (PDF)</button>
+        <button id="speak">Speak</button>
+      </div>
+      <pre id="insight"></pre>
     </div>
   </div>
 
-  <div class="panel">
-    <h3 id="h3Right">Right Hand</h3>
-    <div id="camBoxRight" class="camBox">
-      <canvas id="canvasRight"></canvas>
-    </div>
-    <div>
-      <button id="startCamRight">Start</button>
-      <button id="captureRight">Capture</button>
-      <button id="torchRight">Torch</button>
-      <button id="uploadRight">Upload</button>
-    </div>
-  </div>
+  <script type="module" src="./app.js"></script>
 
-  <div>
-    <button id="analyze">Analyze</button>
-    <button id="fullReport">Full Report (PDF)</button>
-    <button id="speak">Speak</button>
-  </div>
-
-  <pre id="insight"></pre>
-
-  <script type="module" src="./app.js?v=57"></script>
+  <!-- SideBoot AI Panel link -->
+  <script type="module">
+    import { initSideBoot } from './modules/sideboot.js';
+    initSideBoot();
+  </script>
 </body>
 </html>
