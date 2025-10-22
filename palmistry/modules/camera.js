@@ -1,10 +1,9 @@
-// modules/camera.js — Quantum Palm Analyzer V5.7 · Stable Final
+// modules/camera.js — Quantum Palm Analyzer V5.8 (Full Capture + Live Preview)
 export class CameraCard {
   constructor(container, opts = {}) {
     this.container = container;
     this.opts = opts;
 
-    // --- create video element ---
     this.video = document.createElement('video');
     this.video.autoplay = true;
     this.video.playsInline = true;
@@ -26,7 +25,7 @@ export class CameraCard {
   async start() {
     try {
       if (this.stream) this.stop();
-      this.stream = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: this.opts.facingMode || 'environment' },
           width: { ideal: 1280 },
@@ -34,8 +33,10 @@ export class CameraCard {
         },
         audio: false
       });
-      this.video.srcObject = this.stream;
-      this.track = this.stream.getVideoTracks()[0];
+      this.stream = stream;
+      this.video.srcObject = stream;
+      await this.video.play();
+      this.track = stream.getVideoTracks()[0];
       this.opts.onStatus?.("📷 Camera active");
     } catch (err) {
       console.error("Camera error:", err);
@@ -52,62 +53,63 @@ export class CameraCard {
     }
   }
 
-  // ==== CAPTURE TO CANVAS (keep live preview) ====
-  captureTo(canvas, { mirror = false, cover = false } = {}) {
-    if (!this.video.videoWidth) return;
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width = this.video.videoWidth;
-    const h = canvas.height = this.video.videoHeight;
+  // ==== CAPTURE TO CANVAS (hand image visible) ====
+  captureTo(canvas, { mirror = false } = {}) {
+    const video = this.video;
+    if (!video.videoWidth || !video.videoHeight) {
+      this.opts.onStatus?.("⚠️ No camera feed", false);
+      return;
+    }
 
-    // keep live video visible
-    this.video.style.opacity = "1";
+    const w = (canvas.width = video.videoWidth);
+    const h = (canvas.height = video.videoHeight);
+    const ctx = canvas.getContext("2d");
 
+    ctx.save();
     if (mirror) {
       ctx.translate(w, 0);
       ctx.scale(-1, 1);
     }
-    ctx.drawImage(this.video, 0, 0, w, h);
-    if (mirror) ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.restore();
 
-    // --- flash overlay ---
-    const flash = document.createElement('div');
-    flash.style.position = 'absolute';
-    flash.style.inset = '0';
-    flash.style.background = 'rgba(255,255,255,0.2)';
-    flash.style.pointerEvents = 'none';
-    flash.style.borderRadius = '14px';
+    // visible flash overlay
+    const flash = document.createElement("div");
+    flash.style.position = "absolute";
+    flash.style.inset = "0";
+    flash.style.background = "rgba(255,255,255,0.2)";
+    flash.style.borderRadius = "14px";
+    flash.style.pointerEvents = "none";
     this.container.appendChild(flash);
-    setTimeout(() => flash.remove(), 250);
+    setTimeout(() => flash.remove(), 200);
 
-    // --- scan beam overlay ---
-    const beam = document.createElement('div');
-    beam.className = 'scan-beam';
-    beam.style.position = 'absolute';
+    // blue scan beam
+    const beam = document.createElement("div");
+    beam.style.position = "absolute";
     beam.style.left = 0;
     beam.style.top = 0;
-    beam.style.width = '100%';
-    beam.style.height = '3px';
-    beam.style.background = 'linear-gradient(90deg, transparent, #00e5ff, transparent)';
-    beam.style.animation = 'beamScan 1.4s linear';
-    beam.style.pointerEvents = 'none';
-    beam.style.borderRadius = '10px';
+    beam.style.width = "100%";
+    beam.style.height = "4px";
+    beam.style.background = "linear-gradient(90deg, transparent, #00e5ff, transparent)";
+    beam.style.animation = "beamScan 1.2s linear";
+    beam.style.pointerEvents = "none";
     this.container.appendChild(beam);
-    beam.addEventListener('animationend', () => beam.remove());
+    beam.addEventListener("animationend", () => beam.remove());
 
-    // animation keyframes add once
-    if (!document.getElementById('beamStyle')) {
-      const st = document.createElement('style');
-      st.id = 'beamStyle';
-      st.textContent = `
-      @keyframes beamScan {
-        0% { top: 0; opacity: 0.6; }
-        50% { opacity: 1; }
-        100% { top: 100%; opacity: 0; }
-      }`;
-      document.head.appendChild(st);
+    if (!document.getElementById("beamAnim")) {
+      const style = document.createElement("style");
+      style.id = "beamAnim";
+      style.textContent = `
+        @keyframes beamScan {
+          0% { top: 0; opacity: 0.6; }
+          50% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
     }
 
-    this.opts.onStatus?.("📸 Palm captured");
+    this.opts.onStatus?.("📸 Hand captured to canvas");
   }
 
   // ==== TORCH ====
