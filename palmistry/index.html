@@ -3,8 +3,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quantum Bio-Aura Analyzer V1.0 · AI Wisdom Amplifier Edition</title>
+<title>Quantum Bio-Aura Analyzer V1.1 · Smart Aura Mask Edition</title>
 <link rel="icon" href="./icon.png"/>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
 <style>
 :root{--bg:#0b0f16;--neon:#00e5ff;--pri:#16f0a7;}
 body{margin:0;background:var(--bg);color:#e6f0ff;
@@ -20,19 +22,19 @@ button:hover{background:#00e5ff;color:#000;}
 </style>
 </head>
 <body>
-<h1>🔮 Quantum Bio-Aura Analyzer V1.0</h1>
-<div id="status">AI Wisdom Amplifier Active ✨</div>
+<h1>🔮 Quantum Bio-Aura Analyzer V1.1</h1>
+<div id="status">Smart Aura Mask Active ✨</div>
 
 <video id="vid" autoplay playsinline></video>
 <canvas id="cv" width="320" height="420"></canvas>
 
 <div>
   <button id="startBtn">📷 Start Camera</button>
-  <button id="captureBtn">✋ Analyze Aura</button>
+  <button id="analyzeBtn">🧠 Analyze Aura</button>
 </div>
 
 <div class="footer">
-© 2025 Sathyadarshana Quantum Division · AI Buddhi — “Hybrid Vision Edition”
+© 2025 Sathyadarshana Quantum Division · AI Buddhi — “Smart Aura Mask Edition”
 </div>
 
 <script src="./app.js"></script>
