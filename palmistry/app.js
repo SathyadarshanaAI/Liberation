@@ -1,190 +1,157 @@
-// === Sathyadarshana Quantum Palm Analyzer V7.4.4 · Universal Torch+Analyzer Safe Edition ===
+// === Sathyadarshana Quantum Palm Analyzer V7.4.5 – Torch + Voice Stable Edition ===
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
-let streamLeft, streamRight, torchEnabled = false, trackTorch = null;
+let streamLeft, streamRight, trackLeft, trackRight;
 
-// ===== STATUS =====
-function msg(text, ok = true) {
-  statusEl.textContent = text;
+// === STATUS MESSAGE ===
+function msg(t, ok = true) {
+  statusEl.textContent = t;
   statusEl.style.color = ok ? "#16f0a7" : "#ff6b6b";
 }
 
-// ===== CAMERA =====
+// === CAMERA START ===
 async function startCam(side) {
   const vid = side === "left" ? $("vidLeft") : $("vidRight");
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" },
-      audio: false
-    });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
     vid.srcObject = stream;
-    await vid.play().catch(() => msg("Tap to start video ▶️", false));
+    await vid.play();
 
-    if (side === "left") streamLeft = stream; else streamRight = stream;
-    msg(`${side} camera active ✅`);
+    if (side === "left") { streamLeft = stream; trackLeft = stream.getVideoTracks()[0]; }
+    else { streamRight = stream; trackRight = stream.getVideoTracks()[0]; }
 
-    // Torch setup
-    const track = stream.getVideoTracks()[0];
-    const caps = track.getCapabilities();
-    const btn = $("torchBtn");
-    btn.style.display = "inline-block";
-
-    if (caps.torch) {
-      trackTorch = track;
-      btn.onclick = async () => {
-        torchEnabled = !torchEnabled;
-        await track.applyConstraints({ advanced: [{ torch: torchEnabled }] });
-        btn.textContent = torchEnabled ? "💡 Torch ON" : "🔦 Torch";
-        msg(torchEnabled ? "Torch ON ✅" : "Torch OFF ❌");
-      };
-    } else {
-      // fallback soft light overlay
-      btn.onclick = () => {
-        torchEnabled = !torchEnabled;
-        document.body.style.background = torchEnabled ? "#ffffff" : "#0b0f16";
-        btn.textContent = torchEnabled ? "💡 Screen Torch" : "🔦 Torch";
-        msg(torchEnabled ? "Screen Torch Mode ON ⚪" : "Screen Torch OFF 🕯️");
-      };
-    }
+    msg(`${side} camera started ✅`);
+    setupTorch(side);
   } catch (e) {
-    msg("Camera access denied ❌", false);
+    msg(`Camera blocked ❌ ${e.message}`, false);
   }
 }
 
-// ===== AUTO HAND DETECTOR (V5 Adaptive Safe Mode) =====
-function detectHandSide(cv) {
-  const w = cv.width, h = cv.height;
-  const ctx = cv.getContext("2d");
-  const img = ctx.getImageData(0, 0, w, h).data;
-  let leftSum = 0, rightSum = 0, total = 0;
-
-  for (let y = 0; y < h; y += 4) {
-    for (let x = 0; x < 40; x++) {
-      const i = (y * w + x) * 4;
-      const lum = img[i] + img[i + 1] + img[i + 2];
-      leftSum += lum; total += lum;
-    }
-    for (let x = w - 40; x < w; x++) {
-      const i = (y * w + x) * 4;
-      const lum = img[i] + img[i + 1] + img[i + 2];
-      rightSum += lum; total += lum;
-    }
+// === TORCH CONTROL ===
+function setupTorch(side) {
+  const btn = side === "left" ? $("torchLeft") : $("torchRight");
+  const track = side === "left" ? trackLeft : trackRight;
+  const caps = track.getCapabilities?.() || {};
+  if (caps.torch) {
+    btn.style.display = "inline-block";
+    btn.onclick = async () => {
+      const current = btn.dataset.on === "1";
+      await track.applyConstraints({ advanced: [{ torch: !current }] });
+      btn.dataset.on = current ? "0" : "1";
+      btn.textContent = current ? "💡 Torch" : "💥 Torch ON";
+      msg(`${side} torch ${current ? "OFF" : "ON"}`);
+    };
+  } else {
+    btn.onclick = () => {
+      const on = document.body.style.background === "white";
+      document.body.style.background = on ? "#0b0f16" : "white";
+      btn.textContent = on ? "💡 Torch" : "💥 Screen Light";
+      msg(`${side} screen light ${on ? "OFF" : "ON"}`);
+    };
   }
-  const diff = rightSum - leftSum;
-  const avg = total / (w * h);
-  let threshold = 700000;
-  if (avg > 160) threshold = 1200000;
-  else if (avg < 60) threshold = 400000;
-  if (Math.abs(diff) < threshold) {
-    msg("🤖 Hand orientation unclear – retry capture", false);
-    return "Unknown";
-  }
-  return diff > 0 ? "Right Hand" : "Left Hand";
 }
 
-// ===== CAPTURE + ANALYZE =====
+// === CAPTURE ===
 function capture(side) {
   const vid = side === "left" ? $("vidLeft") : $("vidRight");
-  const cv = side === "left" ? $("canvasLeft") : $("canvasRight");
-  const ctx = cv.getContext("2d");
-  ctx.drawImage(vid, 0, 0, cv.width, cv.height);
-  flash(cv);
-
-  const hand = detectHandSide(cv);
-  if (hand === "Unknown") return;
-  const aura = analyzeAura(cv);
-  drawAuraOverlay(cv, aura.color);
-  drawPalmLines(cv);
-
-  cv.dataset.locked = "1";
-  cv.dataset.aura = aura.type;
-  msg(`${hand} captured 🔒 (${aura.type})`);
-
-  const u = new SpeechSynthesisUtterance(`${hand} captured, aura ${aura.type}`);
-  u.lang = "en-US"; speechSynthesis.speak(u);
-
-  if (hand === "Right Hand") startAnalyzer();
+  const canvas = side === "left" ? $("canvasLeft") : $("canvasRight");
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+  canvas.dataset.locked = "1";
+  flash(canvas);
+  const aura = analyzeAura(canvas);
+  drawAura(canvas, aura.color);
+  drawPalmLines(canvas);
+  msg(`${side} hand captured 🔒 (${aura.type})`);
+  speak(`${side} hand captured, aura ${aura.type}`);
 }
 
-// ===== AURA ANALYZER =====
-function analyzeAura(canvas) {
-  const ctx = canvas.getContext("2d");
-  const { width: w, height: h } = canvas;
+// === ANALYZE ===
+function analyzeAura(cv) {
+  const ctx = cv.getContext("2d");
+  const { width:w, height:h } = cv;
   const data = ctx.getImageData(0, 0, w, h).data;
-  let r = 0, g = 0, b = 0, c = 0;
-  for (let i = 0; i < data.length; i += 40) { r += data[i]; g += data[i + 1]; b += data[i + 2]; c++; }
-  r /= c; g /= c; b /= c;
-  const hue = rgbToHue(r, g, b);
-  let color = "#fff", type = "Neutral";
-  if (hue < 25 || hue > 340) { color = "#ff3333"; type = "Active (Red)"; }
-  else if (hue < 60) { color = "#ffd700"; type = "Divine (Gold)"; }
-  else if (hue < 140) { color = "#00ff88"; type = "Healing (Green)"; }
-  else if (hue < 220) { color = "#3399ff"; type = "Peaceful (Blue)"; }
-  else if (hue < 300) { color = "#cc66ff"; type = "Mystic (Violet)"; }
+  let r=0,g=0,b=0,c=0;
+  for (let i=0;i<data.length;i+=60){r+=data[i];g+=data[i+1];b+=data[i+2];c++;}
+  r/=c;g/=c;b/=c;
+  const hue = rgbToHue(r,g,b);
+  let color="#fff",type="Neutral";
+  if (hue<25||hue>340){color="#ff3333";type="Active (Red)";}
+  else if (hue<60){color="#ffd700";type="Divine (Gold)";}
+  else if (hue<140){color="#00ff88";type="Healing (Green)";}
+  else if (hue<220){color="#3399ff";type="Peaceful (Blue)";}
+  else if (hue<300){color="#cc66ff";type="Mystic (Violet)";}
   return { color, type };
 }
-function rgbToHue(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-  let h = 0;
-  if (d === 0) h = 0;
-  else if (max === r) h = (60 * ((g - b) / d) + 360) % 360;
-  else if (max === g) h = (60 * ((b - r) / d) + 120) % 360;
-  else h = (60 * ((r - g) / d) + 240) % 360;
+function rgbToHue(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+  let h=0;
+  if(d===0)h=0;
+  else if(max===r)h=(60*((g-b)/d)+360)%360;
+  else if(max===g)h=(60*((b-r)/d)+120)%360;
+  else h=(60*((r-g)/d)+240)%360;
   return h;
 }
 
-// ===== OVERLAYS =====
-function drawAuraOverlay(cv, color) {
+// === DRAW AURA ===
+function drawAura(cv, color) {
   const ctx = cv.getContext("2d");
-  ctx.globalCompositeOperation = "lighter";
-  const g = ctx.createRadialGradient(cv.width / 2, cv.height / 2, 20, cv.width / 2, cv.height / 2, 160);
-  g.addColorStop(0, color + "55");
+  ctx.globalCompositeOperation="lighter";
+  const g = ctx.createRadialGradient(cv.width/2, cv.height/2, 20, cv.width/2, cv.height/2, 160);
+  g.addColorStop(0, color+"55");
   g.addColorStop(1, "transparent");
   ctx.fillStyle = g;
-  ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.globalCompositeOperation = "source-over";
+  ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.globalCompositeOperation="source-over";
 }
+
+// === DRAW PALM LINES ===
 function drawPalmLines(cv) {
   const ctx = cv.getContext("2d");
-  ctx.strokeStyle = "#16f0a7";
-  ctx.lineWidth = 1.4;
-  const w = cv.width, h = cv.height;
-  const lines = [
-    [[w * 0.35, h * 0.7], [w * 0.2, h * 0.5, w * 0.4, h * 0.25]],
-    [[w * 0.3, h * 0.5], [w * 0.75, h * 0.45]],
-    [[w * 0.25, h * 0.35], [w * 0.8, h * 0.32]],
-    [[w * 0.5, h * 0.85], [w * 0.55, h * 0.25]],
-    [[w * 0.65, h * 0.9], [w * 0.7, h * 0.4]]
+  ctx.strokeStyle="#16f0a7";
+  ctx.lineWidth=1.2;
+  const w=cv.width,h=cv.height;
+  const lines=[
+    [[w*0.3,h*0.7],[w*0.2,h*0.5,w*0.45,h*0.3]],
+    [[w*0.4,h*0.55],[w*0.75,h*0.45]],
+    [[w*0.25,h*0.35],[w*0.8,h*0.3]],
+    [[w*0.45,h*0.85],[w*0.55,h*0.25]]
   ];
-  for (const [a, b] of lines) {
+  for(const [a,b] of lines){
     ctx.beginPath();
-    ctx.moveTo(a[0], a[1]);
-    if (b.length === 4) ctx.quadraticCurveTo(b[0], b[1], b[2], b[3]);
-    else ctx.lineTo(b[0], b[1]);
+    ctx.moveTo(a[0],a[1]);
+    if(b.length===4)ctx.quadraticCurveTo(b[0],b[1],b[2],b[3]);
+    else ctx.lineTo(b[0],b[1]);
     ctx.stroke();
   }
 }
 
-// ===== REPORT + PDF =====
-function startAnalyzer() {
-  const L = $("canvasLeft").dataset.aura || "Unknown";
-  const R = $("canvasRight").dataset.aura || "Unknown";
-  $("reportBox").textContent = `
-AI Buddhi Report
------------------
-Left Aura : ${L}
-Right Aura: ${R}
-Balance between memory & awareness defines your light.`;
-  msg("🧠 Divine Energy Report Generated");
-}
-function flash(cv) {
-  cv.style.boxShadow = "0 0 20px #16f0a7";
-  setTimeout(() => (cv.style.boxShadow = "none"), 900);
+// === FLASH EFFECT ===
+function flash(cv){
+  cv.style.boxShadow="0 0 20px #16f0a7";
+  setTimeout(()=>cv.style.boxShadow="none",800);
 }
 
-// ===== EVENTS =====
-$("startLeft").onclick = () => startCam("left");
-$("startRight").onclick = () => startCam("right");
-$("captureLeft").onclick = () => capture("left");
-$("captureRight").onclick = () => capture("right");
+// === SPEECH ===
+function speak(text){
+  try{
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="en-US";
+    speechSynthesis.speak(u);
+  }catch(e){console.warn("Voice error",e);}
+}
+
+// === BUTTONS ===
+$("startLeft").onclick = ()=>startCam("left");
+$("startRight").onclick = ()=>startCam("right");
+$("captureLeft").onclick = ()=>capture("left");
+$("captureRight").onclick = ()=>capture("right");
+
+$("analyzeBtn").onclick = ()=>{
+  speak("Analyzing captured palms, generating divine report");
+  msg("Analyzing... 🌈");
+  setTimeout(()=>msg("Report ready ✨"),2500);
+};
+
+$("speakBtn").onclick = ()=>speak("This is the Quantum Palm Analyzer. Your hands are windows to the soul.");
