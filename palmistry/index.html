@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sathyadarshana Quantum Palmistry V8.0 · Single Intelligent Scanner Edition</title>
+<title>Sathyadarshana Quantum Palmistry V8.2 · Dual Intelligent Analyzer Edition</title>
 <link rel="icon" href="./icon.png" />
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
@@ -12,49 +12,68 @@ body {
   margin:0; background:var(--bg); color:#e6f0ff; font-family:'Segoe UI',sans-serif; text-align:center;
 }
 h1 { color:var(--neon); margin-top:20px; text-shadow:0 0 10px var(--neon); }
+
+.camWrap {
+  display:flex; flex-wrap:wrap; justify-content:center; gap:25px; margin:20px auto;
+}
+.camCol {
+  background:var(--card); padding:12px 16px; border-radius:18px;
+  box-shadow:0 0 15px #000; position:relative;
+}
 video,canvas {
-  width:300px; height:400px; border-radius:16px;
+  width:260px; height:340px; border-radius:14px;
   border:2px solid #333; display:block; margin:10px auto; background:#000;
 }
 button {
   background:#0d253f; border:none; border-radius:10px;
-  padding:8px 16px; margin:6px; color:#00e5ff; font-weight:600; cursor:pointer;
+  padding:8px 14px; margin:5px; color:#00e5ff; font-weight:600; cursor:pointer;
 }
 button:hover { background:#00e5ff; color:#000; }
+canvas[data-locked="1"] { border:2px solid var(--pri); box-shadow:0 0 12px var(--neon); }
+.status { margin-top:10px; font-size:14px; color:#16f0a7; }
 #reportBox {
   background:#101820; color:#00e5ff; padding:10px;
-  margin:15px auto; max-width:650px; border-radius:10px;
+  margin:15px auto; max-width:700px; border-radius:10px;
   white-space:pre-wrap; text-align:left; box-shadow:0 0 10px #00e5ff33;
 }
 .aura-ring {
   position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  width:220px; height:220px; border-radius:50%;
+  width:200px; height:200px; border-radius:50%;
   box-shadow:0 0 30px 10px #00e5ffaa;
-  animation:pulse 3s infinite ease-in-out; pointer-events:none;
+  animation:pulse 3s infinite ease-in-out;
 }
 @keyframes pulse {
   0%{transform:translate(-50%,-50%) scale(1);opacity:0.8;}
-  50%{transform:translate(-50%,-50%) scale(1.25);opacity:0.3;}
+  50%{transform:translate(-50%,-50%) scale(1.2);opacity:0.3;}
   100%{transform:translate(-50%,-50%) scale(1);opacity:0.8;}
 }
-.status { margin-top:10px; font-size:14px; color:#16f0a7; }
 .footer { font-size:12px; opacity:.7; margin:20px 0; }
 </style>
 </head>
 <body>
-<h1>🔮 Sathyadarshana Quantum Palmistry V8.0</h1>
-<div id="status" class="status">Intelligent Scanner Active ✨</div>
+<h1>🔮 Sathyadarshana Quantum Palmistry V8.2</h1>
+<div id="status" class="status">Dual Intelligent Analyzer Active ✨</div>
 
-<div style="position:relative;display:inline-block;">
-  <div class="aura-ring" id="auraRing"></div>
-  <video id="vidMain" autoplay playsinline></video>
-  <canvas id="canvasMain" width="300" height="400"></canvas>
-</div>
+<div class="camWrap">
+  <div class="camCol">
+    <h3>Left Hand</h3>
+    <div class="aura-ring" id="auraLeft"></div>
+    <video id="vidLeft" autoplay playsinline></video>
+    <canvas id="canvasLeft" width="260" height="340"></canvas>
+    <button id="startLeft">Start</button>
+    <button id="captureLeft">Capture</button>
+    <button id="torchLeft">💡Torch</button>
+  </div>
 
-<div>
-  <button id="startBtn">📷 Start</button>
-  <button id="captureBtn">✋ Capture</button>
-  <button id="torchBtn">💡 Torch</button>
+  <div class="camCol">
+    <h3>Right Hand</h3>
+    <div class="aura-ring" id="auraRight"></div>
+    <video id="vidRight" autoplay playsinline></video>
+    <canvas id="canvasRight" width="260" height="340"></canvas>
+    <button id="startRight">Start</button>
+    <button id="captureRight">Capture</button>
+    <button id="torchRight">💡Torch</button>
+  </div>
 </div>
 
 <div>
@@ -63,10 +82,10 @@ button:hover { background:#00e5ff; color:#000; }
   <button id="speakBtn">🔊 Speak</button>
 </div>
 
-<div id="reportBox">Awaiting capture...</div>
+<div id="reportBox">Awaiting analysis...</div>
 
 <div class="footer">
-© 2025 Sathyadarshana Quantum Division · AI Buddhi — “Divine Structure of Life”
+© 2025 Sathyadarshana Quantum Division · AI Buddhi — “Dual Intelligent Analyzer Edition”
 </div>
 
 <script src="./app.js"></script>
