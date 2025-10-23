@@ -1,4 +1,6 @@
-// === Sathyadarshana Quantum Palm Analyzer V7.3.2 · Divine Energy Wave Edition ===
+// === Sathyadarshana Quantum Palm Analyzer V7.3.3 · Divine Energy Wave Edition ===
+import { translateReport } from './translator.js';
+
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
 let streamLeft, streamRight;
@@ -130,28 +132,20 @@ function verifyLock() {
 }
 
 // ===== ANALYZER =====
-function startAnalyzer() {
+async function startAnalyzer() {
   if (!verifyLock()) return;
   const aL = $("canvasLeft").dataset.aura || "Unknown";
   const aR = $("canvasRight").dataset.aura || "Unknown";
-  const mini = generateMiniReport(aL, aR);
-  const full = generateFullReport(aL, aR);
-  $("reportBox").textContent = mini + "\n\n" + full;
+  const report = generateFullReport(aL, aR);
+  $("reportBox").textContent = report;
+
+  const lang = $("language").value;
+  const translated = await translateReport(report, lang);
+  $("reportBox").textContent += "\n\n" + translated;
   msg("🧠 Divine Energy Report Generated");
-  translateReport(full);
 }
 
 // ===== REPORTS =====
-function generateMiniReport(aL, aR) {
-  return `
-AI Buddhi Palm & Aura Mini Report
----------------------------------
-Left Aura  : ${aL}
-Right Aura : ${aR}
-Your left hand shows memory & karma.
-Your right hand mirrors awareness & destiny.
-If both are bright, inner light and outer purpose align.`;
-}
 function generateFullReport(aL, aR) {
   return `
 AI Buddhi Deep Palm Analysis – Divine Energy Wave Edition
@@ -169,25 +163,11 @@ Right Aura: ${aR}
 When auras pulse together, divine equilibrium manifests.`;
 }
 
-// ===== TRANSLATION =====
-async function translateReport(text) {
-  const lang = $("language").value;
-  if (lang === "en") return;
-  try {
-    const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`);
-    const json = await res.json();
-    const tr = json[0].map(x => x[0]).join("");
-    $("reportBox").textContent += `\n\n🌐 Translated:\n${tr}`;
-  } catch {
-    msg("Translation unavailable (offline)", false);
-  }
-}
-
 // ===== PDF + VOICE =====
 function makePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  pdf.text("Sathyadarshana Quantum Palm Analyzer V7.3.2 · Divine Energy Wave Edition", 10, 10);
+  pdf.text("Sathyadarshana Quantum Palm Analyzer V7.3.3 · Divine Energy Wave Edition", 10, 10);
   pdf.text($("reportBox").textContent, 10, 20, { maxWidth: 180 });
   pdf.save("DivineEnergyWave_Report.pdf");
 }
