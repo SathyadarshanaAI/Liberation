@@ -1,7 +1,7 @@
-// === Sathyadarshana Quantum Palm Analyzer V7.4.2 · Light Adaptive Stable Edition ===
+// === Sathyadarshana Quantum Palm Analyzer V7.4.3 · Torch + Auto Light Balancer Edition ===
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
-let streamLeft, streamRight;
+let streamLeft, streamRight, torchTrack = null;
 
 // ===== STATUS =====
 function msg(text, ok = true) {
@@ -19,14 +19,32 @@ async function startCam(side) {
     });
     vid.srcObject = stream;
     await vid.play().catch(() => msg("Tap to start video ▶️", false));
+
     if (side === "left") streamLeft = stream; else streamRight = stream;
     msg(`${side} camera active ✅`);
+
+    // --- Torch Control ---
+    const track = stream.getVideoTracks()[0];
+    const caps = track.getCapabilities();
+    if (caps.torch) {
+      torchTrack = track;
+      const torchBtn = $("torchBtn");
+      torchBtn.style.display = "inline-block";
+      torchBtn.onclick = async () => {
+        const s = track.getSettings();
+        const newTorch = !s.torch;
+        await track.applyConstraints({ advanced: [{ torch: newTorch }] });
+        torchBtn.textContent = newTorch ? "💡 Torch ON" : "🔦 Torch";
+      };
+    } else {
+      $("torchBtn").style.display = "none";
+    }
   } catch (e) {
     msg("Camera access denied ❌", false);
   }
 }
 
-// ===== AUTO HAND DETECTOR (V3 – Light Adaptive AI Logic) =====
+// ===== HAND DETECTOR (V4 Light-Aware AI) =====
 function detectHandSide(cv) {
   const w = cv.width, h = cv.height;
   const ctx = cv.getContext("2d");
@@ -48,11 +66,9 @@ function detectHandSide(cv) {
 
   const diff = rightSum - leftSum;
   const avgLight = totalLight / (w * h);
-
-  // Adaptive threshold based on brightness
   let threshold = 700000;
-  if (avgLight > 150) threshold = 1200000;   // daylight
-  else if (avgLight < 60) threshold = 400000; // low light
+  if (avgLight > 160) threshold = 1300000;  // bright sunlight
+  else if (avgLight < 60) threshold = 400000; // dark indoor
 
   if (Math.abs(diff) < threshold) {
     msg("🤖 Hand orientation unclear – retry capture", false);
@@ -70,7 +86,7 @@ function capture(side) {
   flash(cv);
 
   const hand = detectHandSide(cv);
-  if (hand === "Unknown") return; // skip unclear captures
+  if (hand === "Unknown") return;
 
   const aura = analyzeAura(cv);
   drawAuraOverlay(cv, aura.color);
@@ -80,7 +96,11 @@ function capture(side) {
   cv.dataset.aura = aura.type;
   msg(`${hand} captured 🔒 (${aura.type})`);
 
-  if (hand === "Right Hand") startAnalyzer(); // auto trigger
+  // 🎙️ Voice feedback
+  const u = new SpeechSynthesisUtterance(`${hand} captured, aura ${aura.type}`);
+  u.lang = "en-US"; speechSynthesis.speak(u);
+
+  if (hand === "Right Hand") startAnalyzer();
 }
 
 // ===== AURA ANALYZER =====
@@ -124,8 +144,7 @@ function drawAuraOverlay(cv, color) {
 }
 function drawPalmLines(cv) {
   const ctx = cv.getContext("2d");
-  ctx.strokeStyle = "#16f0a7";
-  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = "#16f0a7"; ctx.lineWidth = 1.4;
   const w = cv.width, h = cv.height;
   const lines = [
     [[w * 0.35, h * 0.7], [w * 0.2, h * 0.5, w * 0.4, h * 0.25]],
@@ -147,23 +166,15 @@ function drawPalmLines(cv) {
 function startAnalyzer() {
   const L = $("canvasLeft").dataset.aura || "Unknown";
   const R = $("canvasRight").dataset.aura || "Unknown";
-  const mini = generateMiniReport(L, R);
-  const full = generateFullReport(L, R);
-  $("reportBox").textContent = mini + "\n\n" + full;
-  msg("🧠 Divine Energy Report Generated");
-}
-function generateMiniReport(L, R) {
-  return `
+  const mini = `
 AI Buddhi Mini Report
 ---------------------
 Left Aura : ${L}
 Right Aura: ${R}
 Balance between memory & awareness defines your light.`;
-}
-function generateFullReport(L, R) {
-  return `
-AI Buddhi Deep Palm Analysis – Light Adaptive Edition
-----------------------------------------------------
+  const full = `
+AI Buddhi Deep Palm Analysis – Torch+Voice Edition
+--------------------------------------------------
 Life Line : Vital energy & endurance.
 Head Line : Thought clarity & wisdom.
 Heart Line : Compassion & emotional truth.
@@ -172,24 +183,19 @@ Sun Line  : Inner recognition of light.
 Left Aura : ${L}
 Right Aura: ${R}
 Together they reveal equilibrium between soul & action.`;
+
+  $("reportBox").textContent = mini + "\n\n" + full;
+  msg("🧠 Divine Energy Report Generated");
 }
 
-// ===== PDF + SPEECH =====
+// ===== PDF & FLASH =====
 function makePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  pdf.text("Sathyadarshana Quantum Palm Analyzer V7.4.2 · Light Adaptive Stable Edition", 10, 10);
+  pdf.text("Sathyadarshana Quantum Palm Analyzer V7.4.3 · Torch + Auto Light Balancer Edition", 10, 10);
   pdf.text($("reportBox").textContent, 10, 20, { maxWidth: 180 });
-  pdf.save("LightAdaptive_Report.pdf");
+  pdf.save("TorchLight_Report.pdf");
 }
-function speak() {
-  const t = $("reportBox").textContent;
-  const u = new SpeechSynthesisUtterance(t);
-  u.lang = "en-US";
-  speechSynthesis.speak(u);
-}
-
-// ===== FLASH =====
 function flash(cv) {
   cv.style.boxShadow = "0 0 20px #16f0a7";
   setTimeout(() => (cv.style.boxShadow = "none"), 900);
@@ -201,4 +207,3 @@ $("startRight").onclick = () => startCam("right");
 $("captureLeft").onclick = () => capture("left");
 $("captureRight").onclick = () => capture("right");
 $("saveBtn").onclick = makePDF;
-$("speakBtn").onclick = speak;
