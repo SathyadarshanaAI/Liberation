@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Quantum Bio-Aura Analyzer V1.1 · Smart Aura Mask Edition</title>
+<title>Quantum Bio-Aura Analyzer V1.1.1 · Smart Lock Aura Edition</title>
 <link rel="icon" href="./icon.png"/>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
@@ -18,23 +18,25 @@ button{background:#0d253f;border:none;border-radius:10px;
        padding:8px 16px;margin:6px;color:#00e5ff;font-weight:600;cursor:pointer;}
 button:hover{background:#00e5ff;color:#000;}
 #status{margin-top:10px;font-size:14px;color:#16f0a7;}
+canvas[data-locked="1"]{border:2px solid #16f0a7;box-shadow:0 0 12px #00e5ff;}
 .footer{font-size:12px;opacity:.6;margin:20px 0;}
 </style>
 </head>
 <body>
-<h1>🔮 Quantum Bio-Aura Analyzer V1.1</h1>
-<div id="status">Smart Aura Mask Active ✨</div>
+<h1>🔮 Quantum Bio-Aura Analyzer V1.1.1</h1>
+<div id="status">Smart Lock Aura System Ready ✨</div>
 
 <video id="vid" autoplay playsinline></video>
 <canvas id="cv" width="320" height="420"></canvas>
 
 <div>
   <button id="startBtn">📷 Start Camera</button>
+  <button id="captureBtn">📸 Capture Frame</button>
   <button id="analyzeBtn">🧠 Analyze Aura</button>
 </div>
 
 <div class="footer">
-© 2025 Sathyadarshana Quantum Division · AI Buddhi — “Smart Aura Mask Edition”
+© 2025 Sathyadarshana Quantum Division · AI Buddhi — “Smart Lock Aura Edition”
 </div>
 
 <script src="./app.js"></script>
