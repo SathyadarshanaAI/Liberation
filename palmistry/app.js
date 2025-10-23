@@ -1,4 +1,4 @@
-// === Sathyadarshana Quantum Palm Analyzer V7.4.1 · Self-Aware Camera Fix Edition ===
+// === Sathyadarshana Quantum Palm Analyzer V7.4.2 · Light Adaptive Stable Edition ===
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
 let streamLeft, streamRight;
@@ -26,21 +26,35 @@ async function startCam(side) {
   }
 }
 
-// ===== AUTO HAND DETECTOR (V2 Smart Logic) =====
+// ===== AUTO HAND DETECTOR (V3 – Light Adaptive AI Logic) =====
 function detectHandSide(cv) {
   const w = cv.width, h = cv.height;
-  const img = cv.getContext("2d").getImageData(0, 0, w, h).data;
-  let leftSum = 0, rightSum = 0;
+  const ctx = cv.getContext("2d");
+  const img = ctx.getImageData(0, 0, w, h).data;
+  let leftSum = 0, rightSum = 0, totalLight = 0;
+
   for (let y = 0; y < h; y += 4) {
     for (let x = 0; x < 40; x++) {
-      leftSum += img[(y * w + x) * 4] + img[(y * w + x) * 4 + 1] + img[(y * w + x) * 4 + 2];
+      const i = (y * w + x) * 4;
+      const lum = img[i] + img[i + 1] + img[i + 2];
+      leftSum += lum; totalLight += lum;
     }
     for (let x = w - 40; x < w; x++) {
-      rightSum += img[(y * w + x) * 4] + img[(y * w + x) * 4 + 1] + img[(y * w + x) * 4 + 2];
+      const i = (y * w + x) * 4;
+      const lum = img[i] + img[i + 1] + img[i + 2];
+      rightSum += lum; totalLight += lum;
     }
   }
+
   const diff = rightSum - leftSum;
-  if (Math.abs(diff) < 700000) {
+  const avgLight = totalLight / (w * h);
+
+  // Adaptive threshold based on brightness
+  let threshold = 700000;
+  if (avgLight > 150) threshold = 1200000;   // daylight
+  else if (avgLight < 60) threshold = 400000; // low light
+
+  if (Math.abs(diff) < threshold) {
     msg("🤖 Hand orientation unclear – retry capture", false);
     return "Unknown";
   }
@@ -56,7 +70,8 @@ function capture(side) {
   flash(cv);
 
   const hand = detectHandSide(cv);
-  if (hand === "Unknown") return; // stop here if unclear
+  if (hand === "Unknown") return; // skip unclear captures
+
   const aura = analyzeAura(cv);
   drawAuraOverlay(cv, aura.color);
   drawPalmLines(cv);
@@ -65,7 +80,7 @@ function capture(side) {
   cv.dataset.aura = aura.type;
   msg(`${hand} captured 🔒 (${aura.type})`);
 
-  if (hand === "Right Hand") startAnalyzer(); // auto trigger after right hand
+  if (hand === "Right Hand") startAnalyzer(); // auto trigger
 }
 
 // ===== AURA ANALYZER =====
@@ -147,8 +162,8 @@ Balance between memory & awareness defines your light.`;
 }
 function generateFullReport(L, R) {
   return `
-AI Buddhi Deep Palm Analysis – Self-Aware Edition
--------------------------------------------------
+AI Buddhi Deep Palm Analysis – Light Adaptive Edition
+----------------------------------------------------
 Life Line : Vital energy & endurance.
 Head Line : Thought clarity & wisdom.
 Heart Line : Compassion & emotional truth.
@@ -163,9 +178,9 @@ Together they reveal equilibrium between soul & action.`;
 function makePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  pdf.text("Sathyadarshana Quantum Palm Analyzer V7.4.1 · Self-Aware Camera Fix Edition", 10, 10);
+  pdf.text("Sathyadarshana Quantum Palm Analyzer V7.4.2 · Light Adaptive Stable Edition", 10, 10);
   pdf.text($("reportBox").textContent, 10, 20, { maxWidth: 180 });
-  pdf.save("SelfAware_Report.pdf");
+  pdf.save("LightAdaptive_Report.pdf");
 }
 function speak() {
   const t = $("reportBox").textContent;
