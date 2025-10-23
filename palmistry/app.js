@@ -1,7 +1,8 @@
-// === Sathyadarshana Quantum Palmistry V8.0 – Single Intelligent Scanner Edition ===
+// === Sathyadarshana Quantum Palmistry V8.2 – Dual Intelligent Analyzer Edition ===
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
-let streamMain, track, torchOn = false;
+let streamLeft, streamRight, trackLeft, trackRight;
+let torchLeftOn = false, torchRightOn = false;
 
 // ===== STATUS =====
 function msg(t, ok = true) {
@@ -10,44 +11,46 @@ function msg(t, ok = true) {
 }
 
 // ===== CAMERA =====
-async function startCam() {
+async function startCam(side) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" },
       audio: false
     });
-    streamMain = stream;
-    const vid = $("vidMain");
+    const vid = side === "left" ? $("vidLeft") : $("vidRight");
     vid.srcObject = stream;
     await vid.play();
-    msg("Camera active ✅");
-    const tracks = stream.getVideoTracks();
-    if (tracks[0].getCapabilities().torch) track = tracks[0];
+    if (side === "left") { streamLeft = stream; trackLeft = stream.getVideoTracks()[0]; }
+    else { streamRight = stream; trackRight = stream.getVideoTracks()[0]; }
+    msg(`${side} camera active ✅`);
   } catch (e) {
-    msg("Camera access denied ❌", false);
+    msg(`Camera error (${side}) ❌`, false);
   }
 }
 
-// ===== TORCH CONTROL =====
-async function toggleTorch() {
-  if (!track) return msg("Torch not supported 🔦", false);
+// ===== TORCH =====
+async function toggleTorch(side) {
+  const track = side === "left" ? trackLeft : trackRight;
+  if (!track) return msg(`No camera for ${side}`, false);
+  const state = side === "left" ? torchLeftOn : torchRightOn;
   try {
-    torchOn = !torchOn;
-    await track.applyConstraints({ advanced: [{ torch: torchOn }] });
-    msg(torchOn ? "Torch ON 💡" : "Torch OFF 🌑");
+    const next = !state;
+    await track.applyConstraints({ advanced: [{ torch: next }] });
+    if (side === "left") torchLeftOn = next; else torchRightOn = next;
+    msg(`${side} torch ${next ? "ON 💡" : "OFF 🌑"}`);
   } catch (e) {
-    msg("Torch control error ⚠️", false);
+    msg(`Torch failed (${side})`, false);
   }
 }
 
 // ===== CAPTURE =====
-function capture() {
-  const vid = $("vidMain");
-  const cv = $("canvasMain");
+function capture(side) {
+  const vid = side === "left" ? $("vidLeft") : $("vidRight");
+  const cv = side === "left" ? $("canvasLeft") : $("canvasRight");
   const ctx = cv.getContext("2d");
   ctx.drawImage(vid, 0, 0, cv.width, cv.height);
   flash(cv);
-  msg("Image captured 🔒");
+  msg(`${side} hand captured 🔒`);
 }
 
 // ===== AURA ANALYZER =====
@@ -70,7 +73,6 @@ function analyzeAura(canvas) {
   drawAuraOverlay(canvas, color);
   return type;
 }
-
 function rgbToHue(r, g, b) {
   r /= 255; g /= 255; b /= 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
@@ -81,11 +83,10 @@ function rgbToHue(r, g, b) {
   else h = (60 * ((r - g) / d) + 240) % 360;
   return h;
 }
-
 function drawAuraOverlay(cv, color) {
   const ctx = cv.getContext("2d");
   ctx.globalCompositeOperation = "lighter";
-  const g = ctx.createRadialGradient(cv.width / 2, cv.height / 2, 10, cv.width / 2, cv.height / 2, 180);
+  const g = ctx.createRadialGradient(cv.width / 2, cv.height / 2, 10, cv.width / 2, cv.height / 2, 160);
   g.addColorStop(0, color + "55");
   g.addColorStop(1, "transparent");
   ctx.fillStyle = g;
@@ -93,47 +94,59 @@ function drawAuraOverlay(cv, color) {
   ctx.globalCompositeOperation = "source-over";
 }
 
-// ===== ANALYZE & REPORT =====
+// ===== ANALYZE =====
 function analyze() {
-  const aura = analyzeAura($("canvasMain"));
+  const left = analyzeAura($("canvasLeft"));
+  const right = analyzeAura($("canvasRight"));
   const report = `
-AI Buddhi Report — Single Intelligent Scanner
+AI Buddhi Dual Analysis Report
 --------------------------------------------
-Aura Type : ${aura}
-Meaning   : ${(aura==="Healing (Green)")?"Balance, recovery, and renewal.":(aura==="Active (Red)")?"Vital drive and courage.":"Inner harmony and intuition."}
+Left Aura : ${left}
+Right Aura: ${right}
+
+Interpretation:
+${left === right
+    ? "Your energies are balanced across both aspects of life."
+    : "There is a shift between inner awareness and outer action. Maintain harmony."}
+
+Guidance:
+Left hand (past & inner self) and right hand (present & outer self)
+together define your evolving divine pattern.
 --------------------------------------------
-Sathyadarshana Quantum Palmistry · Divine Structure of Life
+Sathyadarshana Quantum Palmistry · Dual Intelligent Analyzer Edition
 `;
   $("reportBox").textContent = report;
   speak(report);
-  msg("🧠 Analysis complete");
+  msg("🧠 Dual analysis complete ✅");
 }
 
 // ===== PDF + SPEECH =====
 function makePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  pdf.text("Sathyadarshana Quantum Palmistry V8.0 – Single Intelligent Scanner Edition", 10, 10);
+  pdf.text("Sathyadarshana Quantum Palmistry V8.2 – Dual Intelligent Analyzer Edition", 10, 10);
   pdf.text($("reportBox").textContent, 10, 20, { maxWidth: 180 });
-  pdf.save("Sathyadarshana_Report.pdf");
+  pdf.save("Sathyadarshana_Dual_Report.pdf");
 }
-
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US";
   speechSynthesis.speak(u);
 }
 
-// ===== FLASH EFFECT =====
+// ===== FLASH =====
 function flash(cv) {
   cv.style.boxShadow = "0 0 20px #16f0a7";
   setTimeout(() => (cv.style.boxShadow = "none"), 900);
 }
 
 // ===== EVENTS =====
-$("startBtn").onclick = startCam;
-$("captureBtn").onclick = capture;
-$("torchBtn").onclick = toggleTorch;
+$("startLeft").onclick = () => startCam("left");
+$("startRight").onclick = () => startCam("right");
+$("captureLeft").onclick = () => capture("left");
+$("captureRight").onclick = () => capture("right");
+$("torchLeft").onclick = () => toggleTorch("left");
+$("torchRight").onclick = () => toggleTorch("right");
 $("analyzeBtn").onclick = analyze;
 $("saveBtn").onclick = makePDF;
 $("speakBtn").onclick = () => speak($("reportBox").textContent);
