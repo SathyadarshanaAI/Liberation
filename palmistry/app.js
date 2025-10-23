@@ -194,4 +194,14 @@ $("torchRight").onclick = () => toggleTorch("right");
 $("analyzeBtn").onclick = startAnalyzer;
 $("saveBtn").onclick = makePDF;
 $("speakBtn").onclick = speak;
-$("language").onchange = e => msg(`🌐 Language: ${e.target.value}`);
+$("language").onchange = e => msg(`🌐 Language: ${e.target.value}`);// --- CAMERA DEBUG TEST ---
+(async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    console.log("✅ Camera stream obtained:", stream);
+    msg("✅ Camera access OK");
+  } catch (e) {
+    console.error("❌ Camera error:", e);
+    msg("❌ Camera error: " + e.message, false);
+  }
+})();
