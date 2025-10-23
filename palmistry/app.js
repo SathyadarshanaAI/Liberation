@@ -1,7 +1,7 @@
-// === Sathyadarshana Quantum Palm Analyzer V7.4.3 · Torch + Auto Light Balancer Edition ===
+// === Sathyadarshana Quantum Palm Analyzer V7.4.4 · Universal Torch+Analyzer Safe Edition ===
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
-let streamLeft, streamRight, torchTrack = null;
+let streamLeft, streamRight, torchEnabled = false, trackTorch = null;
 
 // ===== STATUS =====
 function msg(text, ok = true) {
@@ -23,53 +23,58 @@ async function startCam(side) {
     if (side === "left") streamLeft = stream; else streamRight = stream;
     msg(`${side} camera active ✅`);
 
-    // --- Torch Control ---
+    // Torch setup
     const track = stream.getVideoTracks()[0];
     const caps = track.getCapabilities();
+    const btn = $("torchBtn");
+    btn.style.display = "inline-block";
+
     if (caps.torch) {
-      torchTrack = track;
-      const torchBtn = $("torchBtn");
-      torchBtn.style.display = "inline-block";
-      torchBtn.onclick = async () => {
-        const s = track.getSettings();
-        const newTorch = !s.torch;
-        await track.applyConstraints({ advanced: [{ torch: newTorch }] });
-        torchBtn.textContent = newTorch ? "💡 Torch ON" : "🔦 Torch";
+      trackTorch = track;
+      btn.onclick = async () => {
+        torchEnabled = !torchEnabled;
+        await track.applyConstraints({ advanced: [{ torch: torchEnabled }] });
+        btn.textContent = torchEnabled ? "💡 Torch ON" : "🔦 Torch";
+        msg(torchEnabled ? "Torch ON ✅" : "Torch OFF ❌");
       };
     } else {
-      $("torchBtn").style.display = "none";
+      // fallback soft light overlay
+      btn.onclick = () => {
+        torchEnabled = !torchEnabled;
+        document.body.style.background = torchEnabled ? "#ffffff" : "#0b0f16";
+        btn.textContent = torchEnabled ? "💡 Screen Torch" : "🔦 Torch";
+        msg(torchEnabled ? "Screen Torch Mode ON ⚪" : "Screen Torch OFF 🕯️");
+      };
     }
   } catch (e) {
     msg("Camera access denied ❌", false);
   }
 }
 
-// ===== HAND DETECTOR (V4 Light-Aware AI) =====
+// ===== AUTO HAND DETECTOR (V5 Adaptive Safe Mode) =====
 function detectHandSide(cv) {
   const w = cv.width, h = cv.height;
   const ctx = cv.getContext("2d");
   const img = ctx.getImageData(0, 0, w, h).data;
-  let leftSum = 0, rightSum = 0, totalLight = 0;
+  let leftSum = 0, rightSum = 0, total = 0;
 
   for (let y = 0; y < h; y += 4) {
     for (let x = 0; x < 40; x++) {
       const i = (y * w + x) * 4;
       const lum = img[i] + img[i + 1] + img[i + 2];
-      leftSum += lum; totalLight += lum;
+      leftSum += lum; total += lum;
     }
     for (let x = w - 40; x < w; x++) {
       const i = (y * w + x) * 4;
       const lum = img[i] + img[i + 1] + img[i + 2];
-      rightSum += lum; totalLight += lum;
+      rightSum += lum; total += lum;
     }
   }
-
   const diff = rightSum - leftSum;
-  const avgLight = totalLight / (w * h);
+  const avg = total / (w * h);
   let threshold = 700000;
-  if (avgLight > 160) threshold = 1300000;  // bright sunlight
-  else if (avgLight < 60) threshold = 400000; // dark indoor
-
+  if (avg > 160) threshold = 1200000;
+  else if (avg < 60) threshold = 400000;
   if (Math.abs(diff) < threshold) {
     msg("🤖 Hand orientation unclear – retry capture", false);
     return "Unknown";
@@ -87,7 +92,6 @@ function capture(side) {
 
   const hand = detectHandSide(cv);
   if (hand === "Unknown") return;
-
   const aura = analyzeAura(cv);
   drawAuraOverlay(cv, aura.color);
   drawPalmLines(cv);
@@ -96,7 +100,6 @@ function capture(side) {
   cv.dataset.aura = aura.type;
   msg(`${hand} captured 🔒 (${aura.type})`);
 
-  // 🎙️ Voice feedback
   const u = new SpeechSynthesisUtterance(`${hand} captured, aura ${aura.type}`);
   u.lang = "en-US"; speechSynthesis.speak(u);
 
@@ -144,7 +147,8 @@ function drawAuraOverlay(cv, color) {
 }
 function drawPalmLines(cv) {
   const ctx = cv.getContext("2d");
-  ctx.strokeStyle = "#16f0a7"; ctx.lineWidth = 1.4;
+  ctx.strokeStyle = "#16f0a7";
+  ctx.lineWidth = 1.4;
   const w = cv.width, h = cv.height;
   const lines = [
     [[w * 0.35, h * 0.7], [w * 0.2, h * 0.5, w * 0.4, h * 0.25]],
@@ -162,39 +166,17 @@ function drawPalmLines(cv) {
   }
 }
 
-// ===== REPORT =====
+// ===== REPORT + PDF =====
 function startAnalyzer() {
   const L = $("canvasLeft").dataset.aura || "Unknown";
   const R = $("canvasRight").dataset.aura || "Unknown";
-  const mini = `
-AI Buddhi Mini Report
----------------------
+  $("reportBox").textContent = `
+AI Buddhi Report
+-----------------
 Left Aura : ${L}
 Right Aura: ${R}
 Balance between memory & awareness defines your light.`;
-  const full = `
-AI Buddhi Deep Palm Analysis – Torch+Voice Edition
---------------------------------------------------
-Life Line : Vital energy & endurance.
-Head Line : Thought clarity & wisdom.
-Heart Line : Compassion & emotional truth.
-Fate Line : Karma & purpose alignment.
-Sun Line  : Inner recognition of light.
-Left Aura : ${L}
-Right Aura: ${R}
-Together they reveal equilibrium between soul & action.`;
-
-  $("reportBox").textContent = mini + "\n\n" + full;
   msg("🧠 Divine Energy Report Generated");
-}
-
-// ===== PDF & FLASH =====
-function makePDF() {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  pdf.text("Sathyadarshana Quantum Palm Analyzer V7.4.3 · Torch + Auto Light Balancer Edition", 10, 10);
-  pdf.text($("reportBox").textContent, 10, 20, { maxWidth: 180 });
-  pdf.save("TorchLight_Report.pdf");
 }
 function flash(cv) {
   cv.style.boxShadow = "0 0 20px #16f0a7";
@@ -206,4 +188,3 @@ $("startLeft").onclick = () => startCam("left");
 $("startRight").onclick = () => startCam("right");
 $("captureLeft").onclick = () => capture("left");
 $("captureRight").onclick = () => capture("right");
-$("saveBtn").onclick = makePDF;
