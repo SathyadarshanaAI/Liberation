@@ -1,40 +1,48 @@
-// === Basic DOM setup ===
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
 const reportBox = $("reportBox");
 const leftVid = $("vidLeft"), rightVid = $("vidRight");
 const leftCv = $("canvasLeft"), rightCv = $("canvasRight");
 
-function msg(t, ok=true){ statusEl.textContent=t; statusEl.style.color=ok?"#16f0a7":"#ff6b6b"; }
-
-// === Start Camera ===
-async function startCam(side){
-  const video = side==="left"?leftVid:rightVid;
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});
-    video.srcObject=stream;
-    await video.play();
-    msg(`${side} camera started ✅`);
-  }catch(e){ msg(`Camera error: ${e.message}`, false); }
+function msg(t, ok = true) {
+  statusEl.textContent = t;
+  statusEl.style.color = ok ? "#16f0a7" : "#ff6b6b";
 }
 
-// === Capture and Analyze ===
-async function analyze(side){
-  const video = side==="left"?leftVid:rightVid;
-  const canvas = side==="left"?leftCv:rightCv;
+// --- Start camera ---
+async function startCam(side) {
+  const video = side === "left" ? leftVid : rightVid;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }, audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+    msg(`${side} camera started ✅`);
+  } catch (e) {
+    msg(`Camera error: ${e.message}`, false);
+  }
+}
+
+// --- Capture + Analyze ---
+async function analyze(side) {
+  const video = side === "left" ? leftVid : rightVid;
+  const canvas = side === "left" ? leftCv : rightCv;
   const ctx = canvas.getContext("2d");
-  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   msg(`Analyzing ${side} hand...`);
-  const data = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  // --- Simple AI heuristic (placeholder until ONNX model integrated) ---
+  // --- basic analysis (brightness + edge clarity) ---
   const brightness = avgBrightness(data.data);
   const clarity = edgeStrength(data.data);
-  const lifeLine = interpretLine(clarity,brightness);
-  const heartLine = interpretEmotion(clarity,brightness);
-  const fateLine = interpretDestiny(brightness,clarity);
+  const lifeLine = interpretLife(clarity, brightness);
+  const heartLine = interpretHeart(clarity, brightness);
+  const fateLine = interpretFate(brightness, clarity);
 
   const report = `
 📖 Palmistry Report (${side} hand)
@@ -48,57 +56,58 @@ Overall Clarity: ${clarity.toFixed(2)} | Light Balance: ${brightness.toFixed(2)}
 `;
 
   reportBox.textContent = report;
-  msg(`✅ ${side} hand analyzed.`);
+  msg(`✅ ${side} hand analysis complete`);
   speak(report);
 }
 
-// === Utility functions ===
-function avgBrightness(data){
-  let sum=0; for(let i=0;i<data.length;i+=4){ sum += (data[i]+data[i+1]+data[i+2])/3; }
-  return sum/(data.length/4)/255;
+// --- helpers ---
+function avgBrightness(d) {
+  let s = 0;
+  for (let i = 0; i < d.length; i += 4) s += (d[i] + d[i + 1] + d[i + 2]) / 3;
+  return s / (d.length / 4) / 255;
 }
-function edgeStrength(data){
-  let e=0; for(let i=0;i<data.length;i+=16){ e += Math.abs(data[i]-data[i+4]) + Math.abs(data[i+1]-data[i+5]); }
-  return e/(data.length/16)/255;
-}
-
-// --- Interpretation heuristics ---
-function interpretLine(c,b){
-  if(c>0.45 && b<0.5) return "Strong vitality, balanced life energy.";
-  if(c>0.45 && b>0.5) return "Energetic but needs grounding.";
-  if(c<0.3) return "Low physical energy, conserve strength.";
-  return "Stable and enduring nature.";
-}
-function interpretEmotion(c,b){
-  if(b>0.6) return "Sensitive, emotionally expressive.";
-  if(c>0.5) return "Calm and compassionate heart.";
-  return "Reserved but loyal feelings.";
-}
-function interpretDestiny(b,c){
-  if(c>0.55) return "Determined and disciplined destiny.";
-  if(b>0.55) return "Flexible fate, creative freedom.";
-  return "Still forming path — introspection needed.";
+function edgeStrength(d) {
+  let e = 0;
+  for (let i = 0; i < d.length; i += 16)
+    e += Math.abs(d[i] - d[i + 4]) + Math.abs(d[i + 1] - d[i + 5]);
+  return e / (d.length / 16) / 255;
 }
 
-// === Voice narration ===
-function speak(text){
-  try{
+function interpretLife(c, b) {
+  if (c > 0.45 && b < 0.5) return "Strong vitality and balanced life energy.";
+  if (c > 0.45 && b > 0.5) return "Energetic but needs rest and grounding.";
+  if (c < 0.3) return "Low physical energy, conserve strength.";
+  return "Stable and enduring life rhythm.";
+}
+function interpretHeart(c, b) {
+  if (b > 0.6) return "Sensitive and emotionally expressive.";
+  if (c > 0.5) return "Calm, caring, and compassionate heart.";
+  return "Quiet but loyal emotions.";
+}
+function interpretFate(b, c) {
+  if (c > 0.55) return "Determined and disciplined destiny.";
+  if (b > 0.55) return "Creative, flexible fate path.";
+  return "Path forming — deep reflection advised.";
+}
+
+// --- Voice narration ---
+function speak(txt) {
+  try {
     const synth = window.speechSynthesis;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 1.0; utter.pitch = 1.1;
-    utter.lang = 'en-US';
-    synth.cancel(); synth.speak(utter);
-  }catch(e){ console.warn("Voice synthesis error", e); }
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = "en-US"; u.rate = 1; u.pitch = 1.1;
+    synth.cancel(); synth.speak(u);
+  } catch (e) { console.warn("Speech error", e); }
 }
 
-// === Bind buttons ===
-$("startLeft").onclick = ()=>startCam("left");
-$("startRight").onclick = ()=>startCam("right");
-$("captureLeft").onclick = ()=>analyze("left");
-$("captureRight").onclick = ()=>analyze("right");
+// --- Bind ---
+$("startLeft").onclick = () => startCam("left");
+$("startRight").onclick = () => startCam("right");
+$("captureLeft").onclick = () => analyze("left");
+$("captureRight").onclick = () => analyze("right");
 
-// === Init ===
-(async()=>{
-  if(!navigator.mediaDevices){ msg("Camera not supported ❌",false);}
-  else msg("Ready. Click Start, then Analyze ✨");
+// --- Init ---
+(async () => {
+  if (!navigator.mediaDevices) msg("Camera not supported ❌", false);
+  else msg("Ready. Click Start → Analyze ✨");
 })();
