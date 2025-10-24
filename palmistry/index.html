@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V8.0 Truth-Line Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V8.8 Divine Analyzer Edition</title>
 <link rel="icon" href="./assets/icon.png" />
 <style>
 :root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
@@ -15,47 +15,57 @@ h1 {
   color:var(--neon); margin-top:20px;
   text-shadow:0 0 12px var(--neon);
 }
-.wrap {display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:20px auto;}
-.camCol {
-  background:var(--card);border-radius:20px;padding:16px;width:90%;max-width:340px;
-  box-shadow:0 0 14px #000;
+.wrap {
+  display:flex; flex-wrap:wrap; justify-content:center;
+  gap:20px; margin:20px auto;
 }
-video,canvas {
-  width:100%;border-radius:12px;background:#000;
-  object-fit:contain;
+.camCol {
+  background:var(--card); border-radius:20px; padding:16px;
+  width:90%; max-width:340px; box-shadow:0 0 14px #000;
+}
+video, canvas {
+  width:100%; border-radius:12px; background:#000; object-fit:contain;
 }
 button {
-  margin:6px;padding:8px 18px;border:none;border-radius:8px;
-  background:var(--neon);color:#000;font-weight:600;cursor:pointer;
-  box-shadow:0 0 10px var(--neon);
+  margin:6px; padding:8px 18px; border:none; border-radius:8px;
+  background:var(--neon); color:#000; font-weight:600;
+  cursor:pointer; box-shadow:0 0 10px var(--neon);
 }
-button:active{transform:scale(0.95);}
-#status{margin-top:15px;color:var(--pri);font-weight:500;}
-#reportBox{
-  background:#0f172a;color:#e0f2fe;margin:20px auto;padding:12px;
-  width:90%;max-width:680px;border-radius:12px;box-shadow:0 0 10px #00e5ff80;
-  text-align:left;white-space:pre-wrap;
+button:active { transform:scale(0.95); }
+#status { margin-top:15px; color:var(--pri); font-weight:500; }
+#reportBox {
+  background:#0f172a; color:#e0f2fe; margin:20px auto; padding:12px;
+  width:90%; max-width:680px; border-radius:12px;
+  box-shadow:0 0 10px #00e5ff80; text-align:left; white-space:pre-wrap;
 }
 </style>
 </head>
 <body>
-<h1>🖐️ Sathyadarshana Quantum Palm Analyzer V8.0</h1>
+<h1>🖐️ Sathyadarshana Quantum Palm Analyzer V8.8</h1>
 
 <div class="wrap">
+  <!-- LEFT HAND -->
   <div class="camCol">
     <h3>Left Hand</h3>
     <video id="vidLeft" autoplay playsinline></video>
     <canvas id="canvasLeft"></canvas><br>
-    <button id="startLeft">Start</button>
-    <button id="captureLeft">Analyze</button>
+    <button id="startLeft">📷 Start</button>
+    <button id="captureLeft">🔎 Mini Report</button>
+    <button id="fullLeft">📜 Full Report</button>
+    <!-- Optional Torch -->
+    <button id="torchLeft">🔦 Torch</button>
   </div>
 
+  <!-- RIGHT HAND -->
   <div class="camCol">
     <h3>Right Hand</h3>
     <video id="vidRight" autoplay playsinline></video>
     <canvas id="canvasRight"></canvas><br>
-    <button id="startRight">Start</button>
-    <button id="captureRight">Analyze</button>
+    <button id="startRight">📷 Start</button>
+    <button id="captureRight">🔎 Mini Report</button>
+    <button id="fullRight">📜 Full Report</button>
+    <!-- Optional Torch -->
+    <button id="torchRight">🔦 Torch</button>
   </div>
 </div>
 
