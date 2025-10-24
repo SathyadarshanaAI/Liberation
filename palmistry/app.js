@@ -1,36 +1,104 @@
-// === Symbolic Reasoner Core (V8.3) ===
-function symbolicReasoner(clarity, brightness) {
-  const findings = [];
+// app.js — V8.3 Camera Fixed + Analyzer Integration
+import { runAnalysis } from "./modules/analyzer.js";
+import { emit, on } from "./modules/bus.js";
 
-  // Logical relationships based on ratios
-  if (clarity > 0.55 && brightness > 0.55)
-    findings.push("Lines are luminous and stable — denotes harmony between karmic and present energies.");
-  if (clarity < 0.35 && brightness > 0.6)
-    findings.push("Spiritual potential high, but worldly restlessness present.");
-  if (clarity > 0.45 && brightness < 0.4)
-    findings.push("Deep-rooted karmic memory influencing physical life force.");
-  if (Math.abs(clarity - brightness) < 0.05)
-    findings.push("Balanced duality between past and present lives — transformation imminent.");
-  if (clarity > 0.6)
-    findings.push("Strong intuitive foresight; seeker of hidden truths.");
-  if (brightness < 0.3)
-    findings.push("Shadowed subconscious; meditation and faith advised.");
+const $ = id => document.getElementById(id);
+const statusEl = $("status");
+const reportBox = $("reportBox");
+const leftVid = $("vidLeft");
+const rightVid = $("vidRight");
+const leftCv = $("canvasLeft");
+const rightCv = $("canvasRight");
 
-  // Unique pattern markers (AI placeholders for future shape detection)
-  findings.push("🔹 Cross pattern near Life Line → Major destiny reconfiguration.");
-  findings.push("⭐ Star near Fate Line → Sudden recognition or spiritual elevation.");
-  findings.push("⚡ Fork in Head Line → Dual paths of logic and imagination.");
-  findings.push("🌙 Island in Heart Line → Emotional sensitivity requiring healing.");
-  findings.push("🔥 Chain marks along Sun Line → Creative obstacles transforming into wisdom.");
-  findings.push("💧 Break on Health Line → Temporary imbalance, rest recommended.");
-  findings.push("🔱 Rising Manikanda Line → Divine awakening through karma purification.");
-
-  return findings.join("\n");
+function msg(t, ok = true) {
+  statusEl.textContent = t;
+  statusEl.style.color = ok ? "#16f0a7" : "#ff6b6b";
 }
 
-// integrate this within analyze() after main report
-function analyzeWithSymbolic(side, clarity, brightness) {
-  const reasonText = symbolicReasoner(clarity, brightness);
-  const combined = `\n\n🧩 Symbolic Reasoning (${side} hand)\n──────────────────────────────\n${reasonText}\n──────────────────────────────\n🕊️ The balance of karma and present destiny converges within the seeker.\n`;
-  return combined;
+// --- Start Camera ---
+async function startCam(side) {
+  const video = side === "left" ? leftVid : rightVid;
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const hasVideo = devices.some(d => d.kind === "videoinput");
+    if (!hasVideo) {
+      msg("No camera detected 🚫", false);
+      return;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+
+    // wait for metadata to get actual dimensions
+    await new Promise(r => {
+      if (video.readyState >= 2) r();
+      else video.onloadedmetadata = () => r();
+    });
+
+    msg(`${side} camera started ✅`);
+  } catch (e) {
+    console.error("Camera Error:", e);
+    msg(`Camera Error: ${e.message}`, false);
+  }
 }
+
+// --- Capture ---
+function capture(side) {
+  const video = side === "left" ? leftVid : rightVid;
+  const canvas = side === "left" ? leftCv : rightCv;
+  try {
+    const ctx = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    msg(`${side} hand captured 🔒`);
+  } catch (e) {
+    msg(`Capture failed: ${e.message}`, false);
+  }
+}
+
+// --- Analyze (connects to analyzer.js) ---
+async function analyze(side) {
+  capture(side);
+  msg(`Running AI analysis for ${side} hand...`);
+  try {
+    const fusion = await runAnalysis({ hand: side });
+    if (fusion?.summary) {
+      reportBox.textContent =
+        `📊 ${side} hand summary:\n${fusion.summary}\n\n` + reportBox.textContent;
+    }
+  } catch (err) {
+    console.error(err);
+    msg("Analyzer error ❌", false);
+  }
+}
+
+// --- Bind buttons ---
+$("startLeft").onclick = () => startCam("left");
+$("startRight").onclick = () => startCam("right");
+$("captureLeft").onclick = () => analyze("left");
+$("captureRight").onclick = () => analyze("right");
+
+// --- Live log listener from analyzer.js ---
+on("analyzer:status", e => {
+  console.log(`[${e.level}] ${e.msg}`);
+});
+on("analyzer:step", e => {
+  console.log(`[STEP] ${e.tag}: ${e.msg}`);
+});
+on("analyzer:metric", e => {
+  console.log(`[METRIC] ${e.key}=${e.val}`);
+});
+
+// --- Initialize ---
+(async () => {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    msg("Camera not supported ❌", false);
+  } else {
+    msg("Ready. Click Start → Analyze ✨");
+  }
+})();
