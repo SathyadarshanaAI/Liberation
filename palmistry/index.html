@@ -65,5 +65,51 @@ button:active { transform:scale(0.94); }
 <div id="reportBox">Report will appear here...</div>
 
 <script type="module" src="./app.js"></script>
+
+<!-- === report.js connection & logic === -->
+<script type="module">
+import { generateFusionReport } from './report.js';
+
+const reportBox = document.getElementById("reportBox");
+const statusEl  = document.getElementById("status");
+
+// --- Demo data until real AI vision connected ---
+const sampleData = {
+  lines: [
+    { name:"heart", strength:82 },
+    { name:"head", strength:75 },
+    { name:"life", strength:88 },
+    { name:"fate", strength:66 },
+    { name:"sun", strength:54 },
+    { name:"health", strength:49 },
+    { name:"marriage", strength:59 },
+  ],
+  aura:{ energy:"radiant" },
+  mounts:[],
+  anomalies:[]
+};
+
+// --- Mini Report ---
+document.getElementById("miniReport").addEventListener("click", ()=>{
+  reportBox.textContent =
+  "🪶 Mini Report:\n" +
+  "Heart Line: Expressive & kind nature.\n" +
+  "Head Line: Balanced reason & intuition.\n" +
+  "Life Line: Strong vitality.\n\n" +
+  "For deeper karmic–dharma analysis, press 📜 Full Report.";
+  statusEl.textContent = "✅ Mini Report generated";
+});
+
+// --- Full Report ---
+document.getElementById("fullReport").addEventListener("click", ()=>{
+  statusEl.textContent = "🔮 Analyzing deep fusion patterns...";
+  setTimeout(()=>{
+    const report = generateFusionReport(sampleData);
+    reportBox.innerHTML = report;
+    statusEl.textContent = "✅ Full AI Fusion Report generated";
+  },1200);
+});
+</script>
+
 </body>
 </html>
