@@ -3,23 +3,46 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🕉️ Sathyadarshana · Modular Core V10</title>
+  <title>🕉️ Sathyadarshana · Modular Core V10.2</title>
   <link rel="icon" href="./assets/icon.png" />
   <style>
-    body { background:#0b0f16; color:#e6f0ff; font-family:'Segoe UI',sans-serif; text-align:center; margin:0; }
-    h1 { color:#00e5ff; margin-top:30px; text-shadow:0 0 10px #00e5ff; }
+    body {
+      background:#0b0f16; color:#e6f0ff; font-family:'Segoe UI',sans-serif;
+      text-align:center; margin:0;
+    }
+    h1 {
+      color:#00e5ff; margin-top:30px; text-shadow:0 0 10px #00e5ff;
+    }
     #status { margin:10px; color:#16f0a7; }
     #reportBox { margin-top:20px; color:#e6f0ff; font-size:1.1em; }
+    .cam-section {
+      margin-top:30px; background:#101820; border-radius:20px;
+      display:inline-block; padding:20px 30px; box-shadow:0 0 10px #00e5ff60;
+    }
+    video, canvas { border-radius:12px; margin-top:10px; }
+    button {
+      background:#00e5ff20; border:1px solid #00e5ff;
+      color:#e6f0ff; padding:8px 16px; border-radius:10px; margin:6px;
+      cursor:pointer; transition:0.3s;
+    }
+    button:hover { background:#00e5ff40; }
   </style>
 </head>
+
 <body>
-  <h1>🕉️ Sathyadarshana · Modular Core</h1>
+  <h1>🕉️ Sathyadarshana · Modular Core V10.2</h1>
   <p id="status">Initializing...</p>
   <div id="reportBox">Report will appear here...</div>
+
+  <!-- 🎥 Camera Module Section -->
+  <div class="cam-section">
+    <h3>Left Hand Capture</h3>
+    <video id="vid-left" autoplay playsinline width="300"></video><br/>
+    <canvas id="canvas-left" width="300" height="240" style="display:none"></canvas><br/>
+    <button onclick="import('./modules/camera.js').then(m=>m.startCamera('left'))">📷 Start</button>
+    <button onclick="import('./modules/camera.js').then(m=>m.capture('left'))">📸 Capture</button>
+  </div>
+
   <script type="module" src="./main.js"></script>
-</body><video id="vid-left" autoplay playsinline width="300"></video>
-<canvas id="canvas-left" width="300" height="240" style="display:none"></canvas>
-<br/>
-<button onclick="import('./modules/camera.js').then(m=>m.startCamera('left'))">📷 Start</button>
-<button onclick="import('./modules/camera.js').then(m=>m.capture('left'))">📸 Capture</button>
+</body>
 </html>
