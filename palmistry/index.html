@@ -22,8 +22,8 @@ video,canvas {
 }
 button {
   margin:6px; padding:8px 16px; border:none; border-radius:8px;
-  background:var(--neon); color:#000; font-weight:600; cursor:pointer;
-  box-shadow:0 0 10px var(--neon); transition:0.2s;
+  background:var(--neon); color:#000; font-weight:600;
+  cursor:pointer; box-shadow:0 0 10px var(--neon); transition:0.2s;
 }
 button:active { transform:scale(0.94); }
 #status { margin-top:15px; color:var(--pri); font-weight:500; }
@@ -35,12 +35,12 @@ button:active { transform:scale(0.94); }
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer V9.7</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V9.7 Ultimate Fusion</h1>
 
 <div class="wrap">
   <div class="camCol">
     <h3>Left Hand (පෙර භවය)</h3>
-    <video id="vidLeft" autoplay playsinline></video>
+    <video id="vidLeft" autoplay playsinline muted></video>
     <canvas id="canvasLeft"></canvas><br>
     <button id="startLeft">📷 Start</button>
     <button id="captureLeft">📸 Capture</button>
@@ -49,7 +49,7 @@ button:active { transform:scale(0.94); }
 
   <div class="camCol">
     <h3>Right Hand (මෙි භවය)</h3>
-    <video id="vidRight" autoplay playsinline></video>
+    <video id="vidRight" autoplay playsinline muted></video>
     <canvas id="canvasRight"></canvas><br>
     <button id="startRight">📷 Start</button>
     <button id="captureRight">📸 Capture</button>
@@ -62,35 +62,67 @@ button:active { transform:scale(0.94); }
 <p id="status">Initializing...</p>
 <div id="reportBox">Report will appear here...</div>
 
-<!-- === Script zone === -->
+<!-- === Script Zone === -->
 <script type="module">
-import { setLeftData, setRightData, generateDualReport } from './fusion.js';
+import { generateFullReport } from './report.js';
 
 const statusEl = document.getElementById("status");
 const reportBox = document.getElementById("reportBox");
 
-let leftStream = null;
-let rightStream = null;
+let leftStream=null, rightStream=null;
 
-// === CAMERA SETUP ===
-async function startCamera(side) {
-  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    vid.srcObject = stream;
-    if (side === "left") leftStream = stream;
-    else rightStream = stream;
-    statusEl.textContent = `✅ ${side.toUpperCase()} camera started`;
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = `❌ Camera error: ${err.message}`;
-  }
+// --- CAMERA SETUP ---
+async function startCamera(side){
+  const vid=document.getElementById(side==="left"?"vidLeft":"vidRight");
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    vid.srcObject=stream;
+    if(side==="left") leftStream=stream; else rightStream=stream;
+    statusEl.textContent=`✅ ${side.toUpperCase()} camera started`;
+  }catch(e){ statusEl.textContent=`❌ ${e.message}`; }
 }
 
-// === CAPTURE FRAME ===
-function captureFrame(side) {
-  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
-  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
-  const ctx = canvas.getContext("2d");
-  canvas.width = vid.videoWidth;
-  canvas.height = vid.video
+// --- CAPTURE FRAME ---
+function captureFrame(side){
+  const vid=document.getElementById(side==="left"?"vidLeft":"vidRight");
+  const canvas=document.getElementById(side==="left"?"canvasLeft":"canvasRight");
+  const ctx=canvas.getContext("2d");
+  canvas.width=vid.videoWidth||640;
+  canvas.height=vid.videoHeight||480;
+  ctx.drawImage(vid,0,0,canvas.width,canvas.height);
+  statusEl.textContent=`📸 ${side.toUpperCase()} hand captured`;
+}
+
+// --- TORCH CONTROL ---
+async function toggleTorch(side){
+  const stream=side==="left"?leftStream:rightStream;
+  if(!stream) return alert("Start the camera first!");
+  const track=stream.getVideoTracks()[0];
+  const caps=track.getCapabilities();
+  if(caps.torch){
+    const cur=track.getSettings().torch||false;
+    await track.applyConstraints({advanced:[{torch:!cur}]});
+    statusEl.textContent=`🔦 Torch ${!cur?'ON':'OFF'} (${side})`;
+  } else alert("Torch not supported");
+}
+
+// --- REPORT GENERATION ---
+document.getElementById("miniReport").onclick=()=>{
+  reportBox.textContent="🧠 Mini Analysis: Lines show balanced intellect and emotion.";
+};
+document.getElementById("fullReport").onclick=()=>{
+  const left="Strong Life Line, deep Heart curve";
+  const right="Steady Fate Line, balanced Head flow";
+  reportBox.textContent=generateFullReport(left,right);
+};
+
+// --- BUTTON EVENTS ---
+document.getElementById("startLeft").onclick=()=>startCamera("left");
+document.getElementById("startRight").onclick=()=>startCamera("right");
+document.getElementById("captureLeft").onclick=()=>captureFrame("left");
+document.getElementById("captureRight").onclick=()=>captureFrame("right");
+document.getElementById("torchLeft").onclick=()=>toggleTorch("left");
+document.getElementById("torchRight").onclick=()=>toggleTorch("right");
+</script>
+</body>
+</html>
