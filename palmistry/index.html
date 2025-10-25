@@ -69,56 +69,28 @@ import { setLeftData, setRightData, generateDualReport } from './fusion.js';
 const statusEl = document.getElementById("status");
 const reportBox = document.getElementById("reportBox");
 
-// Mock data for testing
-const leftSample = {
-  lines:[
-    {name:"heart",strength:84},{name:"head",strength:78},{name:"life",strength:90},
-    {name:"fate",strength:64},{name:"sun",strength:56},{name:"mercury",strength:60},
-    {name:"health",strength:53},{name:"marriage",strength:59}
-  ],
-  aura:{energy:"radiant"},
-  mounts:["Jupiter","Apollo"],
-  anomalies:[
-    {type:"Fish Symbol",meaning:"Spiritual prosperity"},
-    {type:"Trident",meaning:"Tri-fold wisdom path"}
-  ]
-};
+let leftStream = null;
+let rightStream = null;
 
-const rightSample = {
-  lines:[
-    {name:"heart",strength:79},{name:"head",strength:70},{name:"life",strength:86},
-    {name:"fate",strength:72},{name:"sun",strength:60},{name:"mercury",strength:65},
-    {name:"health",strength:48},{name:"marriage",strength:61}
-  ],
-  aura:{energy:"balanced"},
-  mounts:["Mercury","Venus"],
-  anomalies:[{type:"Star Mark",meaning:"Fame through service"}]
-};
+// === CAMERA SETUP ===
+async function startCamera(side) {
+  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    vid.srcObject = stream;
+    if (side === "left") leftStream = stream;
+    else rightStream = stream;
+    statusEl.textContent = `✅ ${side.toUpperCase()} camera started`;
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = `❌ Camera error: ${err.message}`;
+  }
+}
 
-// Mini report
-document.getElementById("miniReport").addEventListener("click",()=>{
-  reportBox.textContent =
-    "🪶 Mini Report:\nHeart Line: Expressive & kind.\nHead Line: Balanced logic & intuition.\nLife Line: Strong vitality.\n\nPress 📜 for full AI report.";
-  statusEl.textContent="✅ Mini Report generated";
-});
-
-// Capture simulation
-document.getElementById("captureLeft").addEventListener("click",()=>{
-  setLeftData(leftSample.lines,leftSample.aura,leftSample.mounts,leftSample.anomalies);
-});
-document.getElementById("captureRight").addEventListener("click",()=>{
-  setRightData(rightSample.lines,rightSample.aura,rightSample.mounts,rightSample.anomalies);
-});
-
-// Full report
-document.getElementById("fullReport").addEventListener("click",()=>{
-  statusEl.textContent="🔮 Analyzing both hands...";
-  setTimeout(()=>{
-    const report = generateDualReport();
-    reportBox.innerHTML = report;
-    statusEl.textContent="✅ Report generated successfully";
-  },1200);
-});
-</script>
-</body>
-</html>
+// === CAPTURE FRAME ===
+function captureFrame(side) {
+  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
+  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
+  const ctx = canvas.getContext("2d");
+  canvas.width = vid.videoWidth;
+  canvas.height = vid.video
