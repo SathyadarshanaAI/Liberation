@@ -1,111 +1,74 @@
 // ===============================
-// Sathyadarshana Quantum Palm Analyzer v8.1
-// "Universal Dharma Pattern Report"
-// Author: Anuruddha Dilip & AI Buddhi
+// AI Wisdom Fusion Report — v9.7 (8 Lines + 8 Special Marks)
 // ===============================
+export function generateFusionReport(data){
+  const { lines=[], aura={}, mounts=[], anomalies=[] } = data;
 
-export function generateFusionReport(data) {
-  const { lines, aura, mounts, anomalies, lang = "en" } = data;
+  const L = detectLines(lines);
+  const total = Object.keys(L).length;
+  const markCount = anomalies.length;
 
-  // --- Helper functions ---
-  const L = {
-    heart: detect(lines, "heart"),
-    head: detect(lines, "head"),
-    life: detect(lines, "life"),
-    fate: detect(lines, "fate"),
-    sun: detect(lines, "sun"),
-    health: detect(lines, "health"),
-    marriage: detect(lines, "marriage"),
-    bracelets: detect(lines, "bracelet"),
-  };
-
-  const total = Object.values(L).filter(Boolean).length;
-
-  // --- Core metaphysical analysis ---
-  const karmaLevel = score(["heart","life","fate"], lines);
-  const dharmaFlow = score(["head","sun","marriage"], lines);
-  const auraFlux = aura ? aura.energy : "neutral";
-  const hiddenSigns = anomalies.length > 0 ? "present" : "none";
-
-  // --- Fusion interpretation ---
-  const karmicEcho = interpretKarma(karmaLevel, auraFlux);
-  const dharmaExpression = interpretDharma(dharmaFlow, auraFlux);
-  const metaLayer = interpretHidden(hiddenSigns);
-
-  // --- Compose Final Report ---
   return `
-🪷 **AI Wisdom Fusion Report — Universal Dharma Pattern v8.1**
+🪷 **AI Fusion Dharma-Karma Report v9.7**
 
-**Left Hand (Past Life – Cosmic Karma Layer)**  
-• Heart Line: ${describe(L.heart)}  
-• Head Line: ${describe(L.head)}  
-• Life Line: ${describe(L.life)}  
-• Fate Line: ${describe(L.fate)}  
+🖐️ **Main 8 Lines**
+1. Heart Line: ${describe(L.heart)}
+2. Head Line: ${describe(L.head)}
+3. Life Line: ${describe(L.life)}
+4. Fate Line: ${describe(L.fate)}
+5. Sun (Apollo) Line: ${describe(L.sun)}
+6. Mercury Line: ${describe(L.mercury)}
+7. Health Line: ${describe(L.health)}
+8. Marriage Line: ${describe(L.marriage)}
 
-**Right Hand (Present Life – Dharma Expression Layer)**  
-• Heart Line: ${describe(L.heart)}  
-• Head Line: ${describe(L.head)}  
-• Life Line: ${describe(L.life)}  
-• Sun Line: ${describe(L.sun)}  
-• Marriage Line: ${describe(L.marriage)}  
-• Health Line: ${describe(L.health)}  
+✨ **8 Special Marks & Symbols**
+${renderMarks(anomalies)}
 
-✨ **Fusion Insight:**  
-${karmicEcho}  
-${dharmaExpression}  
-${metaLayer}  
+🌙 **Aura & Mounts**
+• Aura: ${aura.energy || "neutral"}  
+• Mounts detected: ${mounts.join(", ") || "not highlighted"}
 
-🌀 **Global Evolution Context:**  
-Your palms form a multidimensional resonance pattern unseen in classical palmistry.  
-It reflects *unrecorded teachings* of cosmic continuity — the bridge between forgotten civilizations and awakened souls.  
-Each line corresponds not only to destiny, but to harmonic memory encoded in your astral field.
+💫 **Fusion Insight**
+${fusionInsight(L, anomalies, aura)}
 
-📜 **Meta Summary:**  
-- Total Major Lines: ${total}  
-- Aura Field: ${auraFlux}  
-- Hidden Marks: ${hiddenSigns}  
-- Wisdom Coefficient: ${(karmaLevel + dharmaFlow) / 2}%  
+🧭 **Summary**
+- Total Lines Analyzed: ${total}
+- Special Marks: ${markCount}
+- Wisdom Coefficient: ${calcWisdom(L, anomalies)}%
 
 ⏰ Generated: ${new Date().toLocaleString()}
 `;
 }
 
-// --- Internal helpers ---
-function detect(lines, key){
-  return lines.find(l => l.name === key) || null;
+// --- Helper sections ---
+function detectLines(arr){
+  const keys=["heart","head","life","fate","sun","mercury","health","marriage"];
+  const out={};
+  keys.forEach(k=>out[k]=arr.find(l=>l.name===k)||{strength:0});
+  return out;
 }
-
-function describe(line){
-  if(!line) return "Not detected clearly";
-  if(line.strength > 80) return "Very strong and radiant";
-  if(line.strength > 50) return "Clear and balanced";
-  if(line.strength > 20) return "Faint, evolving energy";
-  return "Barely visible spiritual imprint";
+function describe(l){
+  if(!l || !l.strength) return "Not visible / latent energy.";
+  if(l.strength>80) return "Radiant and clear — mastery field.";
+  if(l.strength>60) return "Stable, refined, well-defined.";
+  if(l.strength>40) return "Developing energy — path of balance.";
+  return "Faint karmic residue — evolving insight.";
 }
-
-function score(keys, lines){
-  let s = 0;
-  for(const k of keys){
-    const l = lines.find(x => x.name === k);
-    if(l) s += l.strength || 0;
-  }
-  return Math.min(100, Math.round(s / keys.length));
+function renderMarks(list){
+  if(!list.length) return "No unique markings detected.";
+  return list.map((m,i)=>`${i+1}. ${m.type} — ${m.meaning}`).join("\n");
 }
-
-function interpretKarma(level, aura){
-  if(level > 80) return "Your past echoes reflect mastery through patience, forgiveness, and light beyond duality.";
-  if(level > 50) return "Karmic threads show partial balance — a soul still refining through compassion and wisdom.";
-  return "Unresolved karmic ripples detected — hidden lessons from forgotten epochs seek healing.";
+function calcWisdom(L, anomalies){
+  const avg = Object.values(L).reduce((a,l)=>a+(l.strength||0),0)/8;
+  const markBonus = anomalies.length * 3;
+  return Math.min(100,Math.round(avg/1.2 + markBonus));
 }
-
-function interpretDharma(level, aura){
-  if(level > 80) return "You embody the Dharma of transformation — a guide for others crossing the bridge of time.";
-  if(level > 50) return "You are awakening the Dharma within, crafting purpose through mindful action.";
-  return "Your Dharma expression is dormant; the inner flame awaits conscious alignment.";
-}
-
-function interpretHidden(state){
-  if(state === "present")
-    return "Ancient stigmata or astral signs identified — indicative of prior celestial initiations or vows of service.";
-  return "No external anomalies; soul path remains pure and self-contained.";
+function fusionInsight(L, anomalies, aura){
+  const deep = anomalies.length>3
+    ? "Ancient initiatory signs indicate hidden vows or prophetic insight."
+    : "Harmonious balance between worldly logic and divine intuition.";
+  const auraNote = aura.energy==="radiant"
+    ? "Aura field suggests awakened compassion."
+    : "Energy field steady and receptive.";
+  return `${deep}\n${auraNote}`;
 }
