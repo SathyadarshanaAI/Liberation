@@ -17,5 +17,9 @@
   <p id="status">Initializing...</p>
   <div id="reportBox">Report will appear here...</div>
   <script type="module" src="./main.js"></script>
-</body>
+</body><video id="vid-left" autoplay playsinline width="300"></video>
+<canvas id="canvas-left" width="300" height="240" style="display:none"></canvas>
+<br/>
+<button onclick="import('./modules/camera.js').then(m=>m.startCamera('left'))">📷 Start</button>
+<button onclick="import('./modules/camera.js').then(m=>m.capture('left'))">📸 Capture</button>
 </html>
