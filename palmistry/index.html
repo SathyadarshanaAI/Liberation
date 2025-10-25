@@ -1,41 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V9.7 Ultimate Fusion</title>
-<link rel="icon" href="./assets/icon.png" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V9.8 Serenity Build</title>
+<link rel="icon" href="./assets/icon.png"/>
 <style>
-:root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
-body {
-  margin:0; background:var(--bg); color:#e6f0ff;
-  font-family:'Segoe UI',sans-serif; text-align:center;
+:root{
+  --bg:#050910;--card:#101820;--neon:#00e5ff;--pri:#16f0a7;
 }
-h1 { color:var(--neon); margin-top:20px; text-shadow:0 0 12px var(--neon); }
-.wrap { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin:20px auto; }
-.camCol {
-  background:var(--card); border-radius:20px; padding:16px;
-  width:90%; max-width:340px; box-shadow:0 0 14px #000;
+body{
+  margin:0;background:var(--bg);color:#e6f0ff;
+  font-family:'Segoe UI',sans-serif;text-align:center;
 }
-video,canvas {
-  width:100%; border-radius:12px; background:#000; object-fit:contain;
+h1{
+  color:var(--neon);margin-top:18px;
+  text-shadow:0 0 12px var(--neon);
 }
-button {
-  margin:6px; padding:8px 16px; border:none; border-radius:8px;
-  background:var(--neon); color:#000; font-weight:600;
-  cursor:pointer; box-shadow:0 0 10px var(--neon); transition:0.2s;
+p.tip{color:var(--pri);font-size:0.9em;margin-top:4px;}
+.wrap{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:20px auto;
 }
-button:active { transform:scale(0.94); }
-#status { margin-top:15px; color:var(--pri); font-weight:500; }
-#reportBox {
-  background:#0f172a; color:#e0f2fe; margin:20px auto; padding:14px;
-  width:90%; max-width:700px; border-radius:12px;
-  box-shadow:0 0 15px #00e5ff80; text-align:left; white-space:pre-wrap;
+.camCol{
+  background:var(--card);border-radius:20px;padding:16px;
+  width:90%;max-width:340px;box-shadow:0 0 14px #000;
+}
+video,canvas{
+  width:100%;border-radius:12px;background:#000;object-fit:contain;
+}
+button{
+  margin:6px;padding:8px 16px;border:none;border-radius:8px;
+  background:var(--neon);color:#000;font-weight:600;
+  cursor:pointer;box-shadow:0 0 10px var(--neon);transition:0.2s;
+}
+button:active{transform:scale(0.94);}
+#status{margin-top:14px;color:var(--pri);font-weight:500;}
+#reportBox{
+  background:#0f172a;color:#e0f2fe;margin:20px auto;padding:14px;
+  width:90%;max-width:700px;border-radius:12px;
+  box-shadow:0 0 15px #00e5ff80;text-align:left;white-space:pre-wrap;
 }
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V9.7 Ultimate Fusion</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V9.8 Serenity Build</h1>
+<p class="tip">🔒 Please allow camera access when prompted</p>
 
 <div class="wrap">
   <div class="camCol">
@@ -62,38 +71,46 @@ button:active { transform:scale(0.94); }
 <p id="status">Initializing...</p>
 <div id="reportBox">Report will appear here...</div>
 
-<!-- === Script Zone === -->
+<!-- === SCRIPT ZONE === -->
 <script type="module">
 import { generateFullReport } from './report.js';
+const statusEl=document.getElementById("status");
+const reportBox=document.getElementById("reportBox");
+let leftStream=null,rightStream=null;
 
-const statusEl = document.getElementById("status");
-const reportBox = document.getElementById("reportBox");
-
-let leftStream=null, rightStream=null;
-
-// --- CAMERA SETUP ---
+// ---- SMART CAMERA START ----
 async function startCamera(side){
   const vid=document.getElementById(side==="left"?"vidLeft":"vidRight");
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-    vid.srcObject=stream;
+    const constraints={
+      video:{
+        facingMode:{ideal:"environment"},
+        width:{ideal:1280},height:{ideal:720}
+      },audio:false
+    };
+    const stream=await navigator.mediaDevices.getUserMedia(constraints);
+    vid.srcObject=stream;await vid.play();
     if(side==="left") leftStream=stream; else rightStream=stream;
     statusEl.textContent=`✅ ${side.toUpperCase()} camera started`;
-  }catch(e){ statusEl.textContent=`❌ ${e.message}`; }
+  }catch(err){
+    console.error(err);
+    statusEl.textContent=`❌ Camera error: ${err.message}`;
+    alert("Camera error: "+err.message);
+  }
 }
 
-// --- CAPTURE FRAME ---
+// ---- CAPTURE FRAME ----
 function captureFrame(side){
   const vid=document.getElementById(side==="left"?"vidLeft":"vidRight");
   const canvas=document.getElementById(side==="left"?"canvasLeft":"canvasRight");
   const ctx=canvas.getContext("2d");
-  canvas.width=vid.videoWidth||640;
-  canvas.height=vid.videoHeight||480;
+  if(!vid.videoWidth){alert("Start camera first!");return;}
+  canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
   ctx.drawImage(vid,0,0,canvas.width,canvas.height);
   statusEl.textContent=`📸 ${side.toUpperCase()} hand captured`;
 }
 
-// --- TORCH CONTROL ---
+// ---- TORCH CONTROL ----
 async function toggleTorch(side){
   const stream=side==="left"?leftStream:rightStream;
   if(!stream) return alert("Start the camera first!");
@@ -103,26 +120,31 @@ async function toggleTorch(side){
     const cur=track.getSettings().torch||false;
     await track.applyConstraints({advanced:[{torch:!cur}]});
     statusEl.textContent=`🔦 Torch ${!cur?'ON':'OFF'} (${side})`;
-  } else alert("Torch not supported");
+  }else alert("Torch not supported on this device");
 }
 
-// --- REPORT GENERATION ---
+// ---- REPORT SYSTEM ----
 document.getElementById("miniReport").onclick=()=>{
-  reportBox.textContent="🧠 Mini Analysis: Lines show balanced intellect and emotion.";
+  reportBox.textContent="🧠 Mini Analysis: Clear mind, warm heart, creative balance between logic and emotion.";
 };
 document.getElementById("fullReport").onclick=()=>{
-  const left="Strong Life Line, deep Heart curve";
-  const right="Steady Fate Line, balanced Head flow";
+  const left="Strong Life Line, divine Heart resonance";
+  const right="Steady Fate, luminous Head flow";
   reportBox.textContent=generateFullReport(left,right);
 };
 
-// --- BUTTON EVENTS ---
+// ---- EVENTS ----
 document.getElementById("startLeft").onclick=()=>startCamera("left");
 document.getElementById("startRight").onclick=()=>startCamera("right");
 document.getElementById("captureLeft").onclick=()=>captureFrame("left");
 document.getElementById("captureRight").onclick=()=>captureFrame("right");
 document.getElementById("torchLeft").onclick=()=>toggleTorch("left");
 document.getElementById("torchRight").onclick=()=>toggleTorch("right");
+
+// ---- Permission hint if blocked ----
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+  statusEl.textContent="❌ Camera API not supported on this device/browser.";
+}
 </script>
 </body>
 </html>
