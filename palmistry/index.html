@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V9.6 Dual-Hand Intelligence</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V9.7 Ultimate Fusion</title>
 <link rel="icon" href="./assets/icon.png" />
 <style>
 :root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
@@ -29,16 +29,15 @@ button:active { transform:scale(0.94); }
 #status { margin-top:15px; color:var(--pri); font-weight:500; }
 #reportBox {
   background:#0f172a; color:#e0f2fe; margin:20px auto; padding:14px;
-  width:90%; max-width:680px; border-radius:12px;
+  width:90%; max-width:700px; border-radius:12px;
   box-shadow:0 0 15px #00e5ff80; text-align:left; white-space:pre-wrap;
 }
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer V9.6</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer V9.7</h1>
 
 <div class="wrap">
-  <!-- LEFT HAND -->
   <div class="camCol">
     <h3>Left Hand (පෙර භවය)</h3>
     <video id="vidLeft" autoplay playsinline></video>
@@ -48,7 +47,6 @@ button:active { transform:scale(0.94); }
     <button id="torchLeft">🔦 Torch</button>
   </div>
 
-  <!-- RIGHT HAND -->
   <div class="camCol">
     <h3>Right Hand (මෙි භවය)</h3>
     <video id="vidRight" autoplay playsinline></video>
@@ -64,52 +62,63 @@ button:active { transform:scale(0.94); }
 <p id="status">Initializing...</p>
 <div id="reportBox">Report will appear here...</div>
 
-<script type="module" src="./app.js"></script>
-
-<!-- === report.js connection & logic === -->
+<!-- === Script zone === -->
 <script type="module">
-import { generateFusionReport } from './report.js';
+import { setLeftData, setRightData, generateDualReport } from './fusion.js';
 
+const statusEl = document.getElementById("status");
 const reportBox = document.getElementById("reportBox");
-const statusEl  = document.getElementById("status");
 
-// --- Demo data until real AI vision connected ---
-const sampleData = {
-  lines: [
-    { name:"heart", strength:82 },
-    { name:"head", strength:75 },
-    { name:"life", strength:88 },
-    { name:"fate", strength:66 },
-    { name:"sun", strength:54 },
-    { name:"health", strength:49 },
-    { name:"marriage", strength:59 },
+// Mock data for testing
+const leftSample = {
+  lines:[
+    {name:"heart",strength:84},{name:"head",strength:78},{name:"life",strength:90},
+    {name:"fate",strength:64},{name:"sun",strength:56},{name:"mercury",strength:60},
+    {name:"health",strength:53},{name:"marriage",strength:59}
   ],
-  aura:{ energy:"radiant" },
-  mounts:[],
-  anomalies:[]
+  aura:{energy:"radiant"},
+  mounts:["Jupiter","Apollo"],
+  anomalies:[
+    {type:"Fish Symbol",meaning:"Spiritual prosperity"},
+    {type:"Trident",meaning:"Tri-fold wisdom path"}
+  ]
 };
 
-// --- Mini Report ---
-document.getElementById("miniReport").addEventListener("click", ()=>{
+const rightSample = {
+  lines:[
+    {name:"heart",strength:79},{name:"head",strength:70},{name:"life",strength:86},
+    {name:"fate",strength:72},{name:"sun",strength:60},{name:"mercury",strength:65},
+    {name:"health",strength:48},{name:"marriage",strength:61}
+  ],
+  aura:{energy:"balanced"},
+  mounts:["Mercury","Venus"],
+  anomalies:[{type:"Star Mark",meaning:"Fame through service"}]
+};
+
+// Mini report
+document.getElementById("miniReport").addEventListener("click",()=>{
   reportBox.textContent =
-  "🪶 Mini Report:\n" +
-  "Heart Line: Expressive & kind nature.\n" +
-  "Head Line: Balanced reason & intuition.\n" +
-  "Life Line: Strong vitality.\n\n" +
-  "For deeper karmic–dharma analysis, press 📜 Full Report.";
-  statusEl.textContent = "✅ Mini Report generated";
+    "🪶 Mini Report:\nHeart Line: Expressive & kind.\nHead Line: Balanced logic & intuition.\nLife Line: Strong vitality.\n\nPress 📜 for full AI report.";
+  statusEl.textContent="✅ Mini Report generated";
 });
 
-// --- Full Report ---
-document.getElementById("fullReport").addEventListener("click", ()=>{
-  statusEl.textContent = "🔮 Analyzing deep fusion patterns...";
+// Capture simulation
+document.getElementById("captureLeft").addEventListener("click",()=>{
+  setLeftData(leftSample.lines,leftSample.aura,leftSample.mounts,leftSample.anomalies);
+});
+document.getElementById("captureRight").addEventListener("click",()=>{
+  setRightData(rightSample.lines,rightSample.aura,rightSample.mounts,rightSample.anomalies);
+});
+
+// Full report
+document.getElementById("fullReport").addEventListener("click",()=>{
+  statusEl.textContent="🔮 Analyzing both hands...";
   setTimeout(()=>{
-    const report = generateFusionReport(sampleData);
+    const report = generateDualReport();
     reportBox.innerHTML = report;
-    statusEl.textContent = "✅ Full AI Fusion Report generated";
+    statusEl.textContent="✅ Report generated successfully";
   },1200);
 });
 </script>
-
 </body>
 </html>
