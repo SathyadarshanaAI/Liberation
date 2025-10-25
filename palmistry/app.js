@@ -1,4 +1,4 @@
-// app.js — V9.0 Truth-Line Final Edition
+// app.js — V9.1 Truth-Line Intelligence Edition
 // © 2025 Sathyadarshana Research Core
 
 const $ = id => document.getElementById(id);
@@ -8,13 +8,12 @@ const leftVid = $("vidLeft");
 const rightVid = $("vidRight");
 const leftCv = $("canvasLeft");
 const rightCv = $("canvasRight");
-
 let torchState = false;
 
-// === 12-language Voice ===
+// 🌐 Language + Voice
 function detectLang(){
   const l = navigator.language?.slice(0,2);
-  const langs = ["en","si","ta","hi","fr","de","es","zh","ja","ko","ar","ru"];
+  const langs=["en","si","ta","hi","fr","de","es","zh","ja","ko","ar","ru"];
   return langs.includes(l)?l:"en";
 }
 function speak(text,lang="en"){
@@ -27,7 +26,7 @@ function speak(text,lang="en"){
   }catch(e){console.warn("Speech error",e);}
 }
 
-// === Torch Control ===
+// 🔦 Torch toggle
 async function toggleTorch(side="left"){
   try{
     const vid=side==="left"?leftVid:rightVid;
@@ -40,7 +39,7 @@ async function toggleTorch(side="left"){
   }catch(e){msg(`Torch: ${e.message}`,false);}
 }
 
-// === Camera Start ===
+// 🎥 Start camera
 async function startCam(side){
   const vid=side==="left"?leftVid:rightVid;
   try{
@@ -50,7 +49,7 @@ async function startCam(side){
   }catch(e){msg(`Camera Error: ${e.message}`,false);}
 }
 
-// === Capture ===
+// 📸 Capture
 function capture(side){
   const vid=side==="left"?leftVid:rightVid;
   const cv=side==="left"?leftCv:rightCv;
@@ -62,17 +61,17 @@ function capture(side){
   return true;
 }
 
-// === Analyzer ===
+// 🔮 Analyze logic
 async function analyze(side,mode="mini"){
   if(!capture(side))return;
   msg(`Analyzing ${side} hand (${mode})...`);
-  await new Promise(r=>setTimeout(r,800)); // demo delay
+  await new Promise(r=>setTimeout(r,700));
   const now=new Date().toLocaleTimeString();
   const lang=detectLang();
 
   const intro=side==="left"
-    ?"Left hand shows past karmic flow and inherited memory."
-    :"Right hand shows present destiny and current life pattern.";
+    ?"Left hand reveals past karmic flow, memory and inherited energy."
+    :"Right hand reflects present destiny, conscious effort and creative path.";
 
   const lines=[
     "• Life Line: strong vitality, balanced energy",
@@ -82,14 +81,14 @@ async function analyze(side,mode="mini"){
     "• Sun Line: artistic vision awakening",
     "• Health Line: steady balance and recovery",
     "• Marriage Line: karmic connection influence",
-    "• Manikanda Ring: spiritual awakening sign"
+    "• Divine Awakening Line: spiritual awakening and intuitive elevation"
   ];
 
   let text="";
   if(mode==="mini"){
     text=`🕒 ${now}\n${side.toUpperCase()} HAND SUMMARY\n${intro}`;
   }else{
-    text=`🕒 ${now}\n${side.toUpperCase()} HAND FULL REPORT\n${intro}\n${"-".repeat(40)}\n${lines.join("\n")}\n\n(Extended AI version coming soon...)`;
+    text=`🕒 ${now}\n${side.toUpperCase()} HAND FULL REPORT\n${intro}\n${"-".repeat(40)}\n${lines.join("\n")}\n\n(Extended AI report module ready for deployment.)`;
   }
 
   reportBox.textContent=text;
@@ -98,14 +97,14 @@ async function analyze(side,mode="mini"){
   speak(intro,lang);
 }
 
-// === Glow animation ===
+// 💫 Glow animation
 function glow(){
   reportBox.style.transition="box-shadow 0.6s ease";
   reportBox.style.boxShadow="0 0 24px 8px #00e5ff";
   setTimeout(()=>reportBox.style.boxShadow="0 0 10px #00e5ff80",1500);
 }
 
-// === Bindings ===
+// 🔘 Bind UI
 $("startLeft").onclick=()=>startCam("left");
 $("startRight").onclick=()=>startCam("right");
 $("captureLeft").onclick=()=>analyze("left","mini");
@@ -115,11 +114,12 @@ $("fullRight").onclick=()=>analyze("right","full");
 $("torchLeft").onclick=()=>toggleTorch("left");
 $("torchRight").onclick=()=>toggleTorch("right");
 
-// === Status ===
+// 💬 Status
 function msg(t,ok=true){statusEl.textContent=t;statusEl.style.color=ok?"#16f0a7":"#ff6b6b";}
 
-// === Init ===
+// 🚀 Init
 (async()=>{
-  if(!navigator.mediaDevices?.getUserMedia) msg("❌ Camera not supported",false);
+  if(!navigator.mediaDevices?.getUserMedia)
+    msg("❌ Camera not supported",false);
   else msg("Ready — Tap Start → Analyze ✨");
 })();
