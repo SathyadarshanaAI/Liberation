@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V9.4 Capture Intelligence</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V9.5 Dharma Dual-Hand Edition</title>
 <link rel="icon" href="./assets/icon.png" />
 <style>
 :root { --bg:#0b0f16; --card:#101820; --neon:#00e5ff; --pri:#16f0a7; }
@@ -11,14 +11,8 @@ body {
   margin:0; background:var(--bg); color:#e6f0ff;
   font-family:'Segoe UI',sans-serif; text-align:center;
 }
-h1 { 
-  color:var(--neon); margin-top:20px;
-  text-shadow:0 0 12px var(--neon);
-}
-.wrap { 
-  display:flex; flex-wrap:wrap; justify-content:center;
-  gap:20px; margin:20px auto;
-}
+h1 { color:var(--neon); margin-top:20px; text-shadow:0 0 12px var(--neon); }
+.wrap { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin:20px auto; }
 .camCol {
   background:var(--card); border-radius:20px; padding:16px;
   width:90%; max-width:340px; box-shadow:0 0 14px #000;
@@ -41,31 +35,27 @@ button:active { transform:scale(0.94); }
 </style>
 </head>
 <body>
-<h1>🖐️ Sathyadarshana Quantum Palm Analyzer V9.4</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer V9.5</h1>
 
 <div class="wrap">
   <!-- LEFT HAND -->
   <div class="camCol">
-    <h3>Left Hand</h3>
+    <h3>Left Hand (පෙර භවය)</h3>
     <video id="vidLeft" autoplay playsinline></video>
     <canvas id="canvasLeft"></canvas><br>
     <button id="startLeft">📷 Start</button>
     <button id="captureLeft">📸 Capture</button>
-    <button id="analyzeLeft">🧠 Analyze</button>
-    <button id="miniLeft">🔍 Mini Report</button>
-    <button id="fullLeft">📜 Full Report</button>
     <button id="torchLeft">🔦 Torch</button>
   </div>
 
   <!-- RIGHT HAND -->
   <div class="camCol">
-    <h3>Right Hand</h3>
+    <h3>Right Hand (මෙි භවය)</h3>
     <video id="vidRight" autoplay playsinline></video>
     <canvas id="canvasRight"></canvas><br>
     <button id="startRight">📷 Start</button>
     <button id="captureRight">📸 Capture</button>
     <button id="analyzeRight">🧠 Analyze</button>
-    <button id="miniRight">🔍 Mini Report</button>
     <button id="fullRight">📜 Full Report</button>
     <button id="torchRight">🔦 Torch</button>
   </div>
