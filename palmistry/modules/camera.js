@@ -1,94 +1,50 @@
-// modules/camera.js — Sathyadarshana Quantum Palm Analyzer V6.0 Final
-export class CameraCard {
-  constructor(container, opts = {}) {
-    this.container = container;
-    this.opts = opts;
-    this.video = document.createElement("video");
-    this.video.autoplay = true;
-    this.video.playsInline = true;
-    this.video.muted = true;
-    this.video.style.width = "260px";
-    this.video.style.height = "320px";
-    this.video.style.borderRadius = "10px";
-    container.innerHTML = "";
-    container.appendChild(this.video);
+// --- modules/camera.js ---
+// Dual-hand modular camera controller for V9.6 Dual-Hand Intelligence
 
+export class CameraUnit {
+  constructor(videoId, canvasId, label) {
+    this.video = document.getElementById(videoId);
+    this.canvas = document.getElementById(canvasId);
+    this.label = label;
     this.stream = null;
-    this.track = null;
-    this.torchEnabled = false;
   }
 
   async start() {
     try {
-      const constraints = {
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: this.opts.facingMode || "environment",
+          facingMode: { ideal: "environment" },
           width: { ideal: 1280 },
           height: { ideal: 720 }
         },
         audio: false
-      };
-      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-      this.video.srcObject = this.stream;
+      });
+      this.video.srcObject = stream;
       await this.video.play();
-
-      const [track] = this.stream.getVideoTracks();
-      this.track = track;
-
-      this.opts.onStatus?.("📷 Camera started successfully", true);
-      console.log("Camera stream:", track.getSettings());
-    } catch (e) {
-      console.error("Camera error:", e);
-      this.opts.onStatus?.("❌ Camera unavailable or permission denied", false);
+      this.stream = stream;
+      return `✅ ${this.label} camera started`;
+    } catch (err) {
+      console.error(err);
+      return `❌ Camera error: ${err.message}`;
     }
   }
 
-  captureTo(canvas, { mirror = false } = {}) {
-    if (!this.video.videoWidth) {
-      this.opts.onStatus?.("⚠️ Camera not ready", false);
-      return;
-    }
-    const ctx = canvas.getContext("2d");
-    canvas.width = this.video.videoWidth;
-    canvas.height = this.video.videoHeight;
-    ctx.save();
-    if (mirror) {
-      ctx.scale(-1, 1);
-      ctx.drawImage(this.video, -canvas.width, 0, canvas.width, canvas.height);
-    } else {
-      ctx.drawImage(this.video, 0, 0, canvas.width, canvas.height);
-    }
-    ctx.restore();
-    this.opts.onStatus?.("📸 Image captured", true);
+  capture() {
+    if (!this.video.videoWidth) return `⚠️ Start ${this.label} camera first!`;
+    const ctx = this.canvas.getContext("2d");
+    this.canvas.width = this.video.videoWidth;
+    this.canvas.height = this.video.videoHeight;
+    ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+    return `📸 ${this.label} hand captured`;
   }
 
   async toggleTorch() {
-    if (!this.track) {
-      this.opts.onStatus?.("⚠️ No camera stream to control torch", false);
-      return;
-    }
-
-    try {
-      const capabilities = this.track.getCapabilities();
-      if (!capabilities.torch) {
-        this.opts.onStatus?.("💡 Torch not supported on this device", false);
-        return;
-      }
-
-      this.torchEnabled = !this.torchEnabled;
-      await this.track.applyConstraints({ advanced: [{ torch: this.torchEnabled }] });
-      this.opts.onStatus?.(this.torchEnabled ? "💡 Torch ON" : "🌑 Torch OFF", true);
-    } catch (err) {
-      console.error("Torch error:", err);
-      this.opts.onStatus?.("⚠️ Torch control failed", false);
-    }
-  }
-
-  stop() {
-    if (this.stream) {
-      this.stream.getTracks().forEach(t => t.stop());
-      this.video.srcObject = null;
-      this.opts.onStatus?.("🛑 Camera stopped", true);
-    }
+    if (!this.stream) return `⚠️ Start ${this.label} camera first!`;
+    const track = this.stream.getVideoTracks()[0];
+    const caps = track.getCapabilities();
+    if (!caps.torch) return "🔦 Torch not supported";
+    const current = track.getSettings().torch || false;
+    await track.applyConstraints({ advanced: [{ torch: !current }] });
+    return `🔦 Torch ${!current ? "ON" : "OFF"} (${this.label})`;
   }
 }
