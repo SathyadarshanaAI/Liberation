@@ -1,42 +1,45 @@
-// modules/ai.js — 🪷 Sathyadarshana Serenity AI Voice Engine V10.5
-// Auto-detects language (Sinhala, Tamil, English) and speaks smoothly
+// modules/ai.js — 🪷 Serenity AI Voice Engine V1.3 (12-Language Auto Mode)
 
 export function speak(text) {
-  try {
-    if (!window.speechSynthesis) {
-      console.warn("Speech synthesis not supported.");
-      return;
-    }
-
-    // --- Auto Language Detection ---
-    let lang = "en-US";
-    const siPattern = /[අ-ෆ]/;
-    const taPattern = /[அ-ஹ]/;
-
-    if (siPattern.test(text)) lang = "si-LK";
-    else if (taPattern.test(text)) lang = "ta-IN";
-
-    // --- Create utterance ---
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = lang;
-    utter.rate = 0.95;
-    utter.pitch = 1;
-    utter.volume = 1;
-
-    // --- Voice preference (select best local voice) ---
-    const voices = window.speechSynthesis.getVoices();
-    if (voices && voices.length > 0) {
-      const match = voices.find(v =>
-        v.lang.toLowerCase().includes(lang.split('-')[0])
-      );
-      if (match) utter.voice = match;
-    }
-
-    // --- Speak with smooth pause ---
-    setTimeout(() => window.speechSynthesis.speak(utter), 150);
-
-    console.log(`🔊 Speaking (${lang}): ${text}`);
-  } catch (e) {
-    console.warn("AI voice error:", e);
+  if (!window.speechSynthesis) {
+    console.warn("Speech synthesis not supported.");
+    return;
   }
+
+  // --- Detect language ---
+  let lang = "en-US";
+  const patterns = {
+    "si-LK": /[අ-ෆ]/,                 // Sinhala
+    "ta-IN": /[அ-ஹ]/,                 // Tamil
+    "hi-IN": /[अ-ह]/,                 // Hindi
+    "zh-CN": /[\u4e00-\u9fff]/,       // Chinese
+    "ja-JP": /[\u3040-\u30ff]/,       // Japanese
+    "ko-KR": /[\u1100-\u11FF]/,       // Korean
+    "ar-SA": /[\u0600-\u06FF]/,       // Arabic
+    "es-ES": /[¿¡áéíóúñ]/,            // Spanish
+    "fr-FR": /[àâçéèêëîïôûùüÿœ]/,     // French
+    "de-DE": /[äöüß]/,                // German
+    "it-IT": /[àèéìòù]/,              // Italian
+    "ru-RU": /[А-Яа-яЁё]/             // Russian
+  };
+
+  for (const [code, pattern] of Object.entries(patterns)) {
+    if (pattern.test(text)) { lang = code; break; }
+  }
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  utter.rate = 0.95;
+  utter.pitch = 1;
+  utter.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length) {
+    const v = voices.find(v => v.lang.startsWith(lang.split('-')[0])) ||
+              voices.find(v => v.lang === lang);
+    if (v) utter.voice = v;
+  }
+
+  setTimeout(() => window.speechSynthesis.speak(utter), 150);
+  console.log(`🔊 Speaking (${lang}): ${text}`);
 }
