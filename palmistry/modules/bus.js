@@ -1,31 +1,21 @@
-// modules/bus.js
-// Simple Pub/Sub Event Bus
+// modules/bus.js — Ultra Light Event Bus for Sathyadarshana Modular Core
+const listeners = new Map(); // topic -> Set<functions>
 
-const EventBus = (() => {
-  const events = {};
+export function on(topic, fn) {
+  if (!listeners.has(topic)) listeners.set(topic, new Set());
+  listeners.get(topic).add(fn);
+  return () => off(topic, fn); // unsubscribe handler
+}
 
-  function on(event, handler) {
-    if (!events[event]) events[event] = [];
-    events[event].push(handler);
+export function off(topic, fn) {
+  if (listeners.has(topic)) listeners.get(topic).delete(fn);
+}
+
+export function emit(topic, payload) {
+  if (listeners.has(topic)) {
+    listeners.get(topic).forEach(fn => {
+      try { fn(payload); } 
+      catch (e) { console.warn("Bus handler error:", e); }
+    });
   }
-
-  function off(event, handler) {
-    if (!events[event]) return;
-    events[event] = events[event].filter(h => h !== handler);
-  }
-
-  function emit(event, data = {}) {
-    if (!events[event]) return;
-    for (const handler of events[event]) {
-      try {
-        handler(data);
-      } catch (err) {
-        console.error(`[EventBus] Error in handler for "${event}":`, err);
-      }
-    }
-  }
-
-  return { on, off, emit };
-})();
-
-export default EventBus;
+}
