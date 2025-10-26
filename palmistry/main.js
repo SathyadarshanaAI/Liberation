@@ -1,29 +1,11 @@
-// main.js — Root Modular Loader
-const status = document.getElementById("status");
-const reportBox = document.getElementById("reportBox");
+// main.js
+import EventBus from "./modules/bus.js";
+import * as Camera from "./modules/camera.js";
+import * as Vision from "./modules/vision.js";
+import * as Report from "./modules/report.js";
+import Core from "./modules/core.js";
 
-async function boot() {
-  status.textContent = "Loading modules…";
-  try {
-    const [bus, camera, report, vision, pdf, ai] = await Promise.all([
-      import("./modules/bus.js"),
-      import("./modules/camera.js"),
-      import("./modules/report.js"),
-      import("./modules/vision.js"),
-      import("./modules/pdf.js"),
-      import("./modules/ai.js"),
-    ]);
-
-    status.textContent = "Modules loaded ✅";
-    reportBox.textContent = "Quantum Palm Analyzer Core initialized successfully.";
-
-    // Emit first event
-    bus.emit("core:ready", { time: new Date().toISOString() });
-  } catch (e) {
-    status.textContent = "❌ Module load failed";
-    reportBox.textContent = e.message;
-    console.error("Module load error:", e);
-  }
-}
-
-boot();
+window.addEventListener("DOMContentLoaded", () => {
+  console.log("Palmistry app initializing...");
+  Core.init();
+});
