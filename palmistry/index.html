@@ -135,5 +135,29 @@ window.setVoiceStatus=(state)=>{
 </script>
 
 <script type="module" src="./main.js"></script>
-</body>
+</body><script>
+window.onerror = function (message, source, lineno, colno, error) {
+  const panel = document.getElementById("buddhiConsole");
+  const msg = document.createElement("div");
+  msg.style.color = "#ff6b6b";
+  msg.style.fontFamily = "monospace";
+  msg.textContent = "❌ ERROR in " + (source.split("/").pop() || "unknown") +
+    " [line " + lineno + ", col " + colno + "]: " + message;
+  panel.appendChild(msg);
+  panel.scrollTop = panel.scrollHeight;
+  return true; // prevent browser popup
+};
+
+window.addEventListener("unhandledrejection", function (event) {
+  const panel = document.getElementById("buddhiConsole");
+  const msg = document.createElement("div");
+  msg.style.color = "#ffa500";
+  msg.style.fontFamily = "monospace";
+  msg.textContent = "⚠️ Promise rejection in " +
+    (event.reason?.fileName ? event.reason.fileName.split("/").pop() : "unknown") +
+    ": " + (event.reason?.message || event.reason);
+  panel.appendChild(msg);
+  panel.scrollTop = panel.scrollHeight;
+});
+</script>
 </html>
