@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sathyadarshana Quantum Palm Analyzer V10.8 · Serenity Voice Edition</title>
+<title>Sathyadarshana Quantum Palm Analyzer V10.8 Clean Edition</title>
 <link rel="icon" href="./assets/icon.png" />
 <style>
 :root{
@@ -74,9 +74,8 @@ footer{margin:25px 0;font-size:0.9em;color:#aaa;}
   <button id="translateBtn">Translate (12 Langs)</button>
 </div>
 
-<footer>Powered by AI Buddhi · Sathyadarshana Modular Core V10.8 · Serenity Voice Edition</footer>
+<footer>Powered by AI Buddhi · Clean Build V10.8</footer>
 
-<!-- Buddhi Live Monitor Panel -->
 <div id="buddhiConsole" style="
   position:fixed;bottom:0;left:0;width:100%;
   background:#000c;border-top:1px solid #00e5ff60;
@@ -86,7 +85,6 @@ footer{margin:25px 0;font-size:0.9em;color:#aaa;}
   backdrop-filter:blur(6px);
 "></div>
 
-<!-- Voice Status Light -->
 <div id="voiceStatus" style="
   position:fixed;top:8px;right:8px;
   width:14px;height:14px;border-radius:50%;
@@ -111,14 +109,13 @@ window.addEventListener("error",e=>logLine("ERROR: "+e.message,"#ff6b6b"));
 window.addEventListener("unhandledrejection",e=>logLine("REJECTED: "+(e.reason?.message||e.reason),"#ff6b6b"));
 
 function trace(evt,data){
-  logLine("Event: "+evt+" → "+JSON.stringify(data));
+  logLine("Event: "+evt+" -> "+JSON.stringify(data));
 }
 window.BuddhiLog=trace;
 
 logLine("Buddhi Live Monitor Panel active v10.8");
 logLine("Voice: Silent");
 
-// Voice bubble updater
 window.setVoiceStatus=(state)=>{
   switch(state){
     case "speak":
