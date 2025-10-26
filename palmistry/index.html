@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer V10.7 · Serenity Fusion Edition</title>
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer V10.8 · Serenity Voice Edition</title>
 <link rel="icon" href="./assets/icon.png" />
 <style>
 :root{
@@ -74,7 +74,60 @@ footer{margin:25px 0;font-size:0.9em;color:#aaa;}
   <button id="translateBtn">🌐 Translate (12 Langs)</button>
 </div>
 
-<footer>🌸 Powered by AI Buddhi · Sathyadarshana Modular Core V10.7 · Serenity Fusion Edition</footer>
+<footer>🌸 Powered by AI Buddhi · Sathyadarshana Modular Core V10.8 · Serenity Voice Edition</footer>
+
+<!-- 🧠 Buddhi Live Monitor Panel -->
+<div id="buddhiConsole" style="
+  position:fixed;bottom:0;left:0;width:100%;
+  background:#000c;border-top:1px solid #00e5ff60;
+  color:#00e5ff;font-size:12px;
+  font-family:monospace;max-height:120px;overflow-y:auto;
+  padding:6px 8px;text-align:left;z-index:9999;
+  backdrop-filter:blur(6px);
+"></div>
+
+<!-- 🗣️ Voice Status Light -->
+<div id="voiceStatus" style="
+  position:fixed;top:8px;right:8px;
+  width:14px;height:14px;border-radius:50%;
+  background:#777;box-shadow:0 0 8px #000;
+  border:1px solid #111;z-index:99999;
+"></div>
+
+<script type="module">
+const con=document.getElementById("buddhiConsole");
+const vlight=document.getElementById("voiceStatus");
+
+function logLine(txt,col="#00e5ff"){
+  const el=document.createElement("div");
+  el.textContent=txt;el.style.color=col;
+  con.appendChild(el);
+  con.scrollTop=con.scrollHeight;
+}
+
+// Error tracking
+window.addEventListener("error",e=>logLine("⚠️ "+e.message,"#ff6b6b"));
+window.addEventListener("unhandledrejection",e=>logLine("💥 "+(e.reason?.message||e.reason),"#ff6b6b"));
+
+// Live hook
+function trace(evt,data){
+  logLine(`🧩 ${evt} → ${JSON.stringify(data)}`);
+}
+window.BuddhiLog=trace;
+
+// 🌸 startup
+logLine("🌸 Buddhi Live Monitor Panel active · v10.8");
+logLine("🟡 Voice: Silent");
+
+// Voice status monitor (AI integration ready)
+window.setVoiceStatus=(state)=>{
+  switch(state){
+    case "speak": vlight.style.background="#16f0a7"; logLine("🟢 Speaking..."); break;
+    case "silent": vlight.style.background="#777"; logLine("🟡 Silent"); break;
+    case "error": vlight.style.background="#ff5555"; logLine("🔴 Voice Error"); break;
+  }
+};
+</script>
 
 <script type="module" src="./main.js"></script>
 </body>
