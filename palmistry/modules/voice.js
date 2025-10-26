@@ -1,17 +1,17 @@
-// modules/voice.js — Speech Narration for Sathyadarshana Core
-export function speak(text, lang = "en") {
-  try {
-    const synth = window.speechSynthesis;
-    if (!synth) {
-      console.warn("Speech synthesis not supported.");
-      return;
-    }
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = lang;
-    utter.rate = 1;
-    utter.pitch = 1;
-    synth.speak(utter);
-  } catch (e) {
-    console.warn("Voice module error:", e);
+export function speak(text, lang="en"){
+  const voices = {
+    en:"en-US", si:"si-LK", ta:"ta-IN", hi:"hi-IN", fr:"fr-FR", es:"es-ES",
+    de:"de-DE", it:"it-IT", ar:"ar-SA", zh:"zh-CN", ja:"ja-JP", ru:"ru-RU"
+  };
+  const sel = voices[lang] || "en-US";
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = sel;
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    speechSynthesis.speak(u);
+  }catch(e){
+    const audio = new Audio("./assets/voice_complete.mp3");
+    audio.play();
   }
 }
