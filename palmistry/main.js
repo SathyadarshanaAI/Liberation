@@ -9,15 +9,42 @@ import { validateEthics } from "./modules/ethics.js";
 import { getUserData } from "./modules/form.js";
 import { translateTextAI } from "./modules/translate.js";
 
+// --- DOM Elements ---
 const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
 const overlay = document.getElementById("overlay");
 const msg = document.getElementById("msg");
-let stream;
 
+let stream = null;
+
+// --- Start Camera ---
 document.getElementById("startBtn").onclick = async () => {
+  msg.textContent = "🟡 Initializing camera...";
   stream = await startCamera(video, msg);
+  if (stream) msg.textContent = "✅ Camera active. Place hand under bright light.";
 };
 
+// --- Capture Palm ---
+document.getElementById("captureBtn").onclick = () => {
+  if (!video.srcObject) {
+    msg.textContent = "⚠️ Please start camera first.";
+    msg.className = "error";
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  msg.textContent = "✅ Palm captured successfully! Ready for AI analysis.";
+  msg.className = "";
+
+  // Save to memory
+  localStorage.setItem("lastPalm", canvas.toDataURL("image/png"));
+};
+
+// --- Analyze Palm via AI ---
 document.getElementById("analyzeBtn").onclick = async () => {
   if (!stream) {
     msg.textContent = "⚠️ Start camera first.";
@@ -28,33 +55,40 @@ document.getElementById("analyzeBtn").onclick = async () => {
   const frame = captureFrame(video);
   if (!(await validateEthics(frame, msg))) return;
 
+  // --- Clarity detection ---
   const clarity = checkClarity(frame);
-  if (clarity < 0.4) {
-    msg.textContent = "⚠️ Palm unclear. Retake under better light.";
+  if (clarity < 0.35) {
+    msg.textContent = "⚠️ Palm unclear. Please recapture in brighter light.";
     speak("Please move to brighter light.");
     return;
   }
 
+  // --- Edge detection & overlay ---
+  msg.textContent = "🔍 Detecting palm lines...";
   const edges = detectEdges(frame);
   renderOverlay(overlay, edges);
-  msg.textContent = "✅ Palm lines detected. Running AI...";
 
+  // --- AI segmentation ---
+  msg.textContent = "🤖 Analyzing palm structure...";
   const result = await analyzeAI(edges);
   renderOverlay(overlay, edges, result);
-  msg.textContent = "✅ AI segmentation done. Generating report...";
 
-  // Get user data (Name, DOB, Gender, ID)
+  // --- Fetch user data ---
   const user = getUserData();
 
-  // Auto-detect browser language for multilingual translation
+  // --- Multilingual translation ---
   const userLang = navigator.language.slice(0, 2);
 
-  // Generate multilingual + personalized report
+  // --- Generate report ---
+  msg.textContent = "📄 Generating AI report...";
   await generateReport(result, userLang, user);
 
-  // Voice summary in same language
-  const spoken = await translateTextAI("Palm analysis complete for " + user.name + ". " + result.summary, userLang);
-  speak(spoken, userLang);
+  // --- Voice summary ---
+  const summaryText = await translateTextAI(
+    "Palm analysis complete for " + user.name + ". " + result.summary,
+    userLang
+  );
+  speak(summaryText, userLang);
 
   msg.textContent = "✅ Report ready for " + user.name + ".";
 };
