@@ -1,48 +1,40 @@
 // modules/camera.js
-// ✅ Sathyadarshana Quantum Palm Analyzer · Camera Engine v2.3.1
-
 export async function startCamera(video, msg) {
   try {
-    // --- Check for available cameras ---
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cams = devices.filter(d => d.kind === "videoinput");
-
-    if (cams.length === 0) {
-      msg.textContent = "❌ No camera detected on this device.";
+    if (!navigator.mediaDevices?.getUserMedia) {
+      msg.textContent = "❌ Camera not supported on this device.";
       msg.className = "error";
       return null;
     }
 
-    // --- Prefer back camera if available ---
-    const backCam = cams.find(c => /back|rear|environment/i.test(c.label));
-    const selectedCam = backCam ? backCam.deviceId : cams[0].deviceId;
-
-    // --- Open camera stream ---
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { deviceId: selectedCam ? { exact: selectedCam } : undefined },
+    const constraints = {
+      video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
-    });
+    };
 
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = stream;
-    await video.play();
 
-    msg.textContent = "✅ Camera active. Hold your hand steady under good light.";
-    msg.className = "";
+    // Ensure autoplay works on mobile
+    video.onloadeddata = () => {
+      video.play();
+      msg.textContent = "✅ Camera active. Place your hand in bright light.";
+      msg.className = "";
+    };
+
     return stream;
   } catch (err) {
     console.error("Camera error:", err);
-    msg.textContent = "⚠️ Camera access error: " + err.message;
+    msg.textContent = "⚠️ Camera access failed: " + err.message;
     msg.className = "error";
 
-    // --- Guide user if permission denied ---
     if (err.name === "NotAllowedError") {
-      alert("Please allow camera access in your browser settings (tap lock icon → Site settings → Camera → Allow).");
+      alert("Please allow camera access:\nTap 🔒 → Site Settings → Camera → Allow");
     }
     return null;
   }
 }
 
-// --- Capture single frame to canvas ImageData ---
 export function captureFrame(video) {
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth || 640;
