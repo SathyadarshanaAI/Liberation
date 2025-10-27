@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sathyadarshana · Wisdom Dashboard v2.4</title>
+<title>Sathyadarshana · Wisdom Dashboard v2.5</title>
 <link rel="icon" href="./assets/icon.png">
 <style>
 :root{--bg:#0b0f16;--card:#101820;--neon:#00e5ff;--pri:#16f0a7;}
@@ -18,6 +18,14 @@ input{
   border-radius:10px;border:1px solid var(--pri);
   background:#101820;color:#e6f0ff;text-align:center;
 }
+#voiceBtn{
+  background:var(--neon);color:#000;
+  border:none;border-radius:10px;
+  padding:10px 20px;font-weight:bold;cursor:pointer;
+  box-shadow:0 0 10px var(--neon);
+  transition:all .3s;
+}
+#voiceBtn:hover{box-shadow:0 0 20px var(--pri);}
 .card{
   background:var(--card);border-radius:14px;padding:12px;
   margin:10px auto;width:90%;max-width:500px;
@@ -33,11 +41,28 @@ small{color:#aaa;}
 </head>
 <body>
 <h1>📜 Sathyadarshana Wisdom Dashboard</h1>
+
 <div id="searchBox">
   <input id="searchInput" placeholder="Search by name or ID...">
+  <button id="voiceBtn">🎙️ Voice Search</button>
 </div>
+
 <div id="reportList">Loading reports...</div>
 
+<!-- Core dashboard module -->
 <script type="module" src="./modules/dashboard.js"></script>
+
+<!-- Voice recall integration -->
+<script type="module">
+import { initVoiceRecall, startVoiceSearch } from "./modules/divine-recall.js";
+
+// Initialize voice system based on browser language
+initVoiceRecall(navigator.language.slice(0,2));
+
+// Voice search activation
+const btn = document.getElementById("voiceBtn");
+btn.onclick = () => startVoiceSearch(navigator.language.slice(0,2));
+</script>
+
 </body>
 </html>
