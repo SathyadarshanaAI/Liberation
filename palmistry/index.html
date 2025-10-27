@@ -44,5 +44,26 @@ button:hover{box-shadow:0 0 20px #16f0a7;}
 </div>
 
 <script type="module" src="./main.js"></script>
-</body>
+
+ <script>
+(function(){
+  function show(msg){
+    let p=document.getElementById("buddhiPanel");
+    if(!p){
+      p=document.createElement("div");
+      p.id="buddhiPanel";
+      p.style.cssText="position:fixed;bottom:8px;left:8px;right:8px;background:rgba(0,0,0,.9);color:#16f0a7;font-family:monospace;font-size:12px;border:1px solid #00e5ff;border-radius:8px;padding:6px 10px;z-index:999999;max-height:140px;overflow:auto;box-shadow:0 0 10px #00e5ff";
+      document.body.appendChild(p);
+    }
+    const t=new Date().toLocaleTimeString();
+    p.innerHTML += `<div>[${t}] ${msg}</div>`;
+    p.scrollTop=p.scrollHeight;
+  }
+  window.buddhiLog = show;
+  show("🧠 Buddhi Monitor active (inline)");
+  window.onerror=(m,s,l)=>{show("❌ "+m+" @"+l);};
+  window.addEventListener("unhandledrejection",e=>show("⚠️ "+(e.reason?.message||e.reason)));
+  show("✅ Inline monitor ready.");
+})();
+</script>  </body>  
 </html>
