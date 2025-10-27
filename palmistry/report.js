@@ -1,31 +1,29 @@
 import { speak } from "./voice.js";
 
-window.exportPalmPDF = async function (side) {
-  const { jsPDF } = window.jspdf;
-  const box = document.querySelector(`#report-${side}`);
+export async function generatePalmReport(v, side) {
   const lang = window.currentLang || "en";
-  const img = window.capturedHands[side] || null;
+  const energy = (v.life.strength + v.heart.clarity + v.head.depth) * 33.3;
+  const fate = v.fate.split
+    ? "dual opportunities — transformation is near."
+    : "steady destiny showing balanced karma.";
 
-  let text = box.innerText.replace("📜 Save PDF", "");
+  const karmic =
+    side === "left"
+      ? "This hand carries karmic memories from previous lives — lessons, vows, and blessings that shape your present path."
+      : "This hand reveals your active life journey — choices, creation, and destiny unfolding in this lifetime.";
 
-  const translated = await window.translateText(text, lang);
-  const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+  const text = `
+  ${side === "left" ? "🌸 Past Life Insight" : "🌞 Present & Future Path"}
+  ${karmic}
+  Life line steady, Heart line deep, Fate line shows ${fate}
+  Energy Index: ${energy.toFixed(2)}
+  `;
 
-  // 🖐️ add captured hand image if available
-  if (img) {
-    const imgWidth = 80, imgHeight = 60;
-    pdf.addImage(img, "PNG", 65, 15, imgWidth, imgHeight);
-    pdf.text("Captured Hand Image", 75, 80);
-  }
+  speak(text, lang);
 
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(12);
-  pdf.text(translated, 15, 100, { maxWidth: 180 });
-
-  // watermark
-  pdf.setTextColor(150);
-  pdf.setFontSize(10);
-  pdf.text("© Sathyadarshana · Light of Truth", 60, 285);
-
-  pdf.save(`PalmReport_${side}_${lang}.pdf`);
-};
+  return `
+  <h3>${side === "left" ? "🌸" : "🌞"} AI RealScan Report (${side} hand)</h3>
+  <p>${text}</p>
+  <p><button class="pdfBtn" onclick="exportPalmPDF('${side}')">📜 Save PDF</button></p>
+  <hr style="border:0;height:1px;background:#00e5ff30;">`;
+}
