@@ -3,66 +3,93 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sathyadarshana · Quantum Palm Analyzer · Camera Debug v2.3.0</title>
+<title>Sathyadarshana Quantum Palm Analyzer · True Vision v2.3.1</title>
 <link rel="icon" href="./assets/icon.png">
 <style>
-body {
-  margin:0; background:#0b0f16; color:#e6f0ff;
-  font-family:'Segoe UI',sans-serif; text-align:center;
-}
-h1 { color:#00e5ff; text-shadow:0 0 10px #00e5ff; margin-top:20px; }
-button {
-  background:#00e5ff; color:#000; padding:8px 16px; margin:10px;
-  border:none; border-radius:8px; font-weight:bold;
-}
-#log {
-  background:#000; color:#0f0; font-family:monospace; font-size:13px;
-  text-align:left; padding:8px; margin:10px; height:140px;
-  overflow-y:auto; white-space:pre-line;
-  border-radius:8px; border:1px solid #00e5ff;
-}
-video { width:90%; border-radius:10px; margin-top:10px; }
+:root{--bg:#0b0f16;--card:#101820;--neon:#00e5ff;--pri:#16f0a7;}
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:'Segoe UI',sans-serif;text-align:center;}
+h1{color:var(--neon);text-shadow:0 0 12px var(--neon);margin:16px 0;}
+.camBox{background:var(--card);border-radius:16px;padding:12px;width:90%;max-width:380px;box-shadow:0 0 10px #0007;margin:auto;}
+video,canvas{width:100%;border-radius:12px;margin-top:10px;}
+button{background:var(--neon);color:#000;padding:8px 20px;margin:6px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;box-shadow:0 0 10px var(--neon);}
+button:hover{box-shadow:0 0 20px var(--pri);}
+#msg{margin-top:10px;color:#16f0a7}.error{color:#ff6b6b}
+#log{background:#000;color:#0f0;font-family:monospace;font-size:12px;text-align:left;padding:8px;margin:10px;border-radius:8px;height:140px;overflow-y:auto;white-space:pre-line;}
 </style>
 </head>
 <body>
-<h1>📷 Camera Debug Console</h1>
-<button id="start">Start Camera</button>
-<div><video id="video" autoplay playsinline></video></div>
-<pre id="log">Initializing log...</pre>
+
+<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · True Vision v2.3.1</h1>
+
+<div class="camBox">
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" hidden></canvas>
+
+  <div>
+    <button id="startBtn">📷 Start Camera</button>
+    <button id="flipBtn">🔄 Flip</button>
+    <button id="captureBtn">✋ Capture</button>
+  </div>
+
+  <p id="msg">Awaiting camera...</p>
+  <pre id="log">Initializing log...</pre>
+</div>
 
 <script>
-const video = document.getElementById("video");
-const logBox = document.getElementById("log");
-const startBtn = document.getElementById("start");
+const video=document.getElementById("video");
+const logBox=document.getElementById("log");
+const msg=document.getElementById("msg");
+let currentFacing="environment";
+let stream=null;
 
-function log(t){ logBox.textContent += "\n" + t; logBox.scrollTop = logBox.scrollHeight; }
+function log(t){logBox.textContent+="\n"+t;logBox.scrollTop=logBox.scrollHeight;}
 
-// --- Universal error listener ---
-window.addEventListener("error", e => log("❌ JS Error: " + e.message + " @ " + e.filename.split("/").pop() + ":" + e.lineno));
-window.addEventListener("unhandledrejection", e => log("⚠️ Promise: " + (e.reason?.message || e.reason)));
-
-// --- Start Camera ---
-startBtn.onclick = async () => {
-  try {
-    log("Requesting camera...");
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:"environment", width:{ideal:1280}, height:{ideal:720} },
+async function startCamera(){
+  try{
+    if(stream){stream.getTracks().forEach(t=>t.stop());}
+    log("Requesting camera ("+currentFacing+")...");
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{exact:currentFacing}},
       audio:false
     });
-    video.srcObject = stream;
-    const playPromise = video.play();
-    if(playPromise) playPromise.catch(e => log("⚠️ Autoplay blocked: " + e.message));
-    video.onloadeddata = ()=> log("✅ Camera active. Ready.");
-  } catch(e){
-    log("❌ Camera Error: " + e.name + " - " + e.message);
+    video.srcObject=stream;
+    await video.play();
+    msg.textContent="✅ Camera active. Ready.";
+    log("✅ Camera active. Ready.");
+  }catch(e){
+    msg.textContent="❌ "+e.message;
+    log("❌ "+e.name+": "+e.message);
   }
+}
+
+document.getElementById("startBtn").onclick=startCamera;
+document.getElementById("flipBtn").onclick=()=>{
+  currentFacing=currentFacing==="user"?"environment":"user";
+  startCamera();
+};
+document.getElementById("captureBtn").onclick=()=>{
+  try{
+    const canvas=document.getElementById("canvas");
+    const ctx=canvas.getContext("2d");
+    canvas.width=video.videoWidth;
+    canvas.height=video.videoHeight;
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const data=canvas.toDataURL("image/png");
+    localStorage.setItem("lastPalm",data);
+    msg.textContent="✅ Palm captured successfully.";
+    log("📸 Frame captured and saved to memory.");
+  }catch(e){log("❌ Capture error: "+e.message);}
 };
 
-// --- Permissions log ---
-navigator.permissions?.query({name:"camera"}).then(r => log("🔍 Camera permission: " + r.state)).catch(()=>{});
+// Universal error tracking
+window.addEventListener("error", e=>log("❌ JS Error: "+e.message));
+window.addEventListener("unhandledrejection", e=>log("⚠️ Promise: "+(e.reason?.message||e.reason)));
+
+// Device + permission check
+navigator.permissions?.query({name:"camera"}).then(r=>log("🔍 Permission: "+r.state));
 navigator.mediaDevices?.enumerateDevices().then(d=>{
-  const cams = d.filter(x=>x.kind==="videoinput");
-  log("🎥 Detected cameras: " + cams.length + " (" + cams.map(c=>c.label||"Unnamed").join(", ") + ")");
+  const cams=d.filter(x=>x.kind==="videoinput");
+  log("🎥 Cameras detected: "+cams.length+" ("+cams.map(c=>c.label||"Unnamed").join(", ")+")");
 });
 </script>
 </body>
