@@ -1,4 +1,4 @@
-// voice.js — Buddhi Voice System (12 Language Support)
+// 🕉️ Buddhi Voice System · Quantum Multilingual Engine (V11.8)
 export function speak(text, lang = "en") {
   const langMap = {
     en: "en-US",
@@ -22,12 +22,23 @@ export function speak(text, lang = "en") {
   utter.rate = 1.0;
   utter.volume = 1.0;
 
+  // 🧠 Voice selection logic
   const voices = speechSynthesis.getVoices();
   if (voices.length > 0) {
-    const match = voices.find(v => v.lang.startsWith(voiceLang));
+    const match = voices.find(v => v.lang.toLowerCase().startsWith(voiceLang.toLowerCase()));
     if (match) utter.voice = match;
   }
 
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utter);
+  // 🎛️ Soft cancel + retry (browser bug prevention)
+  if (speechSynthesis.speaking) {
+    speechSynthesis.cancel();
+    setTimeout(() => speechSynthesis.speak(utter), 300);
+  } else {
+    speechSynthesis.speak(utter);
+  }
+
+  // 🧩 Feedback logs
+  utter.onstart = () => console.log(`🎤 Buddhi speaking in [${utter.lang}]`);
+  utter.onerror = (e) => console.error("❌ Buddhi voice error:", e);
+  utter.onend = () => console.log("🔚 Voice complete.");
 }
