@@ -1,31 +1,53 @@
-// modules/camera.js · Quantum Palm Analyzer v10.8
-export async function startCamera(side) {
-  const vid = document.getElementById(`vid-${side}`);
-  if (!vid) return `❌ No video element for ${side}`;
+// modules/camera.js
+// ✅ Sathyadarshana Quantum Palm Analyzer · Camera Engine v2.3.1
+
+export async function startCamera(video, msg) {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    vid.srcObject = stream;
-    vid.dataset.active = "1";
-    return `✅ ${side.toUpperCase()} camera started`;
-  } catch (e) {
-    return `⚠️ Camera start failed (${side}): ${e.message}`;
+    // --- Check for available cameras ---
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === "videoinput");
+
+    if (cams.length === 0) {
+      msg.textContent = "❌ No camera detected on this device.";
+      msg.className = "error";
+      return null;
+    }
+
+    // --- Prefer back camera if available ---
+    const backCam = cams.find(c => /back|rear|environment/i.test(c.label));
+    const selectedCam = backCam ? backCam.deviceId : cams[0].deviceId;
+
+    // --- Open camera stream ---
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: selectedCam ? { exact: selectedCam } : undefined },
+      audio: false
+    });
+
+    video.srcObject = stream;
+    await video.play();
+
+    msg.textContent = "✅ Camera active. Hold your hand steady under good light.";
+    msg.className = "";
+    return stream;
+  } catch (err) {
+    console.error("Camera error:", err);
+    msg.textContent = "⚠️ Camera access error: " + err.message;
+    msg.className = "error";
+
+    // --- Guide user if permission denied ---
+    if (err.name === "NotAllowedError") {
+      alert("Please allow camera access in your browser settings (tap lock icon → Site settings → Camera → Allow).");
+    }
+    return null;
   }
 }
 
-export function capture(side) {
-  const vid = document.getElementById(`vid-${side}`);
-  const canvas = document.getElementById(`canvas-${side}`);
-  if (!vid || !canvas) return `❌ Missing elements for ${side}`;
-  try {
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-    canvas.style.display = "block";
-    canvas.classList.add("flash");
-    setTimeout(() => canvas.classList.remove("flash"), 600);
-    // Optionally pause video for snapshot
-    vid.pause?.();
-    return `📸 ${side.toUpperCase()} hand captured`;
-  } catch (e) {
-    return `⚠️ Capture failed (${side}): ${e.message}`;
-  }
+// --- Capture single frame to canvas ImageData ---
+export function captureFrame(video) {
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
