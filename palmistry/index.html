@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sathyadarshana · Quantum Palm Analyzer · True Vision v2.2.2</title>
+<title>Sathyadarshana · Quantum Palm Analyzer · True Vision v2.2.3</title>
 <link rel="icon" href="./assets/icon.png">
 <style>
 :root{
@@ -24,7 +24,7 @@ h1{
   border-radius:16px;
   padding:12px;
   width:90%;
-  max-width:360px;
+  max-width:380px;
   box-shadow:0 0 10px #0007;
 }
 video,canvas{width:100%;border-radius:12px;}
@@ -46,7 +46,7 @@ small{color:#aaa;}
 </style>
 </head>
 <body>
-<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · True Vision v2.2.2</h1>
+<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · True Vision v2.2.3</h1>
 
 <div id="view">
   <div class="camBox">
@@ -66,81 +66,28 @@ small{color:#aaa;}
 
     <div>
       <button id="startBtn">📷 Start Camera</button>
-      <button id="captureBtn">🔍 Capture Palm</button>
+      <button id="captureBtn">✋ Capture Palm</button>
+      <button id="analyzeBtn">🔮 Analyze Palm</button>
     </div>
     <p id="msg">Awaiting camera...</p>
   </div>
 </div>
 
-<script type="module">
-const video=document.getElementById('video');
-const canvas=document.getElementById('canvas');
-const msg=document.getElementById('msg');
-let stream=null;
+<!-- Import Main Analyzer Script -->
+<script type="module" src="./main.js"></script>
 
-document.getElementById('startBtn').onclick=async()=>{
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:"environment"}
-    });
-    video.srcObject=stream;
-    msg.textContent="✅ Camera active. Place your hand in bright light.";
-    msg.className="";
-  }catch(e){
-    msg.textContent="⚠️ Camera permission denied: "+e.message;
-    msg.className="error";
+<!-- Optional: fallback local clarity check if module missing -->
+<script>
+if(!window.checkClarity){
+  window.checkClarity = (img)=>{
+    let diff=0,count=0;
+    for(let i=0;i<img.data.length;i+=40){
+      const l1=0.299*img.data[i]+0.587*img.data[i+1]+0.114*img.data[i+2];
+      const l2=0.299*img.data[i+4]+0.587*img.data[i+5]+0.114*img.data[i+6];
+      diff+=Math.abs(l1-l2);count++;
+    }
+    return Math.min(diff/count/50,1);
   }
-};
-
-document.getElementById('captureBtn').onclick=()=>{
-  if(!stream){
-    msg.textContent="⚠️ Please start camera first.";
-    msg.className="error";
-    return;
-  }
-
-  const ctx=canvas.getContext('2d');
-  canvas.width=video.videoWidth;
-  canvas.height=video.videoHeight;
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
-  const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-
-  const clarity=checkClarity(imgData);
-
-  if(clarity<0.25){
-    msg.innerHTML="⚠️ Palm lines not clear. Please recapture in better light or focus.";
-    msg.className="error";
-    return;
-  }
-
-  // --- user details ---
-  const name=document.getElementById("userName").value.trim()||"Unknown";
-  const dob=document.getElementById("userDOB").value||"N/A";
-  const nic=document.getElementById("userNIC").value.trim()||"N/A";
-  const gender=document.getElementById("userGender").value||"N/A";
-
-  msg.innerHTML=`
-    ✅ Palm captured successfully.<br>
-    <small>${name}, ${gender}, DOB: ${dob}, ID: ${nic}</small><br>
-    Preparing for AI analysis...
-  `;
-  msg.className="";
-
-  // --- Save frame (optional for AI pipeline) ---
-  const frame=canvas.toDataURL("image/png");
-  localStorage.setItem("lastPalm", frame);
-  localStorage.setItem("userData", JSON.stringify({name,dob,nic,gender}));
-};
-
-// --- Simple clarity estimator ---
-function checkClarity(img){
-  let diff=0,count=0;
-  for(let i=0;i<img.data.length;i+=40){
-    const l1=0.299*img.data[i]+0.587*img.data[i+1]+0.114*img.data[i+2];
-    const l2=0.299*img.data[i+4]+0.587*img.data[i+5]+0.114*img.data[i+6];
-    diff+=Math.abs(l1-l2);count++;
-  }
-  return Math.min(diff/count/50,1);
 }
 </script>
 </body>
