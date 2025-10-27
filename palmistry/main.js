@@ -1,38 +1,67 @@
 import { autoAnalyzeIfReady } from "./modules/ai-analyzer.js";
+import { speak } from "./modules/voice.js";
 
-const vLeft = document.getElementById("videoLeft");
-const vRight = document.getElementById("videoRight");
-const cLeft = document.getElementById("canvasLeft");
-const cRight = document.getElementById("canvasRight");
-const msg = document.getElementById("msg");
+// quick reference helpers
+const $ = id => document.getElementById(id);
+const L = { video: $("videoLeft"), canvas: $("canvasLeft") };
+const R = { video: $("videoRight"), canvas: $("canvasRight") };
+const msg = $("msg");
 
-async function startCam(video) {
+window.modulesLoaded = window.modulesLoaded || {};
+window.modulesLoaded["main"] = true;
+
+// ========== CAMERA ==========
+async function startCam(side) {
+  const v = side === "left" ? L.video : R.video;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video:true });
-    video.srcObject = stream;
-    bfLog("📸 Camera started: " + video.id);
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" } // 🔁 back camera
+    });
+    v.srcObject = stream;
+    bfLog(`📸 Camera started (${side})`);
   } catch (e) {
-    bfLog("❌ Camera error: " + e.message,"#ff5555");
-    msg.textContent = "Camera permission denied!";
+    bfLog(`❌ Camera error: ${e.message}`, "#ff4444");
+    msg.textContent = "Camera permission error! Please allow camera access.";
+    speak("කැමරා අයිතිය සක්‍රීය කරන්න.", "si");
   }
 }
 
-function capture(video, canvas, side) {
-  try {
-    const ctx = canvas.getContext("2d");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    localStorage.setItem(side, canvas.toDataURL("image/png"));
-    msg.textContent = `${side} captured.`;
-    bfLog(`✋ ${side} captured.`);
-    autoAnalyzeIfReady(msg);
-  } catch (e) {
-    bfLog("❌ Capture failed: " + e.message,"#ff4444");
-  }
+// ========== CAPTURE ==========
+function capture(side) {
+  const obj = side === "left" ? L : R;
+  const ctx = obj.canvas.getContext("2d");
+  obj.canvas.width = obj.video.videoWidth;
+  obj.canvas.height = obj.video.videoHeight;
+  ctx.drawImage(obj.video, 0, 0, obj.canvas.width, obj.canvas.height);
+
+  const data = obj.canvas.toDataURL("image/png");
+  localStorage.setItem(side === "left" ? "palmLeft" : "palmRight", data);
+
+  bfLog(`✋ ${side} palm captured.`);
+  msg.textContent = `${side === "left" ? "Left" : "Right"} hand locked ✅`;
+
+  autoAnalyzeIfReady(msg); // trigger AI when both captured
 }
 
-document.getElementById("startLeft").onclick = ()=>startCam(vLeft);
-document.getElementById("startRight").onclick = ()=>startCam(vRight);
-document.getElementById("captureLeft").onclick = ()=>capture(vLeft, cLeft, "palmLeft");
-document.getElementById("captureRight").onclick = ()=>capture(vRight, cRight, "palmRight");
+// ========== UI HOOKS ==========
+$("startLeft").onclick = () => startCam("left");
+$("startRight").onclick = () => startCam("right");
+$("captureLeft").onclick = () => capture("left");
+$("captureRight").onclick = () => capture("right");
+
+$("analyzeBtn").onclick = () => {
+  bfLog("🔮 Manual analyze triggered.");
+  autoAnalyzeIfReady(msg);
+};
+
+// ========== STATUS ==========
+window.addEventListener("load", () => {
+  bfLog("🕉️ Main module loaded successfully.");
+  msg.textContent = "System ready. Awaiting capture...";
+});
+
+// ========== DEBUG SAFETY ==========
+window.onerror = (m, s, l) => bfLog(`❌ ${m} in ${s?.split("/").pop() || "?"}@${l}`, "#ff5555");
+window.addEventListener("unhandledrejection", e =>
+  bfLog(`⚠️ ${e.reason?.message || e.reason}`, "#ffaa33")
+);
