@@ -1,19 +1,31 @@
 import { speak } from "./voice.js";
 
-export async function generatePalmReport(v, side) {
-  const energy = (v.life.strength + v.heart.clarity + v.head.depth) * 33.3;
+window.exportPalmPDF = async function (side) {
+  const { jsPDF } = window.jspdf;
+  const box = document.querySelector(`#report-${side}`);
   const lang = window.currentLang || "en";
+  const img = window.capturedHands[side] || null;
 
-  const message = side === "left"
-    ? "Your left hand carries past karmic memories. Strong heart line and broad life line show deep spiritual heritage."
-    : "Your right hand reveals present and future path. Clear lines show conscious direction and balanced karma.";
+  let text = box.innerText.replace("📜 Save PDF", "");
 
-  // 🧠 Voice Summary in chosen language
-  speak(message, lang);
+  const translated = await window.translateText(text, lang);
+  const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
 
-  return `
-  <h3>${side === "left" ? "🌸" : "🌞"} AI RealScan Report (${side} hand)</h3>
-  <p>${message}</p>
-  <p>✨ <b>Energy Index:</b> ${energy.toFixed(2)}</p>
-  <hr style="border:0;height:1px;background:#00e5ff30;">`;
-}
+  // 🖐️ add captured hand image if available
+  if (img) {
+    const imgWidth = 80, imgHeight = 60;
+    pdf.addImage(img, "PNG", 65, 15, imgWidth, imgHeight);
+    pdf.text("Captured Hand Image", 75, 80);
+  }
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  pdf.text(translated, 15, 100, { maxWidth: 180 });
+
+  // watermark
+  pdf.setTextColor(150);
+  pdf.setFontSize(10);
+  pdf.text("© Sathyadarshana · Light of Truth", 60, 285);
+
+  pdf.save(`PalmReport_${side}_${lang}.pdf`);
+};
