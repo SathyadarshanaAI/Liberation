@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sathyadarshana · Quantum Palm Analyzer · True Vision v2.2.1</title>
+<title>Sathyadarshana · Quantum Palm Analyzer · True Vision v2.2.2</title>
 <link rel="icon" href="./assets/icon.png">
 <style>
 :root{
@@ -22,7 +22,7 @@ h1{
 .camBox{
   background:var(--card);
   border-radius:16px;
-  padding:10px;
+  padding:12px;
   width:90%;
   max-width:360px;
   box-shadow:0 0 10px #0007;
@@ -31,7 +31,10 @@ video,canvas{width:100%;border-radius:12px;}
 button{
   background:var(--neon);color:#000;padding:8px 20px;margin:8px;
   border:none;border-radius:10px;font-weight:bold;cursor:pointer;
+  box-shadow:0 0 10px var(--neon);
+  transition:0.3s;
 }
+button:hover{box-shadow:0 0 20px var(--pri);}
 #msg{margin-top:10px;color:#16f0a7}
 .error{color:#ff6b6b}
 input,select{
@@ -39,10 +42,11 @@ input,select{
   border-radius:8px;border:1px solid #16f0a7;
   background:#0b0f16;color:#e6f0ff;text-align:center;
 }
+small{color:#aaa;}
 </style>
 </head>
 <body>
-<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · True Vision v2.2.1</h1>
+<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · True Vision v2.2.2</h1>
 
 <div id="view">
   <div class="camBox">
@@ -54,15 +58,15 @@ input,select{
       <input id="userDOB" type="date">
       <input id="userNIC" placeholder="National ID / Passport No.">
       <select id="userGender">
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-        <option value="other">Other</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
       </select>
     </div>
 
     <div>
       <button id="startBtn">📷 Start Camera</button>
-      <button id="captureBtn">🔍 Analyze Palm</button>
+      <button id="captureBtn">🔍 Capture Palm</button>
     </div>
     <p id="msg">Awaiting camera...</p>
   </div>
@@ -72,13 +76,16 @@ input,select{
 const video=document.getElementById('video');
 const canvas=document.getElementById('canvas');
 const msg=document.getElementById('msg');
-let stream;
+let stream=null;
 
 document.getElementById('startBtn').onclick=async()=>{
   try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:"environment"}
+    });
     video.srcObject=stream;
     msg.textContent="✅ Camera active. Place your hand in bright light.";
+    msg.className="";
   }catch(e){
     msg.textContent="⚠️ Camera permission denied: "+e.message;
     msg.className="error";
@@ -86,32 +93,46 @@ document.getElementById('startBtn').onclick=async()=>{
 };
 
 document.getElementById('captureBtn').onclick=()=>{
-  if(!stream){msg.textContent="⚠️ Please start camera first.";msg.className="error";return;}
+  if(!stream){
+    msg.textContent="⚠️ Please start camera first.";
+    msg.className="error";
+    return;
+  }
+
   const ctx=canvas.getContext('2d');
-  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
   const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-  const clarity=checkClarity(imgData);
-  if(clarity<0.4){
-    msg.innerHTML="⚠️ Palm lines not clear. Please recapture in better light.";
-    msg.className="error";
-  }else{
-    // collect user details
-    const name = document.getElementById("userName").value.trim() || "Unknown";
-    const dob  = document.getElementById("userDOB").value || "N/A";
-    const gender = document.getElementById("userGender").value || "N/A";
-    const nic  = document.getElementById("userNIC").value.trim() || "N/A";
 
-    msg.innerHTML = `
-      ✅ Palm captured successfully.<br>
-      <small>${name}, ${gender}, DOB: ${dob}, ID: ${nic}</small><br>
-      Ready for AI analysis.
-    `;
-    msg.className="";
+  const clarity=checkClarity(imgData);
+
+  if(clarity<0.25){
+    msg.innerHTML="⚠️ Palm lines not clear. Please recapture in better light or focus.";
+    msg.className="error";
+    return;
   }
+
+  // --- user details ---
+  const name=document.getElementById("userName").value.trim()||"Unknown";
+  const dob=document.getElementById("userDOB").value||"N/A";
+  const nic=document.getElementById("userNIC").value.trim()||"N/A";
+  const gender=document.getElementById("userGender").value||"N/A";
+
+  msg.innerHTML=`
+    ✅ Palm captured successfully.<br>
+    <small>${name}, ${gender}, DOB: ${dob}, ID: ${nic}</small><br>
+    Preparing for AI analysis...
+  `;
+  msg.className="";
+
+  // --- Save frame (optional for AI pipeline) ---
+  const frame=canvas.toDataURL("image/png");
+  localStorage.setItem("lastPalm", frame);
+  localStorage.setItem("userData", JSON.stringify({name,dob,nic,gender}));
 };
 
-// Simple clarity estimator
+// --- Simple clarity estimator ---
 function checkClarity(img){
   let diff=0,count=0;
   for(let i=0;i<img.data.length;i+=40){
