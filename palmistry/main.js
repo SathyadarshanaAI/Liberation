@@ -1,6 +1,7 @@
 import { checkModules, checkVersion } from "./modules/integrity-monitor.js";
 checkModules();
-checkVersion("v4.4");
+checkVersion("v5.2");
+import { checkModules, checkVersion } from "./modules/inte
 import { startCamera, captureFrame } from "./modules/camera.js";
 import { analyzeAI } from "./modules/ai-segmentation.js";
 import { generateReport } from "./modules/report.js";
