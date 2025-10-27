@@ -44,26 +44,62 @@ button:hover{box-shadow:0 0 20px #16f0a7;}
 </div>
 
 <script type="module" src="./main.js"></script>
-
- <script>
+</body>
+  <script>
 (function(){
-  function show(msg){
-    let p=document.getElementById("buddhiPanel");
-    if(!p){
-      p=document.createElement("div");
-      p.id="buddhiPanel";
-      p.style.cssText="position:fixed;bottom:8px;left:8px;right:8px;background:rgba(0,0,0,.9);color:#16f0a7;font-family:monospace;font-size:12px;border:1px solid #00e5ff;border-radius:8px;padding:6px 10px;z-index:999999;max-height:140px;overflow:auto;box-shadow:0 0 10px #00e5ff";
-      document.body.appendChild(p);
-    }
-    const t=new Date().toLocaleTimeString();
-    p.innerHTML += `<div>[${t}] ${msg}</div>`;
-    p.scrollTop=p.scrollHeight;
+  const logBox = document.createElement("div");
+  logBox.id = "buddhiFusion";
+  logBox.innerHTML = `
+    <div id="bfHeader">🧠 Buddhi Fusion Monitor v6.0 
+      <button id="bfToggle">⬇</button>
+      <button id="bfSave">💾</button>
+    </div>
+    <div id="bfBody">Initializing...</div>`;
+  logBox.style.cssText = `
+    position:fixed;bottom:10px;left:10px;right:10px;
+    background:rgba(0,0,0,.9);color:#16f0a7;
+    font-family:monospace;font-size:12px;border:1px solid #00e5ff;
+    border-radius:10px;z-index:999999;box-shadow:0 0 12px #00e5ff;`;
+  document.body.appendChild(logBox);
+  const body = logBox.querySelector("#bfBody");
+  const toggle = logBox.querySelector("#bfToggle");
+  const save = logBox.querySelector("#bfSave");
+
+  let collapsed = false;
+  toggle.onclick = () => {
+    collapsed = !collapsed;
+    body.style.display = collapsed ? "none" : "block";
+    toggle.textContent = collapsed ? "⬆" : "⬇";
+  };
+
+  save.onclick = () => {
+    const blob = new Blob([body.innerText], {type:"text/plain"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "buddhi_log.txt";
+    a.click();
+  };
+
+  function log(msg){
+    const t = new Date().toLocaleTimeString();
+    body.innerHTML += `<div>[${t}] ${msg}</div>`;
+    body.scrollTop = body.scrollHeight;
   }
-  window.buddhiLog = show;
-  show("🧠 Buddhi Monitor active (inline)");
-  window.onerror=(m,s,l)=>{show("❌ "+m+" @"+l);};
-  window.addEventListener("unhandledrejection",e=>show("⚠️ "+(e.reason?.message||e.reason)));
-  show("✅ Inline monitor ready.");
+
+  window.onerror = (m,s,l)=>log(`❌ ${m} @${l}`);
+  window.addEventListener("unhandledrejection", e => log(`⚠️ ${e.reason?.message||e.reason}`));
+  log("✅ Buddhi Fusion Monitor initialized.");
+
+  // live module check
+  setInterval(()=>{
+    try{
+      if(window.modulesLoaded){
+        log("🧩 Modules verified: "+Object.keys(window.modulesLoaded).length);
+      }else{
+        log("⚙️ Checking system integrity...");
+      }
+    }catch(e){ log("❗Check error: "+e.message); }
+  },2000);
 })();
-</script>  </body>  
+</script>
 </html>
