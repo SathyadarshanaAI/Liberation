@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V11 RealScan</title>
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V11.6a Voice Edition</title>
 <link rel="icon" href="./assets/icon.png"/>
 <style>
 body{
@@ -15,10 +15,13 @@ h1{color:#00e5ff;text-shadow:0 0 12px #00e5ff;}
 .camCol{background:#101820;border-radius:18px;padding:16px;width:90%;max-width:360px;box-shadow:0 0 12px #00e5ff30;}
 button{background:#00e5ff;color:#000;border:none;padding:10px 16px;border-radius:10px;font-weight:bold;margin:6px;}
 #reportBox{margin:20px auto;max-width:700px;background:#111a24;padding:20px;border-radius:16px;text-align:left;}
+#voicePanel{margin-top:15px;text-align:center;}
+select{padding:6px 10px;border-radius:8px;font-weight:bold;}
 </style>
 </head>
 <body>
-<h1>🖐️ Sathyadarshana Quantum Palm Analyzer V11 · RealScan</h1>
+<h1>🖐️ Sathyadarshana Quantum Palm Analyzer V11.6a · Voice Edition</h1>
+
 <div class="wrap">
   <div class="camCol">
     <strong>Left Hand</strong><br>
@@ -31,7 +34,40 @@ button{background:#00e5ff;color:#000;border:none;padding:10px 16px;border-radius
     <button id="capRight">📸 Capture Right</button>
   </div>
 </div>
+
+<!-- 🔊 Voice Control Panel -->
+<div id="voicePanel">
+  <label for="langSelect">🗣️ Voice Language:</label>
+  <select id="langSelect">
+    <option value="en">English</option>
+    <option value="si">සිංහල (Sinhala)</option>
+    <option value="ta">தமிழ் (Tamil)</option>
+    <option value="hi">हिन्दी (Hindi)</option>
+    <option value="fr">Français (French)</option>
+    <option value="es">Español (Spanish)</option>
+    <option value="de">Deutsch (German)</option>
+    <option value="ru">Русский (Russian)</option>
+    <option value="zh">中文 (Chinese)</option>
+    <option value="ja">日本語 (Japanese)</option>
+    <option value="ar">العربية (Arabic)</option>
+    <option value="pt">Português (Portuguese)</option>
+  </select>
+  <button id="stopVoice">🔇 Stop Voice</button>
+</div>
+
 <div id="reportBox">Report will appear here...</div>
+
+<!-- ✅ main app -->
 <script type="module" src="./app.js"></script>
+
+<!-- 🌐 connect voice.js -->
+<script type="module">
+  import { speak } from "./voice.js";
+  const select = document.getElementById("langSelect");
+  window.currentLang = "en";
+  select.onchange = () => { window.currentLang = select.value; };
+  document.getElementById("stopVoice").onclick = () => speechSynthesis.cancel();
+</script>
+
 </body>
 </html>
