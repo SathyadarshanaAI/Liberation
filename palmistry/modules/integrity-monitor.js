@@ -1,4 +1,4 @@
-// 🕉️ Sathyadarshana Integrity Monitor v4.4 — Self-Reviving Popup Engine
+// 🕉️ Sathyadarshana Integrity Monitor v4.5 — Guaranteed Visible Overlay Console
 
 const MODULES = [
   "camera.js", "ai-segmentation.js", "report.js",
@@ -9,7 +9,7 @@ function logIntegrity(type, msg, file = "system", line = "?") {
   const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
   logs.push({ time: new Date().toLocaleTimeString(), type, file, line, msg });
   localStorage.setItem("buddhiIntegrity", JSON.stringify(logs));
-  showPanel();
+  showOverlay();
 }
 
 export async function checkModules() {
@@ -23,17 +23,17 @@ export async function checkModules() {
       logIntegrity("missing", `${file} — ${e.message}`);
     }
   }
-  logIntegrity("done", "✅ Module verification complete");
+  logIntegrity("done", "✅ All modules checked.");
 }
 
-export function checkVersion(ver = "v4.4") {
+export function checkVersion(ver = "v4.5") {
   const prev = localStorage.getItem("buddhiVersion");
   if (prev && prev !== ver) logIntegrity("update", `Updated ${prev} → ${ver}`);
   else if (!prev) logIntegrity("init", `Initialized ${ver}`);
   localStorage.setItem("buddhiVersion", ver);
 }
 
-// Global error monitor
+// --- Global error handlers ---
 window.onerror = (msg, src, line) => {
   const file = src ? src.split("/").pop() : "unknown";
   logIntegrity("error", msg, file, line);
@@ -43,60 +43,58 @@ window.addEventListener("unhandledrejection", e =>
   logIntegrity("promise", e.reason?.message || e.reason)
 );
 
-// Popup drawer
-function showPanel() {
-  if (!document.body) {
-    setTimeout(showPanel, 300);
-    return;
-  }
-  let p = document.getElementById("integrityPanel");
-  if (!p) {
-    p = document.createElement("div");
-    p.id = "integrityPanel";
-    Object.assign(p.style, {
-      position: "fixed",
-      bottom: "10px",
-      right: "10px",
-      width: "320px",
-      maxHeight: "220px",
-      overflowY: "auto",
-      background: "rgba(16,24,32,0.95)",
-      color: "#16f0a7",
-      fontFamily: "monospace",
-      fontSize: "12px",
-      padding: "8px",
-      borderRadius: "10px",
-      boxShadow: "0 0 10px #00e5ff",
-      backdropFilter: "blur(6px)",
-      zIndex: "99999",
-      textAlign: "left",
-      transition: "opacity 0.4s ease",
-      opacity: "0"
-    });
-    document.body.appendChild(p);
-    setTimeout(() => (p.style.opacity = "1"), 300);
+// --- Show floating overlay ---
+function showOverlay() {
+  if (!document.body) return setTimeout(showOverlay, 400);
+
+  let root = document.getElementById("buddhiRootOverlay");
+  if (!root) {
+    root = document.createElement("div");
+    root.id = "buddhiRootOverlay";
+    root.innerHTML = `
+      <style>
+        #buddhiRootOverlay {
+          position:fixed;
+          bottom:0;left:0;width:100%;
+          background:rgba(0,0,0,0.85);
+          color:#16f0a7;
+          font-family:monospace;
+          font-size:12px;
+          padding:6px 10px;
+          border-top:2px solid #00e5ff;
+          box-shadow:0 -2px 15px #00e5ff;
+          max-height:120px;
+          overflow-y:auto;
+          z-index:999999;
+          text-align:left;
+          backdrop-filter:blur(6px);
+          opacity:0;
+          transition:opacity 0.6s ease;
+        }
+      </style>
+      <div id="buddhiLogBox">🧠 Buddhi Log initialized...</div>
+    `;
+    document.body.appendChild(root);
+    setTimeout(() => (root.style.opacity = "1"), 200);
   }
 
+  const box = document.getElementById("buddhiLogBox");
   const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
-  p.innerHTML = logs
-    .slice(-10)
-    .map(
-      l => `<div>[${l.type}] <b>${l.file}</b>: ${l.msg}</div>`
-    )
-    .join("");
+  if (box) {
+    box.innerHTML = logs
+      .slice(-8)
+      .map(
+        l =>
+          `<div>[${l.type}] <b>${l.file}</b> → ${l.msg}</div>`
+      )
+      .join("");
+  }
 }
 
-// Retry loop until success
-(function keepTrying() {
-  try {
-    showPanel();
-    setTimeout(keepTrying, 2000);
-  } catch {
-    setTimeout(keepTrying, 2000);
-  }
-})();
+// --- keep alive loop ---
+setInterval(showOverlay, 2500);
 
-// Manual viewer
+// --- manual popup viewer ---
 window.addEventListener("keydown", e => {
   if (e.ctrlKey && e.altKey && e.key === "b") {
     const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
