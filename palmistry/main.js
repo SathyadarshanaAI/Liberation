@@ -1,69 +1,59 @@
-// --- Integrity monitor temporarily disabled to avoid duplicate conflicts ---
-// import { checkModules, checkVersion } from "./modules/integrity-monitor.js";
-// checkModules();
-// checkVersion("v5.2");
+// main.js
+window.modulesLoaded = {};
 
-import { startCamera, captureFrame } from "./modules/camera.js";
-import { analyzeAI } from "./modules/ai-segmentation.js";
-import { generateReport } from "./modules/report.js";
-import { speak } from "./modules/voice.js";
-import { compareHands } from "./modules/compare.js";
-import { autoUpdate } from "./modules/updater.js";
-
-// --- DOM elements ---
-const L = { video: videoLeft, canvas: canvasLeft };
-const R = { video: videoRight, canvas: canvasRight };
-const msg = document.getElementById("msg");
-
-// --- Camera controls ---
-document.getElementById("startLeft").onclick = () => startCamera(L.video, msg);
-document.getElementById("startRight").onclick = () => startCamera(R.video, msg);
-document.getElementById("captureLeft").onclick = () => capture(L, "Left");
-document.getElementById("captureRight").onclick = () => capture(R, "Right");
-
-// --- Capture function ---
-function capture(side, label) {
-  const ctx = side.canvas.getContext("2d");
-  side.canvas.width = side.video.videoWidth;
-  side.canvas.height = side.video.videoHeight;
-  ctx.drawImage(side.video, 0, 0, side.canvas.width, side.canvas.height);
-
-  const data = side.canvas.toDataURL("image/png");
-  localStorage.setItem(label === "Left" ? "palmLeft" : "palmRight", data);
-
-  msg.textContent = `✅ ${label} hand captured successfully.`;
-  console.log(`[${label}] Captured frame saved to memory.`);
+async function startCamera(video, msg, name){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    video.srcObject = stream;
+    msg.textContent = "✅ " + name + " camera started.";
+    window.modulesLoaded[name] = true;
+  } catch (err) {
+    msg.textContent = "❌ " + name + " camera error: " + err.message;
+    document.dispatchEvent(new CustomEvent("buddhi-error", {
+      detail: { type: "camera", file: name + ".js", line: 6, message: err.message }
+    }));
+  }
 }
 
-// --- Analyze both hands ---
-document.getElementById("analyzeBtn").onclick = async () => {
-  try {
-    msg.textContent = "🤖 Analyzing both hands...";
-    const leftFrame = captureFrame(L.video);
-    const rightFrame = captureFrame(R.video);
+function captureFrame(video){
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
 
-    const left = await analyzeAI(leftFrame);
-    const right = await analyzeAI(rightFrame);
+// ===== DOM Setup =====
+const L = { video: document.getElementById("videoLeft"), name: "Left" };
+const R = { video: document.getElementById("videoRight"), name: "Right" };
+const msg = document.getElementById("msg");
 
-    await generateReport(left, "en", { hand: "Left" });
-    await generateReport(right, "en", { hand: "Right" });
+document.getElementById("startLeft").onclick = () => startCamera(L.video, msg, "Left");
+document.getElementById("startRight").onclick = () => startCamera(R.video, msg, "Right");
 
-    const comparison = compareHands(left, right);
-    speak(comparison.summary, "en");
+document.getElementById("captureLeft").onclick = () => capture("Left");
+document.getElementById("captureRight").onclick = () => capture("Right");
 
-    msg.textContent = "✅ Dual report generated successfully.";
-    console.log("AI comparison:", comparison.summary);
-    autoUpdate(); // Check for AI seed updates
-  } catch (e) {
-    msg.textContent = "❌ Error during analysis: " + e.message;
-    console.error("Analyzer error:", e);
+function capture(side){
+  const video = side === "Left" ? L.video : R.video;
+  const canvas = captureFrame(video);
+  const data = canvas.toDataURL("image/png");
+  localStorage.setItem("palm" + side, data);
+  msg.textContent = `📸 ${side} hand captured.`;
+  document.dispatchEvent(new CustomEvent("buddhi-log",{detail:{message:`${side} hand captured.`}}));
+}
+
+// Analyze button
+document.getElementById("analyzeBtn").onclick = () => {
+  msg.textContent = "🤖 Analyzing captured images...";
+  try{
+    const left = localStorage.getItem("palmLeft");
+    const right = localStorage.getItem("palmRight");
+    if(!left || !right) throw new Error("Missing capture images.");
+    msg.textContent = "✅ Both hands ready for AI analysis.";
+  }catch(e){
+    msg.textContent = "❌ "+e.message;
+    document.dispatchEvent(new CustomEvent("buddhi-error",{detail:{type:"analyze",file:"main.js",line:60,message:e.message}}));
   }
 };
-
-// --- Safety log ---
-window.addEventListener("error", (e) => {
-  console.error("❌ JS Error:", e.message, e.filename, e.lineno);
-});
-window.addEventListener("unhandledrejection", (e) => {
-  console.warn("⚠️ Promise Rejection:", e.reason);
-});
