@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sathyadarshana · Wisdom Dashboard v2.4</title>
+<link rel="icon" href="./assets/icon.png">
+<style>
+:root{--bg:#0b0f16;--card:#101820;--neon:#00e5ff;--pri:#16f0a7;}
+body{
+  margin:0;background:var(--bg);color:#e6f0ff;
+  font-family:'Segoe UI',sans-serif;text-align:center;
+}
+h1{color:var(--neon);text-shadow:0 0 12px var(--neon);margin:16px 0;}
+#searchBox{margin:20px auto;width:90%;max-width:400px;}
+input{
+  width:100%;padding:10px;margin:10px 0;
+  border-radius:10px;border:1px solid var(--pri);
+  background:#101820;color:#e6f0ff;text-align:center;
+}
+.card{
+  background:var(--card);border-radius:14px;padding:12px;
+  margin:10px auto;width:90%;max-width:500px;
+  box-shadow:0 0 12px #0008;text-align:left;
+}
+button{
+  background:var(--neon);color:#000;border:none;
+  border-radius:8px;padding:6px 16px;font-weight:bold;
+  cursor:pointer;margin-top:6px;
+}
+small{color:#aaa;}
+</style>
+</head>
+<body>
+<h1>📜 Sathyadarshana Wisdom Dashboard</h1>
+<div id="searchBox">
+  <input id="searchInput" placeholder="Search by name or ID...">
+</div>
+<div id="reportList">Loading reports...</div>
+
+<script type="module" src="./modules/dashboard.js"></script>
+</body>
+</html>
