@@ -6,6 +6,8 @@ import { analyzeAI } from "./modules/ai-segmentation.js";
 import { generateReport } from "./modules/report.js";
 import { speak } from "./modules/voice.js";
 import { validateEthics } from "./modules/ethics.js";
+import { getUserData } from "./modules/form.js";
+import { translateTextAI } from "./modules/translate.js";
 
 const video = document.getElementById("video");
 const overlay = document.getElementById("overlay");
@@ -17,7 +19,12 @@ document.getElementById("startBtn").onclick = async () => {
 };
 
 document.getElementById("analyzeBtn").onclick = async () => {
-  if (!stream) return (msg.textContent = "⚠️ Start camera first.");
+  if (!stream) {
+    msg.textContent = "⚠️ Start camera first.";
+    msg.className = "error";
+    return;
+  }
+
   const frame = captureFrame(video);
   if (!(await validateEthics(frame, msg))) return;
 
@@ -36,9 +43,18 @@ document.getElementById("analyzeBtn").onclick = async () => {
   renderOverlay(overlay, edges, result);
   msg.textContent = "✅ AI segmentation done. Generating report...";
 
-  // Auto-detect browser language (for multilingual translation)
+  // Get user data (Name, DOB, Gender, ID)
+  const user = getUserData();
+
+  // Auto-detect browser language for multilingual translation
   const userLang = navigator.language.slice(0, 2);
 
-  await generateReport(result, userLang);
-  speak(await translateTextAI("Palm analysis complete. " + result.summary, userLang), userLang);
+  // Generate multilingual + personalized report
+  await generateReport(result, userLang, user);
+
+  // Voice summary in same language
+  const spoken = await translateTextAI("Palm analysis complete for " + user.name + ". " + result.summary, userLang);
+  speak(spoken, userLang);
+
+  msg.textContent = "✅ Report ready for " + user.name + ".";
 };
