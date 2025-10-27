@@ -1,3 +1,9 @@
+// =============================
+// 🧠 SATHYADARSHANA · QUANTUM PALM ANALYZER
+// MAIN ENGINE + INTEGRITY GUARDIAN v3.9 CONNECTED
+// =============================
+
+// --- Imports ---
 import { startCamera, captureFrame } from "./modules/camera.js";
 import { checkClarity } from "./modules/clarity.js";
 import { detectEdges } from "./modules/edges.js";
@@ -8,6 +14,17 @@ import { speak } from "./modules/voice.js";
 import { validateEthics } from "./modules/ethics.js";
 import { getUserData } from "./modules/form.js";
 import { translateTextAI } from "./modules/translate.js";
+
+// 🧩 Integrity Guardian Module
+import {
+  checkModules,
+  checkVersion,
+  trackPalm
+} from "./modules/integrity-monitor.js";
+
+// --- Initialize Integrity System ---
+checkModules();
+checkVersion("v3.9");
 
 // --- DOM Elements ---
 const video = document.getElementById("video");
@@ -21,7 +38,9 @@ let stream = null;
 document.getElementById("startBtn").onclick = async () => {
   msg.textContent = "🟡 Initializing camera...";
   stream = await startCamera(video, msg);
-  if (stream) msg.textContent = "✅ Camera active. Place hand under bright light.";
+  if (stream) {
+    msg.textContent = "✅ Camera active. Place hand under bright light.";
+  }
 };
 
 // --- Capture Palm ---
@@ -40,8 +59,9 @@ document.getElementById("captureBtn").onclick = () => {
   msg.textContent = "✅ Palm captured successfully! Ready for AI analysis.";
   msg.className = "";
 
-  // Save to memory
+  // Save to memory + Integrity ID log
   localStorage.setItem("lastPalm", canvas.toDataURL("image/png"));
+  trackPalm("unknown"); // Auto log with unique Palm ID
 };
 
 // --- Analyze Palm via AI ---
