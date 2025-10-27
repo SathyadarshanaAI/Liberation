@@ -3,179 +3,66 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sathyadarshana · Quantum Palm Analyzer · True Vision v2.2.3</title>
+<title>Sathyadarshana · Quantum Palm Analyzer · Camera Debug v2.3.0</title>
 <link rel="icon" href="./assets/icon.png">
 <style>
-:root{
-  --bg:#0b0f16;--card:#101820;--neon:#00e5ff;--pri:#16f0a7;
+body {
+  margin:0; background:#0b0f16; color:#e6f0ff;
+  font-family:'Segoe UI',sans-serif; text-align:center;
 }
-body{
-  margin:0;background:var(--bg);color:#e6f0ff;
-  font-family:'Segoe UI',sans-serif;text-align:center;
+h1 { color:#00e5ff; text-shadow:0 0 10px #00e5ff; margin-top:20px; }
+button {
+  background:#00e5ff; color:#000; padding:8px 16px; margin:10px;
+  border:none; border-radius:8px; font-weight:bold;
 }
-h1{
-  color:var(--neon);
-  text-shadow:0 0 12px var(--neon);
-  margin:16px 0;
+#log {
+  background:#000; color:#0f0; font-family:monospace; font-size:13px;
+  text-align:left; padding:8px; margin:10px; height:140px;
+  overflow-y:auto; white-space:pre-line;
+  border-radius:8px; border:1px solid #00e5ff;
 }
-#view{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:20px}
-.camBox{
-  background:var(--card);
-  border-radius:16px;
-  padding:12px;
-  width:90%;
-  max-width:380px;
-  box-shadow:0 0 10px #0007;
-}
-video,canvas{width:100%;border-radius:12px;}
-button{
-  background:var(--neon);color:#000;padding:8px 20px;margin:8px;
-  border:none;border-radius:10px;font-weight:bold;cursor:pointer;
-  box-shadow:0 0 10px var(--neon);
-  transition:0.3s;
-}
-button:hover{box-shadow:0 0 20px var(--pri);}
-#msg{margin-top:10px;color:#16f0a7}
-.error{color:#ff6b6b}
-input,select{
-  width:90%;padding:8px;margin:6px 0;
-  border-radius:8px;border:1px solid #16f0a7;
-  background:#0b0f16;color:#e6f0ff;text-align:center;
-}
-small{color:#aaa;}
+video { width:90%; border-radius:10px; margin-top:10px; }
 </style>
 </head>
 <body>
-<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · True Vision v2.2.3</h1>
+<h1>📷 Camera Debug Console</h1>
+<button id="start">Start Camera</button>
+<div><video id="video" autoplay playsinline></video></div>
+<pre id="log">Initializing log...</pre>
 
-<div id="view">
-  <div class="camBox">
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas" hidden></canvas>
-
-    <div id="userForm">
-      <input id="userName" placeholder="Full Name">
-      <input id="userDOB" type="date">
-      <input id="userNIC" placeholder="National ID / Passport No.">
-      <select id="userGender">
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
-      </select>
-    </div>
-
-    <div>
-      <button id="startBtn">📷 Start Camera</button>
-      <button id="captureBtn">✋ Capture Palm</button>
-      <button id="analyzeBtn">🔮 Analyze Palm</button>
-    </div>
-    <p id="msg">Awaiting camera...</p>
-  </div>
-</div>
-
-<!-- Main Analyzer Script -->
-<script type="module" src="./main.js"></script>
-
-<!-- Local fallback clarity -->
 <script>
-if(!window.checkClarity){
-  window.checkClarity = (img)=>{
-    let diff=0,count=0;
-    for(let i=0;i<img.data.length;i+=40){
-      const l1=0.299*img.data[i]+0.587*img.data[i+1]+0.114*img.data[i+2];
-      const l2=0.299*img.data[i+4]+0.587*img.data[i+5]+0.114*img.data[i+6];
-      diff+=Math.abs(l1-l2);count++;
-    }
-    return Math.min(diff/count/50,1);
+const video = document.getElementById("video");
+const logBox = document.getElementById("log");
+const startBtn = document.getElementById("start");
+
+function log(t){ logBox.textContent += "\n" + t; logBox.scrollTop = logBox.scrollHeight; }
+
+// --- Universal error listener ---
+window.addEventListener("error", e => log("❌ JS Error: " + e.message + " @ " + e.filename.split("/").pop() + ":" + e.lineno));
+window.addEventListener("unhandledrejection", e => log("⚠️ Promise: " + (e.reason?.message || e.reason)));
+
+// --- Start Camera ---
+startBtn.onclick = async () => {
+  try {
+    log("Requesting camera...");
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:"environment", width:{ideal:1280}, height:{ideal:720} },
+      audio:false
+    });
+    video.srcObject = stream;
+    const playPromise = video.play();
+    if(playPromise) playPromise.catch(e => log("⚠️ Autoplay blocked: " + e.message));
+    video.onloadeddata = ()=> log("✅ Camera active. Ready.");
+  } catch(e){
+    log("❌ Camera Error: " + e.name + " - " + e.message);
   }
-}
-</script>
-
-<!-- 🧠 Buddhi Error Console -->
-<div id="buddhiConsole" style="
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  max-height:120px;
-  overflow-y:auto;
-  background:#101820;
-  color:#16f0a7;
-  font-family:monospace;
-  font-size:12px;
-  border-top:1px solid #00e5ff;
-  padding:4px;
-  text-align:left;
-  z-index:9999;
-  display:none;
-"></div>
-
-<!-- 🧩 Console Controls -->
-<div style="
-  position:fixed;
-  bottom:125px;
-  right:10px;
-  z-index:10000;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-">
-  <button id="toggleConsole" style="
-    background:#00e5ff;
-    border:none;
-    border-radius:6px;
-    padding:6px 10px;
-    font-size:12px;
-    font-weight:bold;
-    cursor:pointer;
-    box-shadow:0 0 10px #00e5ff;
-  ">🧠 Show Log</button>
-
-  <button id="clearConsole" style="
-    background:#ff6b6b;
-    border:none;
-    border-radius:6px;
-    padding:6px 10px;
-    font-size:12px;
-    font-weight:bold;
-    cursor:pointer;
-    box-shadow:0 0 10px #ff6b6b;
-  ">🧹 Clear</button>
-</div>
-
-<script>
-// Console hide/show/clear
-const panel = document.getElementById("buddhiConsole");
-const toggleBtn = document.getElementById("toggleConsole");
-const clearBtn = document.getElementById("clearConsole");
-
-toggleBtn.onclick = () => {
-  const visible = panel.style.display !== "none";
-  panel.style.display = visible ? "none" : "block";
-  toggleBtn.textContent = visible ? "🧠 Show Log" : "🙈 Hide Log";
 };
-clearBtn.onclick = () => { panel.innerHTML = ""; };
 
-// Error capture
-window.onerror = function (message, source, lineno, colno) {
-  const msg = document.createElement("div");
-  msg.style.color = "#ff6b6b";
-  msg.style.fontFamily = "monospace";
-  msg.textContent = "❌ ERROR in " + (source.split("/").pop() || "unknown") +
-    " [line " + lineno + ", col " + colno + "]: " + message;
-  panel.appendChild(msg);
-  panel.scrollTop = panel.scrollHeight;
-  return true;
-};
-window.addEventListener("unhandledrejection", function (event) {
-  const msg = document.createElement("div");
-  msg.style.color = "#ffa500";
-  msg.style.fontFamily = "monospace";
-  msg.textContent = "⚠️ Promise rejection in " +
-    (event.reason?.fileName ? event.reason.fileName.split("/").pop() : "unknown") +
-    ": " + (event.reason?.message || event.reason);
-  panel.appendChild(msg);
-  panel.scrollTop = panel.scrollHeight;
+// --- Permissions log ---
+navigator.permissions?.query({name:"camera"}).then(r => log("🔍 Camera permission: " + r.state)).catch(()=>{});
+navigator.mediaDevices?.enumerateDevices().then(d=>{
+  const cams = d.filter(x=>x.kind==="videoinput");
+  log("🎥 Detected cameras: " + cams.length + " (" + cams.map(c=>c.label||"Unnamed").join(", ") + ")");
 });
 </script>
 </body>
