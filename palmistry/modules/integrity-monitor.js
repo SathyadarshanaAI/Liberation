@@ -1,109 +1,83 @@
-// 🕉️ Sathyadarshana Integrity Monitor v4.5 — Guaranteed Visible Overlay Console
+// 🕉️ Sathyadarshana Integrity Monitor v5.0 — Unbreakable Console Engine
 
 const MODULES = [
   "camera.js", "ai-segmentation.js", "report.js",
   "voice.js", "compare.js", "updater.js"
 ];
 
-function logIntegrity(type, msg, file = "system", line = "?") {
-  const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
-  logs.push({ time: new Date().toLocaleTimeString(), type, file, line, msg });
-  localStorage.setItem("buddhiIntegrity", JSON.stringify(logs));
-  showOverlay();
+// 🧾 Save + draw log
+function log(type, msg, file = "system", line = "?") {
+  const data = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
+  data.push({ time: new Date().toLocaleTimeString(), type, file, line, msg });
+  localStorage.setItem("buddhiIntegrity", JSON.stringify(data));
+  forcePanel();
 }
 
+// 🔍 Verify module presence
 export async function checkModules() {
-  logIntegrity("check", "🔍 Checking core modules...");
+  log("init", "🔍 Checking module integrity...");
   for (const file of MODULES) {
     try {
-      const res = await fetch(`./modules/${file}`, { method: "HEAD" });
-      if (!res.ok) throw new Error("missing or inaccessible");
-      logIntegrity("ok", `${file} verified`);
+      const r = await fetch(`./modules/${file}`, { method: "HEAD" });
+      if (!r.ok) throw new Error("missing");
+      log("ok", `${file} verified ✅`);
     } catch (e) {
-      logIntegrity("missing", `${file} — ${e.message}`);
+      log("missing", `${file} — ${e.message}`);
     }
   }
-  logIntegrity("done", "✅ All modules checked.");
+  log("done", "All modules checked");
 }
 
-export function checkVersion(ver = "v4.5") {
+// 🧩 Version check
+export function checkVersion(ver = "v5.0") {
   const prev = localStorage.getItem("buddhiVersion");
-  if (prev && prev !== ver) logIntegrity("update", `Updated ${prev} → ${ver}`);
-  else if (!prev) logIntegrity("init", `Initialized ${ver}`);
+  if (!prev) log("init", `Initialized ${ver}`);
+  else if (prev !== ver) log("update", `Updated ${prev} → ${ver}`);
+  else log("version", `${ver} active`);
   localStorage.setItem("buddhiVersion", ver);
 }
 
-// --- Global error handlers ---
+// 🧱 Error capture
 window.onerror = (msg, src, line) => {
-  const file = src ? src.split("/").pop() : "unknown";
-  logIntegrity("error", msg, file, line);
+  log("error", msg, src?.split("/").pop() || "unknown", line);
   return true;
 };
 window.addEventListener("unhandledrejection", e =>
-  logIntegrity("promise", e.reason?.message || e.reason)
+  log("promise", e.reason?.message || e.reason)
 );
 
-// --- Show floating overlay ---
-function showOverlay() {
-  if (!document.body) return setTimeout(showOverlay, 400);
+// 🔦 Popup creator (absolute fallback)
+function forcePanel() {
+  try {
+    if (!document.body) return setTimeout(forcePanel, 300);
+    let panel = document.getElementById("buddhiMonitor");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "buddhiMonitor";
+      panel.style.cssText = `
+        position:fixed;bottom:0;left:0;width:100%;
+        background:rgba(0,0,0,0.9);
+        color:#16f0a7;font-family:monospace;font-size:12px;
+        border-top:2px solid #00e5ff;
+        box-shadow:0 -2px 10px #00e5ff;
+        padding:6px 10px;max-height:140px;overflow-y:auto;
+        z-index:999999;opacity:0;transition:opacity .6s;
+      `;
+      panel.innerHTML = `<div id="buddhiLog">🧠 Buddhi Monitor starting...</div>`;
+      document.body.appendChild(panel);
+      setTimeout(() => (panel.style.opacity = "1"), 200);
+    }
 
-  let root = document.getElementById("buddhiRootOverlay");
-  if (!root) {
-    root = document.createElement("div");
-    root.id = "buddhiRootOverlay";
-    root.innerHTML = `
-      <style>
-        #buddhiRootOverlay {
-          position:fixed;
-          bottom:0;left:0;width:100%;
-          background:rgba(0,0,0,0.85);
-          color:#16f0a7;
-          font-family:monospace;
-          font-size:12px;
-          padding:6px 10px;
-          border-top:2px solid #00e5ff;
-          box-shadow:0 -2px 15px #00e5ff;
-          max-height:120px;
-          overflow-y:auto;
-          z-index:999999;
-          text-align:left;
-          backdrop-filter:blur(6px);
-          opacity:0;
-          transition:opacity 0.6s ease;
-        }
-      </style>
-      <div id="buddhiLogBox">🧠 Buddhi Log initialized...</div>
-    `;
-    document.body.appendChild(root);
-    setTimeout(() => (root.style.opacity = "1"), 200);
-  }
-
-  const box = document.getElementById("buddhiLogBox");
-  const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
-  if (box) {
-    box.innerHTML = logs
-      .slice(-8)
-      .map(
-        l =>
-          `<div>[${l.type}] <b>${l.file}</b> → ${l.msg}</div>`
-      )
-      .join("");
+    const logBox = document.getElementById("buddhiLog");
+    const data = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
+    logBox.innerHTML = data
+      .slice(-10)
+      .map(l => `[${l.type}] <b>${l.file}</b>: ${l.msg}`)
+      .join("<br>");
+  } catch (err) {
+    console.warn("Monitor display failed:", err);
   }
 }
 
-// --- keep alive loop ---
-setInterval(showOverlay, 2500);
-
-// --- manual popup viewer ---
-window.addEventListener("keydown", e => {
-  if (e.ctrlKey && e.altKey && e.key === "b") {
-    const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
-    alert(
-      "🧠 Buddhi Integrity Logs\n\n" +
-        logs
-          .slice(-15)
-          .map(l => `${l.time} | ${l.type} | ${l.file}\n${l.msg}`)
-          .join("\n")
-    );
-  }
-});
+// 🔁 Continuous self-refresh
+setInterval(forcePanel, 2000);
