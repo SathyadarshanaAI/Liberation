@@ -1,3 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer V3.2 — Twin Vision PRO Edition</title>
+<link rel="icon" href="./assets/icon.png"/>
+<style>
+:root{
+  --bg:#0b0f16;--card:#101820;--neon:#00e5ff;--pri:#16f0a7;
+}
+body{
+  margin:0;background:var(--bg);color:#e6f0ff;
+  font-family:'Segoe UI',sans-serif;text-align:center;
+}
+h1{
+  color:var(--neon);margin-top:20px;text-shadow:0 0 12px var(--neon);
+}
+.wrap{
+  display:flex;flex-wrap:wrap;justify-content:center;
+  gap:20px;margin:20px auto;
+}
+.camBox{
+  background:var(--card);border-radius:16px;padding:12px;
+  width:90%;max-width:360px;box-shadow:0 0 10px #000;
+}
+button{
+  background:#00e5ff;color:#000;border:none;
+  padding:10px 20px;border-radius:10px;
+  font-weight:bold;cursor:pointer;margin:6px;
+  box-shadow:0 0 8px #00e5ff;
+}
+#msg{margin-top:15px;color:var(--pri);}
+video,canvas{width:100%;border-radius:10px;}
+</style>
+</head>
+
+<body>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer<br>V3.2 — Twin Vision PRO Edition</h1>
+
+<div class="wrap">
+  <div class="camBox">
+    <h3>🌗 Left Hand</h3>
+    <video id="videoLeft" autoplay playsinline></video>
+    <canvas id="canvasLeft" hidden></canvas><br>
+    <button id="startLeft">📷 Start Left</button>
+    <button id="captureLeft">✋ Capture Left</button>
+  </div>
+
+  <div class="camBox">
+    <h3>🌕 Right Hand</h3>
+    <video id="videoRight" autoplay playsinline></video>
+    <canvas id="canvasRight" hidden></canvas><br>
+    <button id="startRight">📷 Start Right</button>
+    <button id="captureRight">✋ Capture Right</button>
+  </div>
+</div>
+
+<button id="analyzeBtn">🔮 Analyze Both Hands</button>
+<p id="msg">Awaiting capture...</p>
+
+<script type="module" src="./main.js"></script>
+
+<!-- 🧠 Buddhi Fusion Monitor v6.2 PRO -->
 <script>
 (function(){
   const logBox=document.createElement("div");
@@ -43,7 +107,6 @@
     body.scrollTop=body.scrollHeight;
   }
 
-  // 🧠 Error hooks
   window.onerror=(m,s,l)=>log(`❌ ${m} in ${s?.split("/").pop()||"?"}@${l}`,"#ff6666");
   window.addEventListener("unhandledrejection",e=>
     log(`⚠️ Promise: ${e.reason?.message||e.reason}`,"#ffaa33"));
@@ -51,7 +114,6 @@
 
   log("🧠 Buddhi Fusion Monitor v6.2 PRO initialized.");
 
-  // 🧩 live module check + heartbeat
   setInterval(()=>{
     try{
       if(window.modulesLoaded){
@@ -64,3 +126,6 @@
   },4000);
 })();
 </script>
+
+</body>
+</html>
