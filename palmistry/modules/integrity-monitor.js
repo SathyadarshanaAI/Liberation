@@ -1,84 +1,60 @@
-// 🧠 Sathyadarshana · Buddhi Integrity Guardian v3.9
-// Self-Diagnostic Engine | Line-level error + Module Health + AI Awareness
+// 🧠 Sathyadarshana Integrity Monitor v3.91 · Twin Vision Compatible
 
 const MODULES = [
-  "camera.js", "clarity.js", "edges.js", "ai-segmentation.js",
-  "report.js", "voice.js", "form.js", "translate.js"
+  "camera.js", "ai-segmentation.js", "report.js",
+  "voice.js", "compare.js", "updater.js"
 ];
 
-// 🔹 Local log store
-function saveIntegrityLog(entry){
+// 🟢 Save Log
+function logIntegrity(type, msg, file = "system", line = "?") {
   const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
-  logs.push({ time:new Date().toLocaleString(), ...entry });
+  logs.push({ time: new Date().toLocaleString(), type, file, line, msg });
   localStorage.setItem("buddhiIntegrity", JSON.stringify(logs));
-
-  // Notify Buddhi AI in real-time
-  window.dispatchEvent(new CustomEvent("integrityUpdate",{detail:entry}));
+  console.log(`🧠 [${type}] ${file}:${line} → ${msg}`);
 }
 
-// 🔹 Show logs quickly
-export function viewIntegrity(){
-  const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
-  console.table(logs);
-}
-
-// 🔹 Check module presence
-export async function checkModules(){
-  for(const file of MODULES){
-    try { await import(`./${file}`); }
-    catch(e){ saveIntegrityLog({type:"missing",file,msg:e.message}); }
+// 🟣 Check all required modules
+export async function checkModules() {
+  logIntegrity("check", "Module verification started…");
+  for (const file of MODULES) {
+    try {
+      const res = await fetch(`./modules/${file}`, { method: "HEAD" });
+      if (!res.ok) throw new Error("missing or inaccessible");
+      logIntegrity("ok", `${file} verified`);
+    } catch (e) {
+      logIntegrity("missing", `${file} → ${e.message}`);
+    }
   }
-  saveIntegrityLog({type:"system",msg:"Module health check complete"});
+  logIntegrity("done", "Module verification complete ✅");
 }
 
-// 🔹 Capture runtime errors
-window.onerror = (msg,src,line,col)=>{
-  const file = src?.split("/").pop() || "unknown";
-  saveIntegrityLog({type:"error",file,line,msg});
+// 🟢 Version tracker
+export function checkVersion(ver = "v3.91") {
+  const prev = localStorage.getItem("buddhiVersion");
+  if (prev && prev !== ver)
+    logIntegrity("update", `Updated ${prev} ➜ ${ver}`);
+  else if (!prev)
+    logIntegrity("init", `Initialized version ${ver}`);
+  localStorage.setItem("buddhiVersion", ver);
+}
+
+// 🧩 Error and Promise handler
+window.onerror = (msg, src, line) => {
+  const file = src ? src.split("/").pop() : "unknown";
+  logIntegrity("error", msg, file, line);
   return true;
 };
-window.onunhandledrejection = e=>{
-  saveIntegrityLog({type:"promise",msg:e.reason?.message || e.reason});
-};
+window.addEventListener("unhandledrejection", e =>
+  logIntegrity("promise", e.reason?.message || e.reason)
+);
 
-// 🔹 Console error override (line detect)
-const oldErr = console.error;
-console.error = function(...args){
-  const stack = new Error().stack.split("\n")[2] || "";
-  const m = stack.match(/(\w+\.js):(\d+):(\d+)/);
-  const file = m?m[1]:"unknown", line=m?m[2]:"?";
-  saveIntegrityLog({type:"runtime",file,line,msg:args.join(" ")});
-  oldErr.apply(console,args);
-};
-
-// 🔹 Version checker
-export function checkVersion(ver="v3.9"){
-  const prev = localStorage.getItem("buddhiVersion");
-  if(prev && prev!==ver)
-    saveIntegrityLog({type:"update",msg:`Updated ${prev} ➜ ${ver}`});
-  localStorage.setItem("buddhiVersion",ver);
-}
-
-// 🔹 Palm capture event (ID + side)
-export function trackPalm(hand){
-  const id=`Palm-${hand}-${Date.now()}`;
-  saveIntegrityLog({type:"capture",hand,id});
-  const all = JSON.parse(localStorage.getItem("palmRecords")||"[]");
-  all.push({id,hand,time:new Date().toLocaleString()});
-  localStorage.setItem("palmRecords",JSON.stringify(all));
-}
-
-// 🔹 Secret viewer (Ctrl+Alt+B)
-window.addEventListener("keydown",e=>{
-  if(e.ctrlKey && e.altKey && e.key==='b'){
-    const logs=JSON.parse(localStorage.getItem("buddhiIntegrity")||"[]");
-    alert("🧠 Buddhi Integrity Log\n\n"+
-      logs.slice(-10).map(l=>`${l.time} | ${l.type} | ${l.file||''} ${l.line||''}\n${l.msg}`).join("\n"));
+// 🟠 Secret viewer
+window.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.altKey && e.key === "b") {
+    const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
+    alert("🧠 Buddhi Logs\n\n" +
+      logs.slice(-12)
+        .map(l => `${l.time} | ${l.type} | ${l.file}:${l.line}\n${l.msg}`)
+        .join("\n"));
   }
-});
-
-// 🔹 AI awareness (Buddhi speaks)
-window.addEventListener("integrityUpdate",e=>{
-  const d=e.detail;
-  console.log(`🧠 Buddhi detected issue → ${d.file||'unknown'}:${d.line||'?'} → ${d.msg}`);
 });
