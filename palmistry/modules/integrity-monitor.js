@@ -1,76 +1,66 @@
-// 🕉️ Sathyadarshana Integrity Monitor v4.2 — Universal Auto Popup Version
+// 🕉️ Sathyadarshana Integrity Monitor v4.3 — Unstoppable Popup Engine
 
 const MODULES = [
   "camera.js", "ai-segmentation.js", "report.js",
   "voice.js", "compare.js", "updater.js"
 ];
 
-// --- LOG FUNCTION ---
+// 🧠 Store + log
 function logIntegrity(type, msg, file="system", line="?") {
   const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
-  logs.push({
-    time: new Date().toLocaleTimeString(),
-    type, file, line, msg
-  });
+  logs.push({ time: new Date().toLocaleTimeString(), type, file, line, msg });
   localStorage.setItem("buddhiIntegrity", JSON.stringify(logs));
-  renderPanel();
+  drawPanel();
 }
 
-// --- MODULE CHECK ---
+// 🔍 Check modules
 export async function checkModules() {
-  logIntegrity("check", "🔍 Verifying essential modules...");
+  logIntegrity("check", "Checking Sathyadarshana modules...");
   for (const file of MODULES) {
     try {
       const res = await fetch(`./modules/${file}`, { method: "HEAD" });
       if (!res.ok) throw new Error("missing or inaccessible");
       logIntegrity("ok", `${file} verified`);
     } catch (e) {
-      logIntegrity("missing", `${file} → ${e.message}`);
+      logIntegrity("missing", `${file} — ${e.message}`);
     }
   }
-  logIntegrity("done", "✅ Module integrity check complete.");
+  logIntegrity("done", "✅ Module scan complete.");
 }
 
-// --- VERSION TRACKER ---
-export function checkVersion(ver = "v4.2") {
+// 🔢 Versioning
+export function checkVersion(ver = "v4.3") {
   const prev = localStorage.getItem("buddhiVersion");
-  if (prev && prev !== ver)
-    logIntegrity("update", `Updated ${prev} ➜ ${ver}`);
-  else if (!prev)
-    logIntegrity("init", `Initialized version ${ver}`);
+  if (prev && prev !== ver) logIntegrity("update", `Updated ${prev} → ${ver}`);
+  else if (!prev) logIntegrity("init", `Initialized ${ver}`);
   localStorage.setItem("buddhiVersion", ver);
 }
 
-// --- ERROR MONITORING ---
+// ⚠️ Global error capture
 window.onerror = (msg, src, line) => {
   const file = src ? src.split("/").pop() : "unknown";
   logIntegrity("error", msg, file, line);
   return true;
 };
-window.addEventListener("unhandledrejection", (e) =>
+window.addEventListener("unhandledrejection", e =>
   logIntegrity("promise", e.reason?.message || e.reason)
 );
 
-// --- SAFE PANEL CREATION ---
-function renderPanel() {
-  if (!document.body) {
-    // retry every 300ms until DOM ready
-    return setTimeout(renderPanel, 300);
-  }
-
-  let panel = document.getElementById("integrityPanel");
-  if (!panel) {
-    panel = document.createElement("div");
-    panel.id = "integrityPanel";
-    Object.assign(panel.style, {
+// 🧩 Create & refresh panel
+function drawPanel() {
+  if (!document.body) return; // wait for DOM
+  let p = document.getElementById("integrityPanel");
+  if (!p) {
+    p = document.createElement("div");
+    p.id = "integrityPanel";
+    Object.assign(p.style, {
       position: "fixed",
       bottom: "10px",
       right: "10px",
-      zIndex: 99999,
       width: "320px",
       maxHeight: "200px",
       overflowY: "auto",
-      background: "rgba(16,24,32,0.9)",
+      background: "rgba(16,24,32,0.92)",
       color: "#16f0a7",
       fontFamily: "monospace",
       fontSize: "12px",
@@ -79,38 +69,40 @@ function renderPanel() {
       boxShadow: "0 0 10px #00e5ff",
       backdropFilter: "blur(5px)",
       textAlign: "left",
-      transition: "opacity 0.5s",
-      opacity: "0"
+      zIndex: "99999",
+      opacity: "0",
+      transition: "opacity 0.6s ease-in"
     });
-    document.body.appendChild(panel);
-    setTimeout(() => (panel.style.opacity = "1"), 500);
+    document.body.appendChild(p);
+    setTimeout(() => (p.style.opacity = "1"), 300);
   }
 
   const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
-  panel.innerHTML = logs
+  p.innerHTML = logs
     .slice(-8)
-    .map(
-      (l) =>
-        `<div>[${l.type}] <b>${l.file}</b>: ${l.msg}</div>`
-    )
+    .map(l => `<div>[${l.type}] <b>${l.file}</b>: ${l.msg}</div>`)
     .join("");
 }
 
-// --- AUTO REFRESH EVERY 3 SECONDS ---
-setInterval(renderPanel, 3000);
+// 🕓 Guaranteed popup trigger – checks DOM until success
+let ensureInterval = setInterval(() => {
+  if (document.body) {
+    drawPanel();
+    clearInterval(ensureInterval);
+    // re-render logs every 5s
+    setInterval(drawPanel, 5000);
+  }
+}, 500);
 
-// --- KEYBOARD POPUP VIEWER ---
-window.addEventListener("keydown", (e) => {
+// 🧠 Keyboard log viewer (Ctrl + Alt + B)
+window.addEventListener("keydown", e => {
   if (e.ctrlKey && e.altKey && e.key === "b") {
     const logs = JSON.parse(localStorage.getItem("buddhiIntegrity") || "[]");
     alert(
       "🧠 Buddhi Integrity Logs\n\n" +
         logs
-          .slice(-12)
-          .map(
-            (l) =>
-              `${l.time} | ${l.type} | ${l.file}\n${l.msg}`
-          )
+          .slice(-15)
+          .map(l => `${l.time} | ${l.type} | ${l.file}\n${l.msg}`)
           .join("\n")
     );
   }
