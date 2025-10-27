@@ -6,8 +6,8 @@ const vids = {
 };
 const reportBox = document.getElementById("reportBox");
 let isLocked = { left: false, right: false };
+window.capturedHands = {}; // 🖐️ store captured images for PDF use
 
-// 🎥 start camera once
 async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -21,19 +21,18 @@ async function startCamera() {
 }
 startCamera();
 
-// ✨ flash feedback
-function flashEffect(el) {
-  el.style.boxShadow = "0 0 25px #00e5ff";
-  setTimeout(() => (el.style.boxShadow = ""), 800);
+function flashEffect(v) {
+  v.style.boxShadow = "0 0 25px #00e5ff";
+  setTimeout(() => (v.style.boxShadow = ""), 800);
 }
 
-// 📸 capture
 async function captureAndAnalyze(side) {
   if (isLocked[side]) {
     alert(`🔒 ${side} hand already locked!`);
     return;
   }
 
+  const v = vids[side];
   const btn = document.getElementById(
     `cap${side.charAt(0).toUpperCase() + side.slice(1)}`
   );
@@ -41,17 +40,29 @@ async function captureAndAnalyze(side) {
   btn.innerText = "🔄 Capturing...";
   isLocked[side] = true;
 
-  const v = vids[side];
   const c = document.createElement("canvas");
   c.width = v.videoWidth;
   c.height = v.videoHeight;
   const ctx = c.getContext("2d");
   ctx.drawImage(v, 0, 0, c.width, c.height);
 
+  const imgData = c.toDataURL("image/png");
   flashEffect(v);
-  const img = c.toDataURL("image/png");
 
-  // clear old report for that side
+  // 🖼️ store and preview captured hand
+  window.capturedHands[side] = imgData;
+  const preview = document.createElement("img");
+  preview.src = imgData;
+  preview.style.width = "160px";
+  preview.style.borderRadius = "8px";
+  preview.style.margin = "10px";
+  preview.alt = `${side} hand`;
+  const oldPrev = document.querySelector(`#preview-${side}`);
+  if (oldPrev) oldPrev.remove();
+  preview.id = `preview-${side}`;
+  reportBox.prepend(preview);
+
+  // remove old report if exists
   const old = document.querySelector(`#report-${side}`);
   if (old) old.remove();
 
@@ -60,10 +71,9 @@ async function captureAndAnalyze(side) {
   box.innerHTML = `<p>🧠 Processing ${side} hand...</p>`;
   reportBox.appendChild(box);
 
-  const result = await analyzeRealPalm(img, side);
+  const result = await analyzeRealPalm(imgData, side);
   box.innerHTML = result;
 
-  // unlock for new scan if needed
   btn.disabled = false;
   btn.innerText = "📸 Capture " + side.charAt(0).toUpperCase() + side.slice(1);
   isLocked[side] = false;
