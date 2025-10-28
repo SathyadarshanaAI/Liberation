@@ -1,56 +1,68 @@
-import { speak } from "./voice.js";
 import { drawAIOverlay } from "./overlay.js";
+import { generateMiniReport } from "./report.js";
+import { speak } from "./voice.js";
+import { startDialogue } from "./dialogue.js";
 
-const vids = {
-  left: document.getElementById("vidLeft"),
-  right: document.getElementById("vidRight"),
-};
-const reportBox = document.getElementById("reportBox");
-window.currentLang = "en";
+const vids={left:vidLeft,right:vidRight};
+let isLocked={left:false,right:false};
+let stream=null;
 
-async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    vids.left.srcObject = stream;
-    vids.right.srcObject = stream;
-    console.log("✅ Camera active");
-  } catch (e) {
-    alert("⚠️ Please allow camera permission.");
-  }
+// 🎥 Start camera
+async function startCamera(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    vids.left.srcObject=stream; vids.right.srcObject=stream;
+  }catch(e){alert("⚠️ Allow camera permission.");}
 }
 startCamera();
 
-function flashEffect(video) {
-  const flash = document.createElement("div");
-  flash.className = "flash";
-  video.parentElement.appendChild(flash);
-  setTimeout(() => flash.remove(), 700);
-}
-
-async function capture(side) {
-  const video = vids[side];
-  flashEffect(video);
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0);
-  const img = canvas.toDataURL("image/png");
-
-  const report = `Mini Report (${side} hand): 
-  Observed balanced lines, steady mind, inner wisdom and spiritual focus. 
-  Life line strong, Heart line deep, Fate line subtle. 
-  Reflects dedication and calm discipline.`;
-
-  drawAIOverlay(canvas, side);
-  reportBox.innerHTML = `<img src="${img}" width="160" style="border-radius:8px;margin:10px"/><p>${report}</p>`;
-  speak(report, window.currentLang);
-}
-
-document.getElementById("capLeft").onclick = () => capture("left");
-document.getElementById("capRight").onclick = () => capture("right");
-document.getElementById("stopVoice").onclick = () => speechSynthesis.cancel();
-
-document.getElementById("langSelect").onchange = (e) => {
-  window.currentLang = e.target.value;
-  speak(`Language set to ${e.target.options[e.target.selectedIndex].text}`, window.currentLang);
+// 💾 Save user info
+saveUser.onclick=()=>{
+  const data={name:userName.value,dob:userDOB.value,id:userID.value};
+  localStorage.setItem("userData",JSON.stringify(data));
+  alert(`Saved for ${data.name||"User"}`);
 };
+
+// 📸 Capture & Analyze
+async function captureAndAnalyze(side){
+  if(isLocked[side])return;
+  isLocked[side]=true;
+
+  const v=vids[side];
+  const c=document.createElement("canvas");
+  c.width=v.videoWidth; c.height=v.videoHeight;
+  const ctx=c.getContext("2d");
+  ctx.drawImage(v,0,0,c.width,c.height);
+
+  animateBeam(c.height); // golden scan beam
+  drawAIOverlay(c,side);
+
+  // simulate shutter close
+  stream.getTracks().forEach(t=>t.stop());
+  v.srcObject=null;
+
+  const img=c.toDataURL("image/png");
+  const mini=await generateMiniReport(img,side);
+  reportBox.innerHTML=`<img src="${img}" width="160" style="border-radius:8px;margin:8px;"><br>${mini}`;
+
+  const txt=reportBox.textContent.slice(0,280);
+  speak(`Your ${side} hand analysis: ${txt}`,window.currentLang);
+  startDialogue(side,txt);
+}
+capLeft.onclick=()=>captureAndAnalyze("left");
+capRight.onclick=()=>captureAndAnalyze("right");
+
+// 🌈 Golden beam animation
+function animateBeam(h){
+  const beam=document.getElementById("beam");
+  beam.style.opacity=1; let y=0;
+  const id=setInterval(()=>{
+    y+=5; beam.style.top=y+"px";
+    if(y>h){clearInterval(id);beam.style.opacity=0;}
+  },15);
+}
+
+// 🔊 Voice select
+window.currentLang="en";
+langSelect.onchange=()=>window.currentLang=langSelect.value;
+stopVoice.onclick=()=>speechSynthesis.cancel();
