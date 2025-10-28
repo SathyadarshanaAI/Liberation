@@ -1,79 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V14 Adaptive Intelligence Edition</title>
-<link rel="icon" href="./assets/icon.png"/>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.7 Golden Flash Edition</title>
+<link rel="icon" href="./assets/icon.png" />
 <style>
-  :root{
-    --bg:#0b0f16;--card:#101820;--neon:#00e5ff;--pri:#16f0a7;
-  }
-  body{
-    margin:0;background:var(--bg);color:#e6f0ff;
-    font-family:'Segoe UI',sans-serif;text-align:center;
-  }
-  h1{
-    color:var(--neon);margin-top:20px;text-shadow:0 0 15px var(--neon);
-  }
-  .wrap{
-    display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:20px auto;
-  }
-  .camCol{
-    background:var(--card);border-radius:18px;padding:16px;
-    width:90%;max-width:360px;box-shadow:0 0 12px #00e5ff30;
-    position:relative;overflow:hidden;
-  }
-  video{
-    width:320px;height:240px;border-radius:12px;object-fit:cover;
-  }
-  canvas{
-    position:absolute;top:0;left:0;width:320px;height:240px;
-    border-radius:12px;pointer-events:none;
-  }
-  .beam{
-    position:absolute;top:-10%;left:0;width:100%;height:8px;
-    background:linear-gradient(90deg,#00e5ff,#16f0a7);
-    box-shadow:0 0 25px #00e5ff80;opacity:0;
-  }
-  button{
-    background:var(--neon);color:#000;border:none;
-    padding:10px 16px;border-radius:10px;font-weight:bold;margin:6px;
-  }
-  #reportBox{
-    margin:20px auto;max-width:700px;background:#111a24;padding:20px;
-    border-radius:16px;text-align:left;line-height:1.6;
-  }
-  #voicePanel{
-    margin-top:15px;text-align:center;
-  }
-  select{
-    padding:6px 10px;border-radius:8px;font-weight:bold;
-  }
+body{
+  background:#0b0f16;color:#e6f0ff;font-family:'Segoe UI',sans-serif;
+  margin:0;text-align:center;overflow-x:hidden;
+}
+h1{
+  color:#00e5ff;text-shadow:0 0 15px #00e5ff;
+  font-size:1.3rem;margin:18px 0;
+}
+.wrap{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:10px auto;
+}
+.camCol{
+  background:#101820;border-radius:18px;padding:14px;width:90%;max-width:360px;
+  box-shadow:0 0 12px #00e5ff30;position:relative;overflow:hidden;
+}
+button{
+  background:#00e5ff;color:#000;border:none;padding:10px 16px;border-radius:10px;
+  font-weight:bold;margin:6px;cursor:pointer;
+}
+#reportBox{
+  margin:20px auto;max-width:700px;background:#111a24;padding:20px;
+  border-radius:16px;text-align:left;line-height:1.6;
+}
+select{padding:6px 10px;border-radius:8px;font-weight:bold;}
+.beam{
+  position:absolute;top:-100%;left:0;width:100%;height:100%;
+  background:linear-gradient(180deg,rgba(255,215,0,0.05),rgba(255,255,255,0.2),rgba(255,215,0,0.05));
+  filter:blur(2px);animation:scan 4s linear infinite;
+}
+@keyframes scan{
+  0%{top:-100%;}
+  50%{top:0;}
+  100%{top:100%;}
+}
+.flash{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:radial-gradient(circle,rgba(255,215,0,0.6),transparent 70%);
+  animation:flash 0.6s ease-out;
+}
+@keyframes flash{
+  0%{opacity:1;}
+  100%{opacity:0;}
+}
 </style>
 </head>
 <body>
-<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · V14 Adaptive Intelligence Edition</h1>
-
+<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.7 Golden Flash Edition</h1>
 <div class="wrap">
   <div class="camCol">
     <strong>Left Hand</strong><br>
-    <video id="vidLeft" autoplay playsinline></video>
-    <canvas id="scanLeft"></canvas>
-    <div class="beam" id="beamLeft"></div>
+    <div class="beam"></div>
+    <video id="vidLeft" autoplay playsinline width="320" height="240"></video><br>
     <button id="capLeft">📸 Capture Left</button>
   </div>
-
   <div class="camCol">
     <strong>Right Hand</strong><br>
-    <video id="vidRight" autoplay playsinline></video>
-    <canvas id="scanRight"></canvas>
-    <div class="beam" id="beamRight"></div>
+    <div class="beam"></div>
+    <video id="vidRight" autoplay playsinline width="320" height="240"></video><br>
     <button id="capRight">📸 Capture Right</button>
   </div>
 </div>
 
-<!-- 🔊 Voice Control -->
+<!-- 🔊 Voice Control Panel -->
 <div id="voicePanel">
   <label>🗣️ Voice Language:</label>
   <select id="langSelect">
@@ -94,7 +89,6 @@
 </div>
 
 <div id="reportBox">Report will appear here...</div>
-
 <script type="module" src="./app.js"></script>
 </body>
 </html>
