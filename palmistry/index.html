@@ -1,74 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.7 Golden Flash Edition</title>
-<link rel="icon" href="./assets/icon.png" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.0 Soul Fusion Edition</title>
+<link rel="icon" href="./assets/icon.png"/>
 <style>
-body{
-  background:#0b0f16;color:#e6f0ff;font-family:'Segoe UI',sans-serif;
-  margin:0;text-align:center;overflow-x:hidden;
-}
-h1{
-  color:#00e5ff;text-shadow:0 0 15px #00e5ff;
-  font-size:1.3rem;margin:18px 0;
-}
-.wrap{
-  display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:10px auto;
-}
-.camCol{
-  background:#101820;border-radius:18px;padding:14px;width:90%;max-width:360px;
-  box-shadow:0 0 12px #00e5ff30;position:relative;overflow:hidden;
-}
-button{
-  background:#00e5ff;color:#000;border:none;padding:10px 16px;border-radius:10px;
-  font-weight:bold;margin:6px;cursor:pointer;
-}
-#reportBox{
-  margin:20px auto;max-width:700px;background:#111a24;padding:20px;
-  border-radius:16px;text-align:left;line-height:1.6;
-}
-select{padding:6px 10px;border-radius:8px;font-weight:bold;}
-.beam{
-  position:absolute;top:-100%;left:0;width:100%;height:100%;
-  background:linear-gradient(180deg,rgba(255,215,0,0.05),rgba(255,255,255,0.2),rgba(255,215,0,0.05));
-  filter:blur(2px);animation:scan 4s linear infinite;
-}
-@keyframes scan{
-  0%{top:-100%;}
-  50%{top:0;}
-  100%{top:100%;}
-}
-.flash{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  background:radial-gradient(circle,rgba(255,215,0,0.6),transparent 70%);
-  animation:flash 0.6s ease-out;
-}
-@keyframes flash{
-  0%{opacity:1;}
-  100%{opacity:0;}
-}
+body{background:#0b0f16;color:#e6f0ff;font-family:'Segoe UI',sans-serif;margin:0;text-align:center}
+h1{color:#00e5ff;text-shadow:0 0 15px #00e5ff;font-size:1.4rem;margin:18px 0}
+.wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:10px auto}
+.camCol{background:#101820;border-radius:18px;padding:14px;width:90%;max-width:360px;box-shadow:0 0 12px #00e5ff30}
+button{background:#00e5ff;color:#000;border:none;padding:10px 16px;border-radius:10px;font-weight:bold;margin:6px}
+#reportBox{margin:20px auto;max-width:720px;background:#111a24;padding:20px;border-radius:16px;text-align:left;line-height:1.6}
+select,input{padding:6px 10px;border-radius:8px;font-weight:bold;margin:4px}
+#beam{position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,#ffd700,#ffae00);box-shadow:0 0 15px #ffae00;opacity:0}
 </style>
 </head>
 <body>
-<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.7 Golden Flash Edition</h1>
+<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · V13.0 Soul Fusion Edition</h1>
+
+<div id="userInfo">
+  <input id="userName" placeholder="Full Name" required/>
+  <input id="userDOB" type="date"/>
+  <input id="userID" placeholder="ID / NIC Number"/>
+  <button id="saveUser">💾 Save</button>
+</div>
+
 <div class="wrap">
   <div class="camCol">
     <strong>Left Hand</strong><br>
-    <div class="beam"></div>
     <video id="vidLeft" autoplay playsinline width="320" height="240"></video><br>
     <button id="capLeft">📸 Capture Left</button>
   </div>
   <div class="camCol">
     <strong>Right Hand</strong><br>
-    <div class="beam"></div>
     <video id="vidRight" autoplay playsinline width="320" height="240"></video><br>
     <button id="capRight">📸 Capture Right</button>
   </div>
 </div>
 
-<!-- 🔊 Voice Control Panel -->
+<div id="beam"></div>
+
 <div id="voicePanel">
   <label>🗣️ Voice Language:</label>
   <select id="langSelect">
@@ -85,10 +57,11 @@ select{padding:6px 10px;border-radius:8px;font-weight:bold;}
     <option value="ar">العربية</option>
     <option value="pt">Português</option>
   </select>
-  <button id="stopVoice">🔇 Stop Voice</button>
+  <button id="stopVoice">🔇 Stop</button>
 </div>
 
 <div id="reportBox">Report will appear here...</div>
+
 <script type="module" src="./app.js"></script>
 </body>
 </html>
