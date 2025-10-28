@@ -1,43 +1,97 @@
-import { analyzePalm } from "./fusion.js";
+// 🕉️ app.js — Sathyadarshana Quantum Palm Analyzer V14
 import { speak } from "./voice.js";
 
-const vids = { left: document.getElementById("vidLeft"), right: document.getElementById("vidRight") };
-const reportBox = document.getElementById("reportBox");
-const langSel = document.getElementById("langSelect");
+const langSelect = document.getElementById("langSelect");
 window.currentLang = "en";
+langSelect.onchange = () => {
+  window.currentLang = langSelect.value;
+};
 
-// ✅ Start camera
-async function startCamera() {
+const vids = {
+  left: document.getElementById("vidLeft"),
+  right: document.getElementById("vidRight"),
+};
+const beams = {
+  left: document.getElementById("beamLeft"),
+  right: document.getElementById("beamRight"),
+};
+const reportBox = document.getElementById("reportBox");
+
+async function startCamera(side) {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    vids.left.srcObject = stream;
-    vids.right.srcObject = stream;
-    console.log("✅ Camera started");
-  } catch (e) {
-    alert("⚠️ Please allow camera permission.");
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+    });
+    vids[side].srcObject = stream;
+    vids[side].dataset.streamActive = "1";
+    console.log(`📷 ${side} camera started`);
+  } catch (err) {
+    console.error("Camera error:", err);
+    alert("Camera permission denied or unavailable.");
   }
 }
-startCamera();
 
-// 📸 Capture + Analyze
-async function capture(side) {
-  const v = vids[side];
-  const c = document.createElement("canvas");
-  c.width = v.videoWidth; c.height = v.videoHeight;
-  const ctx = c.getContext("2d");
-  ctx.drawImage(v, 0, 0, c.width, c.height);
-  const img = c.toDataURL("image/png");
-  const result = await analyzePalm(img, side);
-  const imgTag = `<img src="${img}" width="150" style="margin:10px;border-radius:8px;">`;
-  reportBox.innerHTML += `${imgTag}${result}`;
-  alert(`${side} hand captured successfully!`);
+function stopCamera(side) {
+  const vid = vids[side];
+  const stream = vid.srcObject;
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+    vid.srcObject = null;
+    vid.dataset.streamActive = "0";
+    console.log(`🛑 ${side} camera stopped`);
+  }
 }
-document.getElementById("capLeft").onclick = () => capture("left");
-document.getElementById("capRight").onclick = () => capture("right");
 
-// 🌐 Voice controls
-langSel.onchange = () => {
-  window.currentLang = langSel.value;
-  speak(`Language set to ${langSel.options[langSel.selectedIndex].text}`, window.currentLang);
+// Beam animation (scanner line)
+function playBeam(side) {
+  const beam = beams[side];
+  beam.style.opacity = 1;
+  beam.animate(
+    [
+      { top: "-10%", opacity: 1 },
+      { top: "100%", opacity: 0.2 },
+      { top: "110%", opacity: 0 },
+    ],
+    { duration: 2500, easing: "ease-in-out" }
+  );
+  setTimeout(() => (beam.style.opacity = 0), 2500);
+}
+
+// Capture & analysis logic
+function captureHand(side) {
+  const vid = vids[side];
+  if (!vid.srcObject) {
+    alert("Please allow camera access first.");
+    return;
+  }
+
+  // Beam animation
+  playBeam(side);
+
+  // Shutter effect
+  document.body.style.transition = "background 0.3s";
+  document.body.style.background = "#fff";
+  setTimeout(() => (document.body.style.background = "#0b0f16"), 200);
+
+  // Auto stop after capture
+  setTimeout(() => {
+    stopCamera(side);
+    const msg = `✅ ${side} hand scan complete. Generating analysis...`;
+    console.log(msg);
+    speak(msg, window.currentLang);
+    reportBox.innerHTML = `<b>${msg}</b><br><br><i>AI report will appear shortly...</i>`;
+  }, 1800);
+}
+
+// Event setup
+document.getElementById("capLeft").onclick = () => {
+  if (vids.left.dataset.streamActive !== "1") startCamera("left");
+  else captureHand("left");
 };
+document.getElementById("capRight").onclick = () => {
+  if (vids.right.dataset.streamActive !== "1") startCamera("right");
+  else captureHand("right");
+};
+
+// Stop all voices
 document.getElementById("stopVoice").onclick = () => speechSynthesis.cancel();
