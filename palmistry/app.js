@@ -1,68 +1,41 @@
-import { drawAIOverlay } from "./overlay.js";
-import { generateMiniReport } from "./report.js";
-import { speak } from "./voice.js";
-import { startDialogue } from "./dialogue.js";
+// 🕉️ voice.js — Buddhi Voice System (12 Language Edition)
+export function speak(text, lang = "en") {
+  try {
+    if (!("speechSynthesis" in window)) {
+      console.warn("⚠️ Speech synthesis not supported on this browser.");
+      return;
+    }
 
-const vids={left:vidLeft,right:vidRight};
-let isLocked={left:false,right:false};
-let stream=null;
+    const langMap = {
+      en: "en-US",
+      si: "si-LK",
+      ta: "ta-IN",
+      hi: "hi-IN",
+      fr: "fr-FR",
+      es: "es-ES",
+      de: "de-DE",
+      ru: "ru-RU",
+      zh: "zh-CN",
+      ja: "ja-JP",
+      ar: "ar-SA",
+      pt: "pt-PT",
+    };
 
-// 🎥 Start camera
-async function startCamera(){
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-    vids.left.srcObject=stream; vids.right.srcObject=stream;
-  }catch(e){alert("⚠️ Allow camera permission.");}
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langMap[lang] || "en-US";
+    utter.pitch = 1.05;
+    utter.rate = 1.0;
+    utter.volume = 1.0;
+
+    const voices = speechSynthesis.getVoices();
+    const match = voices.find(v => v.lang.startsWith(utter.lang));
+    if (match) utter.voice = match;
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+
+    console.log(`🎙️ Speaking (${utter.lang})`);
+  } catch (err) {
+    console.error("🔇 Voice system error:", err);
+  }
 }
-startCamera();
-
-// 💾 Save user info
-saveUser.onclick=()=>{
-  const data={name:userName.value,dob:userDOB.value,id:userID.value};
-  localStorage.setItem("userData",JSON.stringify(data));
-  alert(`Saved for ${data.name||"User"}`);
-};
-
-// 📸 Capture & Analyze
-async function captureAndAnalyze(side){
-  if(isLocked[side])return;
-  isLocked[side]=true;
-
-  const v=vids[side];
-  const c=document.createElement("canvas");
-  c.width=v.videoWidth; c.height=v.videoHeight;
-  const ctx=c.getContext("2d");
-  ctx.drawImage(v,0,0,c.width,c.height);
-
-  animateBeam(c.height); // golden scan beam
-  drawAIOverlay(c,side);
-
-  // simulate shutter close
-  stream.getTracks().forEach(t=>t.stop());
-  v.srcObject=null;
-
-  const img=c.toDataURL("image/png");
-  const mini=await generateMiniReport(img,side);
-  reportBox.innerHTML=`<img src="${img}" width="160" style="border-radius:8px;margin:8px;"><br>${mini}`;
-
-  const txt=reportBox.textContent.slice(0,280);
-  speak(`Your ${side} hand analysis: ${txt}`,window.currentLang);
-  startDialogue(side,txt);
-}
-capLeft.onclick=()=>captureAndAnalyze("left");
-capRight.onclick=()=>captureAndAnalyze("right");
-
-// 🌈 Golden beam animation
-function animateBeam(h){
-  const beam=document.getElementById("beam");
-  beam.style.opacity=1; let y=0;
-  const id=setInterval(()=>{
-    y+=5; beam.style.top=y+"px";
-    if(y>h){clearInterval(id);beam.style.opacity=0;}
-  },15);
-}
-
-// 🔊 Voice select
-window.currentLang="en";
-langSelect.onchange=()=>window.currentLang=langSelect.value;
-stopVoice.onclick=()=>speechSynthesis.cancel();
