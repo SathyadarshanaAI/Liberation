@@ -1,97 +1,56 @@
-// 🕉️ app.js — Sathyadarshana Quantum Palm Analyzer V14
 import { speak } from "./voice.js";
-
-const langSelect = document.getElementById("langSelect");
-window.currentLang = "en";
-langSelect.onchange = () => {
-  window.currentLang = langSelect.value;
-};
+import { drawAIOverlay } from "./overlay.js";
 
 const vids = {
   left: document.getElementById("vidLeft"),
   right: document.getElementById("vidRight"),
 };
-const beams = {
-  left: document.getElementById("beamLeft"),
-  right: document.getElementById("beamRight"),
-};
 const reportBox = document.getElementById("reportBox");
+window.currentLang = "en";
 
-async function startCamera(side) {
+async function startCamera() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-    });
-    vids[side].srcObject = stream;
-    vids[side].dataset.streamActive = "1";
-    console.log(`📷 ${side} camera started`);
-  } catch (err) {
-    console.error("Camera error:", err);
-    alert("Camera permission denied or unavailable.");
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    vids.left.srcObject = stream;
+    vids.right.srcObject = stream;
+    console.log("✅ Camera active");
+  } catch (e) {
+    alert("⚠️ Please allow camera permission.");
   }
 }
+startCamera();
 
-function stopCamera(side) {
-  const vid = vids[side];
-  const stream = vid.srcObject;
-  if (stream) {
-    stream.getTracks().forEach((track) => track.stop());
-    vid.srcObject = null;
-    vid.dataset.streamActive = "0";
-    console.log(`🛑 ${side} camera stopped`);
-  }
+function flashEffect(video) {
+  const flash = document.createElement("div");
+  flash.className = "flash";
+  video.parentElement.appendChild(flash);
+  setTimeout(() => flash.remove(), 700);
 }
 
-// Beam animation (scanner line)
-function playBeam(side) {
-  const beam = beams[side];
-  beam.style.opacity = 1;
-  beam.animate(
-    [
-      { top: "-10%", opacity: 1 },
-      { top: "100%", opacity: 0.2 },
-      { top: "110%", opacity: 0 },
-    ],
-    { duration: 2500, easing: "ease-in-out" }
-  );
-  setTimeout(() => (beam.style.opacity = 0), 2500);
+async function capture(side) {
+  const video = vids[side];
+  flashEffect(video);
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+  const img = canvas.toDataURL("image/png");
+
+  const report = `Mini Report (${side} hand): 
+  Observed balanced lines, steady mind, inner wisdom and spiritual focus. 
+  Life line strong, Heart line deep, Fate line subtle. 
+  Reflects dedication and calm discipline.`;
+
+  drawAIOverlay(canvas, side);
+  reportBox.innerHTML = `<img src="${img}" width="160" style="border-radius:8px;margin:10px"/><p>${report}</p>`;
+  speak(report, window.currentLang);
 }
 
-// Capture & analysis logic
-function captureHand(side) {
-  const vid = vids[side];
-  if (!vid.srcObject) {
-    alert("Please allow camera access first.");
-    return;
-  }
-
-  // Beam animation
-  playBeam(side);
-
-  // Shutter effect
-  document.body.style.transition = "background 0.3s";
-  document.body.style.background = "#fff";
-  setTimeout(() => (document.body.style.background = "#0b0f16"), 200);
-
-  // Auto stop after capture
-  setTimeout(() => {
-    stopCamera(side);
-    const msg = `✅ ${side} hand scan complete. Generating analysis...`;
-    console.log(msg);
-    speak(msg, window.currentLang);
-    reportBox.innerHTML = `<b>${msg}</b><br><br><i>AI report will appear shortly...</i>`;
-  }, 1800);
-}
-
-// Event setup
-document.getElementById("capLeft").onclick = () => {
-  if (vids.left.dataset.streamActive !== "1") startCamera("left");
-  else captureHand("left");
-};
-document.getElementById("capRight").onclick = () => {
-  if (vids.right.dataset.streamActive !== "1") startCamera("right");
-  else captureHand("right");
-};
-
-// Stop all voices
+document.getElementById("capLeft").onclick = () => capture("left");
+document.getElementById("capRight").onclick = () => capture("right");
 document.getElementById("stopVoice").onclick = () => speechSynthesis.cancel();
+
+document.getElementById("langSelect").onchange = (e) => {
+  window.currentLang = e.target.value;
+  speak(`Language set to ${e.target.options[e.target.selectedIndex].text}`, window.currentLang);
+};
