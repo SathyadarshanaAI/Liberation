@@ -1,15 +1,12 @@
-export function drawAIOverlay(canvas, side){
-  const ctx = canvas.getContext("2d");
-  const grad = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-  grad.addColorStop(0,"rgba(255,215,0,0.6)");
-  grad.addColorStop(1,"rgba(255,255,255,0.2)");
-  ctx.strokeStyle = grad;
-  ctx.lineWidth = 2;
-  ctx.shadowBlur = 12;
-  ctx.shadowColor = "gold";
-  ctx.beginPath();
-  ctx.moveTo(30,canvas.height-40);
-  ctx.bezierCurveTo(canvas.width/3,canvas.height/2,canvas.width/1.5,50,canvas.width-30,canvas.height/2);
-  ctx.stroke();
-  console.log(`🌟 Overlay drawn for ${side} hand`);
+export function drawAIOverlay(canvas,side){
+  const ctx=canvas.getContext("2d");
+  const colors=["#FFD700","#FF4500","#00FFFF","#ADFF2F","#FF69B4","#00FF7F","#FFA500","#FF00FF"];
+  ctx.lineWidth=2; ctx.globalAlpha=0.7;
+  for(let i=0;i<8;i++){
+    ctx.strokeStyle=colors[i];
+    ctx.beginPath();
+    ctx.moveTo(Math.random()*canvas.width,Math.random()*canvas.height/2);
+    ctx.lineTo(Math.random()*canvas.width,canvas.height*Math.random());
+    ctx.stroke();
+  }
 }
