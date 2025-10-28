@@ -1,43 +1,56 @@
-// app.js — Core Camera Logic
-console.log("📸 Palm Analyzer V12 Voice Fusion Edition starting...");
+import { speak } from "./voice.js";
+import { analyzeRealPalm } from "./fusion.js";
 
-async function startCamera(videoEl) {
+const vids = {
+  left: document.getElementById("vidLeft"),
+  right: document.getElementById("vidRight"),
+};
+let isLocked = { left: false, right: false };
+window.currentLang = "en";
+
+async function startCamera() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-      audio: false
-    });
-    videoEl.srcObject = stream;
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    vids.left.srcObject = stream;
+    vids.right.srcObject = stream;
     console.log("✅ Camera started");
-  } catch (err) {
-    alert("Camera access denied or unavailable: " + err.message);
-    console.error("Camera error:", err);
+  } catch (e) {
+    alert("⚠️ Please allow camera permission in browser settings.");
   }
 }
+startCamera();
 
-function captureFrame(videoEl, side) {
-  const canvas = document.createElement("canvas");
-  canvas.width = videoEl.videoWidth || 320;
-  canvas.height = videoEl.videoHeight || 240;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+async function captureAndAnalyze(side) {
+  if (isLocked[side]) return alert(`${side} hand already captured.`);
+  isLocked[side] = true;
 
-  const dataURL = canvas.toDataURL("image/png");
-  localStorage.setItem(`palm_${side}`, dataURL);
+  const v = vids[side];
+  const c = document.createElement("canvas");
+  c.width = v.videoWidth || 320;
+  c.height = v.videoHeight || 240;
+  c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
 
-  console.log(`🖐️ ${side} hand captured`);
+  const imgData = c.toDataURL("image/png");
+  const preview = document.createElement("img");
+  preview.src = imgData;
+  preview.style.width = "160px";
+  preview.style.borderRadius = "8px";
+  preview.style.margin = "8px";
+  document.getElementById("reportBox").prepend(preview);
+
+  const report = await analyzeRealPalm(imgData, side);
+  document.getElementById("reportBox").innerHTML += report;
+  speak(report.replace(/<[^>]+>/g, ""), window.currentLang);
   alert(`${side} hand captured successfully!`);
+
+  isLocked[side] = false;
 }
 
-// Initialize
-window.addEventListener("DOMContentLoaded", () => {
-  const vidLeft = document.getElementById("vidLeft");
-  const vidRight = document.getElementById("vidRight");
+document.getElementById("capLeft").onclick = () => captureAndAnalyze("left");
+document.getElementById("capRight").onclick = () => captureAndAnalyze("right");
 
-  // start both cameras sequentially (fallback if only one available)
-  startCamera(vidLeft);
-  startCamera(vidRight);
-
-  document.getElementById("capLeft").onclick = () => captureFrame(vidLeft, "left");
-  document.getElementById("capRight").onclick = () => captureFrame(vidRight, "right");
-});
+document.getElementById("langSelect").onchange = (e) => {
+  window.currentLang = e.target.value;
+  speak(`Language set to ${e.target.options[e.target.selectedIndex].text}`, window.currentLang);
+};
+document.getElementById("stopVoice").onclick = () => speechSynthesis.cancel();
