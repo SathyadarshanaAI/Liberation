@@ -1,11 +1,40 @@
-export async function generateMiniReport(img,side){
-  const user=JSON.parse(localStorage.getItem("userData")||"{}");
-  return `
-  <h3>🖐️ ${side.toUpperCase()} Hand Mini Report</h3>
-  <p><strong>Name:</strong> ${user.name||"Unknown"}<br>
-  <strong>DOB:</strong> ${user.dob||"—"} | <strong>ID:</strong> ${user.id||"—"}</p>
-  <p>Your ${side} hand shows balanced energy lines and moderate tension between heart and mind.
-  The life line indicates resilience, while creative impulses emerge through branching rays.
-  Focus on harmony, mindfulness, and compassionate strength. This analysis reflects physical
-  vitality and subtle spiritual potential sensed through line structure and tonal variation.</p>`;
+// 🕉️ voice.js — Buddhi Voice System (V13 Soul Fusion Edition)
+export function speak(text, lang = "en") {
+  try {
+    if (!("speechSynthesis" in window)) {
+      console.warn("⚠️ Speech synthesis not supported on this browser.");
+      return;
+    }
+
+    const langMap = {
+      en: "en-US",
+      si: "si-LK",
+      ta: "ta-IN",
+      hi: "hi-IN",
+      fr: "fr-FR",
+      es: "es-ES",
+      de: "de-DE",
+      ru: "ru-RU",
+      zh: "zh-CN",
+      ja: "ja-JP",
+      ar: "ar-SA",
+      pt: "pt-PT",
+    };
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = langMap[lang] || "en-US";
+    utter.pitch = 1.05;
+    utter.rate = 1.0;
+    utter.volume = 1.0;
+
+    const voices = speechSynthesis.getVoices();
+    const match = voices.find(v => v.lang.startsWith(utter.lang));
+    if (match) utter.voice = match;
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+    console.log(`🎙️ Speaking in ${utter.lang}`);
+  } catch (e) {
+    console.error("🔇 Voice system error:", e);
+  }
 }
