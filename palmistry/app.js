@@ -3,20 +3,22 @@ import { generateMiniReport } from "./report.js";
 import { speak } from "./voice.js";
 
 const vids = { left: vidLeft, right: vidRight };
+let streams = { left: null, right: null };
 let isLocked = { left: false, right: false };
-let stream = null;
 
-// 🎥 Start camera
-async function startCamera() {
+// 🎥 Start each camera separately
+async function startCamera(side) {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    vids.left.srcObject = stream;
-    vids.right.srcObject = stream;
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    vids[side].srcObject = stream;
+    streams[side] = stream;
   } catch (e) {
     alert("⚠️ Allow camera permission to continue.");
   }
 }
-startCamera();
+
+startCamera("left");
+startCamera("right");
 
 // 💾 Save user info
 saveUser.onclick = () => {
@@ -32,17 +34,20 @@ async function captureAndAnalyze(side) {
 
   const v = vids[side];
   const c = document.createElement("canvas");
-  c.width = v.videoWidth;
-  c.height = v.videoHeight;
+  c.width = v.videoWidth || 320;
+  c.height = v.videoHeight || 240;
   const ctx = c.getContext("2d");
   ctx.drawImage(v, 0, 0, c.width, c.height);
 
   animateBeam(c.height);
   drawAIOverlay(c, side);
 
-  // simulate shutter close
-  stream.getTracks().forEach(t => t.stop());
-  v.srcObject = null;
+  // Stop only THIS side camera
+  if (streams[side]) {
+    streams[side].getTracks().forEach(t => t.stop());
+    streams[side] = null;
+    v.srcObject = null;
+  }
 
   const img = c.toDataURL("image/png");
   const mini = await generateMiniReport(img, side);
@@ -72,5 +77,5 @@ function animateBeam(h) {
 
 // 🔊 Voice control
 window.currentLang = "en";
-langSelect.onchange = () => window.currentLang = langSelect.value;
+langSelect.onchange = () => (window.currentLang = langSelect.value);
 stopVoice.onclick = () => speechSynthesis.cancel();
