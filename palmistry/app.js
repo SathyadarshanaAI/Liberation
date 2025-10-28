@@ -1,4 +1,4 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer V11.7 · MultiVoice + Overlay Edition
+// 🕉️ Sathyadarshana Quantum Palm Analyzer V11.8 · VoiceSync Edition
 import { analyzeRealPalm } from "./fusion.js";
 import { drawAIOverlay } from "./overlay.js";
 import { speak } from "./voice.js";
@@ -6,7 +6,7 @@ import { speak } from "./voice.js";
 // 🎥 Camera setup
 const vids = {
   left: document.getElementById("vidLeft"),
-  right: document.getElementById("vidRight")
+  right: document.getElementById("vidRight"),
 };
 const reportBox = document.getElementById("reportBox");
 let isLocked = { left: false, right: false };
@@ -16,7 +16,7 @@ window.capturedHands = {};
 async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
+      video: { facingMode: "environment" },
     });
     vids.left.srcObject = stream;
     vids.right.srcObject = stream;
@@ -45,7 +45,7 @@ async function captureAndAnalyze(side) {
   // 🌈 AI Overlay (Quantum Line Map)
   drawAIOverlay(c, side);
 
-  // 📸 Save and preview
+  // 📸 Save + Preview
   const imgData = c.toDataURL("image/png");
   window.capturedHands[side] = imgData;
   const preview = document.createElement("img");
@@ -69,26 +69,45 @@ async function captureAndAnalyze(side) {
   box.innerHTML = result;
   reportBox.appendChild(box);
 
-  // 🔊 Speak report summary
-  const plainText = box.textContent.slice(0, 280);
-  speak(`Here is your ${side} hand analysis: ${plainText}`, window.currentLang);
+  // 🔊 Speak summarized report
+  const plainText = box.textContent.slice(0, 300);
+  speak(`Here is your ${side} hand analysis. ${plainText}`, window.currentLang);
 
   isLocked[side] = false;
 }
 
-// 📷 Capture buttons
+// 📷 Capture Buttons
 document.getElementById("capLeft").onclick = () => captureAndAnalyze("left");
 document.getElementById("capRight").onclick = () => captureAndAnalyze("right");
 
 // 🌐 Voice Language Control
 const select = document.getElementById("langSelect");
 window.currentLang = "en";
+
 select.onchange = () => {
   window.currentLang = select.value;
-  speak(`Language set to ${select.options[select.selectedIndex].text}`, window.currentLang);
+  const langName = select.options[select.selectedIndex].text;
+  speak(`Language set to ${langName}`, window.currentLang);
+  console.log(`🌐 Current language: ${window.currentLang}`);
 };
 
+// 🔇 Stop Voice
 document.getElementById("stopVoice").onclick = () => {
   speechSynthesis.cancel();
-  console.log("🔇 Voice stopped");
+  console.log("🔇 Voice stopped by user");
 };
+
+// 🗣️ Preload Voices (for mobile browsers)
+if (typeof speechSynthesis !== "undefined") {
+  const preloadVoices = () => {
+    const voices = speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      console.log(`🗣️ ${voices.length} voices loaded.`);
+    } else {
+      console.log("⚙️ Loading voice data...");
+      setTimeout(preloadVoices, 500);
+    }
+  };
+  speechSynthesis.onvoiceschanged = preloadVoices;
+  preloadVoices();
+}
