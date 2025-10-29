@@ -38,7 +38,7 @@ h1{
   padding:14px;
   width:90%;
   max-width:340px;
-  overflow:hidden; /* Beam confined */
+  overflow:hidden;
   box-shadow:0 0 15px #00e5ff22;
 }
 video,canvas{
@@ -94,49 +94,8 @@ button{
   </div>
 </div>
 
-<script>
-const vidLeft = document.getElementById("vidLeft");
-const vidRight = document.getElementById("vidRight");
-const canvasLeft = document.getElementById("canvasLeft");
-const canvasRight = document.getElementById("canvasRight");
+<!-- 👇 External camera module -->
+<script type="module" src="./palmistry/camera.js"></script>
 
-// start cameras
-async function startCam(videoEl){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-    videoEl.srcObject = stream;
-  }catch(e){
-    alert("Camera error: "+e.message);
-  }
-}
-startCam(vidLeft);
-startCam(vidRight);
-
-// capture and save
-document.getElementById("captureLeft").onclick = ()=>{
-  const ctx = canvasLeft.getContext("2d");
-  ctx.drawImage(vidLeft,0,0,canvasLeft.width,canvasLeft.height);
-  localStorage.setItem("palmLeft",canvasLeft.toDataURL("image/png"));
-  stopScan("leftBox");
-}
-document.getElementById("captureRight").onclick = ()=>{
-  const ctx = canvasRight.getContext("2d");
-  ctx.drawImage(vidRight,0,0,canvasRight.width,canvasRight.height);
-  localStorage.setItem("palmRight",canvasRight.toDataURL("image/png"));
-  stopScan("rightBox");
-}
-
-// beam control
-function startScan(boxId){
-  document.querySelector(`#${boxId} .scanBeam`).style.display="block";
-}
-function stopScan(boxId){
-  document.querySelector(`#${boxId} .scanBeam`).style.display="none";
-}
-
-// start scanning animation
-startScan("leftBox");
-startScan("rightBox");
-</script>
 </body>
 </html>
