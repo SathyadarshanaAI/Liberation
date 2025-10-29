@@ -3,27 +3,112 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V13.2 Dual Start + Capture Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V13.4 True Serenity Fusion Edition</title>
 <style>
 :root{
-  --bg:#0b0f16;--card:#101820;--neon:#00e5ff;--pri:#16f0a7;--gold:#FFD700;
+  --bg:#0b0f16;
+  --card:#101820;
+  --neon:#00e5ff;
+  --pri:#16f0a7;
+  --gold:#FFD700;
 }
-body{margin:0;background:var(--bg);color:#e6f0ff;font-family:'Segoe UI',sans-serif;text-align:center}
-h1{color:var(--neon);text-shadow:0 0 15px var(--neon);margin-top:18px;font-size:1.3rem}
-.camWrap{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin:20px auto;width:95%;max-width:700px;position:relative}
-.camBox{position:relative;width:300px;height:400px;background:var(--card);border-radius:16px;box-shadow:0 0 20px #00e5ff22;overflow:hidden;padding:6px}
-video,.lockedImg{width:100%;height:100%;border-radius:12px;object-fit:cover;background:#000}
-.goldenBeam{position:absolute;top:-100%;left:0;width:100%;height:100%;background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.5) 50%,transparent 100%);box-shadow:0 0 25px var(--gold);opacity:0;pointer-events:none}
-button{background:var(--neon);border:none;color:#000;font-weight:bold;padding:8px 16px;border-radius:8px;margin-top:8px;cursor:pointer}
-button:hover{background:var(--pri);color:#fff}
-.options,.userForm,#reportBox{background:#101820;border-radius:12px;width:90%;max-width:700px;margin:20px auto;box-shadow:0 0 20px #00e5ff33 inset;padding:12px;text-align:left}
-label{display:block;margin:6px 0 3px;color:#8bd;font-size:0.9rem}
-input,select{width:100%;background:#0d131b;color:#00e5ff;border:none;border-radius:6px;padding:6px}
-#reportBox{font-size:0.9rem;line-height:1.5}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#e6f0ff;
+  font-family:'Segoe UI',sans-serif;
+  text-align:center;
+}
+h1{
+  color:var(--neon);
+  text-shadow:0 0 15px var(--neon);
+  margin-top:18px;
+  font-size:1.3rem;
+}
+.camWrap{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:20px;
+  margin:20px auto;
+  width:95%;
+  max-width:700px;
+}
+.camBox{
+  position:relative;
+  width:300px;
+  height:400px;
+  background:var(--card);
+  border-radius:16px;
+  box-shadow:0 0 20px #00e5ff33;
+  padding:10px;
+  overflow:hidden;
+}
+video,.lockedImg{
+  width:100%;
+  height:100%;
+  border-radius:12px;
+  object-fit:cover;
+  background:#000;
+}
+.goldenBeam{
+  position:absolute;
+  top:-100%;
+  left:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.4) 50%,transparent 100%);
+  box-shadow:0 0 25px var(--gold);
+  opacity:0;
+  pointer-events:none;
+}
+button{
+  background:var(--neon);
+  border:none;
+  color:#000;
+  font-weight:bold;
+  padding:8px 16px;
+  border-radius:8px;
+  margin-top:8px;
+  cursor:pointer;
+  transition:0.3s;
+}
+button:hover{background:var(--pri);color:#fff;}
+.options,.userForm,#reportBox{
+  background:#101820;
+  border-radius:12px;
+  width:90%;
+  max-width:700px;
+  margin:20px auto;
+  box-shadow:0 0 20px #00e5ff33 inset;
+  padding:12px;
+  text-align:left;
+}
+label{display:block;margin:6px 0 3px;color:#8bd;font-size:0.9rem;}
+input,select{
+  width:100%;
+  background:#0d131b;
+  color:#00e5ff;
+  border:none;
+  border-radius:6px;
+  padding:6px;
+}
+#reportBox{font-size:0.9rem;line-height:1.5;}
+#liveBtn{
+  background:#ff5fd0;
+  color:#fff;
+  width:100%;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  padding:10px;
+  font-weight:bold;
+  box-shadow:0 0 15px #ff5fd099;
+}
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.2</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.4</h1>
 <div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
 
 <div class="userForm">
@@ -75,6 +160,7 @@ input,select{width:100%;background:#0d131b;color:#00e5ff;border:none;border-radi
     <button id="speakBtn">🔊 Speak Report</button>
     <button id="homeBtn">🏠 Back to Home</button>
     <button id="pdfBtn" style="background:#FFD700;color:#000;margin-left:6px;">💵 Full Report (5$)</button>
+    <button id="liveBtn">💬 AI Buddhi Live Discussion</button>
   </div>
 </div>
 
@@ -178,6 +264,7 @@ document.getElementById("pdfBtn").onclick=()=>{
 function speak(t){speechSynthesis.speak(new SpeechSynthesisUtterance(t));}
 document.getElementById("speakBtn").onclick=()=>speak(report.innerText);
 document.getElementById("homeBtn").onclick=()=>location.href='index.html';
+document.getElementById("liveBtn").onclick=()=>alert("🧘 AI Buddhi: Live Discussion session will open soon...");
 brightness.oninput=()=>{const v=brightness.value;
  document.querySelectorAll("video").forEach(vd=>vd.style.filter=`brightness(${v})`);
 };
