@@ -1,45 +1,52 @@
 // palmistry/camera.js
-export class PalmCamera {
-  constructor(videoEl, canvasEl, boxId){
-    this.video = videoEl;
-    this.canvas = canvasEl;
+console.log("📷 Palmistry Camera Module Loaded");
+
+class PalmCam {
+  constructor(videoId, canvasId, boxId, storageKey) {
+    this.video = document.getElementById(videoId);
+    this.canvas = document.getElementById(canvasId);
     this.boxId = boxId;
-    this.stream = null;
+    this.key = storageKey;
   }
 
-  async start(){
+  async start() {
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: {ideal: 1280}, height: {ideal: 720} }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: {ideal:1280}, height:{ideal:720} }
       });
-      this.video.srcObject = this.stream;
-      this.video.style.transform = "scaleX(1)"; // avoid mirror
+      this.video.srcObject = stream;
+      this.stream = stream;
       this.startBeam();
-    } catch(e){
+    } catch (e) {
       alert("Camera error: " + e.message);
     }
   }
 
-  capture(){
+  capture() {
     const ctx = this.canvas.getContext("2d");
-    const w = this.canvas.width, h = this.canvas.height;
     ctx.save();
-    ctx.scale(1,1);  // no flip
-    ctx.drawImage(this.video, 0, 0, w, h);
+    ctx.scale(1, 1); // avoid mirror distortion
+    ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
     ctx.restore();
-    localStorage.setItem(`palm_${this.boxId}`, this.canvas.toDataURL("image/png"));
+    localStorage.setItem(this.key, this.canvas.toDataURL("image/png"));
     this.stopBeam();
   }
 
-  stop(){
-    this.stream?.getTracks().forEach(t=>t.stop());
-    this.stopBeam();
+  startBeam() {
+    document.querySelector(`#${this.boxId} .scanBeam`).style.display = "block";
   }
 
-  startBeam(){
-    document.querySelector(`#${this.boxId} .scanBeam`).style.display="block";
-  }
-  stopBeam(){
-    document.querySelector(`#${this.boxId} .scanBeam`).style.display="none";
+  stopBeam() {
+    document.querySelector(`#${this.boxId} .scanBeam`).style.display = "none";
   }
 }
+
+// ==== initialize both cameras ====
+const left = new PalmCam("vidLeft", "canvasLeft", "leftBox", "palmLeft");
+const right = new PalmCam("vidRight", "canvasRight", "rightBox", "palmRight");
+
+left.start();
+right.start();
+
+document.getElementById("captureLeft").onclick = () => left.capture();
+document.getElementById("captureRight").onclick = () => right.capture();
