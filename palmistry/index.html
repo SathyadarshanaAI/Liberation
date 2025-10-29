@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · Dual Camera</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.3 + Options</title>
 <style>
 :root{
   --bg:#0b0f16;
@@ -24,6 +24,8 @@ h1{
   margin-top:18px;
   font-size:1.4rem;
 }
+
+/* camera area */
 .camWrap{
   display:flex;
   flex-wrap:wrap;
@@ -74,6 +76,38 @@ button:hover{
   background:var(--pri);
   color:#fff;
 }
+
+/* OPTIONS PANEL */
+.options{
+  margin:20px auto;
+  background:#101820;
+  padding:15px;
+  border-radius:12px;
+  width:90%;
+  max-width:680px;
+  box-shadow:0 0 20px #00e5ff33 inset;
+  text-align:left;
+}
+.options label{
+  display:block;
+  margin:8px 0 4px;
+  color:#8bd;
+  font-size:0.9rem;
+}
+.options select, .options input[type=range]{
+  width:100%;
+  background:#0d131b;
+  color:#00e5ff;
+  border:none;
+  border-radius:6px;
+  padding:6px;
+}
+.options input[type=checkbox]{
+  transform:scale(1.3);
+  margin-right:8px;
+}
+
+/* AI report box */
 #reportBox{
   background:#0d131b;
   border-radius:14px;
@@ -89,10 +123,10 @@ button:hover{
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.3</h1>
 
 <div class="camWrap">
-  <!-- Left -->
+  <!-- Left Hand -->
   <div class="camBox" id="leftBox">
     <h3>Left Hand</h3>
     <video id="vidLeft" autoplay playsinline></video>
@@ -100,13 +134,36 @@ button:hover{
     <button id="btnLeft">📸 Capture Left</button>
   </div>
 
-  <!-- Right -->
+  <!-- Right Hand -->
   <div class="camBox" id="rightBox">
     <h3>Right Hand</h3>
     <video id="vidRight" autoplay playsinline></video>
     <div class="scanBeam"></div>
     <button id="btnRight">📸 Capture Right</button>
   </div>
+</div>
+
+<!-- ⚙️ OPTIONS PANEL -->
+<div class="options">
+  <h3>⚙️ Analyzer Options</h3>
+  <label>Analyzer Mode:</label>
+  <select id="modeSel">
+    <option value="basic">Basic Insight</option>
+    <option value="advanced">Advanced Line Scan</option>
+    <option value="divine">Divine Fusion (AI)</option>
+  </select>
+
+  <label>Language:</label>
+  <select id="langSel">
+    <option value="en">English</option>
+    <option value="si">සිංහල</option>
+    <option value="ta">தமிழ்</option>
+  </select>
+
+  <label>Brightness:</label>
+  <input id="brightness" type="range" min="0.5" max="2" step="0.1" value="1">
+
+  <label><input type="checkbox" id="autosave"> Auto Save Captures</label>
 </div>
 
 <div id="reportBox">
@@ -121,12 +178,38 @@ initCamera("vidLeft");
 initCamera("vidRight");
 
 const report = document.getElementById("reportText");
+const bright = document.getElementById("brightness");
+const autoSave = document.getElementById("autosave");
+const langSel = document.getElementById("langSel");
+const modeSel = document.getElementById("modeSel");
 
 document.getElementById("btnLeft").onclick = ()=>{
   report.textContent = "📷 Captured left hand successfully.";
+  saveIfEnabled("palmLeft");
 };
 document.getElementById("btnRight").onclick = ()=>{
   report.textContent = "📷 Captured right hand successfully.";
+  saveIfEnabled("palmRight");
+};
+
+bright.oninput = ()=>{
+  const val = bright.value;
+  document.getElementById("vidLeft").style.filter = `brightness(${val})`;
+  document.getElementById("vidRight").style.filter = `brightness(${val})`;
+};
+
+function saveIfEnabled(key){
+  if(autoSave.checked){
+    localStorage.setItem(key, Date.now());
+    console.log("Auto-saved:", key);
+  }
+}
+
+langSel.onchange = ()=>{
+  report.textContent = `🌐 Language set to ${langSel.options[langSel.selectedIndex].text}.`;
+};
+modeSel.onchange = ()=>{
+  report.textContent = `🧠 Analyzer mode: ${modeSel.value.toUpperCase()}.`;
 };
 </script>
 </body>
