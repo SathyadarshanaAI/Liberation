@@ -1,52 +1,24 @@
-// palmistry/camera.js
-console.log("📷 Palmistry Camera Module Loaded");
+// modules/camera.js
+export async function initCamera(containerId){
+  const area = document.getElementById(containerId);
+  if(!area) return console.warn("Camera area not found!");
 
-class PalmCam {
-  constructor(videoId, canvasId, boxId, storageKey) {
-    this.video = document.getElementById(videoId);
-    this.canvas = document.getElementById(canvasId);
-    this.boxId = boxId;
-    this.key = storageKey;
-  }
+  const video = document.createElement("video");
+  video.autoplay = true;
+  video.playsInline = true;
+  video.style.width = "100%";
+  video.style.height = "100%";
+  video.style.objectFit = "cover";
+  video.style.borderRadius = "16px";
 
-  async start() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: {ideal:1280}, height:{ideal:720} }
-      });
-      this.video.srcObject = stream;
-      this.stream = stream;
-      this.startBeam();
-    } catch (e) {
-      alert("Camera error: " + e.message);
-    }
-  }
+  area.appendChild(video);
 
-  capture() {
-    const ctx = this.canvas.getContext("2d");
-    ctx.save();
-    ctx.scale(1, 1); // avoid mirror distortion
-    ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-    ctx.restore();
-    localStorage.setItem(this.key, this.canvas.toDataURL("image/png"));
-    this.stopBeam();
-  }
-
-  startBeam() {
-    document.querySelector(`#${this.boxId} .scanBeam`).style.display = "block";
-  }
-
-  stopBeam() {
-    document.querySelector(`#${this.boxId} .scanBeam`).style.display = "none";
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" } });
+    video.srcObject = stream;
+    console.log("Camera started successfully.");
+  } catch(err){
+    console.error("Camera Error:", err);
+    area.innerHTML = `<p style="color:#f55">⚠️ Camera access denied or unavailable.</p>`;
   }
 }
-
-// ==== initialize both cameras ====
-const left = new PalmCam("vidLeft", "canvasLeft", "leftBox", "palmLeft");
-const right = new PalmCam("vidRight", "canvasRight", "rightBox", "palmRight");
-
-left.start();
-right.start();
-
-document.getElementById("captureLeft").onclick = () => left.capture();
-document.getElementById("captureRight").onclick = () => right.capture();
