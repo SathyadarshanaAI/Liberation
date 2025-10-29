@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.6 Dual Lock Beam Fusion Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.7 Dual Lock Beam Fusion Edition</title>
 <style>
 :root{
   --bg:#0b0f16;
@@ -72,17 +72,11 @@ h1{
   box-shadow:0 0 20px #00e5ff22;
   overflow:hidden;
 }
-video{
+video, .lockedImg{
   width:100%;
   aspect-ratio:3/4;
   border-radius:12px;
   background:#000;
-  object-fit:cover;
-}
-.lockedImg{
-  width:100%;
-  aspect-ratio:3/4;
-  border-radius:12px;
   object-fit:cover;
 }
 .goldenBeam{
@@ -151,7 +145,7 @@ button:hover{
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.6</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.7</h1>
 
 <div class="camWrap">
   <!-- 🧍‍♂️ User Info Overlay -->
@@ -203,14 +197,7 @@ button:hover{
 
   <label><input type="checkbox" id="autosave" checked> Auto Save Captures</label>
 
-  <div id="google_translate_element" style="margin-top:16px;text-align:center;"></div>
-
   <div style="text-align:center;margin-top:20px;">
-    <button onclick="window.location.href='index.html'" style="background:#00e5ff;color:#000;font-weight:bold;">🏠 Back to Home</button>
-    <button onclick="window.location.href='ai-buddhi.html'" style="background:#ffb700;color:#000;font-weight:bold;margin-left:10px;">🤖 AI Buddhi Live Chat</button>
-  </div>
-
-  <div style="text-align:center;margin-top:10px;">
     <button id="fullReportBtn" style="background:#16f0a7;color:#000;font-weight:bold;width:100%;">📜 Generate Full AI Report</button>
     <button id="pdfBtn" style="background:#FFD700;color:#000;font-weight:bold;width:100%;margin-top:8px;">💵 Download Full Report (5 $)</button>
   </div>
@@ -221,30 +208,23 @@ button:hover{
   <p id="reportText">Awaiting analysis...</p>
 </div>
 
-<!-- 🌐 Translator -->
-<script type="text/javascript">
-function googleTranslateElementInit(){
-  new google.translate.TranslateElement({
-    pageLanguage:'en',
-    includedLanguages:'en,si,ta,hi,bn,zh,ja,fr,de,es,it,ru,ar',
-    layout:google.translate.TranslateElement.InlineLayout.SIMPLE
-  },'google_translate_element');
-}
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 const vidL=document.getElementById("vidLeft");
 const vidR=document.getElementById("vidRight");
 const report=document.getElementById("reportText");
-let stream,leftLocked=false,rightLocked=false,leftImg=null,rightImg=null;
+let streamLeft,streamRight,leftLocked=false,rightLocked=false,leftImg=null,rightImg=null;
 
-// 🎥 Start Camera
+// 🎥 Start both cameras equal size
 async function initCam(){
   try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-    vidL.srcObject=stream; vidR.srcObject=stream;
+    streamLeft=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    streamRight=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    vidL.srcObject=streamLeft;
+    vidR.srcObject=streamRight;
+    vidL.style.aspectRatio="3/4";
+    vidR.style.aspectRatio="3/4";
   }catch(e){alert("Camera not available");}
 }
 initCam();
@@ -258,35 +238,50 @@ function capture(side){
   const vid=side==="left"?vidL:vidR;
   const beam=document.getElementById(side==="left"?"beamLeft":"beamRight");
   const canvas=document.createElement("canvas");
-  canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
+  canvas.width=vid.videoWidth;
+  canvas.height=vid.videoHeight;
   const ctx=canvas.getContext("2d");
   ctx.drawImage(vid,0,0,canvas.width,canvas.height);
   const img=canvas.toDataURL("image/png");
 
-  // lock logic
   if(side==="left"){
     leftLocked=true; leftImg=img;
-    vidL.replaceWith(Object.assign(document.createElement("img"),{src:img,className:"lockedImg"}));
+    vid.replaceWith(Object.assign(document.createElement("img"),{
+      src:img,className:"lockedImg",id:"vidLeft"
+    }));
     drawLines(ctx,canvas,"left");
-    report.textContent="✅ Left hand captured. Now scan right hand.";
+    report.textContent="✅ Left hand captured. Now capture right hand.";
   } else {
     rightLocked=true; rightImg=img;
-    animateBeam(beam,canvas,ctx);
+    animateBothBeams(canvas,ctx);
   }
 }
 
-// Golden beam animation
-function animateBeam(beam,canvas,ctx){
-  beam.style.opacity=1; let y=0;
-  const h=canvas.height;
+// Dual golden beams and camera off
+function animateBothBeams(canvas,ctx){
+  const beamL=document.getElementById("beamLeft");
+  const beamR=document.getElementById("beamRight");
+  beamL.style.opacity=1; beamR.style.opacity=1;
+  let y=0, h=canvas.height;
   const id=setInterval(()=>{
-    y+=5; beam.style.top=y+"px";
+    y+=5;
+    beamL.style.top=y+"px";
+    beamR.style.top=y+"px";
     if(y>h){
-      clearInterval(id); beam.style.opacity=0;
+      clearInterval(id);
+      beamL.style.opacity=0; beamR.style.opacity=0;
+      stopCameras();
       drawLines(ctx,canvas,"right");
       analyzeBoth();
     }
   },10);
+}
+
+// Stop both cameras when done
+function stopCameras(){
+  streamLeft?.getTracks().forEach(t=>t.stop());
+  streamRight?.getTracks().forEach(t=>t.stop());
+  console.log("🎥 Cameras stopped after dual scan");
 }
 
 // Draw colored lines (different palette)
@@ -296,13 +291,15 @@ function drawLines(ctx,canvas,side){
   const cool=["#00CED1","#1E90FF","#7B68EE","#ADFF2F","#00FA9A","#5F9EA0","#8A2BE2","#00BFFF"];
   const colors=side==="left"?warm:cool;
   for(let i=0;i<8;i++){
-    ctx.strokeStyle=colors[i];ctx.lineWidth=2;
-    ctx.beginPath();const y=h*(i+1)/9;
+    ctx.strokeStyle=colors[i];
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    const y=h*(i+1)/9;
     ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
   }
 }
 
-// Auto analyze both hands
+// Analyze both hands
 function analyzeBoth(){
   if(!leftImg||!rightImg)return;
   report.innerHTML="🧠 Analyzing both hands... please wait.";
@@ -313,10 +310,9 @@ function analyzeBoth(){
       <img src="${rightImg}" width="150" style="border-radius:8px;">
     </div>
     <b>AI Buddhi Report:</b>
-    <p>Your palm lines reveal deep mental strength and emotional stability.
-    The left hand indicates introspection and wisdom, while the right hand
-    represents action, destiny, and spiritual renewal. 
-    A balance between intuition and purpose is visible — a sign of awakening energy.</p>`;
+    <p>Both hands captured successfully. Mental–spiritual harmony detected. 
+    The golden energy stream indicates balanced intuition and purpose.
+    Dual scan complete ✅</p>`;
   },3000);
 }
 
