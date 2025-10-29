@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.9 True Sync Beam Lock Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V13.0 Perfect Fusion + Google Translate Edition</title>
 <style>
 :root{
   --bg:#0b0f16;
   --card:#101820;
   --neon:#00e5ff;
+  --pri:#16f0a7;
   --gold:#FFD700;
 }
 body{
@@ -24,8 +25,6 @@ h1{
   margin-top:18px;
   font-size:1.3rem;
 }
-
-/* camera layout */
 .camWrap{
   display:flex;
   flex-wrap:wrap;
@@ -34,6 +33,7 @@ h1{
   margin:20px auto;
   width:95%;
   max-width:700px;
+  position:relative;
 }
 .camBox{
   position:relative;
@@ -44,12 +44,12 @@ h1{
   box-shadow:0 0 20px #00e5ff22;
   overflow:hidden;
 }
-video, .lockedImg{
+video,.lockedImg{
   width:100%;
   height:100%;
   border-radius:12px;
-  background:#000;
   object-fit:cover;
+  background:#000;
 }
 .goldenBeam{
   position:absolute;
@@ -57,7 +57,7 @@ video, .lockedImg{
   left:0;
   width:100%;
   height:100%;
-  background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.45) 50%,transparent 100%);
+  background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.5) 50%,transparent 100%);
   box-shadow:0 0 25px var(--gold);
   opacity:0;
   pointer-events:none;
@@ -72,11 +72,40 @@ button{
   margin-top:8px;
   cursor:pointer;
 }
-button:hover{background:var(--gold);color:#000;}
+button:hover{background:var(--pri);color:#fff;}
+.options,.userForm,#reportBox{
+  background:#101820;
+  border-radius:12px;
+  width:90%;
+  max-width:700px;
+  margin:20px auto;
+  box-shadow:0 0 20px #00e5ff33 inset;
+  padding:12px;
+  text-align:left;
+}
+label{display:block;margin:6px 0 3px;color:#8bd;font-size:0.9rem;}
+input,select{
+  width:100%;
+  background:#0d131b;
+  color:#00e5ff;
+  border:none;
+  border-radius:6px;
+  padding:6px;
+}
+#reportBox{font-size:0.9rem;line-height:1.5;}
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.9</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.0</h1>
+
+<div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
+
+<div class="userForm">
+  <label>Name:</label><input id="userName" placeholder="Enter your name">
+  <label>Date of Birth:</label><input type="date" id="userDOB">
+  <label>ID Number:</label><input id="userID" placeholder="Enter ID">
+  <button id="saveUser">💾 Save Details</button>
+</div>
 
 <div class="camWrap">
   <div class="camBox">
@@ -85,7 +114,6 @@ button:hover{background:var(--gold);color:#000;}
     <div class="goldenBeam" id="beamLeft"></div>
     <button id="btnLeft">📸 Capture Left</button>
   </div>
-
   <div class="camBox">
     <h3>Right Hand</h3>
     <video id="vidRight" autoplay playsinline></video>
@@ -94,98 +122,128 @@ button:hover{background:var(--gold);color:#000;}
   </div>
 </div>
 
-<p id="status">Awaiting capture...</p>
+<div class="options">
+  <h3>⚙️ Analyzer Options</h3>
+  <label>Analyzer Mode:</label>
+  <select id="modeSel">
+    <option>Basic Insight</option>
+    <option selected>Advanced Line Scan</option>
+    <option>Divine Fusion (AI)</option>
+  </select>
+  <label>Language:</label>
+  <select id="langSel">
+    <option value="en">English</option>
+    <option value="si">Sinhala</option>
+    <option value="ta">Tamil</option>
+  </select>
+  <label>Brightness:</label>
+  <input id="brightness" type="range" min="0.5" max="2" step="0.1" value="1">
+</div>
+
+<div id="reportBox">
+  <b>AI Insight:</b>
+  <p id="reportText">Awaiting analysis...</p>
+  <div style="text-align:center;">
+    <button id="speakBtn">🔊 Speak Report</button>
+    <button id="homeBtn">🏠 Back to Home</button>
+    <button id="pdfBtn" style="background:#FFD700;color:#000;margin-left:6px;">💵 Full Report (5$)</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+function googleTranslateElementInit(){
+ new google.translate.TranslateElement({pageLanguage:'en',
+ includedLanguages:'en,si,ta,hi,bn,zh,ja,fr,de,es,it,ru,ar'},
+ 'google_translate_element');
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 <script>
-const vidL=document.getElementById("vidLeft");
-const vidR=document.getElementById("vidRight");
-const beamL=document.getElementById("beamLeft");
-const beamR=document.getElementById("beamRight");
-const status=document.getElementById("status");
+const vidL=document.getElementById("vidLeft"),
+      vidR=document.getElementById("vidRight"),
+      beamL=document.getElementById("beamLeft"),
+      beamR=document.getElementById("beamRight"),
+      report=document.getElementById("reportText");
+let streamL,streamR,leftImg,rightImg;
 
-let streamL,streamR,leftImg,rightImg,leftLocked=false,rightLocked=false;
+(async()=>{
+ const opt={video:{facingMode:"environment",aspectRatio:3/4}};
+ try{
+  streamL=await navigator.mediaDevices.getUserMedia(opt);
+  streamR=await navigator.mediaDevices.getUserMedia(opt);
+  vidL.srcObject=streamL; vidR.srcObject=streamR;
+ }catch(e){alert("Camera error: "+e.message);}
+})();
 
-// start cameras
-async function initCam(){
-  const opt={video:{facingMode:"environment",aspectRatio:3/4}};
-  try{
-    streamL=await navigator.mediaDevices.getUserMedia(opt);
-    streamR=await navigator.mediaDevices.getUserMedia(opt);
-    vidL.srcObject=streamL;
-    vidR.srcObject=streamR;
-  }catch(e){alert("Camera error: "+e.message);}
-}
-initCam();
-
-// capture
 document.getElementById("btnLeft").onclick=()=>capture("left");
 document.getElementById("btnRight").onclick=()=>capture("right");
 
 function capture(side){
-  const vid=side==="left"?vidL:vidR;
-  const canvas=document.createElement("canvas");
-  canvas.width=vid.videoWidth;
-  canvas.height=vid.videoHeight;
-  const ctx=canvas.getContext("2d");
-  ctx.drawImage(vid,0,0,canvas.width,canvas.height);
-  const imgData=canvas.toDataURL("image/png");
-
-  const img=document.createElement("img");
-  img.src=imgData;
-  img.className="lockedImg";
-
-  if(side==="left"){
-    vid.replaceWith(img);
-    leftImg=imgData; leftLocked=true;
-    status.textContent="✅ Left captured. Capture right hand.";
-  }else{
-    vid.replaceWith(img);
-    rightImg=imgData; rightLocked=true;
-    status.textContent="✅ Both captured. Preparing beam scan...";
-    triggerBeamSequence();
-  }
+ const vid=side==="left"?vidL:vidR;
+ const canvas=document.createElement("canvas");
+ canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
+ const ctx=canvas.getContext("2d");
+ ctx.drawImage(vid,0,0,canvas.width,canvas.height);
+ drawLines(ctx,canvas,side);
+ const img=document.createElement("img");
+ img.src=canvas.toDataURL("image/png"); img.className="lockedImg";
+ vid.replaceWith(img);
+ if(side==="left"){leftImg=img.src;report.textContent="✅ Left captured. Capture right hand.";}
+ else{rightImg=img.src;report.textContent="✅ Both captured. Preparing beam..."; triggerSequence();}
 }
 
-// sequence: 3s delay -> beam scroll -> 2s later blackout
-function triggerBeamSequence(){
-  setTimeout(()=>{
-    animateBeams();
-    setTimeout(()=>blackout(),5000);
-  },3000);
+function drawLines(ctx,canvas,side){
+ const w=canvas.width,h=canvas.height;
+ const colors=["#FFD700","#FF4500","#FF69B4","#00CED1","#ADFF2F","#FF6347","#00FF7F","#BA55D3"];
+ for(let i=0;i<8;i++){ctx.strokeStyle=colors[i];ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,h*(i+1)/9);ctx.lineTo(w,h*(i+1)/9);ctx.stroke();}
 }
 
-// beam scroll animation
+function triggerSequence(){
+ setTimeout(()=>{animateBeams();setTimeout(()=>blackout(),5000);},3000);
+}
 function animateBeams(){
-  beamL.style.opacity=1;
-  beamR.style.opacity=1;
-  let y=0;
-  const h=400;
-  const id=setInterval(()=>{
-    y+=6;
-    beamL.style.top=y+"px";
-    beamR.style.top=y+"px";
-    if(y>h){
-      clearInterval(id);
-      beamL.style.opacity=0;
-      beamR.style.opacity=0;
-      status.textContent="🌟 Beam scan complete.";
-    }
-  },10);
+ beamL.style.opacity=1;beamR.style.opacity=1;
+ let y=0;const h=400;
+ const id=setInterval(()=>{
+  y+=6;beamL.style.top=y+"px";beamR.style.top=y+"px";
+  if(y>h){clearInterval(id);beamL.style.opacity=0;beamR.style.opacity=0;
+   report.innerHTML="🌟 Beam scan complete. Analyzing...";
+   setTimeout(showReport,1500);
+  }
+ },10);
 }
-
-// blackout
 function blackout(){
-  document.querySelectorAll(".lockedImg").forEach(el=>{
-    el.style.filter="brightness(0)";
-  });
-  stopAll();
-  status.textContent="🖤 Cameras off.";
+ document.querySelectorAll(".lockedImg").forEach(el=>el.style.filter="brightness(0)");
+ [streamL,streamR].forEach(s=>s?.getTracks().forEach(t=>t.stop()));
 }
-
-// stop cameras
-function stopAll(){
-  [streamL,streamR].forEach(s=>s?.getTracks().forEach(t=>t.stop()));
+function showReport(){
+ report.innerHTML="Your palms reveal deep wisdom and energy balance.<br>Dual harmony detected ✅";
+ speak(report.innerText);
 }
+document.getElementById("saveUser").onclick=()=>{
+ const d={name:userName.value,dob:userDOB.value,id:userID.value};
+ localStorage.setItem("userData",JSON.stringify(d));
+ alert(`Saved ${d.name||"User"}`);
+};
+document.getElementById("pdfBtn").onclick=()=>{
+ const { jsPDF }=window.jspdf;const doc=new jsPDF();
+ const d=JSON.parse(localStorage.getItem("userData")||"{}");
+ doc.text("Sathyadarshana Quantum Palm Analyzer Report",10,15);
+ doc.text(`Name: ${d.name||"N/A"}`,10,25);
+ doc.text(`DOB: ${d.dob||"N/A"}`,10,33);
+ doc.text(`ID: ${d.id||"N/A"}`,10,41);
+ doc.text("Dual Scan Complete. $5 Demo Version",10,55);
+ doc.save("AI_Palm_Report.pdf");
+};
+function speak(text){const u=new SpeechSynthesisUtterance(text);speechSynthesis.speak(u);}
+document.getElementById("speakBtn").onclick=()=>speak(report.innerText);
+document.getElementById("homeBtn").onclick=()=>location.href='index.html';
+brightness.oninput=()=>{const v=brightness.value;
+ document.querySelectorAll("video").forEach(vd=>vd.style.filter=`brightness(${v})`);
+};
 </script>
 </body>
 </html>
