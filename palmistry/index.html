@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.4 Golden Beam + User Options Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.5 User Overlay + $5 PDF Edition</title>
 <style>
 :root{
   --bg:#0b0f16;
@@ -35,7 +35,34 @@ h1{
   margin:20px auto;
   width:95%;
   max-width:700px;
+  position:relative;
 }
+
+/* user info overlay */
+.userForm{
+  position:absolute;
+  top:-10px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  max-width:640px;
+  background:#101820cc;
+  backdrop-filter:blur(6px);
+  border:1px solid #00e5ff55;
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 0 12px #00e5ff44 inset;
+  z-index:10;
+}
+.userForm label{display:block;text-align:left;font-size:0.9rem;color:#8bd;margin:6px 0 2px;}
+.userForm input{
+  width:100%;padding:6px;border-radius:6px;background:#0d131b;color:#00e5ff;border:none;
+}
+.userForm button{
+  margin-top:8px;width:100%;background:var(--pri);color:#fff;border:none;border-radius:8px;
+  padding:8px;font-weight:bold;
+}
+
 .camBox{
   position:relative;
   width:320px;
@@ -75,7 +102,7 @@ button:hover{
   color:#fff;
 }
 
-/* OPTIONS PANEL */
+/* options + report */
 .options{
   margin:20px auto;
   background:#101820;
@@ -100,12 +127,7 @@ button:hover{
   border-radius:6px;
   padding:6px;
 }
-.options input[type=checkbox]{
-  transform:scale(1.3);
-  margin-right:8px;
-}
-
-/* AI report box */
+.options input[type=checkbox]{transform:scale(1.3);margin-right:8px}
 #reportBox{
   background:#0d131b;
   border-radius:14px;
@@ -121,9 +143,20 @@ button:hover{
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.4</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.5</h1>
 
 <div class="camWrap">
+  <!-- 🧍‍♂️ User Info Overlay -->
+  <div class="userForm">
+    <label for="userName">Name:</label>
+    <input type="text" id="userName" placeholder="Enter your name">
+    <label for="userDOB">Date of Birth:</label>
+    <input type="date" id="userDOB">
+    <label for="userID">ID Number:</label>
+    <input type="text" id="userID" placeholder="Enter ID">
+    <button id="saveUser">💾 Save Details</button>
+  </div>
+
   <!-- Left Hand -->
   <div class="camBox" id="leftBox">
     <h3>Left Hand</h3>
@@ -141,7 +174,6 @@ button:hover{
   </div>
 </div>
 
-<!-- ⚙️ OPTIONS PANEL -->
 <div class="options">
   <h3>⚙️ Analyzer Options</h3>
   <label>Analyzer Mode:</label>
@@ -163,20 +195,6 @@ button:hover{
 
   <label><input type="checkbox" id="autosave" checked> Auto Save Captures</label>
 
-  <hr style="margin:14px 0;border:0;border-top:1px solid #223;">
-  <h3>🧍‍♂️ User Information</h3>
-  <label for="userName">Name:</label>
-  <input type="text" id="userName" placeholder="Enter your name" style="width:100%;padding:6px;border-radius:6px;background:#0d131b;color:#00e5ff;border:none;">
-
-  <label for="userDOB">Date of Birth:</label>
-  <input type="date" id="userDOB" style="width:100%;padding:6px;border-radius:6px;background:#0d131b;color:#00e5ff;border:none;">
-
-  <label for="userID">ID Number:</label>
-  <input type="text" id="userID" placeholder="Enter ID" style="width:100%;padding:6px;border-radius:6px;background:#0d131b;color:#00e5ff;border:none;">
-
-  <button id="saveUser" style="width:100%;margin-top:10px;background:var(--pri);color:#fff;">💾 Save Details</button>
-
-  <!-- 🌐 Translator -->
   <div id="google_translate_element" style="margin-top:16px;text-align:center;"></div>
 
   <div style="text-align:center;margin-top:20px;">
@@ -186,6 +204,7 @@ button:hover{
 
   <div style="text-align:center;margin-top:10px;">
     <button id="fullReportBtn" style="background:#16f0a7;color:#000;font-weight:bold;width:100%;">📜 Generate Full AI Report</button>
+    <button id="pdfBtn" style="background:#FFD700;color:#000;font-weight:bold;width:100%;margin-top:8px;">💵 Download Full Report (5 $)</button>
   </div>
 </div>
 
@@ -196,15 +215,16 @@ button:hover{
 
 <!-- 🌐 Google Translator -->
 <script type="text/javascript">
-function googleTranslateElementInit() {
+function googleTranslateElementInit(){
   new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    includedLanguages: 'en,si,ta,hi,bn,zh,ja,fr,de,es,it,ru,ar',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-  }, 'google_translate_element');
+    pageLanguage:'en',
+    includedLanguages:'en,si,ta,hi,bn,zh,ja,fr,de,es,it,ru,ar',
+    layout:google.translate.TranslateElement.InlineLayout.SIMPLE
+  },'google_translate_element');
 }
 </script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 const vidL=document.getElementById("vidLeft");
@@ -212,17 +232,16 @@ const vidR=document.getElementById("vidRight");
 const report=document.getElementById("reportText");
 let stream;
 
-// 🎥 Start camera
+// 🎥 Start Camera
 async function initCam(){
   try{
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-    vidL.srcObject=stream;
-    vidR.srcObject=stream;
+    vidL.srcObject=stream; vidR.srcObject=stream;
   }catch(e){alert("Camera not available");}
 }
 initCam();
 
-// 📸 Capture
+// Capture with restart + auto-analyze
 document.getElementById("btnLeft").onclick=()=>capture("left");
 document.getElementById("btnRight").onclick=()=>capture("right");
 
@@ -234,52 +253,49 @@ function capture(side){
   const ctx=canvas.getContext("2d");
   ctx.drawImage(vid,0,0,canvas.width,canvas.height);
 
-  stream.getTracks().forEach(t=>t.stop());
-  vid.srcObject=null;
-
-  beam.style.opacity=1;
-  let y=0;
+  beam.style.opacity=1; let y=0;
   const id=setInterval(()=>{
-    y+=5;
-    beam.style.top=y+"px";
+    y+=5; beam.style.top=y+"px";
     if(y>canvas.height){
-      clearInterval(id);
-      beam.style.opacity=0;
+      clearInterval(id); beam.style.opacity=0;
       drawColorLines(ctx,canvas);
+      const img=canvas.toDataURL("image/png");
+      localStorage.setItem(`palm_${side}`,img);
+      if(side==="left"){ restartCamera(); report.textContent="✅ Left hand captured. Now scan right hand."; }
+      else{ analyzeBothHands(); }
     }
   },10);
 }
-
-// 🎨 Draw 8 colored lines
+function restartCamera(){
+  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
+  .then(s=>{stream=s;vidL.srcObject=stream;vidR.srcObject=stream;})
+  .catch(e=>console.error("Restart failed",e));
+}
 function drawColorLines(ctx,canvas){
   const w=canvas.width,h=canvas.height;
   const colors=["#FFD700","#FF4500","#00CED1","#ADFF2F","#FF69B4","#1E90FF","#9932CC","#FF6347"];
   for(let i=0;i<8;i++){
-    ctx.strokeStyle=colors[i];
-    ctx.lineWidth=2;
-    ctx.beginPath();
-    const y=h*(i+1)/9;
-    ctx.moveTo(0,y);
-    ctx.lineTo(w,y);
-    ctx.stroke();
+    ctx.strokeStyle=colors[i];ctx.lineWidth=2;
+    ctx.beginPath();const y=h*(i+1)/9;
+    ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
   }
-  const img=canvas.toDataURL("image/png");
-  showReport(img);
+}
+function analyzeBothHands(){
+  const left=localStorage.getItem("palm_left");
+  const right=localStorage.getItem("palm_right");
+  if(!left||!right)return;
+  report.innerHTML="🧠 Analyzing both hands... please wait.";
+  setTimeout(()=>{
+    report.innerHTML=`<img src="${left}" width="120" style="border-radius:8px;margin:6px;">
+    <img src="${right}" width="120" style="border-radius:8px;margin:6px;">
+    <br><b>AI Buddhi Report:</b><br>ඔබගේ අත් දෙකම විශ්ලේෂණය කර ඇත. අතේ රේඛා වලට අභ්‍යන්තර ශක්තිමත් ආකෘති ඇත.
+    ඔබගේ ජීවිතයේ ශක්තිමත් මගපෙන්වීමක් පවතින අතර, ඔබ තුළ ආත්මීය නවෝත්තාපනයක් ඉපදෙමින් පවතී.`;
+  },3000);
 }
 
-// 🧠 Show Mini Report
-function showReport(img){
-  const sample=`🤖 Analyzer mode: ADVANCED\n\nThis palm scan captured multi-spectrum golden resonances and eight energy layers. Each hue reflects emotional, intellectual, and karmic vibrations aligned with spiritual purpose. The pattern reveals persistence, creativity, and inner wisdom merging with divine guidance.\n\nContinue aligning actions with compassion and truth. The balance of colors suggests harmony and destiny awakening beyond fear.`;
-  report.innerHTML=`<img src="${img}" width="160" style="border-radius:8px;margin:8px;"><br>${sample}`;
-}
-
-// 💾 Save User Data
+// 💾 Save User Info
 document.getElementById("saveUser").onclick=()=>{
-  const data={
-    name:userName.value,
-    dob:userDOB.value,
-    id:userID.value
-  };
+  const data={name:userName.value,dob:userDOB.value,id:userID.value};
   localStorage.setItem("userData",JSON.stringify(data));
   alert(`✅ Saved: ${data.name||"User"}`);
 };
@@ -287,18 +303,33 @@ document.getElementById("saveUser").onclick=()=>{
 // 📜 Full Report
 document.getElementById("fullReportBtn").onclick=()=>{
   const d=JSON.parse(localStorage.getItem("userData")||"{}");
-  const msg=`📄 Generating full AI analysis for ${d.name||"User"} (${d.id||"N/A"}) born ${d.dob||"Unknown"}...`;
-  report.textContent=msg+"\n\n🧠 AI Buddhi analyzing palm lines, aura & karmic data...";
-  setTimeout(()=>{
-    report.textContent+="\n\n✅ Full report ready (Preview version).";
-  },3000);
+  report.textContent=`📄 Generating full AI analysis for ${d.name||"User"} (${d.id||"N/A"}) born ${d.dob||"Unknown"}...`;
+  setTimeout(()=>{report.textContent+="\n\n✅ Full report ready (Preview).";},3000);
 };
 
-// 🔆 Brightness control
-document.getElementById("brightness").oninput=()=>{
-  const val=brightness.value;
-  vidL.style.filter=`brightness(${val})`;
-  vidR.style.filter=`brightness(${val})`;
+// 💵 PDF Download ($5)
+document.getElementById("pdfBtn").onclick=()=>{
+  const { jsPDF } = window.jspdf;
+  const doc=new jsPDF();
+  doc.setFont("helvetica","bold");
+  doc.text("Sathyadarshana Quantum Palm Analyzer - AI Full Report",10,15);
+  const data=JSON.parse(localStorage.getItem("userData")||"{}");
+  doc.setFontSize(12);
+  doc.text(`Name: ${data.name||"N/A"}`,10,30);
+  doc.text(`DOB: ${data.dob||"N/A"}`,10,38);
+  doc.text(`ID: ${data.id||"N/A"}`,10,46);
+  doc.text("------------------------------------------------------------",10,52);
+  doc.text("This report provides advanced AI-driven analysis based on your palm scans.",10,62,{maxWidth:180});
+  doc.text("Payment: $5 (Demo version, not charged)",10,84);
+  doc.save("AI_Palm_Report.pdf");
+  alert("💵 Your AI Full Report PDF has been generated.");
+};
+
+// Brightness
+brightness.oninput=()=>{
+  const v=brightness.value;
+  vidL.style.filter=`brightness(${v})`;
+  vidR.style.filter=`brightness(${v})`;
 };
 </script>
 </body>
