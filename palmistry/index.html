@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · Beam Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · Modular Fusion</title>
 <style>
 :root{
   --bg:#0b0f16;
@@ -21,7 +21,7 @@ body{
 h1{
   color:var(--neon);
   text-shadow:0 0 15px var(--neon);
-  margin-top:16px;
+  margin-top:18px;
   font-size:1.4rem;
 }
 .wrapper{
@@ -31,26 +31,13 @@ h1{
   justify-content:center;
   margin:30px auto;
   width:95%;
-  max-width:650px;
+  max-width:680px;
   background:var(--card);
   border-radius:20px;
   padding:20px;
-  box-shadow:0 0 20px #00e5ff22;
+  box-shadow:0 0 25px #00e5ff22;
   overflow:hidden;
-}
-.scanBeam{
-  position:absolute;
-  top:-100%;
-  left:0;
-  width:100%;
-  height:100%;
-  background:linear-gradient(180deg,transparent 0%,rgba(0,255,255,0.2) 50%,transparent 100%);
-  animation:scanMove 3s linear infinite;
-  pointer-events:none;
-}
-@keyframes scanMove{
-  0%{top:-100%;}
-  100%{top:100%;}
+  position:relative;
 }
 #cameraArea{
   position:relative;
@@ -59,6 +46,56 @@ h1{
   border-radius:16px;
   overflow:hidden;
   background:#000;
+  margin-bottom:16px;
+}
+.scanBeam{
+  position:absolute;
+  top:-100%;
+  left:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(180deg,transparent 0%,rgba(0,255,255,0.25) 50%,transparent 100%);
+  animation:scanMove 3s linear infinite;
+  pointer-events:none;
+}
+@keyframes scanMove{
+  0%{top:-100%;}
+  100%{top:100%;}
+}
+
+/* Button Bar */
+.btnBar{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin:10px 0;
+}
+button{
+  background:var(--neon);
+  border:none;
+  color:#000;
+  font-weight:bold;
+  padding:8px 16px;
+  border-radius:8px;
+  transition:0.2s;
+}
+button:hover{
+  background:var(--pri);
+  color:#fff;
+}
+
+/* Report box */
+#reportBox{
+  background:#0d131b;
+  border-radius:14px;
+  padding:12px;
+  margin-top:15px;
+  width:95%;
+  max-width:640px;
+  box-shadow:0 0 12px #00e5ff33 inset;
+  text-align:left;
+  font-size:0.9rem;
+  line-height:1.5;
 }
 </style>
 </head>
@@ -69,14 +106,44 @@ h1{
   <div id="cameraArea">
     <div class="scanBeam"></div>
   </div>
-  <p style="margin-top:12px;color:#9bd;">Camera initialized via <b>modules/camera.js</b></p>
+
+  <div class="btnBar">
+    <button id="btnCapture">📸 Capture</button>
+    <button id="btnAnalyze">🧠 Analyze</button>
+    <button id="btnSpeak">🔊 Voice</button>
+  </div>
+
+  <div id="reportBox">
+    <b>AI Insight:</b>
+    <p id="reportText">Awaiting analysis...</p>
+  </div>
 </div>
 
 <script type="module">
 import { initCamera } from "./modules/camera.js";
 
-// 🔹 Initialize the camera module directly here
+// Initialize camera preview
 initCamera("cameraArea");
+
+// --- Capture / Analyze / Speak ---
+const reportEl = document.getElementById("reportText");
+
+document.getElementById("btnCapture").onclick = ()=>{
+  reportEl.textContent = "📷 Capturing palm image...";
+};
+
+document.getElementById("btnAnalyze").onclick = ()=>{
+  reportEl.textContent = "🧠 AI analyzing palm features, please wait...";
+  setTimeout(()=>{
+    reportEl.textContent = "✨ Analysis complete: Your palm lines show insight, foresight, and balance between mind and heart. A full AI report will appear here in the next version.";
+  },2000);
+};
+
+document.getElementById("btnSpeak").onclick = ()=>{
+  const msg = new SpeechSynthesisUtterance(reportEl.textContent);
+  msg.lang = "en-US";
+  window.speechSynthesis.speak(msg);
+};
 </script>
 </body>
 </html>
