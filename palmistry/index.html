@@ -214,7 +214,9 @@ function capture(side){
  img.src=canvas.toDataURL("image/png");img.className="lockedImg";
  vid.replaceWith(img);
  if(side==="left"){leftImg=img.src;report.textContent="✅ Left captured. Capture right hand.";}
- else{rightImg=img.src;report.textContent="✅ Both captured. Preparing beam...";triggerSequence();}
+ else{rightImg=img.src;report.textContent="✅ Both captured. Preparing beam...";}
+ // auto-analyze trigger only when both hands captured
+ if(leftImg && rightImg){ triggerSequence(); }
 }
 
 function drawLines(ctx,canvas,side){
@@ -225,7 +227,7 @@ function drawLines(ctx,canvas,side){
 }
 
 function triggerSequence(){
- setTimeout(()=>{animateBeams();setTimeout(()=>blackout(),5000);},3000);
+ setTimeout(()=>{animateBeams();setTimeout(()=>blackout(),5000);},1500);
 }
 function animateBeams(){
  beamL.style.opacity=1;beamR.style.opacity=1;
