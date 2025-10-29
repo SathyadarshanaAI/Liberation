@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.3 + Options</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.4 Golden Beam + User Options Edition</title>
 <style>
 :root{
   --bg:#0b0f16;
   --card:#101820;
   --neon:#00e5ff;
   --pri:#16f0a7;
+  --gold:#FFD700;
 }
 body{
   margin:0;
@@ -49,19 +50,16 @@ video{
   border-radius:12px;
   background:#000;
 }
-.scanBeam{
+.goldenBeam{
   position:absolute;
   top:-100%;
   left:0;
   width:100%;
   height:100%;
-  background:linear-gradient(180deg,transparent 0%,rgba(0,255,255,0.25) 50%,transparent 100%);
-  animation:scanMove 3s linear infinite;
+  background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.45) 50%,transparent 100%);
+  box-shadow:0 0 20px var(--gold);
+  opacity:0;
   pointer-events:none;
-}
-@keyframes scanMove{
-  0%{top:-100%;}
-  100%{top:100%;}
 }
 button{
   background:var(--neon);
@@ -123,14 +121,14 @@ button:hover{
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.3</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.4</h1>
 
 <div class="camWrap">
   <!-- Left Hand -->
   <div class="camBox" id="leftBox">
     <h3>Left Hand</h3>
     <video id="vidLeft" autoplay playsinline></video>
-    <div class="scanBeam"></div>
+    <div class="goldenBeam" id="beamLeft"></div>
     <button id="btnLeft">📸 Capture Left</button>
   </div>
 
@@ -138,7 +136,7 @@ button:hover{
   <div class="camBox" id="rightBox">
     <h3>Right Hand</h3>
     <video id="vidRight" autoplay playsinline></video>
-    <div class="scanBeam"></div>
+    <div class="goldenBeam" id="beamRight"></div>
     <button id="btnRight">📸 Capture Right</button>
   </div>
 </div>
@@ -149,21 +147,46 @@ button:hover{
   <label>Analyzer Mode:</label>
   <select id="modeSel">
     <option value="basic">Basic Insight</option>
-    <option value="advanced">Advanced Line Scan</option>
+    <option value="advanced" selected>Advanced Line Scan</option>
     <option value="divine">Divine Fusion (AI)</option>
   </select>
 
   <label>Language:</label>
   <select id="langSel">
     <option value="en">English</option>
-    <option value="si">සිංහල</option>
+    <option value="si" selected>සිංහල</option>
     <option value="ta">தமிழ்</option>
   </select>
 
   <label>Brightness:</label>
   <input id="brightness" type="range" min="0.5" max="2" step="0.1" value="1">
 
-  <label><input type="checkbox" id="autosave"> Auto Save Captures</label>
+  <label><input type="checkbox" id="autosave" checked> Auto Save Captures</label>
+
+  <hr style="margin:14px 0;border:0;border-top:1px solid #223;">
+  <h3>🧍‍♂️ User Information</h3>
+  <label for="userName">Name:</label>
+  <input type="text" id="userName" placeholder="Enter your name" style="width:100%;padding:6px;border-radius:6px;background:#0d131b;color:#00e5ff;border:none;">
+
+  <label for="userDOB">Date of Birth:</label>
+  <input type="date" id="userDOB" style="width:100%;padding:6px;border-radius:6px;background:#0d131b;color:#00e5ff;border:none;">
+
+  <label for="userID">ID Number:</label>
+  <input type="text" id="userID" placeholder="Enter ID" style="width:100%;padding:6px;border-radius:6px;background:#0d131b;color:#00e5ff;border:none;">
+
+  <button id="saveUser" style="width:100%;margin-top:10px;background:var(--pri);color:#fff;">💾 Save Details</button>
+
+  <!-- 🌐 Translator -->
+  <div id="google_translate_element" style="margin-top:16px;text-align:center;"></div>
+
+  <div style="text-align:center;margin-top:20px;">
+    <button onclick="window.location.href='index.html'" style="background:#00e5ff;color:#000;font-weight:bold;">🏠 Back to Home</button>
+    <button onclick="window.location.href='ai-buddhi.html'" style="background:#ffb700;color:#000;font-weight:bold;margin-left:10px;">🤖 AI Buddhi Live Chat</button>
+  </div>
+
+  <div style="text-align:center;margin-top:10px;">
+    <button id="fullReportBtn" style="background:#16f0a7;color:#000;font-weight:bold;width:100%;">📜 Generate Full AI Report</button>
+  </div>
 </div>
 
 <div id="reportBox">
@@ -171,45 +194,111 @@ button:hover{
   <p id="reportText">Awaiting analysis...</p>
 </div>
 
-<script type="module">
-import { initCamera } from "./modules/camera.js";
+<!-- 🌐 Google Translator -->
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,si,ta,hi,bn,zh,ja,fr,de,es,it,ru,ar',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+  }, 'google_translate_element');
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
-initCamera("vidLeft");
-initCamera("vidRight");
+<script>
+const vidL=document.getElementById("vidLeft");
+const vidR=document.getElementById("vidRight");
+const report=document.getElementById("reportText");
+let stream;
 
-const report = document.getElementById("reportText");
-const bright = document.getElementById("brightness");
-const autoSave = document.getElementById("autosave");
-const langSel = document.getElementById("langSel");
-const modeSel = document.getElementById("modeSel");
+// 🎥 Start camera
+async function initCam(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    vidL.srcObject=stream;
+    vidR.srcObject=stream;
+  }catch(e){alert("Camera not available");}
+}
+initCam();
 
-document.getElementById("btnLeft").onclick = ()=>{
-  report.textContent = "📷 Captured left hand successfully.";
-  saveIfEnabled("palmLeft");
-};
-document.getElementById("btnRight").onclick = ()=>{
-  report.textContent = "📷 Captured right hand successfully.";
-  saveIfEnabled("palmRight");
-};
+// 📸 Capture
+document.getElementById("btnLeft").onclick=()=>capture("left");
+document.getElementById("btnRight").onclick=()=>capture("right");
 
-bright.oninput = ()=>{
-  const val = bright.value;
-  document.getElementById("vidLeft").style.filter = `brightness(${val})`;
-  document.getElementById("vidRight").style.filter = `brightness(${val})`;
-};
+function capture(side){
+  const vid=side==="left"?vidL:vidR;
+  const beam=document.getElementById(side==="left"?"beamLeft":"beamRight");
+  const canvas=document.createElement("canvas");
+  canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
+  const ctx=canvas.getContext("2d");
+  ctx.drawImage(vid,0,0,canvas.width,canvas.height);
 
-function saveIfEnabled(key){
-  if(autoSave.checked){
-    localStorage.setItem(key, Date.now());
-    console.log("Auto-saved:", key);
-  }
+  stream.getTracks().forEach(t=>t.stop());
+  vid.srcObject=null;
+
+  beam.style.opacity=1;
+  let y=0;
+  const id=setInterval(()=>{
+    y+=5;
+    beam.style.top=y+"px";
+    if(y>canvas.height){
+      clearInterval(id);
+      beam.style.opacity=0;
+      drawColorLines(ctx,canvas);
+    }
+  },10);
 }
 
-langSel.onchange = ()=>{
-  report.textContent = `🌐 Language set to ${langSel.options[langSel.selectedIndex].text}.`;
+// 🎨 Draw 8 colored lines
+function drawColorLines(ctx,canvas){
+  const w=canvas.width,h=canvas.height;
+  const colors=["#FFD700","#FF4500","#00CED1","#ADFF2F","#FF69B4","#1E90FF","#9932CC","#FF6347"];
+  for(let i=0;i<8;i++){
+    ctx.strokeStyle=colors[i];
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    const y=h*(i+1)/9;
+    ctx.moveTo(0,y);
+    ctx.lineTo(w,y);
+    ctx.stroke();
+  }
+  const img=canvas.toDataURL("image/png");
+  showReport(img);
+}
+
+// 🧠 Show Mini Report
+function showReport(img){
+  const sample=`🤖 Analyzer mode: ADVANCED\n\nThis palm scan captured multi-spectrum golden resonances and eight energy layers. Each hue reflects emotional, intellectual, and karmic vibrations aligned with spiritual purpose. The pattern reveals persistence, creativity, and inner wisdom merging with divine guidance.\n\nContinue aligning actions with compassion and truth. The balance of colors suggests harmony and destiny awakening beyond fear.`;
+  report.innerHTML=`<img src="${img}" width="160" style="border-radius:8px;margin:8px;"><br>${sample}`;
+}
+
+// 💾 Save User Data
+document.getElementById("saveUser").onclick=()=>{
+  const data={
+    name:userName.value,
+    dob:userDOB.value,
+    id:userID.value
+  };
+  localStorage.setItem("userData",JSON.stringify(data));
+  alert(`✅ Saved: ${data.name||"User"}`);
 };
-modeSel.onchange = ()=>{
-  report.textContent = `🧠 Analyzer mode: ${modeSel.value.toUpperCase()}.`;
+
+// 📜 Full Report
+document.getElementById("fullReportBtn").onclick=()=>{
+  const d=JSON.parse(localStorage.getItem("userData")||"{}");
+  const msg=`📄 Generating full AI analysis for ${d.name||"User"} (${d.id||"N/A"}) born ${d.dob||"Unknown"}...`;
+  report.textContent=msg+"\n\n🧠 AI Buddhi analyzing palm lines, aura & karmic data...";
+  setTimeout(()=>{
+    report.textContent+="\n\n✅ Full report ready (Preview version).";
+  },3000);
+};
+
+// 🔆 Brightness control
+document.getElementById("brightness").oninput=()=>{
+  const val=brightness.value;
+  vidL.style.filter=`brightness(${val})`;
+  vidR.style.filter=`brightness(${val})`;
 };
 </script>
 </body>
