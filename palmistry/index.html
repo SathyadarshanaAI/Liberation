@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.7 Dual Lock Beam Fusion Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.8 Perfect Beam Lock Edition</title>
 <style>
 :root{
   --bg:#0b0f16;
@@ -38,7 +38,7 @@ h1{
   position:relative;
 }
 
-/* user info overlay */
+/* form */
 .userForm{
   position:absolute;
   top:-10px;
@@ -85,8 +85,8 @@ video, .lockedImg{
   left:0;
   width:100%;
   height:100%;
-  background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.45) 50%,transparent 100%);
-  box-shadow:0 0 20px var(--gold);
+  background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.5) 50%,transparent 100%);
+  box-shadow:0 0 25px var(--gold);
   opacity:0;
   pointer-events:none;
 }
@@ -104,7 +104,6 @@ button:hover{
   color:#fff;
 }
 
-/* options + report */
 .options{
   margin:20px auto;
   background:#101820;
@@ -145,10 +144,9 @@ button:hover{
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.7</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.8</h1>
 
 <div class="camWrap">
-  <!-- 🧍‍♂️ User Info Overlay -->
   <div class="userForm">
     <label for="userName">Name:</label>
     <input type="text" id="userName" placeholder="Enter your name">
@@ -159,7 +157,7 @@ button:hover{
     <button id="saveUser">💾 Save Details</button>
   </div>
 
-  <!-- Left Hand -->
+  <!-- Left -->
   <div class="camBox" id="leftBox">
     <h3>Left Hand</h3>
     <video id="vidLeft" autoplay playsinline></video>
@@ -167,7 +165,7 @@ button:hover{
     <button id="btnLeft">📸 Capture Left</button>
   </div>
 
-  <!-- Right Hand -->
+  <!-- Right -->
   <div class="camBox" id="rightBox">
     <h3>Right Hand</h3>
     <video id="vidRight" autoplay playsinline></video>
@@ -194,7 +192,6 @@ button:hover{
 
   <label>Brightness:</label>
   <input id="brightness" type="range" min="0.5" max="2" step="0.1" value="1">
-
   <label><input type="checkbox" id="autosave" checked> Auto Save Captures</label>
 
   <div style="text-align:center;margin-top:20px;">
@@ -216,24 +213,22 @@ const vidR=document.getElementById("vidRight");
 const report=document.getElementById("reportText");
 let streamLeft,streamRight,leftLocked=false,rightLocked=false,leftImg=null,rightImg=null;
 
-// 🎥 Start both cameras equal size
+// 🎥 start cams same size
 async function initCam(){
   try{
-    streamLeft=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-    streamRight=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    const constraints={video:{facingMode:"environment",aspectRatio:3/4}};
+    streamLeft=await navigator.mediaDevices.getUserMedia(constraints);
+    streamRight=await navigator.mediaDevices.getUserMedia(constraints);
     vidL.srcObject=streamLeft;
     vidR.srcObject=streamRight;
-    vidL.style.aspectRatio="3/4";
-    vidR.style.aspectRatio="3/4";
-  }catch(e){alert("Camera not available");}
+  }catch(e){alert("Camera not available: "+e.message);}
 }
 initCam();
 
-// Capture buttons
+// buttons
 document.getElementById("btnLeft").onclick=()=>capture("left");
 document.getElementById("btnRight").onclick=()=>capture("right");
 
-// Capture & Lock logic
 function capture(side){
   const vid=side==="left"?vidL:vidR;
   const beam=document.getElementById(side==="left"?"beamLeft":"beamRight");
@@ -246,109 +241,83 @@ function capture(side){
 
   if(side==="left"){
     leftLocked=true; leftImg=img;
-    vid.replaceWith(Object.assign(document.createElement("img"),{
-      src:img,className:"lockedImg",id:"vidLeft"
-    }));
+    vid.replaceWith(Object.assign(document.createElement("img"),{src:img,className:"lockedImg",id:"vidLeft"}));
     drawLines(ctx,canvas,"left");
-    report.textContent="✅ Left hand captured. Now capture right hand.";
-  } else {
+    report.textContent="✅ Left hand captured. Capture right hand next.";
+  }else{
     rightLocked=true; rightImg=img;
-    animateBothBeams(canvas,ctx);
+    animateDualBeams(canvas,ctx);
   }
 }
 
-// Dual golden beams and camera off
-function animateBothBeams(canvas,ctx){
+// Dual beam + off both cams
+function animateDualBeams(canvas,ctx){
   const beamL=document.getElementById("beamLeft");
   const beamR=document.getElementById("beamRight");
   beamL.style.opacity=1; beamR.style.opacity=1;
   let y=0, h=canvas.height;
   const id=setInterval(()=>{
-    y+=5;
-    beamL.style.top=y+"px";
-    beamR.style.top=y+"px";
+    y+=5; beamL.style.top=y+"px"; beamR.style.top=y+"px";
     if(y>h){
       clearInterval(id);
       beamL.style.opacity=0; beamR.style.opacity=0;
-      stopCameras();
+      stopAllCameras();
       drawLines(ctx,canvas,"right");
       analyzeBoth();
     }
   },10);
 }
 
-// Stop both cameras when done
-function stopCameras(){
-  streamLeft?.getTracks().forEach(t=>t.stop());
-  streamRight?.getTracks().forEach(t=>t.stop());
-  console.log("🎥 Cameras stopped after dual scan");
+function stopAllCameras(){
+  [streamLeft,streamRight].forEach(s=>s?.getTracks().forEach(t=>t.stop()));
+  console.log("🎥 Both cameras stopped");
 }
 
-// Draw colored lines (different palette)
 function drawLines(ctx,canvas,side){
   const w=canvas.width,h=canvas.height;
   const warm=["#FFD700","#FF8C00","#FF4500","#FFA07A","#FF6347","#E9967A","#FFB347","#FF7F50"];
   const cool=["#00CED1","#1E90FF","#7B68EE","#ADFF2F","#00FA9A","#5F9EA0","#8A2BE2","#00BFFF"];
   const colors=side==="left"?warm:cool;
   for(let i=0;i<8;i++){
-    ctx.strokeStyle=colors[i];
-    ctx.lineWidth=2;
-    ctx.beginPath();
-    const y=h*(i+1)/9;
+    ctx.strokeStyle=colors[i];ctx.lineWidth=2;
+    ctx.beginPath();const y=h*(i+1)/9;
     ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
   }
 }
 
-// Analyze both hands
 function analyzeBoth(){
   if(!leftImg||!rightImg)return;
-  report.innerHTML="🧠 Analyzing both hands... please wait.";
+  report.innerHTML="🧠 Analyzing both hands...";
   setTimeout(()=>{
     report.innerHTML=`
-    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
-      <img src="${leftImg}" width="150" style="border-radius:8px;">
-      <img src="${rightImg}" width="150" style="border-radius:8px;">
-    </div>
-    <b>AI Buddhi Report:</b>
-    <p>Both hands captured successfully. Mental–spiritual harmony detected. 
-    The golden energy stream indicates balanced intuition and purpose.
-    Dual scan complete ✅</p>`;
-  },3000);
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <img src="${leftImg}" width="150" style="border-radius:8px;">
+        <img src="${rightImg}" width="150" style="border-radius:8px;">
+      </div>
+      <b>AI Buddhi Report:</b>
+      <p>Both hands captured successfully. True symmetry achieved.<br>
+      Golden energy channels aligned — intuition & destiny balanced.<br>
+      Dual scan complete ✅</p>`;
+  },2500);
 }
 
-// 💾 Save User
 document.getElementById("saveUser").onclick=()=>{
-  const data={name:userName.value,dob:userDOB.value,id:userID.value};
-  localStorage.setItem("userData",JSON.stringify(data));
-  alert(`✅ Saved: ${data.name||"User"}`);
+  const d={name:userName.value,dob:userDOB.value,id:userID.value};
+  localStorage.setItem("userData",JSON.stringify(d));
+  alert(`✅ Saved ${d.name||"User"}`);
 };
 
-// 📜 Full Report
-document.getElementById("fullReportBtn").onclick=()=>{
-  const d=JSON.parse(localStorage.getItem("userData")||"{}");
-  report.textContent=`📄 Generating full AI analysis for ${d.name||"User"} (${d.id||"N/A"}) born ${d.dob||"Unknown"}...`;
-  setTimeout(()=>{report.textContent+="\n\n✅ Full report ready (Preview).";},3000);
-};
-
-// 💵 PDF Download
 document.getElementById("pdfBtn").onclick=()=>{
-  const { jsPDF } = window.jspdf;
-  const doc=new jsPDF();
-  const data=JSON.parse(localStorage.getItem("userData")||"{}");
-  doc.setFont("helvetica","bold");
-  doc.text("Sathyadarshana Quantum Palm Analyzer - AI Full Report",10,15);
-  doc.setFontSize(12);
-  doc.text(`Name: ${data.name||"N/A"}`,10,30);
-  doc.text(`DOB: ${data.dob||"N/A"}`,10,38);
-  doc.text(`ID: ${data.id||"N/A"}`,10,46);
-  doc.text("------------------------------------------------------------",10,52);
-  doc.text("This report provides advanced AI-driven analysis based on your palm scans.",10,62,{maxWidth:180});
-  doc.text("Payment: $5 (Demo version, not charged)",10,84);
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF();const d=JSON.parse(localStorage.getItem("userData")||"{}");
+  doc.text("Sathyadarshana Quantum Palm Analyzer Report",10,15);
+  doc.text(`Name: ${d.name||"N/A"}`,10,25);
+  doc.text(`DOB: ${d.dob||"N/A"}`,10,33);
+  doc.text(`ID: ${d.id||"N/A"}`,10,41);
+  doc.text("Dual Scan Complete. $5 Demo Version",10,55);
   doc.save("AI_Palm_Report.pdf");
-  alert("💵 Your AI Full Report PDF has been generated.");
 };
 
-// Brightness
 brightness.oninput=()=>{
   const v=brightness.value;
   vidL.style.filter=`brightness(${v})`;
