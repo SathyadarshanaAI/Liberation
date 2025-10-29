@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.5 User Overlay + $5 PDF Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.6 Dual Lock Beam Fusion Edition</title>
 <style>
 :root{
   --bg:#0b0f16;
@@ -74,8 +74,16 @@ h1{
 }
 video{
   width:100%;
+  aspect-ratio:3/4;
   border-radius:12px;
   background:#000;
+  object-fit:cover;
+}
+.lockedImg{
+  width:100%;
+  aspect-ratio:3/4;
+  border-radius:12px;
+  object-fit:cover;
 }
 .goldenBeam{
   position:absolute;
@@ -143,7 +151,7 @@ button:hover{
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.5</h1>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V12.6</h1>
 
 <div class="camWrap">
   <!-- 🧍‍♂️ User Info Overlay -->
@@ -185,9 +193,9 @@ button:hover{
 
   <label>Language:</label>
   <select id="langSel">
-    <option value="en">English</option>
-    <option value="si" selected>සිංහල</option>
-    <option value="ta">தமிழ்</option>
+    <option value="en" selected>English</option>
+    <option value="si">Sinhala</option>
+    <option value="ta">Tamil</option>
   </select>
 
   <label>Brightness:</label>
@@ -213,7 +221,7 @@ button:hover{
   <p id="reportText">Awaiting analysis...</p>
 </div>
 
-<!-- 🌐 Google Translator -->
+<!-- 🌐 Translator -->
 <script type="text/javascript">
 function googleTranslateElementInit(){
   new google.translate.TranslateElement({
@@ -230,7 +238,7 @@ function googleTranslateElementInit(){
 const vidL=document.getElementById("vidLeft");
 const vidR=document.getElementById("vidRight");
 const report=document.getElementById("reportText");
-let stream;
+let stream,leftLocked=false,rightLocked=false,leftImg=null,rightImg=null;
 
 // 🎥 Start Camera
 async function initCam(){
@@ -241,10 +249,11 @@ async function initCam(){
 }
 initCam();
 
-// Capture with restart + auto-analyze
+// Capture buttons
 document.getElementById("btnLeft").onclick=()=>capture("left");
 document.getElementById("btnRight").onclick=()=>capture("right");
 
+// Capture & Lock logic
 function capture(side){
   const vid=side==="left"?vidL:vidR;
   const beam=document.getElementById(side==="left"?"beamLeft":"beamRight");
@@ -252,48 +261,66 @@ function capture(side){
   canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
   const ctx=canvas.getContext("2d");
   ctx.drawImage(vid,0,0,canvas.width,canvas.height);
+  const img=canvas.toDataURL("image/png");
 
+  // lock logic
+  if(side==="left"){
+    leftLocked=true; leftImg=img;
+    vidL.replaceWith(Object.assign(document.createElement("img"),{src:img,className:"lockedImg"}));
+    drawLines(ctx,canvas,"left");
+    report.textContent="✅ Left hand captured. Now scan right hand.";
+  } else {
+    rightLocked=true; rightImg=img;
+    animateBeam(beam,canvas,ctx);
+  }
+}
+
+// Golden beam animation
+function animateBeam(beam,canvas,ctx){
   beam.style.opacity=1; let y=0;
+  const h=canvas.height;
   const id=setInterval(()=>{
     y+=5; beam.style.top=y+"px";
-    if(y>canvas.height){
+    if(y>h){
       clearInterval(id); beam.style.opacity=0;
-      drawColorLines(ctx,canvas);
-      const img=canvas.toDataURL("image/png");
-      localStorage.setItem(`palm_${side}`,img);
-      if(side==="left"){ restartCamera(); report.textContent="✅ Left hand captured. Now scan right hand."; }
-      else{ analyzeBothHands(); }
+      drawLines(ctx,canvas,"right");
+      analyzeBoth();
     }
   },10);
 }
-function restartCamera(){
-  navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})
-  .then(s=>{stream=s;vidL.srcObject=stream;vidR.srcObject=stream;})
-  .catch(e=>console.error("Restart failed",e));
-}
-function drawColorLines(ctx,canvas){
+
+// Draw colored lines (different palette)
+function drawLines(ctx,canvas,side){
   const w=canvas.width,h=canvas.height;
-  const colors=["#FFD700","#FF4500","#00CED1","#ADFF2F","#FF69B4","#1E90FF","#9932CC","#FF6347"];
+  const warm=["#FFD700","#FF8C00","#FF4500","#FFA07A","#FF6347","#E9967A","#FFB347","#FF7F50"];
+  const cool=["#00CED1","#1E90FF","#7B68EE","#ADFF2F","#00FA9A","#5F9EA0","#8A2BE2","#00BFFF"];
+  const colors=side==="left"?warm:cool;
   for(let i=0;i<8;i++){
     ctx.strokeStyle=colors[i];ctx.lineWidth=2;
     ctx.beginPath();const y=h*(i+1)/9;
     ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
   }
 }
-function analyzeBothHands(){
-  const left=localStorage.getItem("palm_left");
-  const right=localStorage.getItem("palm_right");
-  if(!left||!right)return;
+
+// Auto analyze both hands
+function analyzeBoth(){
+  if(!leftImg||!rightImg)return;
   report.innerHTML="🧠 Analyzing both hands... please wait.";
   setTimeout(()=>{
-    report.innerHTML=`<img src="${left}" width="120" style="border-radius:8px;margin:6px;">
-    <img src="${right}" width="120" style="border-radius:8px;margin:6px;">
-    <br><b>AI Buddhi Report:</b><br>ඔබගේ අත් දෙකම විශ්ලේෂණය කර ඇත. අතේ රේඛා වලට අභ්‍යන්තර ශක්තිමත් ආකෘති ඇත.
-    ඔබගේ ජීවිතයේ ශක්තිමත් මගපෙන්වීමක් පවතින අතර, ඔබ තුළ ආත්මීය නවෝත්තාපනයක් ඉපදෙමින් පවතී.`;
+    report.innerHTML=`
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+      <img src="${leftImg}" width="150" style="border-radius:8px;">
+      <img src="${rightImg}" width="150" style="border-radius:8px;">
+    </div>
+    <b>AI Buddhi Report:</b>
+    <p>Your palm lines reveal deep mental strength and emotional stability.
+    The left hand indicates introspection and wisdom, while the right hand
+    represents action, destiny, and spiritual renewal. 
+    A balance between intuition and purpose is visible — a sign of awakening energy.</p>`;
   },3000);
 }
 
-// 💾 Save User Info
+// 💾 Save User
 document.getElementById("saveUser").onclick=()=>{
   const data={name:userName.value,dob:userDOB.value,id:userID.value};
   localStorage.setItem("userData",JSON.stringify(data));
@@ -307,13 +334,13 @@ document.getElementById("fullReportBtn").onclick=()=>{
   setTimeout(()=>{report.textContent+="\n\n✅ Full report ready (Preview).";},3000);
 };
 
-// 💵 PDF Download ($5)
+// 💵 PDF Download
 document.getElementById("pdfBtn").onclick=()=>{
   const { jsPDF } = window.jspdf;
   const doc=new jsPDF();
+  const data=JSON.parse(localStorage.getItem("userData")||"{}");
   doc.setFont("helvetica","bold");
   doc.text("Sathyadarshana Quantum Palm Analyzer - AI Full Report",10,15);
-  const data=JSON.parse(localStorage.getItem("userData")||"{}");
   doc.setFontSize(12);
   doc.text(`Name: ${data.name||"N/A"}`,10,30);
   doc.text(`DOB: ${data.dob||"N/A"}`,10,38);
