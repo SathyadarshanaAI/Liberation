@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V13.4 True Serenity Fusion Edition</title>
+<title>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.6 High Feature Edition</title>
 <style>
 :root{
   --bg:#0b0f16;
-  --card:#101820;
+  --card:#111a22;
   --neon:#00e5ff;
   --pri:#16f0a7;
-  --gold:#FFD700;
+  --gold:#ffb300;
 }
 body{
   margin:0;
@@ -21,255 +21,178 @@ body{
 }
 h1{
   color:var(--neon);
+  margin:20px 0 6px;
+  font-size:1.6rem;
   text-shadow:0 0 15px var(--neon);
-  margin-top:18px;
-  font-size:1.3rem;
 }
-.camWrap{
+.wrap{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:20px;
+  gap:24px;
   margin:20px auto;
-  width:95%;
-  max-width:700px;
 }
-.camBox{
-  position:relative;
-  width:300px;
-  height:400px;
+.camCol{
   background:var(--card);
-  border-radius:16px;
-  box-shadow:0 0 20px #00e5ff33;
-  padding:10px;
-  overflow:hidden;
+  border-radius:18px;
+  padding:14px;
+  width:90%;
+  max-width:340px;
+  position:relative;
+  box-shadow:0 0 12px rgba(0,255,255,0.1);
 }
-video,.lockedImg{
+video,canvas{
   width:100%;
-  height:100%;
-  border-radius:12px;
-  object-fit:cover;
+  border-radius:14px;
   background:#000;
 }
-.goldenBeam{
-  position:absolute;
-  top:-100%;
-  left:0;
-  width:100%;
-  height:100%;
-  background:linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.4) 50%,transparent 100%);
-  box-shadow:0 0 25px var(--gold);
-  opacity:0;
-  pointer-events:none;
+.camBtns{
+  margin-top:10px;
 }
 button{
-  background:var(--neon);
-  border:none;
-  color:#000;
-  font-weight:bold;
-  padding:8px 16px;
-  border-radius:8px;
-  margin-top:8px;
-  cursor:pointer;
-  transition:0.3s;
-}
-button:hover{background:var(--pri);color:#fff;}
-.options,.userForm,#reportBox{
   background:#101820;
-  border-radius:12px;
-  width:90%;
-  max-width:700px;
-  margin:20px auto;
-  box-shadow:0 0 20px #00e5ff33 inset;
-  padding:12px;
-  text-align:left;
-}
-label{display:block;margin:6px 0 3px;color:#8bd;font-size:0.9rem;}
-input,select{
-  width:100%;
-  background:#0d131b;
-  color:#00e5ff;
-  border:none;
-  border-radius:6px;
-  padding:6px;
-}
-#reportBox{font-size:0.9rem;line-height:1.5;}
-#liveBtn{
-  background:#ff5fd0;
-  color:#fff;
-  width:100%;
-  margin-top:10px;
-  border:none;
+  color:var(--neon);
+  border:1px solid var(--neon);
   border-radius:10px;
+  padding:6px 12px;
+  margin:3px;
+  font-weight:600;
+  transition:.25s;
+}
+button:hover{background:var(--neon);color:#000;}
+#status{margin:12px;color:var(--pri);font-weight:bold;}
+.rangeBox{margin:8px;}
+input[type="range"]{width:80%;}
+.reportBox{
+  background:#0e141b;
+  border-radius:12px;
   padding:10px;
-  font-weight:bold;
-  box-shadow:0 0 15px #ff5fd099;
+  margin:12px auto;
+  max-width:600px;
+  color:#fff;
 }
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.4</h1>
-<div id="google_translate_element" style="text-align:right;margin:6px 16px;"></div>
+<h1>🖐️ Sathyadarshana Quantum Palm Analyzer · V12.6 High Feature Edition</h1>
+<p id="status">Initializing...</p>
 
-<div class="userForm">
-  <label>Name:</label><input id="userName" placeholder="Enter your name">
-  <label>Date of Birth:</label><input type="date" id="userDOB">
-  <label>ID Number:</label><input id="userID" placeholder="Enter ID">
-  <button id="saveUser">💾 Save Details</button>
-</div>
-
-<div class="camWrap">
-  <div class="camBox">
+<div class="wrap">
+  <!-- Left Hand -->
+  <div class="camCol">
     <h3>Left Hand</h3>
-    <video id="vidLeft" playsinline></video>
-    <div class="goldenBeam" id="beamLeft"></div>
-    <button id="startLeft">📷 Start Left</button>
-    <button id="btnLeft" style="display:none;">📸 Capture Left</button>
+    <video id="vidLeft" autoplay playsinline></video>
+    <canvas id="canvasLeft" width="300" height="400"></canvas>
+    <div class="camBtns">
+      <button id="startCamLeft">📷 Start</button>
+      <button id="captureLeft">📸 Capture</button>
+    </div>
   </div>
-  <div class="camBox">
+
+  <!-- Right Hand -->
+  <div class="camCol">
     <h3>Right Hand</h3>
-    <video id="vidRight" playsinline></video>
-    <div class="goldenBeam" id="beamRight"></div>
-    <button id="startRight">📷 Start Right</button>
-    <button id="btnRight" style="display:none;">📸 Capture Right</button>
+    <video id="vidRight" autoplay playsinline></video>
+    <canvas id="canvasRight" width="300" height="400"></canvas>
+    <div class="camBtns">
+      <button id="startCamRight">📷 Start</button>
+      <button id="captureRight">📸 Capture</button>
+    </div>
   </div>
 </div>
 
-<div class="options">
-  <h3>⚙️ Analyzer Options</h3>
-  <label>Analyzer Mode:</label>
-  <select id="modeSel">
-    <option>Basic Insight</option>
-    <option selected>Advanced Line Scan</option>
-    <option>Divine Fusion (AI)</option>
-  </select>
-  <label>Language:</label>
-  <select id="langSel">
-    <option value="en">English</option>
-    <option value="si">Sinhala</option>
-    <option value="ta">Tamil</option>
-  </select>
-  <label>Brightness:</label>
-  <input id="brightness" type="range" min="0.5" max="2" step="0.1" value="1">
+<div class="rangeBox">
+  🌞 Brightness:
+  <input type="range" id="brightness" min="0.2" max="2" step="0.1" value="1">
 </div>
 
-<div id="reportBox">
-  <b>AI Insight:</b>
-  <p id="reportText">Awaiting analysis...</p>
-  <div style="text-align:center;">
-    <button id="speakBtn">🔊 Speak Report</button>
-    <button id="homeBtn">🏠 Back to Home</button>
-    <button id="pdfBtn" style="background:#FFD700;color:#000;margin-left:6px;">💵 Full Report (5$)</button>
-    <button id="liveBtn">💬 AI Buddhi Live Discussion</button>
-  </div>
+<div class="reportBox" id="report">
+  Your palms are being scanned by AI Buddhi...
+</div>
+
+<div>
+  <button id="saveUser">💾 Save User</button>
+  <button id="pdfBtn">📄 Download PDF</button>
+  <button id="speakBtn">🔊 Speak</button>
+  <button id="homeBtn">🏠 Home</button>
+  <button id="liveBtn">🧘 Live</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-function googleTranslateElementInit(){
- new google.translate.TranslateElement({pageLanguage:'en',
- includedLanguages:'en,si,ta,hi,bn,zh,ja,fr,de,es,it,ru,ar'},
- 'google_translate_element');
-}
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-<script>
-const vidL=document.getElementById("vidLeft"),
-      vidR=document.getElementById("vidRight"),
-      beamL=document.getElementById("beamLeft"),
-      beamR=document.getElementById("beamRight"),
-      report=document.getElementById("reportText");
-let streamL,streamR,leftImg,rightImg;
-
-const startL=document.getElementById("startLeft"),
-      startR=document.getElementById("startRight"),
-      btnL=document.getElementById("btnLeft"),
-      btnR=document.getElementById("btnRight");
-
-startL.onclick=()=>startCam("left");
-startR.onclick=()=>startCam("right");
-btnL.onclick=()=>capture("left");
-btnR.onclick=()=>capture("right");
+const $=id=>document.getElementById(id);
+let streamL,streamR;
 
 async function startCam(side){
- try{
-   const opt={video:{facingMode:"environment",aspectRatio:3/4}};
-   const stream=await navigator.mediaDevices.getUserMedia(opt);
-   if(side==="left"){vidL.srcObject=stream;streamL=stream;}
-   else{vidR.srcObject=stream;streamR=stream;}
-   document.getElementById(side==="left"?"startLeft":"startRight").style.display="none";
-   document.getElementById(side==="left"?"btnLeft":"btnRight").style.display="inline-block";
- }catch(e){alert("Camera access denied: "+e.message);}
+  const vid=side==="left"?$("vidLeft"):$("vidRight");
+  const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+  vid.srcObject=st;
+  if(side==="left")streamL=st;else streamR=st;
+  $("status").textContent=`${side} camera started ✅`;
 }
 
 function capture(side){
- const vid=side==="left"?vidL:vidR;
- const canvas=document.createElement("canvas");
- canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;
- const ctx=canvas.getContext("2d");
- ctx.drawImage(vid,0,0,canvas.width,canvas.height);
- drawLines(ctx,canvas,side);
- const img=document.createElement("img");
- img.src=canvas.toDataURL("image/png");img.className="lockedImg";
- vid.replaceWith(img);
- if(side==="left"){leftImg=img.src;report.textContent="✅ Left captured. Capture right hand.";}
- else{rightImg=img.src;report.textContent="✅ Both captured. Preparing beam...";}
- // auto-analyze trigger only when both hands captured
- if(leftImg && rightImg){ triggerSequence(); }
+  const vid=side==="left"?$("vidLeft"):$("vidRight");
+  const cvs=side==="left"?$("canvasLeft"):$("canvasRight");
+  const ctx=cvs.getContext("2d");
+  ctx.drawImage(vid,0,0,cvs.width,cvs.height);
+  cvs.classList.add("lockedImg");
+  $("status").textContent=`${side} hand captured 🔒`;
+  checkReady();
 }
 
-function drawLines(ctx,canvas,side){
- const w=canvas.width,h=canvas.height;
- const colors=["#FFD700","#FF4500","#FF69B4","#00CED1","#ADFF2F","#FF6347","#00FF7F","#BA55D3"];
- for(let i=0;i<8;i++){ctx.strokeStyle=colors[i];ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(0,h*(i+1)/9);ctx.lineTo(w,h*(i+1)/9);ctx.stroke();}
-}
-
-function triggerSequence(){
- setTimeout(()=>{animateBeams();setTimeout(()=>blackout(),5000);},1500);
-}
-function animateBeams(){
- beamL.style.opacity=1;beamR.style.opacity=1;
- let y=0;const h=400;
- const id=setInterval(()=>{
-  y+=6;beamL.style.top=y+"px";beamR.style.top=y+"px";
-  if(y>h){clearInterval(id);beamL.style.opacity=0;beamR.style.opacity=0;
-   report.innerHTML="🌟 Beam scan complete. Analyzing...";
-   setTimeout(showReport,1500);
+function checkReady(){
+  if($("canvasLeft").classList.contains("lockedImg") &&
+     $("canvasRight").classList.contains("lockedImg")){
+    showReport();
   }
- },10);
 }
+
 function blackout(){
- document.querySelectorAll(".lockedImg").forEach(el=>el.style.filter="brightness(0)");
- [streamL,streamR].forEach(s=>s?.getTracks().forEach(t=>t.stop()));
+  document.querySelectorAll(".lockedImg").forEach(el=>el.style.filter="brightness(0)");
+  [streamL,streamR].forEach(s=>s?.getTracks().forEach(t=>t.stop()));
 }
+
 function showReport(){
- report.innerHTML="Your palms reveal deep wisdom and energy balance.<br>Dual harmony detected ✅";
- speak(report.innerText);
+  const r=$("report");
+  r.innerHTML="✨ Dual-hand harmony detected.<br>AI Buddhi senses balanced energy fields.<br>Wisdom alignment: <b>High</b> ⚡";
+  speak(r.innerText);
 }
-document.getElementById("saveUser").onclick=()=>{
- const d={name:userName.value,dob:userDOB.value,id:userID.value};
- localStorage.setItem("userData",JSON.stringify(d));
- alert(`Saved ${d.name||"User"}`);
+
+function speak(t){speechSynthesis.speak(new SpeechSynthesisUtterance(t));}
+
+$("startCamLeft").onclick=()=>startCam("left");
+$("captureLeft").onclick=()=>capture("left");
+$("startCamRight").onclick=()=>startCam("right");
+$("captureRight").onclick=()=>capture("right");
+
+$("brightness").oninput=()=>{const v=$("brightness").value;
+  document.querySelectorAll("video").forEach(vd=>vd.style.filter=`brightness(${v})`);
 };
-document.getElementById("pdfBtn").onclick=()=>{
- const { jsPDF }=window.jspdf;const doc=new jsPDF();
+
+$("saveUser").onclick=()=>{
+ const name=prompt("Enter your name:","");
+ const dob=prompt("Enter date of birth:","");
+ const id=prompt("Enter ID or NIC:","");
+ localStorage.setItem("userData",JSON.stringify({name,dob,id}));
+ alert("✅ Saved: "+name);
+};
+
+$("pdfBtn").onclick=()=>{
+ const { jsPDF }=window.jspdf;
  const d=JSON.parse(localStorage.getItem("userData")||"{}");
+ const doc=new jsPDF();
  doc.text("Sathyadarshana Quantum Palm Analyzer Report",10,15);
  doc.text(`Name: ${d.name||"N/A"}`,10,25);
  doc.text(`DOB: ${d.dob||"N/A"}`,10,33);
  doc.text(`ID: ${d.id||"N/A"}`,10,41);
- doc.text("Dual Scan Complete. $5 Demo Version",10,55);
+ doc.text("✨ Dual-hand scan complete. AI Buddhi verified balance.",10,55);
  doc.save("AI_Palm_Report.pdf");
 };
-function speak(t){speechSynthesis.speak(new SpeechSynthesisUtterance(t));}
-document.getElementById("speakBtn").onclick=()=>speak(report.innerText);
-document.getElementById("homeBtn").onclick=()=>location.href='index.html';
-document.getElementById("liveBtn").onclick=()=>alert("🧘 AI Buddhi: Live Discussion session will open soon...");
-brightness.oninput=()=>{const v=brightness.value;
- document.querySelectorAll("video").forEach(vd=>vd.style.filter=`brightness(${v})`);
-};
+
+$("speakBtn").onclick=()=>speak($("report").innerText);
+$("homeBtn").onclick=()=>location.href='index.html';
+$("liveBtn").onclick=()=>alert("🧘 AI Buddhi Live Session will open soon...");
 </script>
 </body>
 </html>
