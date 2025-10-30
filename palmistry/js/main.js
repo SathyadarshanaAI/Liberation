@@ -1,49 +1,40 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V15.1 True Vision Build
-// main.js — Integrated Controller (Camera + Dharma + AI Voice)
+ච// 🕉️ Sathyadarshana Quantum Palm Analyzer · V15.2 Dharma Aura Visualization
+// aura.js — Animated energy field representing Dharma illumination
 
-import { startCam, capture } from "./camera.js";
-import { drawPalm } from "./drawPalm.js";
-import { handleUserForm } from "./userForm.js";
-import { speak } from "./voice.js";
-import { activateDharmaMode, describeLineDhamma } from "./dharmaMode.js";
+export function drawAura(canvas, color = "#00e5ff") {
+  const ctx = canvas.getContext("2d");
+  const { width, height } = canvas;
+  let radius = Math.min(width, height) / 3;
+  let phase = 0;
 
-const $ = id => document.getElementById(id);
-const statusEl = $("status");
-const reportEl = $("report");
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
 
-// === Camera Controls ===
-$("startCamLeft").onclick = () => startCam("left", statusEl);
-$("startCamRight").onclick = () => startCam("right", statusEl);
+    // background dim
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, width, height);
+    ctx.globalAlpha = 1;
 
-$("captureLeft").onclick = () => {
-  capture("left", ctx => {
-    drawPalm(ctx);
-    const msg = describeLineDhamma("Life");
-    reportEl.innerHTML = `🧠 Left hand captured.<br>${msg}`;
-    speak("Left hand captured. AI Buddhi analyzing your life line.");
-  });
-};
+    // radiant aura gradient
+    const grad = ctx.createRadialGradient(
+      width / 2, height / 2, radius * 0.3,
+      width / 2, height / 2, radius
+    );
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, "transparent");
 
-$("captureRight").onclick = () => {
-  capture("right", ctx => {
-    drawPalm(ctx);
-    const msg = describeLineDhamma("Fate");
-    reportEl.innerHTML = `✨ Right hand captured.<br>${msg}`;
-    speak("Right hand captured. AI Buddhi analyzing your fate line.");
-    activateDharmaMode(reportEl);
-  });
-};
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
 
-// === User Form Logic ===
-handleUserForm();
+    // gentle pulse
+    phase += 0.05;
+    radius += Math.sin(phase) * 0.6;
 
-// === Initial Greeting ===
-statusEl.textContent = "✅ System initialized. Ready for Dharma Scan.";
-speak("Welcome to Sathyadarshana Quantum Palm Analyzer True Vision Edition. Please begin your Dharma scan.");
+    requestAnimationFrame(animate);
+  }
 
-// === Subtle auto-feedback animation ===
-let dots = 0;
-setInterval(() => {
-  dots = (dots + 1) % 4;
-  statusEl.textContent = "AI Buddhi preparing Dharma vision" + ".".repeat(dots);
-}, 1800);
+  animate();
+}
