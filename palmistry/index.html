@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.2 Dual Window Analyzer</title>
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.4 Dual Analyzer + Translator Edition</title>
 <style>
 :root{
- --bg:#0b0f16;--card:#111a22;--neon:#00e5ff;--pri:#16f0a7;
- --gold:#FFD700;--cyan:#00ffff;
+ --bg:#0b0f16;--card:#111a22;--neon:#00e5ff;--pri:#16f0a7;--gold:#FFD700;--cyan:#00ffff;
 }
 body{margin:0;background:var(--bg);color:#e6f0ff;font-family:'Segoe UI',sans-serif;text-align:center;}
-h1{color:var(--neon);margin:20px 0 8px;font-size:1.5rem;text-shadow:0 0 15px var(--neon);}
+h1{color:var(--neon);margin:18px 0 8px;font-size:1.45rem;text-shadow:0 0 15px var(--neon);}
 .wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;margin:20px auto;}
 .camCol{background:var(--card);border-radius:18px;padding:14px;width:90%;max-width:340px;
  position:relative;box-shadow:0 0 12px rgba(0,255,255,0.15);}
@@ -19,22 +18,80 @@ video,canvas{width:100%;border-radius:14px;background:#000;}
 button{background:#101820;color:var(--neon);border:1px solid var(--neon);
  border-radius:10px;padding:6px 12px;margin:3px;font-weight:600;transition:.25s;}
 button:hover{background:var(--neon);color:#000;}
-#status{margin:12px;color:var(--pri);font-weight:bold;}
-.reportBox{background:#0e141b;border-radius:12px;padding:10px;margin:12px auto;
- max-width:600px;color:#fff;}
+#status{margin:10px;color:var(--pri);font-weight:bold;}
+.reportBox{background:#0e141b;border-radius:12px;padding:10px;margin:14px auto;
+ max-width:600px;color:#fff;box-shadow:0 0 8px rgba(0,255,255,0.2);}
 .beam{position:absolute;top:0;left:0;width:100%;height:8px;
- background:linear-gradient(to bottom,
- rgba(255,215,0,0),rgba(255,215,0,1),rgba(0,255,255,0.7),rgba(255,215,0,0));
+ background:linear-gradient(to bottom,rgba(255,215,0,0),rgba(255,215,0,1),
+ rgba(0,255,255,0.7),rgba(255,215,0,0));
  box-shadow:0 0 25px 4px var(--gold);border-radius:4px;animation:beamMove 3s linear forwards;}
 @keyframes beamMove{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(100%);opacity:0;}}
 .flashFreeze{animation:flash 0.4s ease-out;}
 @keyframes flash{0%{filter:brightness(2);}100%{filter:brightness(1);}}
+.formBox{background:#101820;border-radius:16px;padding:16px;max-width:600px;
+ margin:20px auto;box-shadow:0 0 10px rgba(0,255,255,0.15);}
+label{display:block;margin-top:8px;color:var(--gold);font-weight:500;}
+input,select{width:90%;max-width:360px;padding:6px 10px;margin-top:4px;border-radius:8px;
+ border:1px solid var(--cyan);background:#0c1319;color:#fff;}
+/* Floating translate button */
+#translateBtn{position:fixed;bottom:18px;right:18px;background:#00e5ff;color:#000;
+border:none;padding:10px 16px;border-radius:50px;font-weight:600;
+box-shadow:0 0 12px #00ffff;z-index:999;cursor:pointer;}
 </style>
 </head>
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.2 Dual Window Analyzer</h1>
+
+<!-- 🌐 Google Chrome Translator (12 Languages, Hidden Toolbar) -->
+<div id="google_translate_element" style="display:none;"></div>
+<script type="text/javascript">
+function googleTranslateElementInit(){
+ new google.translate.TranslateElement({
+  pageLanguage:'en',
+  includedLanguages:'en,si,ta,hi,zh,ja,fr,de,es,it,ru,ar',
+  layout:google.translate.TranslateElement.InlineLayout.SIMPLE,
+  autoDisplay:false
+ },'google_translate_element');
+}
+(function(){
+ var s=document.createElement('script');
+ s.src='//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+ document.head.appendChild(s);
+ const css=document.createElement('style');
+ css.innerHTML=`
+ .goog-te-banner-frame.skiptranslate, .goog-logo-link, .goog-te-gadget {display:none!important;}
+ body{top:0!important;}
+ #goog-gt-tt, .goog-te-balloon-frame{display:none!important;}
+ .goog-text-highlight{background:none!important;box-shadow:none!important;}
+ `;
+ document.head.appendChild(css);
+})();
+</script>
+
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.4 Dual Analyzer + Translator Edition</h1>
 <p id="status">Initializing...</p>
 
+<!-- 🔹 USER FORM -->
+<div class="formBox">
+ <h3 style="color:var(--neon);text-shadow:0 0 8px var(--neon);margin-bottom:8px;">🔮 User Information</h3>
+ <label>Full Name</label><input id="userName" placeholder="Enter your full name">
+ <label>Date of Birth</label><input type="date" id="userDOB">
+ <label>Time of Birth</label><input type="time" id="userTime">
+ <label>Birth Place</label><input id="userPlace" placeholder="City / Town">
+ <label>Gender</label>
+ <select id="userGender"><option>Male</option><option>Female</option><option>Other</option></select>
+ <label>Focus</label>
+ <select id="userFocus">
+   <option>Career</option><option>Love</option><option>Health</option>
+   <option>Spiritual Path</option><option>General Reading</option>
+ </select>
+ <div style="margin-top:10px;">
+  <button onclick="saveUser()">💾 Save Info</button>
+  <button onclick="clearUser()">🧹 Clear</button>
+ </div>
+ <p id="userStatus" style="color:var(--pri);margin-top:8px;"></p>
+</div>
+
+<!-- 🔹 CAMERA -->
 <div class="wrap">
  <div class="camCol">
   <h3>Left Hand</h3>
@@ -45,7 +102,6 @@ button:hover{background:var(--neon);color:#000;}
    <button id="captureLeft">📸 Capture</button>
   </div>
  </div>
-
  <div class="camCol">
   <h3>Right Hand</h3>
   <video id="vidRight" autoplay playsinline></video>
@@ -57,67 +113,61 @@ button:hover{background:var(--neon);color:#000;}
  </div>
 </div>
 
-<div class="reportBox" id="report">
- Your palms are being scanned by AI Buddhi...
-</div>
+<div class="reportBox" id="report">Your palms are being scanned by AI Buddhi...</div>
+
+<!-- 🌐 Floating Translate Button -->
+<button id="translateBtn">🌐 Translate</button>
 
 <script>
 const $=id=>document.getElementById(id);
 let streamL,streamR;
-
+function saveUser(){
+ const n=$("userName").value.trim(),d=$("userDOB").value,t=$("userTime").value;
+ const p=$("userPlace").value.trim(),g=$("userGender").value,f=$("userFocus").value;
+ if(!n||!d||!p){$("userStatus").textContent="⚠️ Please fill all required fields.";return;}
+ localStorage.setItem("userData",JSON.stringify({n,d,t,p,g,f}));
+ $("userStatus").textContent="✅ Information saved!";
+}
+function clearUser(){localStorage.removeItem("userData");$("userStatus").textContent="🧹 Cleared.";}
+function loadUser(){
+ const data=localStorage.getItem("userData");if(!data)return;
+ const u=JSON.parse(data);$("userName").value=u.n;$("userDOB").value=u.d;
+ $("userTime").value=u.t;$("userPlace").value=u.p;$("userGender").value=u.g;$("userFocus").value=u.f;
+ $("userStatus").textContent="🔹 Loaded previous data.";
+}
+loadUser();
 async function startCam(side){
  const vid=side==="left"?$("vidLeft"):$("vidRight");
  const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
- vid.srcObject=st;
- if(side==="left")streamL=st;else streamR=st;
+ vid.srcObject=st;if(side==="left")streamL=st;else streamR=st;
  $("status").textContent=`${side} camera started ✅`;
 }
-
-// ---- CAPTURE FUNCTION ----
 async function capture(side){
  const vid=side==="left"?$("vidLeft"):$("vidRight");
  const cvs=side==="left"?$("canvasLeft"):$("canvasRight");
  const ctx=cvs.getContext("2d");
-
- vid.classList.add("flashFreeze");
- setTimeout(()=>vid.classList.remove("flashFreeze"),400);
+ vid.classList.add("flashFreeze");setTimeout(()=>vid.classList.remove("flashFreeze"),400);
  await new Promise(r=>setTimeout(r,150));
-
  ctx.drawImage(vid,0,0,cvs.width,cvs.height);
- cvs.classList.add("lockedImg");
- $("status").textContent=`${side} hand captured 🔒`;
-
- // check both hands ready
- if($("canvasLeft").classList.contains("lockedImg") &&
-    $("canvasRight").classList.contains("lockedImg")){
-   runSequence();
- }
+ cvs.classList.add("lockedImg");$("status").textContent=`${side} hand captured 🔒`;
+ vid.pause();vid.srcObject?.getTracks().forEach(t=>t.stop());vid.style.display="none";
+ if($("canvasLeft").classList.contains("lockedImg")&&$("canvasRight").classList.contains("lockedImg"))runSequence();
 }
-
-// ---- MAIN AI SEQUENCE ----
 async function runSequence(){
- $("status").textContent="🧠 Analyzing captured palms...";
- await pause(1000);
-
- // Beam animation
+ $("status").textContent="🧠 Analyzing captured palms...";await pause(1000);
  const beamL=document.createElement("div"),beamR=document.createElement("div");
  beamL.className=beamR.className="beam";
- $("canvasLeft").parentElement.appendChild(beamL);
- $("canvasRight").parentElement.appendChild(beamR);
- await pause(3000);
- beamL.remove();beamR.remove();
-
- // Draw golden lines
- drawPalm($("canvasLeft").getContext("2d"));
- drawPalm($("canvasRight").getContext("2d"));
-
+ $("canvasLeft").parentElement.appendChild(beamL);$("canvasRight").parentElement.appendChild(beamR);
+ await pause(3000);beamL.remove();beamR.remove();
+ drawPalm($("canvasLeft").getContext("2d"));drawPalm($("canvasRight").getContext("2d"));
+ const u=JSON.parse(localStorage.getItem("userData")||"{}");
+ const name=u.n||"User",focus=u.f||"General";
  $("status").textContent="✨ Beam Aura complete — main palm lines detected!";
  const rep=$("report");
- rep.innerHTML="⚡ Dual-hand capture complete.<br>Energy lines mapped successfully.<br>Wisdom level: <b>High</b> 🌟";
+ rep.innerHTML=`⚡ ${name}, your dual-hand scan is complete.<br>
+ Energy lines mapped successfully for <b>${focus}</b> focus.<br>Wisdom level: <b>High</b> 🌟`;
  speak(rep.innerText);
 }
-
-// ---- PALM LINES DRAW ----
 function drawPalm(ctx){
  const w=ctx.canvas.width,h=ctx.canvas.height;
  const lines=[
@@ -133,23 +183,20 @@ function drawPalm(ctx){
  lines.forEach(L=>{
    ctx.beginPath();
    const grad=ctx.createLinearGradient(L.p[0][0],L.p[0][1],L.p[1][0],L.p[1][1]);
-   grad.addColorStop(0,"#FFD700");
-   grad.addColorStop(1,"#00FFFF");
+   grad.addColorStop(0,"#FFD700");grad.addColorStop(1,"#00FFFF");
    ctx.strokeStyle=grad;ctx.lineWidth=2.5;ctx.shadowColor="#FFD700";
    ctx.shadowBlur=5;ctx.moveTo(...L.p[0]);ctx.lineTo(...L.p[1]);ctx.stroke();
    ctx.shadowBlur=0;ctx.fillStyle="#00e5ff";ctx.font="10px Segoe UI";
    ctx.fillText(L.n,L.p[1][0]-25,L.p[1][1]-3);
  });
 }
-
 function pause(ms){return new Promise(r=>setTimeout(r,ms));}
 function speak(t){speechSynthesis.speak(new SpeechSynthesisUtterance(t));}
-
-// ---- BUTTONS ----
 $("startCamLeft").onclick=()=>startCam("left");
 $("captureLeft").onclick=()=>capture("left");
 $("startCamRight").onclick=()=>startCam("right");
 $("captureRight").onclick=()=>capture("right");
+document.getElementById("translateBtn").onclick=()=>alert("🌐 Use Chrome → Tap ‘Translate’ for 12-language auto translation.");
 </script>
 </body>
 </html>
