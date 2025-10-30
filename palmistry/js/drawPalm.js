@@ -1,4 +1,4 @@
-export function drawPalm(ctx) {
+export function drawPalm(ctx, side = "left") {
   const w = ctx.canvas.width, h = ctx.canvas.height;
   const imgData = ctx.getImageData(0, 0, w, h);
   const px = imgData.data;
@@ -9,7 +9,7 @@ export function drawPalm(ctx) {
   }
   const avg = total / (px.length / 4);
 
-  // === Detection condition ===
+  // === Brightness check ===
   if (avg < 45 || avg > 230) {
     ctx.fillStyle = "#ff6666";
     ctx.font = "14px Segoe UI";
@@ -17,11 +17,20 @@ export function drawPalm(ctx) {
     ctx.shadowBlur = 10;
     ctx.fillText("⚠️ Hand not detected — please recapture", 20, 30);
     ctx.shadowBlur = 0;
-    console.warn("No valid hand region found. Average brightness:", avg);
+    console.warn("No valid hand region found. Avg brightness:", avg);
     return;
   }
 
-  // === Normal draw when hand exists ===
+  // === Simple auto-orientation assist ===
+  const thumb = avgBrightnessRegion(ctx, 0, h * 0.5, w * 0.3, h);
+  const pinky = avgBrightnessRegion(ctx, w * 0.7, h * 0.5, w, h);
+  let mirrored = false;
+  if (thumb < pinky) {
+    mirrored = true;
+    console.log("⚙️ Auto-orientation: image appears flipped, correcting...");
+  }
+
+  // === Draw palm lines ===
   const glow = "#FFD700", neon = "#00FFFF";
   const lines = [
     { n: "Life", p: [[w * 0.25, h * 0.85], [w * 0.05, h * 0.45], [w * 0.45, h * 0.75]] },
@@ -43,12 +52,25 @@ export function drawPalm(ctx) {
     ctx.lineWidth = 2.2;
     ctx.shadowColor = glow;
     ctx.shadowBlur = 6;
-    ctx.moveTo(...L.p[0]);
-    ctx.bezierCurveTo(...L.p[0], ...L.p[1], ...L.p[2]);
+
+    const p = mirrored ? L.p.map(([x, y]) => [w - x, y]) : L.p;
+    ctx.moveTo(...p[0]);
+    ctx.bezierCurveTo(...p[0], ...p[1], ...p[2]);
     ctx.stroke();
+
     ctx.shadowBlur = 0;
     ctx.fillStyle = "#00e5ff";
     ctx.font = "10px Segoe UI";
-    ctx.fillText(L.n, L.p[2][0] - 25, L.p[2][1] - 3);
+    ctx.fillText(L.n, p[2][0] - 25, p[2][1] - 3);
   });
+}
+
+// === Helper: region brightness ===
+function avgBrightnessRegion(ctx, x1, y1, x2, y2) {
+  const img = ctx.getImageData(x1, y1, x2 - x1, y2 - y1).data;
+  let total = 0;
+  for (let i = 0; i < img.length; i += 4) {
+    total += (img[i] + img[i + 1] + img[i + 2]) / 3;
+  }
+  return total / (img.length / 4);
 }
