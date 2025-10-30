@@ -1,0 +1,14 @@
+:root{
+ --bg:#0b0f16;--card:#111a22;--neon:#00e5ff;--pri:#16f0a7;--gold:#FFD700;
+}
+body{margin:0;background:var(--bg);color:#e6f0ff;font-family:'Segoe UI',sans-serif;text-align:center;}
+h1{color:var(--neon);margin:20px 0;text-shadow:0 0 15px var(--neon);}
+.wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;margin:20px auto;}
+.camCol{background:var(--card);border-radius:18px;padding:14px;width:90%;max-width:340px;box-shadow:0 0 12px rgba(0,255,255,.15);}
+video,canvas{width:100%;border-radius:14px;background:#000;}
+button{background:#101820;color:var(--neon);border:1px solid var(--neon);border-radius:10px;padding:6px 12px;margin:3px;font-weight:600;transition:.25s;}
+button:hover{background:var(--neon);color:#000;}
+.reportBox{background:#0e141b;border-radius:12px;padding:10px;margin:12px auto;max-width:600px;}
+.formBox{background:#101820;border-radius:16px;padding:16px;max-width:600px;margin:20px auto;box-shadow:0 0 10px rgba(0,255,255,.2);}
+label{display:block;margin-top:8px;color:var(--gold);}
+input,select{width:90%;max-width:360px;padding:6px 10px;margin-top:4px;border-radius:8px;border:1px solid var(--neon);background:#0c1319;color:#fff;}
