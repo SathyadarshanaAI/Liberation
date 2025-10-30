@@ -1,19 +1,49 @@
-export function saveUser(){
- const n=userName.value.trim(),d=userDOB.value,t=userTime.value,p=userPlace.value.trim(),
-       g=userGender.value,f=userFocus.value;
- if(!n||!d||!p){userStatus.textContent="⚠️ Please fill all required fields.";return;}
- localStorage.setItem("userData",JSON.stringify({n,d,t,p,g,f}));
- userStatus.textContent="✅ Information saved!";
-}
-export function clearUser(){
- localStorage.removeItem("userData");
- userStatus.textContent="🧹 Cleared.";
-}
-export function loadUser(){
- const data=localStorage.getItem("userData");
- if(!data)return;
- const u=JSON.parse(data);
- userName.value=u.n;userDOB.value=u.d;userTime.value=u.t;
- userPlace.value=u.p;userGender.value=u.g;userFocus.value=u.f;
- userStatus.textContent="🔹 Loaded previous data.";
+// userForm.js — handles user info Save/Clear in localStorage
+
+export function handleUserForm() {
+  const $ = id => document.getElementById(id);
+  const name = $("userName");
+  const dob = $("userDOB");
+  const time = $("userTime");
+  const place = $("userPlace");
+  const gender = $("userGender");
+  const focus = $("userFocus");
+  const status = $("userStatus");
+  const saveBtn = $("saveBtn");
+  const clearBtn = $("clearBtn");
+
+  // 🧠 Load previous data if exists
+  const stored = JSON.parse(localStorage.getItem("userInfo"));
+  if (stored) {
+    name.value = stored.name || "";
+    dob.value = stored.dob || "";
+    time.value = stored.time || "";
+    place.value = stored.place || "";
+    gender.value = stored.gender || "Male";
+    focus.value = stored.focus || "Career";
+    status.textContent = "🔁 Previous data loaded.";
+  }
+
+  // 💾 Save
+  saveBtn.onclick = () => {
+    const data = {
+      name: name.value,
+      dob: dob.value,
+      time: time.value,
+      place: place.value,
+      gender: gender.value,
+      focus: focus.value
+    };
+    localStorage.setItem("userInfo", JSON.stringify(data));
+    status.textContent = "✅ Data saved successfully!";
+  };
+
+  // 🧹 Clear
+  clearBtn.onclick = () => {
+    localStorage.removeItem("userInfo");
+    name.value = dob.value = time.value = place.value = "";
+    gender.value = "Male";
+    focus.value = "Career";
+    status.textContent = "🧹 Cleared all data.";
+  };
 }
