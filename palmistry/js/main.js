@@ -1,79 +1,45 @@
-import { drawPalm } from './drawPalm.js';
-import { startCam, capture } from './camera.js';
-import { saveUser, clearUser, loadUser } from './userForm.js';
-import { speak } from './voice.js';
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V13.7 Modular Edition
+// — AI Buddhi Main Controller —
+
+import { startCam, capture } from "./camera.js";
+import { drawPalm } from "./drawPalm.js";
+import { handleUserForm } from "./userForm.js";
+import { speak } from "./voice.js";
 
 const $ = id => document.getElementById(id);
+const statusEl = $("status");
+const reportEl = $("report");
 
-// === INITIAL SETUP ===
-loadUser();
-$("saveBtn").onclick = saveUser;
-$("clearBtn").onclick = clearUser;
-$("startCamLeft").onclick = () => startCam("left");
-$("startCamRight").onclick = () => startCam("right");
-$("captureLeft").onclick = () => capture("left", runSequence);
-$("captureRight").onclick = () => capture("right", runSequence);
+// === Camera Buttons ===
+$("startCamLeft").onclick = () => startCam("left", statusEl);
+$("startCamRight").onclick = () => startCam("right", statusEl);
 
-// === AI MINI INSIGHT DATABASE ===
-const insights = {
-  Career: "Your palm shows strong determination and logical focus. Success favors persistence.",
-  Love: "Emotional warmth and deep connection are visible. True harmony comes through trust.",
-  Health: "Energy flow is balanced. Maintain rest, hydration, and inner calm for stability.",
-  "Spiritual Path": "Lines reveal awakening wisdom. Meditation strengthens divine awareness.",
-  General: "Balanced aura detected. You are walking in harmony with universal energy."
+$("captureLeft").onclick = () => {
+  capture("left", ctx => {
+    drawPalm(ctx);
+    speak("Left hand captured. AI Buddhi analyzing your life line.");
+    reportEl.textContent = "🧠 Left hand captured successfully.";
+  });
 };
 
-// === AI MAIN ANALYSIS SEQUENCE ===
-async function runSequence() {
-  $("status").textContent = "🧠 AI analyzing both palms...";
-  await pause(800);
+$("captureRight").onclick = () => {
+  capture("right", ctx => {
+    drawPalm(ctx);
+    speak("Right hand captured. AI Buddhi analyzing your destiny.");
+    reportEl.textContent = "✨ Right hand captured successfully.";
+  });
+};
 
-  // 🟡 Animate scanning beam
-  animateBeam("canvasLeft");
-  animateBeam("canvasRight");
+// === User Form Logic ===
+handleUserForm();
 
-  await pause(2500);
+// === Initial Greeting ===
+speak("Welcome to Sathyadarshana Quantum Palm Analyzer version thirteen point seven. Please start your camera.");
+statusEl.textContent = "✅ System initialized. Ready for scan.";
 
-  // 🖐️ Draw detected palm lines
-  drawPalm($("canvasLeft").getContext("2d"));
-  drawPalm($("canvasRight").getContext("2d"));
-
-  $("status").textContent = "✨ Beam Aura complete — main palm lines detected!";
-  await pause(500);
-
-  // === AI Insight Report ===
-  const u = JSON.parse(localStorage.getItem("userData") || "{}");
-  const focus = u.f || "General";
-  const name = u.n || "User";
-  const msg = insights[focus] || insights.General;
-
-  $("report").innerHTML = `
-    ⚡ ${name}, your dual-hand scan is complete.<br>
-    Energy lines mapped successfully for <b>${focus}</b> focus.<br><br>
-    <b>AI Insight:</b> ${msg}<br>
-    🌟 Wisdom Level: <b>High</b> <br>
-    <small>(Awaiting AI Deep Palmistry Module...)</small>
-  `;
-
-  // 🔊 Voice feedback
-  speak(`${name}, your ${focus} reading is ready. ${msg}`);
-
-  // === API Hook Placeholder ===
-  // Future: integrate real AI API here
-  // const aiResponse = await fetch('/api/palmistry', {method:'POST', body: palmData});
-  // const json = await aiResponse.json();
-}
-
-// === BEAM EFFECT ===
-function animateBeam(canvasId) {
-  const canvas = $(canvasId);
-  const beam = document.createElement("div");
-  beam.className = "beam";
-  canvas.parentElement.appendChild(beam);
-  setTimeout(() => beam.remove(), 2800);
-}
-
-// === DELAY FUNCTION ===
-function pause(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+// === Auto Feedback Animation ===
+let dots = 0;
+setInterval(() => {
+  dots = (dots + 1) % 4;
+  reportEl.textContent = "AI Buddhi is preparing" + ".".repeat(dots);
+}, 1500);
