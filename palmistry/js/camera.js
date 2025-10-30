@@ -23,29 +23,48 @@ export async function capture(side, callback) {
   const ctx = cvs.getContext("2d");
   ctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
 
-  // 🧠 AI Brightness + Skin-tone Detection
   const img = ctx.getImageData(0, 0, cvs.width, cvs.height);
-  let total = 0, variance = 0;
+  const { data } = img;
+
+  // --- AI Brightness + Skin-tone detection ---
+  let total = 0, variance = 0, skinCount = 0;
   let lastAvg = 0;
-  for (let i = 0; i < img.data.length; i += 4) {
-    const avg = (img.data[i] + img.data[i + 1] + img.data[i + 2]) / 3;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    const avg = (r + g + b) / 3;
     total += avg;
     variance += Math.abs(avg - lastAvg);
     lastAvg = avg;
-  }
-  const avgBrightness = total / (img.data.length / 4);
-  const avgVariance = variance / (img.data.length / 4);
 
-  // ⚠️ Reject dull / flat color surfaces (walls, tables)
+    // 🧠 Skin tone detection (approximate human range)
+    if (r > 80 && g > 30 && b > 20 && r > g && r > b && r < 255 && g < 180 && b < 160) {
+      skinCount++;
+    }
+  }
+
+  const avgBrightness = total / (data.length / 4);
+  const avgVariance = variance / (data.length / 4);
+  const skinRatio = (skinCount / (data.length / 4)) * 100;
+
+  // ⚠️ Reject dull or wall-like captures
   if (avgBrightness < 50 || avgVariance < 20) {
     document.getElementById("status").textContent = 
       `⚠️ ${side} hand not detected — surface too uniform (wall or floor detected)`;
     return;
   }
 
+  // ⚠️ Reject non-skin captures
+  if (skinRatio < 4 || skinRatio > 35) {
+    document.getElementById("status").textContent =
+      `⚠️ ${side} hand not detected — please show your palm clearly.`;
+    return;
+  }
+
   // ✅ Capture success
   cvs.classList.add("lockedImg");
-  document.getElementById("status").textContent = `${side} hand captured 🔒`;
+  document.getElementById("status").textContent = `${side} hand detected & captured 🔒`;
+
   vid.pause();
   vid.srcObject?.getTracks().forEach((t) => t.stop());
 
