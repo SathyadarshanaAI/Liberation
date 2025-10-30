@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.5 Infinity Edition (AI Ready)</title>
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.5.1 Infinity Edition (AI Ready + Translator Fix)</title>
+
 <style>
 :root{
  --bg:#0b0f16;--card:#111a22;--neon:#00e5ff;--pri:#16f0a7;
@@ -13,35 +14,27 @@ body{margin:0;background:var(--bg);color:#e6f0ff;font-family:'Segoe UI',sans-ser
 h1{color:var(--neon);margin:20px 0 10px;font-size:1.6rem;text-shadow:0 0 15px var(--neon);}
 .sub{color:var(--gold);font-size:.9rem;margin-top:-8px;text-shadow:0 0 8px var(--gold);}
 .wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;margin:20px auto;}
-.camCol{background:var(--card);border-radius:18px;padding:14px;width:90%;max-width:340px;
-position:relative;box-shadow:0 0 12px var(--shadow);}
+.camCol{background:var(--card);border-radius:18px;padding:14px;width:90%;max-width:340px;position:relative;box-shadow:0 0 12px var(--shadow);}
 video,canvas{width:100%;border-radius:14px;background:#000;}
 .camBtns{margin-top:10px;}
-button{background:#101820;color:var(--neon);border:1px solid var(--neon);
-border-radius:10px;padding:6px 12px;margin:3px;font-weight:600;transition:.25s;}
+button{background:#101820;color:var(--neon);border:1px solid var(--neon);border-radius:10px;padding:6px 12px;margin:3px;font-weight:600;transition:.25s;}
 button:hover{background:var(--neon);color:#000;}
 #status{margin:12px;color:var(--pri);font-weight:bold;}
-.reportBox{background:#0e141b;border-radius:12px;padding:10px;margin:14px auto;max-width:620px;
-color:#fff;box-shadow:0 0 8px var(--shadow);}
+.reportBox{background:#0e141b;border-radius:12px;padding:10px;margin:14px auto;max-width:620px;color:#fff;box-shadow:0 0 8px var(--shadow);}
 .beam{position:absolute;top:0;left:0;width:100%;height:8px;
 background:linear-gradient(to bottom,rgba(255,215,0,0),rgba(255,215,0,1),rgba(0,255,255,0.7),rgba(255,215,0,0));
 box-shadow:0 0 25px 4px var(--gold);border-radius:4px;animation:beamMove 3s linear forwards;}
 @keyframes beamMove{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(100%);opacity:0;}}
 .flashFreeze{animation:flash 0.4s ease-out;}
 @keyframes flash{0%{filter:brightness(2);}100%{filter:brightness(1);}}
-.formBox{background:#101820;border-radius:16px;padding:16px;max-width:600px;margin:20px auto;
-box-shadow:0 0 10px var(--shadow);}
+.formBox{background:#101820;border-radius:16px;padding:16px;max-width:600px;margin:20px auto;box-shadow:0 0 10px var(--shadow);}
 label{display:block;margin-top:8px;color:var(--gold);font-weight:500;}
-input,select{width:90%;max-width:360px;padding:6px 10px;margin-top:4px;border-radius:8px;
-border:1px solid var(--cyan);background:#0c1319;color:#fff;}
+input,select{width:90%;max-width:360px;padding:6px 10px;margin-top:4px;border-radius:8px;border:1px solid var(--cyan);background:#0c1319;color:#fff;}
 #aiMode{color:var(--gold);font-weight:bold;margin-top:4px;text-shadow:0 0 8px var(--gold);}
-#translateBtn{position:fixed;bottom:18px;right:18px;background:#00e5ff;color:#000;border:none;
-padding:10px 16px;border-radius:50px;font-weight:600;box-shadow:0 0 12px #00ffff;z-index:999;cursor:pointer;}
+#translateBtn{position:fixed;bottom:18px;right:18px;background:#00e5ff;color:#000;border:none;padding:10px 16px;border-radius:50px;font-weight:600;box-shadow:0 0 12px #00ffff;z-index:999;cursor:pointer;}
 </style>
-</head>
-<body>
 
-<!-- 🌐 Google Translator -->
+<!-- 🌐 Google Translator (12-language fixed HTTPS version) -->
 <div id="google_translate_element" style="display:none;"></div>
 <script type="text/javascript">
 function googleTranslateElementInit(){
@@ -53,20 +46,29 @@ function googleTranslateElementInit(){
  },'google_translate_element');
 }
 (function(){
- var s=document.createElement('script');
- s.src='//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+ const s=document.createElement('script');
+ s.src='https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
  document.head.appendChild(s);
  const css=document.createElement('style');
  css.innerHTML=`
- .goog-te-banner-frame.skiptranslate, .goog-logo-link, .goog-te-gadget {display:none!important;}
- body{top:0!important;}#goog-gt-tt,.goog-te-balloon-frame{display:none!important;}
- .goog-text-highlight{background:none!important;box-shadow:none!important;}`;
+ .goog-te-banner-frame.skiptranslate,
+ .goog-logo-link,
+ .goog-te-gadget,
+ #goog-gt-tt,
+ .goog-te-balloon-frame,
+ .goog-te-menu-value span,
+ .goog-text-highlight{display:none!important;}
+ body{top:0!important;}
+ iframe.goog-te-banner-frame{display:none!important;}
+ `;
  document.head.appendChild(css);
 })();
 </script>
 
+</head>
+<body>
 <h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
-<p class="sub">V13.5 Infinity Edition · AI Ready · Dual Window Analyzer</p>
+<p class="sub">V13.5.1 Infinity Edition · AI Ready · Dual Window Analyzer</p>
 <p id="aiMode">AI Mode: OFF — Waiting for Connection</p>
 <p id="status">Initializing...</p>
 
@@ -98,6 +100,7 @@ function googleTranslateElementInit(){
    <button id="captureLeft">📸 Capture</button>
   </div>
  </div>
+
  <div class="camCol">
   <h3>Right Hand</h3>
   <video id="vidRight" autoplay playsinline></video>
@@ -111,11 +114,13 @@ function googleTranslateElementInit(){
 
 <!-- REPORT -->
 <div class="reportBox" id="report">Your palms are being scanned by AI Buddhi...</div>
+
 <button id="translateBtn">🌐 Translate</button>
 
 <script>
 const $=id=>document.getElementById(id);
 let streamL,streamR;
+
 function saveUser(){
  const n=$("userName").value.trim(),d=$("userDOB").value,t=$("userTime").value;
  const p=$("userPlace").value.trim(),g=$("userGender").value,f=$("userFocus").value;
@@ -126,11 +131,13 @@ function saveUser(){
 function clearUser(){localStorage.removeItem("userData");$("userStatus").textContent="🧹 Cleared.";}
 function loadUser(){
  const data=localStorage.getItem("userData");if(!data)return;
- const u=JSON.parse(data);$("userName").value=u.n;$("userDOB").value=u.d;
- $("userTime").value=u.t;$("userPlace").value=u.p;$("userGender").value=u.g;$("userFocus").value=u.f;
+ const u=JSON.parse(data);
+ $("userName").value=u.n;$("userDOB").value=u.d;$("userTime").value=u.t;
+ $("userPlace").value=u.p;$("userGender").value=u.g;$("userFocus").value=u.f;
  $("userStatus").textContent="🔹 Loaded previous data.";
 }
 loadUser();
+
 async function startCam(side){
  const vid=side==="left"?$("vidLeft"):$("vidRight");
  const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
@@ -161,10 +168,9 @@ async function runSequence(){
  $("status").textContent="✨ Beam Aura complete — main palm lines detected!";
  const rep=$("report");
  rep.innerHTML=`⚡ ${name}, your dual-hand scan is complete.<br>
- Energy lines mapped successfully for <b>${focus}</b> focus.<br>Wisdom Level: <b>High</b> 🌟<br><small>(Awaiting AI Deep Analysis...)</small>`;
+ Energy lines mapped successfully for <b>${focus}</b> focus.<br>
+ Wisdom Level: <b>High</b> 🌟<br><small>(Awaiting AI Deep Analysis...)</small>`;
  speak(rep.innerText);
- // 🔮 Placeholder for AI API call
- // await analyzePalmAI('left'); await analyzePalmAI('right');
 }
 function drawPalm(ctx){
  const w=ctx.canvas.width,h=ctx.canvas.height;
@@ -190,11 +196,17 @@ function drawPalm(ctx){
 }
 function pause(ms){return new Promise(r=>setTimeout(r,ms));}
 function speak(t){speechSynthesis.speak(new SpeechSynthesisUtterance(t));}
+
 $("startCamLeft").onclick=()=>startCam("left");
 $("captureLeft").onclick=()=>capture("left");
 $("startCamRight").onclick=()=>startCam("right");
 $("captureRight").onclick=()=>capture("right");
-document.getElementById("translateBtn").onclick=()=>alert("🌐 Use Chrome → Tap ‘Translate’ for 12-language auto translation.");
+
+document.getElementById("translateBtn").onclick=function(){
+ const el=document.querySelector('.goog-te-combo');
+ if(el){el.style.display='block';el.focus();alert('✅ Select your language below to translate!');}
+ else{alert("💡 Please wait a few seconds until translator loads...");}
+};
 </script>
 </body>
 </html>
