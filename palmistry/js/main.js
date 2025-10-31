@@ -24,19 +24,25 @@ function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const cvs = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = cvs.getContext("2d");
+
+  // Draw current frame
   ctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
+
+  // Stop live camera + hide video feed
+  const stream = vid.srcObject;
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    vid.srcObject = null;
+  }
+  vid.style.opacity = "0"; // hide live feed
+  cvs.style.visibility = "visible"; // show captured image
 
   animateBeam(cvs);
 
-  // Fade effect after scan
-  setTimeout(() => {
-    cvs.classList.add("fadeout");
-  }, 2000);
-
-  // Generate report with slight delay
+  // Generate Dharma insight
   setTimeout(() => {
     generateReport(side);
-  }, 2500);
+  }, 2200);
 }
 
 // --- AURA & BEAM EFFECT ---
@@ -53,9 +59,9 @@ function generateReport(side) {
   const reports = [
     "Your heart line reveals compassion and balanced emotion.",
     "Your head line shows deep intuition guided by wisdom.",
-    "The fate line indicates powerful transformation ahead.",
-    "Your palm glows with harmony — karma and awareness aligned.",
-    "You carry the mark of light — your actions sow serenity."
+    "The fate line indicates transformation towards higher truth.",
+    "Your palm radiates harmony — karma and awareness align.",
+    "You hold the mark of light — wisdom guiding your destiny."
   ];
   const msg = reports[Math.floor(Math.random() * reports.length)];
   const box = document.getElementById("reportBox");
