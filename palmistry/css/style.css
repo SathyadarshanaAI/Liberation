@@ -37,7 +37,14 @@ video,canvas {
   border-radius:12px;
   margin-top:8px;
   background:#000;
+  transition: filter 1.5s ease; /* smooth dark fade */
 }
+
+/* Fade to black after capture */
+canvas.fadeout {
+  filter: brightness(0%);
+}
+
 button {
   background:var(--neon);
   color:#000;
@@ -76,6 +83,7 @@ button:hover {
   background:linear-gradient(90deg,#FFD700,#00e5ff,#16f0a7);
   animation:scan 2s linear infinite;
   top:0;
+  border-radius:4px;
 }
 @keyframes scan {
   0% { top:0; opacity:0.3; }
