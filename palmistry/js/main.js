@@ -24,48 +24,44 @@ function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const cvs = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = cvs.getContext("2d");
-
-  // Draw current frame
   ctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
 
-  // Stop live camera + hide video feed
+  // stop camera feed
   const stream = vid.srcObject;
   if (stream) {
-    stream.getTracks().forEach(track => track.stop());
+    stream.getTracks().forEach(t => t.stop());
     vid.srcObject = null;
   }
   vid.style.opacity = "0"; // hide live feed
-  cvs.style.visibility = "visible"; // show captured image
+  cvs.style.visibility = "visible"; // show locked hand
 
   animateBeam(cvs);
 
-  // Generate Dharma insight
   setTimeout(() => {
     generateReport(side);
-  }, 2200);
+  }, 2000);
 }
 
-// --- AURA & BEAM EFFECT ---
+// --- AURA SCAN LINE ---
 function animateBeam(canvas) {
   const beam = document.createElement("div");
   beam.className = "beam";
-  canvas.parentElement.style.position = "relative";
   canvas.parentElement.appendChild(beam);
   setTimeout(() => beam.remove(), 2000);
 }
 
 // --- AI DHARMA ANALYZER ---
 function generateReport(side) {
-  const reports = [
-    "Your heart line reveals compassion and balanced emotion.",
-    "Your head line shows deep intuition guided by wisdom.",
-    "The fate line indicates transformation towards higher truth.",
-    "Your palm radiates harmony — karma and awareness align.",
-    "You hold the mark of light — wisdom guiding your destiny."
+  const dharma = [
+    "Your heart line glows with compassion and inner strength.",
+    "Your head line reveals clarity guided by divine intuition.",
+    "Fate aligns with your karma — a new path is opening.",
+    "You carry a radiant aura — wisdom and emotion in balance.",
+    "Your hand bears the mark of dharma — light flowing through action."
   ];
-  const msg = reports[Math.floor(Math.random() * reports.length)];
+  const msg = dharma[Math.floor(Math.random() * dharma.length)];
   const box = document.getElementById("reportBox");
-  box.innerHTML = `📜 ${side} hand captured.<br><b>Dharma Insight:</b> ${msg}`;
+  box.innerHTML = `📜 ${side.toUpperCase()} hand captured.<br><b>Dharma Insight:</b> ${msg}`;
   speak(msg);
 }
 
