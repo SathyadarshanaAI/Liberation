@@ -1,3 +1,6 @@
+import { analyzePalmPatterns, brainInsight } from "./brain.js";
+import { initHandAI, detectHands } from "./handAI.js";
+
 let streamL, streamR;
 
 // --- CAMERA CONTROL ---
@@ -20,25 +23,35 @@ function setStatus(msg, ok = true) {
 }
 
 // --- CAPTURE & ANALYZE ---
-function capture(side) {
+async function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const cvs = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = cvs.getContext("2d");
+
+  // ✋ Real hand detection check
+  const detection = await detectHands(vid);
+  if (!detection.hasHand) {
+    setStatus(`❌ No hand detected on ${side} camera. Try again.`, false);
+    speak("No hand detected. Please show your palm clearly.");
+    return;
+  }
+
+  // draw locked frame
   ctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
 
-  // stop camera feed
+  // stop live feed and hide
   const stream = vid.srcObject;
   if (stream) {
     stream.getTracks().forEach(t => t.stop());
     vid.srcObject = null;
   }
-  vid.style.opacity = "0"; // hide live feed
-  cvs.style.visibility = "visible"; // show locked hand
+  vid.style.opacity = "0";
+  cvs.style.visibility = "visible";
 
   animateBeam(cvs);
 
   setTimeout(() => {
-    generateReport(side);
+    generateReport(side, detection.confidence);
   }, 2000);
 }
 
@@ -50,16 +63,28 @@ function animateBeam(canvas) {
   setTimeout(() => beam.remove(), 2000);
 }
 
-// --- AI DHARMA ANALYZER ---
-function generateReport(side) {
-  const dharma = [
+// --- AI DHARMA ANALYZER (BRAIN + CONFIDENCE) ---
+function generateReport(side, conf = 0.9) {
+  const cvs = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
+  const ctx = cvs.getContext("2d");
+  const brainMsg = analyzePalmPatterns(ctx);
+
+  const baseDharma = [
     "Your heart line glows with compassion and inner strength.",
     "Your head line reveals clarity guided by divine intuition.",
     "Fate aligns with your karma — a new path is opening.",
-    "You carry a radiant aura — wisdom and emotion in balance.",
-    "Your hand bears the mark of dharma — light flowing through action."
+    "You carry a radiant aura — wisdom and emotion in balance."
   ];
-  const msg = dharma[Math.floor(Math.random() * dharma.length)];
+
+  let msg = brainInsight(
+    baseDharma[Math.floor(Math.random() * baseDharma.length)],
+    brainMsg
+  );
+
+  msg += conf > 0.8
+    ? " (✨ High confidence: Real palm detected clearly.)"
+    : " (⚠️ Low visibility detected, try brighter lighting.)";
+
   const box = document.getElementById("reportBox");
   box.innerHTML = `📜 ${side.toUpperCase()} hand captured.<br><b>Dharma Insight:</b> ${msg}`;
   speak(msg);
@@ -81,4 +106,11 @@ document.getElementById("startCamRight").onclick = () => startCam("right");
 document.getElementById("captureLeft").onclick = () => capture("left");
 document.getElementById("captureRight").onclick = () => capture("right");
 
-setStatus("System ready ✨ Tap Start to begin");
+// --- INIT SYSTEM ---
+setStatus("System initializing... 🔄");
+initHandAI().then(() => {
+  setStatus("System ready ✨ AI Hand Detector Active");
+}).catch(err => {
+  console.warn("AI init error:", err);
+  setStatus("⚠️ AI Module Failed to Initialize", false);
+});
