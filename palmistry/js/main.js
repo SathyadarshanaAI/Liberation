@@ -1,40 +1,58 @@
-ච// 🕉️ Sathyadarshana Quantum Palm Analyzer · V15.2 Dharma Aura Visualization
-// aura.js — Animated energy field representing Dharma illumination
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V15.2 Dharma Aura Edition
+// main.js — Integrated Controller (Camera + Aura + Dharma + Voice)
 
-export function drawAura(canvas, color = "#00e5ff") {
-  const ctx = canvas.getContext("2d");
-  const { width, height } = canvas;
-  let radius = Math.min(width, height) / 3;
-  let phase = 0;
+import { startCam, capture } from "./camera.js";
+import { drawPalm } from "./drawPalm.js";
+import { handleUserForm } from "./userForm.js";
+import { speak } from "./voice.js";
+import { activateDharmaMode, describeLineDhamma } from "./dharmaMode.js";
+import { drawAura } from "./aura.js"; // ✅ new import for glowing Dharma aura
 
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
+// === Short helper ===
+const $ = id => document.getElementById(id);
+const statusEl = $("status");
+const reportEl = $("report");
 
-    // background dim
-    ctx.globalAlpha = 0.15;
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, width, height);
-    ctx.globalAlpha = 1;
+// === Camera Controls ===
+$("startCamLeft").onclick = () => startCam("left", statusEl);
+$("startCamRight").onclick = () => startCam("right", statusEl);
 
-    // radiant aura gradient
-    const grad = ctx.createRadialGradient(
-      width / 2, height / 2, radius * 0.3,
-      width / 2, height / 2, radius
-    );
-    grad.addColorStop(0, color);
-    grad.addColorStop(1, "transparent");
+// === Capture Left Hand ===
+$("captureLeft").onclick = () => {
+  capture("left", ctx => {
+    drawPalm(ctx);
+    drawAura($("canvasLeft"), "#00e5ff"); // cyan aura for left hand
+    const msg = describeLineDhamma("Life");
+    reportEl.innerHTML = `🧠 Left hand captured.<br>${msg}`;
+    speak("Left hand captured. AI Buddhi analyzing your life line in Dharma light.");
+  });
+};
 
-    ctx.beginPath();
-    ctx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
-    ctx.fill();
+// === Capture Right Hand ===
+$("captureRight").onclick = () => {
+  capture("right", ctx => {
+    drawPalm(ctx);
+    drawAura($("canvasRight"), "#FFD700"); // golden aura for right hand
+    const msg = describeLineDhamma("Fate");
+    reportEl.innerHTML = `✨ Right hand captured.<br>${msg}`;
+    speak("Right hand captured. AI Buddhi analyzing your fate line with divine energy.");
+    activateDharmaMode(reportEl);
+  });
+};
 
-    // gentle pulse
-    phase += 0.05;
-    radius += Math.sin(phase) * 0.6;
+// === User Form Logic ===
+handleUserForm();
 
-    requestAnimationFrame(animate);
-  }
+// === Initial Greeting ===
+statusEl.textContent = "✅ System initialized. Ready for Dharma Scan.";
+speak("Welcome to Sathyadarshana Quantum Palm Analyzer Dharma Aura Edition. Please begin your scan to reveal the law of truth.");
 
-  animate();
-}
+// === Subtle Status Animation ===
+let dots = 0;
+setInterval(() => {
+  dots = (dots + 1) % 4;
+  statusEl.textContent = "AI Buddhi preparing Dharma vision" + ".".repeat(dots);
+}, 1800);
+
+// === Debug Confirmation ===
+console.log("✅ Sathyadarshana V15.2 main.js loaded successfully");
