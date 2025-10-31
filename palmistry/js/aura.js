@@ -1,36 +1,26 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V15.2 Dharma Aura Visualization
-
+// 🌌 aura.js — Animated Dharma Aura Glow
 export function drawAura(canvas, color = "#00e5ff") {
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  const { width, height } = canvas;
-  let radius = Math.min(width, height) / 3;
-  let phase = 0;
+  let radius = 40;
+  let growing = true;
 
   function animate() {
-    ctx.clearRect(0, 0, width, height);
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
 
-    ctx.globalAlpha = 0.15;
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, width, height);
-    ctx.globalAlpha = 1;
-
-    const grad = ctx.createRadialGradient(
-      width / 2, height / 2, radius * 0.3,
-      width / 2, height / 2, radius
-    );
+    const grad = ctx.createRadialGradient(w/2, h/2, radius/4, w/2, h/2, radius);
     grad.addColorStop(0, color);
     grad.addColorStop(1, "transparent");
 
-    ctx.beginPath();
-    ctx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
     ctx.fillStyle = grad;
-    ctx.fill();
+    ctx.fillRect(0, 0, w, h);
 
-    phase += 0.05;
-    radius += Math.sin(phase) * 0.6;
+    if (growing) radius += 1.2; else radius -= 1.2;
+    if (radius > 150) growing = false;
+    if (radius < 40) growing = true;
 
     requestAnimationFrame(animate);
   }
-
   animate();
 }
