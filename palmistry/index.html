@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V15.2 Dharma Aura Edition</title>
 <link rel="stylesheet" href="css/style.css">
+<!-- ✅ Fixed: defer ensures JS waits until DOM is ready -->
+<script type="module" src="js/main.js" defer></script>
 </head>
 
 <body>
@@ -21,6 +23,7 @@
       <button id="captureLeft">📸 Capture</button>
     </div>
   </div>
+
   <div class="camCol">
     <h3>Right Hand</h3>
     <video id="vidRight" autoplay playsinline></video>
@@ -34,7 +37,5 @@
 
 <div class="reportBox" id="report">Your palms are being scanned by AI Buddhi...</div>
 
-<!-- Load JS -->
-<script type="module" src="js/main.js"></script>
 </body>
 </html>
