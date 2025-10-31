@@ -1,61 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V15.4 Dharma Synchrony Clean Build</title>
-<link rel="stylesheet" href="css/style.css">
-<script type="module" src="js/main.js" defer></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V16.0 Dharma Vision</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <script type="module" src="./js/main.js" defer></script>
 </head>
-
 <body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
-<p id="status">Initializing system...</p>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
+  <p id="status">System initializing...</p>
 
-<div class="wrap">
-  <!-- === Left Hand Camera === -->
-  <div class="camCol">
-    <h3>Left Hand</h3>
-    <video id="vidLeft" autoplay playsinline></video>
-    <div class="camLayer">
-      <canvas id="canvasLeftLines" width="300" height="400"></canvas>
-      <canvas id="canvasLeftAura" width="300" height="400"></canvas>
+  <div class="wrap">
+    <!-- Left Hand -->
+    <div class="camCol">
+      <h3>Left Hand</h3>
+      <video id="vidLeft" autoplay playsinline></video>
+      <canvas id="canvasLeft" width="300" height="400"></canvas>
+      <div class="camBtns">
+        <button id="startCamLeft">📷 Start</button>
+        <button id="captureLeft">📸 Capture</button>
+      </div>
     </div>
-    <div class="camBtns">
-      <button id="startCamLeft">📷 Start</button>
-      <button id="captureLeft">📸 Capture</button>
-    </div>
-  </div>
 
-  <!-- === Right Hand Camera === -->
-  <div class="camCol">
-    <h3>Right Hand</h3>
-    <video id="vidRight" autoplay playsinline></video>
-    <div class="camLayer">
-      <canvas id="canvasRightLines" width="300" height="400"></canvas>
-      <canvas id="canvasRightAura" width="300" height="400"></canvas>
-    </div>
-    <div class="camBtns">
-      <button id="startCamRight">📷 Start</button>
-      <button id="captureRight">📸 Capture</button>
+    <!-- Right Hand -->
+    <div class="camCol">
+      <h3>Right Hand</h3>
+      <video id="vidRight" autoplay playsinline></video>
+      <canvas id="canvasRight" width="300" height="400"></canvas>
+      <div class="camBtns">
+        <button id="startCamRight">📷 Start</button>
+        <button id="captureRight">📸 Capture</button>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="reportBox" id="report">
-  Your palms are being scanned by <b>AI Buddhi</b>... Please wait for Dharma Aura analysis.
-</div>
+  <div id="reportBox" class="reportBox">
+    🤖 <b>AI Buddhi</b> is analyzing your palms...  
+    <br> Please wait for Dharma Aura insight report.
+  </div>
 
-<section class="dharmaText">
-  <h3>☸ Root Dhamma Principle · Causal Law of Truth</h3>
-  <p>Reading the palm is the art of perceiving the threefold flow of time — 
-  <b>Past</b> (your actions and thoughts), 
-  <b>Present</b> (your consciousness and awareness), and 
-  <b>Future</b> (the truth-path you shape through wisdom).</p>
-  <p>Every line upon the palm is a verse in the book of causes — 
-  the past that formed, the present that feels, and the future that blooms through awareness.</p>
-  <p>🌿 Whoever observes these lines with the eye of truth perceives the link between Karma and Vipāka, 
-  and attains a vision where causes and results dance together in harmony.</p>
-</section>
+  <footer class="footer">
+    <p>© Sathyadarshana Dharma Vision · Built by Anuruddha & AI Buddhi 🌕</p>
+  </footer>
 </body>
 </html>
