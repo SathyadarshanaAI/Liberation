@@ -1,9 +1,10 @@
-// ✋ drawPalm.js — Core Palm Line Drawer (8 major lines)
-
+// ✋ drawPalm.js — Balanced Palm Line Drawer (with z-index safe rendering)
 export function drawPalm(ctx) {
+  if (!ctx) return;
   const w = ctx.canvas.width, h = ctx.canvas.height;
   const fx = w / 500, fy = h / 800;
 
+  // 🪷 8 main lines
   const lines = [
     { n: "Life", p: [[120*fx,700*fy],[60*fx,400*fy],[220*fx,650*fy]], c: "#FFD700" },
     { n: "Head", p: [[100*fx,500*fy],[300*fx,400*fy],[420*fx,420*fy]], c: "#00FFFF" },
@@ -15,8 +16,9 @@ export function drawPalm(ctx) {
     { n: "Manikanda", p: [[220*fx,600*fy],[300*fx,450*fy],[380*fx,320*fy]], c: "#FFFF00" },
   ];
 
-  ctx.lineWidth = 2.4;
-  ctx.shadowBlur = 8;
+  ctx.clearRect(0, 0, w, h); // 🧹 clear old lines
+  ctx.lineWidth = 2.5;
+  ctx.shadowBlur = 6;
 
   for (const ln of lines) {
     ctx.beginPath();
@@ -34,4 +36,6 @@ export function drawPalm(ctx) {
     const [x, y] = ln.p[Math.floor(ln.p.length / 2)];
     ctx.fillText(ln.n, x + 5, y - 4);
   }
+
+  console.log("✋ Palm lines rendered successfully");
 }
