@@ -8,10 +8,11 @@
 
 body {
   margin:0;
-  background:var(--bg);
+  background:radial-gradient(circle at center,#0b0f16 40%,#000 100%);
   color:#e6f0ff;
   font-family:'Segoe UI',sans-serif;
   text-align:center;
+  overflow-x:hidden;
 }
 
 h1 {
@@ -43,7 +44,7 @@ video {
   border-radius:12px;
   margin-top:8px;
   background:#000;
-  transition:opacity 0.8s ease;
+  transition:opacity 1s ease;
 }
 
 canvas {
@@ -70,7 +71,6 @@ button {
   box-shadow:0 0 15px var(--neon);
   transition:all 0.2s;
 }
-
 button:hover {
   background:var(--gold);
   box-shadow:0 0 20px var(--gold);
@@ -85,6 +85,7 @@ button:hover {
   max-width:720px;
   box-shadow:0 0 15px #16f0a740;
   font-size:0.95rem;
+  text-shadow:0 0 10px #16f0a760;
 }
 
 .footer {
@@ -96,15 +97,23 @@ button:hover {
 .beam {
   position:absolute;
   width:100%;
-  height:4px;
+  height:6px;
   background:linear-gradient(90deg,#FFD700,#00e5ff,#16f0a7);
   animation:scan 2s linear infinite;
   top:0;
   border-radius:4px;
+  box-shadow:0 0 20px #00e5ff80;
 }
 
 @keyframes scan {
-  0% { top:0; opacity:0.3; }
+  0% { top:0; opacity:0.2; }
   50% { top:90%; opacity:1; }
-  100% { top:0; opacity:0.3; }
+  100% { top:0; opacity:0.2; }
 }
+
+@keyframes pulse {
+  0% { box-shadow:0 0 15px #00e5ff80; }
+  50% { box-shadow:0 0 40px #FFD70080; }
+  100% { box-shadow:0 0 15px #00e5ff80; }
+}
+.camCol { animation:pulse 4s infinite ease-in-out; }
