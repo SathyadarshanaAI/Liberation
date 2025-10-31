@@ -3,54 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V13.7 Modular Edition</title>
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V15.2 Dharma Aura Edition</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 <h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
 <p id="status">Initializing...</p>
 
-<div class="formBox">
- <h3>🔮 User Information</h3>
- <label>Full Name</label><input id="userName">
- <label>Date of Birth</label><input type="date" id="userDOB">
- <label>Time of Birth</label><input type="time" id="userTime">
- <label>Birth Place</label><input id="userPlace">
- <label>Gender</label>
- <select id="userGender"><option>Male</option><option>Female</option><option>Other</option></select>
- <label>Focus Area</label>
- <select id="userFocus"><option>Career</option><option>Love</option><option>Health</option><option>Spiritual Path</option></select>
- <div class="btnRow">
-  <button id="saveBtn">💾 Save</button>
-  <button id="clearBtn">🧹 Clear</button>
- </div>
- <p id="userStatus"></p>
-</div>
-
 <div class="wrap">
- <div class="camCol">
-  <h3>Left Hand</h3>
-  <video id="vidLeft" autoplay playsinline></video>
-  <canvas id="canvasLeft" width="300" height="400"></canvas>
-  <div class="camBtns">
-   <button id="startCamLeft">📷 Start</button>
-   <button id="captureLeft">📸 Capture</button>
+  <div class="camCol">
+    <h3>Left Hand</h3>
+    <video id="vidLeft" autoplay playsinline></video>
+    <canvas id="canvasLeft" width="300" height="400"></canvas>
+    <div class="camBtns">
+      <button id="startCamLeft">📷 Start</button>
+      <button id="captureLeft">📸 Capture</button>
+    </div>
   </div>
- </div>
- <div class="camCol">
-  <h3>Right Hand</h3>
-  <video id="vidRight" autoplay playsinline></video>
-  <canvas id="canvasRight" width="300" height="400"></canvas>
-  <div class="camBtns">
-   <button id="startCamRight">📷 Start</button>
-   <button id="captureRight">📸 Capture</button>
+  <div class="camCol">
+    <h3>Right Hand</h3>
+    <video id="vidRight" autoplay playsinline></video>
+    <canvas id="canvasRight" width="300" height="400"></canvas>
+    <div class="camBtns">
+      <button id="startCamRight">📷 Start</button>
+      <button id="captureRight">📸 Capture</button>
+    </div>
   </div>
- </div>
 </div>
 
 <div class="reportBox" id="report">Your palms are being scanned by AI Buddhi...</div>
 
-<!-- Load JS modules -->
+<!-- Load JS -->
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
