@@ -8,51 +8,68 @@ import { speak } from "./voice.js";
 import { activateDharmaMode, describeLineDhamma } from "./dharmaMode.js";
 import { drawAura } from "./aura.js"; // ✅ new import for glowing Dharma aura
 
-// === Short helper ===
-const $ = id => document.getElementById(id);
-const statusEl = $("status");
-const reportEl = $("report");
+document.addEventListener("DOMContentLoaded", () => {
+  // === Short helper ===
+  const $ = id => document.getElementById(id);
+  const statusEl = $("status");
+  const reportEl = $("report");
 
-// === Camera Controls ===
-$("startCamLeft").onclick = () => startCam("left", statusEl);
-$("startCamRight").onclick = () => startCam("right", statusEl);
+  if (!statusEl || !reportEl) {
+    console.error("❌ Missing main DOM elements.");
+    return;
+  }
 
-// === Capture Left Hand ===
-$("captureLeft").onclick = () => {
-  capture("left", ctx => {
-    drawPalm(ctx);
-    drawAura($("canvasLeft"), "#00e5ff"); // cyan aura for left hand
-    const msg = describeLineDhamma("Life");
-    reportEl.innerHTML = `🧠 Left hand captured.<br>${msg}`;
-    speak("Left hand captured. AI Buddhi analyzing your life line in Dharma light.");
-  });
-};
+  // === Camera Controls ===
+  const startLeft = $("startCamLeft");
+  const startRight = $("startCamRight");
+  const capLeft = $("captureLeft");
+  const capRight = $("captureRight");
 
-// === Capture Right Hand ===
-$("captureRight").onclick = () => {
-  capture("right", ctx => {
-    drawPalm(ctx);
-    drawAura($("canvasRight"), "#FFD700"); // golden aura for right hand
-    const msg = describeLineDhamma("Fate");
-    reportEl.innerHTML = `✨ Right hand captured.<br>${msg}`;
-    speak("Right hand captured. AI Buddhi analyzing your fate line with divine energy.");
-    activateDharmaMode(reportEl);
-  });
-};
+  if (!startLeft || !startRight || !capLeft || !capRight) {
+    console.error("❌ Camera buttons not found in DOM!");
+    return;
+  }
 
-// === User Form Logic ===
-handleUserForm();
+  startLeft.onclick = () => startCam("left", statusEl);
+  startRight.onclick = () => startCam("right", statusEl);
 
-// === Initial Greeting ===
-statusEl.textContent = "✅ System initialized. Ready for Dharma Scan.";
-speak("Welcome to Sathyadarshana Quantum Palm Analyzer Dharma Aura Edition. Please begin your scan to reveal the law of truth.");
+  // === Capture Left Hand ===
+  capLeft.onclick = () => {
+    capture("left", ctx => {
+      drawPalm(ctx);
+      drawAura($("canvasLeft"), "#00e5ff"); // cyan aura
+      const msg = describeLineDhamma("Life");
+      reportEl.innerHTML = `🧠 Left hand captured.<br>${msg}`;
+      speak("Left hand captured. AI Buddhi analyzing your life line in Dharma light.");
+    });
+  };
 
-// === Subtle Status Animation ===
-let dots = 0;
-setInterval(() => {
-  dots = (dots + 1) % 4;
-  statusEl.textContent = "AI Buddhi preparing Dharma vision" + ".".repeat(dots);
-}, 1800);
+  // === Capture Right Hand ===
+  capRight.onclick = () => {
+    capture("right", ctx => {
+      drawPalm(ctx);
+      drawAura($("canvasRight"), "#FFD700"); // golden aura
+      const msg = describeLineDhamma("Fate");
+      reportEl.innerHTML = `✨ Right hand captured.<br>${msg}`;
+      speak("Right hand captured. AI Buddhi analyzing your fate line with divine energy.");
+      activateDharmaMode(reportEl);
+    });
+  };
 
-// === Debug Confirmation ===
-console.log("✅ Sathyadarshana V15.2 main.js loaded successfully");
+  // === User Form Logic ===
+  handleUserForm();
+
+  // === Initial Greeting ===
+  statusEl.textContent = "✅ System initialized. Ready for Dharma Scan.";
+  speak("Welcome to Sathyadarshana Quantum Palm Analyzer Dharma Aura Edition. Please begin your scan to reveal the law of truth.");
+
+  // === Subtle Status Animation ===
+  let dots = 0;
+  setInterval(() => {
+    dots = (dots + 1) % 4;
+    statusEl.textContent = "AI Buddhi preparing Dharma vision" + ".".repeat(dots);
+  }, 1800);
+
+  // === Debug Confirmation ===
+  console.log("✅ Sathyadarshana V15.2 main.js loaded successfully");
+});
