@@ -1,75 +1,64 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V15.2 Dharma Aura Edition
-// main.js — Integrated Controller (Camera + Aura + Dharma + Voice)
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V15.3 True Synchrony Edition
+// main.js — Complete DOM-safe Build with Aura + Voice + Dharma Integration
 
 import { startCam, capture } from "./camera.js";
 import { drawPalm } from "./drawPalm.js";
-import { handleUserForm } from "./userForm.js";
+import { drawAura } from "./aura.js";
 import { speak } from "./voice.js";
-import { activateDharmaMode, describeLineDhamma } from "./dharmaMode.js";
-import { drawAura } from "./aura.js"; // ✅ new import for glowing Dharma aura
+import { describeLineDhamma, activateDharmaMode } from "./dharmaMode.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  // === Short helper ===
-  const $ = id => document.getElementById(id);
-  const statusEl = $("status");
-  const reportEl = $("report");
+  initPalmAnalyzer();
+});
 
-  if (!statusEl || !reportEl) {
-    console.error("❌ Missing main DOM elements.");
+function initPalmAnalyzer() {
+  const startLeft = document.getElementById("startCamLeft");
+  const startRight = document.getElementById("startCamRight");
+  const capLeft = document.getElementById("captureLeft");
+  const capRight = document.getElementById("captureRight");
+  const statusEl = document.getElementById("status");
+  const reportEl = document.getElementById("report");
+
+  if (!startLeft || !capLeft || !startRight || !capRight) {
+    console.error("❌ Camera buttons not found");
     return;
   }
 
-  // === Camera Controls ===
-  const startLeft = $("startCamLeft");
-  const startRight = $("startCamRight");
-  const capLeft = $("captureLeft");
-  const capRight = $("captureRight");
-
-  if (!startLeft || !startRight || !capLeft || !capRight) {
-    console.error("❌ Camera buttons not found in DOM!");
-    return;
-  }
-
+  // === LEFT HAND ===
   startLeft.onclick = () => startCam("left", statusEl);
-  startRight.onclick = () => startCam("right", statusEl);
-
-  // === Capture Left Hand ===
   capLeft.onclick = () => {
     capture("left", ctx => {
       drawPalm(ctx);
-      drawAura($("canvasLeft"), "#00e5ff"); // cyan aura
+      drawAura(document.getElementById("canvasLeft"), "#00e5ff");
       const msg = describeLineDhamma("Life");
       reportEl.innerHTML = `🧠 Left hand captured.<br>${msg}`;
-      speak("Left hand captured. AI Buddhi analyzing your life line in Dharma light.");
+      speak("Left hand captured. AI Buddhi analyzing your life line.");
     });
   };
 
-  // === Capture Right Hand ===
+  // === RIGHT HAND ===
+  startRight.onclick = () => startCam("right", statusEl);
   capRight.onclick = () => {
     capture("right", ctx => {
       drawPalm(ctx);
-      drawAura($("canvasRight"), "#FFD700"); // golden aura
+      drawAura(document.getElementById("canvasRight"), "#FFD700");
       const msg = describeLineDhamma("Fate");
       reportEl.innerHTML = `✨ Right hand captured.<br>${msg}`;
-      speak("Right hand captured. AI Buddhi analyzing your fate line with divine energy.");
+      speak("Right hand captured. AI Buddhi analyzing your destiny.");
       activateDharmaMode(reportEl);
     });
   };
 
-  // === User Form Logic ===
-  handleUserForm();
-
-  // === Initial Greeting ===
+  // === INITIAL STATUS ===
   statusEl.textContent = "✅ System initialized. Ready for Dharma Scan.";
-  speak("Welcome to Sathyadarshana Quantum Palm Analyzer Dharma Aura Edition. Please begin your scan to reveal the law of truth.");
+  speak("Welcome to Sathyadarshana Quantum Palm Analyzer True Synchrony Edition. Please begin your Dharma scan.");
 
-  // === Subtle Status Animation ===
+  // === Subtle animated feedback ===
   let dots = 0;
   setInterval(() => {
     dots = (dots + 1) % 4;
     statusEl.textContent = "AI Buddhi preparing Dharma vision" + ".".repeat(dots);
   }, 1800);
 
-  // === Debug Confirmation ===
-  console.log("✅ Sathyadarshana V15.2 main.js loaded successfully");
-});
+  console.log("✅ Palm Analyzer initialized successfully");
+}
