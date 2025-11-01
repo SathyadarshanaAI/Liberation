@@ -1,5 +1,7 @@
+// js/main.js
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
+import { speak } from "./voice.js"; // 🆕 added voice import
 
 document.addEventListener("DOMContentLoaded", () => {
   const status = document.getElementById("status");
@@ -20,12 +22,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   aiBtn.onclick = () => {
     aiBtn.disabled = true;
-    aiBtn.textContent = "🤖 Analyzing...";
-    reportBox.textContent = "🪷 Reading your Dharma lines...";
+    aiBtn.textContent = "🤖 Reading energy lines...";
+    reportBox.textContent = "🪷 Analyzing with Buddhi’s Dharma Insight...";
     setTimeout(() => {
-      reportBox.textContent = analyzePalm();
+      const report = analyzePalm();
+      reportBox.textContent = report;
+      speak(report, "en-US"); // 🗣️ Buddhi reads the report aloud
       aiBtn.disabled = false;
       aiBtn.textContent = "🧠 AI Analyze Palm";
-    }, 2000);
+    }, 2200);
   };
 });
