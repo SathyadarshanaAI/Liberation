@@ -1,16 +1,31 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V16.8 Dharma Vision Stable Build
-// handAI_v16.8.js — Offline Ready, Mobile Optimized
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V16.9 Universal Mobile Fix
+// works on Android Chrome 70+, Samsung Internet, Edge, Opera Mini (fallback)
 
 let detector, ready = false;
 
-// ✅ Initialize Hand AI
+// 🌐 Load external scripts safely (no import syntax)
+async function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = url;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// ⚙️ Initialize AI
 export async function initHandAI() {
   try {
-    // Load TensorFlow + HandPose in parallel
-    const [tf, hp] = await Promise.all([
-      import("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js"),
-      import("https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection")
-    ]);
+    if (!window.tf) {
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js");
+    }
+    if (!window.handPoseDetection) {
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection");
+    }
+
+    const tf = window.tf;
+    const hp = window.handPoseDetection;
 
     await tf.setBackend("webgl").catch(() => tf.setBackend("cpu"));
     await tf.ready();
@@ -19,31 +34,31 @@ export async function initHandAI() {
     detector = await hp.createDetector(model, {
       runtime: "tfjs",
       modelType: "lite",
-      maxHands: 1
+      maxHands: 1,
     });
 
     ready = true;
-    console.log("✅ Dharma Vision Hand AI initialized");
+    console.log("✅ Hand AI initialized");
     return true;
-  } catch (e) {
-    console.error("❌ Hand AI initialization failed:", e);
-    alert("AI Hand module failed to load.\nPlease reload or check your browser version.");
+  } catch (err) {
+    console.error("❌ Hand AI initialization failed:", err);
+    alert("AI Hand module failed to load.\nPlease check your browser version or network.");
     return false;
   }
 }
 
-// 🔍 Detect hand in camera stream
+// 🖐️ Detect Hand
 export async function detectHands(videoEl) {
   if (!ready || !videoEl) return { hasHand: false, confidence: 0 };
   try {
     const hands = await detector.estimateHands(videoEl, { flipHorizontal: true });
-    if (hands.length) {
+    if (hands.length > 0) {
       const conf = hands[0].score?.[0] ?? 0.9;
       return { hasHand: true, confidence: conf };
     }
     return { hasHand: false, confidence: 0 };
-  } catch (e) {
-    console.warn("⚠️ Detection issue:", e);
+  } catch (err) {
+    console.warn("⚠️ Detection error:", err);
     return { hasHand: false, confidence: 0 };
   }
 }
