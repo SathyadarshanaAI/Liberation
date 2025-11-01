@@ -1,39 +1,31 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V15.4 Dharma Synchrony Clean Build
 import { startCam, capture } from "./camera.js";
-import { drawPalm } from "./drawPalm.js";
 import { drawAura } from "./aura.js";
+import { drawLines } from "./lines.js";
+import { analyzePalm } from "./aiBrain.js";
+import { speak } from "./voice.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  initPalmAnalyzer();
-});
+const statusEl = document.getElementById("status");
+const reportEl = document.getElementById("report");
 
-function initPalmAnalyzer() {
-  const startLeft = document.getElementById("startCamLeft");
-  const startRight = document.getElementById("startCamRight");
-  const capLeft = document.getElementById("captureLeft");
-  const capRight = document.getElementById("captureRight");
-  const statusEl = document.getElementById("status");
-  const reportEl = document.getElementById("report");
+document.getElementById("startCamLeft").onclick = ()=>startCam("left", statusEl);
+document.getElementById("startCamRight").onclick = ()=>startCam("right", statusEl);
 
-  startLeft.onclick = () => startCam("left", statusEl);
-  startRight.onclick = () => startCam("right", statusEl);
+document.getElementById("captureLeft").onclick = ()=>{
+  capture("left", ()=>{
+    drawAura(document.getElementById("canvasLeftAura").getContext("2d"));
+    drawLines(document.getElementById("canvasLeftLines").getContext("2d"));
+    const msg = analyzePalm("left", 0.83);
+    reportEl.innerText = msg;
+    speak("Left hand analyzed. Compassion and healing karma detected.");
+  });
+};
 
-  capLeft.onclick = () => {
-    capture("left", ctx => {
-      drawPalm(document.getElementById("canvasLeftLines").getContext("2d"));
-      drawAura(document.getElementById("canvasLeftAura"), "#00e5ff");
-      reportEl.innerHTML = "🧠 Left hand captured — Life line of awareness illuminated.";
-    });
-  };
-
-  capRight.onclick = () => {
-    capture("right", ctx => {
-      drawPalm(document.getElementById("canvasRightLines").getContext("2d"));
-      drawAura(document.getElementById("canvasRightAura"), "#FFD700");
-      reportEl.innerHTML = "✨ Right hand captured — Fate line of Dharma awakening.";
-    });
-  };
-
-  statusEl.textContent = "✅ System initialized. Ready for Dharma Scan.";
-  console.log("✅ Palm Analyzer initialized successfully");
-}
+document.getElementById("captureRight").onclick = ()=>{
+  capture("right", ()=>{
+    drawAura(document.getElementById("canvasRightAura").getContext("2d"));
+    drawLines(document.getElementById("canvasRightLines").getContext("2d"));
+    const msg = analyzePalm("right", 0.91);
+    reportEl.innerText = msg;
+    speak("Right hand analyzed. Purpose and Dharma alignment detected.");
+  });
+};
