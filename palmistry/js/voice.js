@@ -1,5 +1,6 @@
- export function speak(text, lang="en-US"){
-  if(!window.speechSynthesis) return;
+// js/voice.js — AI Buddhi Voice Narration
+export function speak(text, lang = "en-US") {
+  if (!window.speechSynthesis) return;
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = lang;
   msg.pitch = 1;
