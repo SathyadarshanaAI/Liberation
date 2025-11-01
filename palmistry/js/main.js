@@ -1,27 +1,31 @@
-import { initHandAI, detectHands } from "./handAI.js";
+import { startCam, capture } from "./camera.js";
+import { analyzePalm } from "./brain.js";
 
-const statusEl = document.getElementById("status");
-const vidLeft = document.getElementById("vidLeft");
-const vidRight = document.getElementById("vidRight");
+document.addEventListener("DOMContentLoaded", () => {
+  const status = document.getElementById("status");
+  const reportBox = document.getElementById("reportBox");
 
-async function startCam(side) {
-  const vid = side === "left" ? vidLeft : vidRight;
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    vid.srcObject = stream;
-    statusEl.textContent = `✅ ${side} camera started`;
-  } catch (err) {
-    statusEl.textContent = `❌ Camera error: ${err.message}`;
-  }
-}
+  const aiBtn = document.createElement("button");
+  aiBtn.textContent = "🧠 AI Analyze Palm";
+  aiBtn.className = "analyzeBtn";
+  document.body.appendChild(aiBtn);
 
-async function initAI() {
-  statusEl.textContent = "🔄 Initializing AI Hand Detector...";
-  await initHandAI();
-  statusEl.textContent = "✨ AI Hand Detector Active";
-}
+  status.textContent = "🧘 Initializing AI Buddhi...";
+  setTimeout(() => { status.textContent = "✅ Ready for Palm Analysis"; }, 1200);
 
-document.getElementById("startCamLeft").onclick = () => startCam("left");
-document.getElementById("startCamRight").onclick = () => startCam("right");
+  document.getElementById("startCamLeft").onclick = () => startCam("left");
+  document.getElementById("startCamRight").onclick = () => startCam("right");
+  document.getElementById("captureLeft").onclick = () => capture("left");
+  document.getElementById("captureRight").onclick = () => capture("right");
 
-window.addEventListener("load", initAI);
+  aiBtn.onclick = () => {
+    aiBtn.disabled = true;
+    aiBtn.textContent = "🤖 Analyzing...";
+    reportBox.textContent = "🪷 Reading your Dharma lines...";
+    setTimeout(() => {
+      reportBox.textContent = analyzePalm();
+      aiBtn.disabled = false;
+      aiBtn.textContent = "🧠 AI Analyze Palm";
+    }, 2000);
+  };
+});
