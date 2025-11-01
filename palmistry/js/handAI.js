@@ -1,21 +1,30 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V16.5
-// handAI.js — Stable Hand Detection (WebGL Safe Mode)
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V16.7 Offline Recovery Build
+// handAI.js — Works on GitHub Pages, Netlify & Android Chrome (fallback loader)
 
-import * as handPoseDetection from "https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection";
-import * as tf from "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0";
+let detector, tf, handPoseDetection, ready = false;
 
-let detector, ready = false;
-
-// ⚙️ Initialize AI Engine
 export async function initHandAI() {
   try {
-    await tf.setBackend("webgl"); // fallback automatic
+    // try load TensorFlow
+    if (!window.tf) {
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js");
+    }
+    if (!window.handPoseDetection) {
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection");
+    }
+
+    tf = window.tf;
+    handPoseDetection = window.handPoseDetection;
+
+    if (!tf || !handPoseDetection) throw new Error("Modules missing");
+
+    await tf.setBackend("webgl").catch(() => tf.setBackend("cpu"));
     await tf.ready();
 
     const model = handPoseDetection.SupportedModels.MediaPipeHands;
     detector = await handPoseDetection.createDetector(model, {
       runtime: "tfjs",
-      modelType: "lite", // lightweight for mobile
+      modelType: "lite",
       maxHands: 1,
     });
 
@@ -23,23 +32,33 @@ export async function initHandAI() {
     console.log("✅ Hand AI initialized successfully!");
   } catch (err) {
     console.error("❌ Hand AI initialization failed:", err);
-    alert("AI Hand module could not load. Please check your internet and reload.");
+    alert("AI Hand module could not load. Try again with strong internet or reload.");
   }
 }
 
-// 🔎 Detect hand presence
+// dynamic loader
+async function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = url;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// 🔍 detect hand
 export async function detectHands(videoEl) {
   if (!ready || !videoEl) return { hasHand: false, confidence: 0 };
   try {
-    const results = await detector.estimateHands(videoEl, { flipHorizontal: true });
-    if (results.length > 0) {
-      const conf = results[0].score ? results[0].score[0] : 0.95;
+    const hands = await detector.estimateHands(videoEl, { flipHorizontal: true });
+    if (hands.length > 0) {
+      const conf = hands[0].score ? hands[0].score[0] : 0.9;
       return { hasHand: true, confidence: conf };
-    } else {
-      return { hasHand: false, confidence: 0 };
     }
+    return { hasHand: false, confidence: 0 };
   } catch (err) {
-    console.warn("Detection failed:", err);
+    console.warn("⚠️ Detection failed:", err);
     return { hasHand: false, confidence: 0 };
   }
 }
