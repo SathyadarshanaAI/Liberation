@@ -1,22 +1,27 @@
-import { startCam, capture } from "./camera.js";
-import { drawAura } from "./aura.js";
-import { drawLines } from "./lines.js";
+import { initHandAI, detectHands } from "./handAI.js";
 
 const statusEl = document.getElementById("status");
+const vidLeft = document.getElementById("vidLeft");
+const vidRight = document.getElementById("vidRight");
 
-document.getElementById("startCamLeft").onclick = ()=>startCam("left", statusEl);
-document.getElementById("startCamRight").onclick = ()=>startCam("right", statusEl);
+async function startCam(side) {
+  const vid = side === "left" ? vidLeft : vidRight;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    vid.srcObject = stream;
+    statusEl.textContent = `✅ ${side} camera started`;
+  } catch (err) {
+    statusEl.textContent = `❌ Camera error: ${err.message}`;
+  }
+}
 
-document.getElementById("captureLeft").onclick = ()=>{
-  capture("left", ()=>{
-    drawAura(document.getElementById("canvasLeftAura").getContext("2d"));
-    drawLines(document.getElementById("canvasLeftLines").getContext("2d"));
-  });
-};
+async function initAI() {
+  statusEl.textContent = "🔄 Initializing AI Hand Detector...";
+  await initHandAI();
+  statusEl.textContent = "✨ AI Hand Detector Active";
+}
 
-document.getElementById("captureRight").onclick = ()=>{
-  capture("right", ()=>{
-    drawAura(document.getElementById("canvasRightAura").getContext("2d"));
-    drawLines(document.getElementById("canvasRightLines").getContext("2d"));
-  });
-};
+document.getElementById("startCamLeft").onclick = () => startCam("left");
+document.getElementById("startCamRight").onclick = () => startCam("right");
+
+window.addEventListener("load", initAI);
