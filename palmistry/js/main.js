@@ -1,8 +1,8 @@
-// main.js — V17.9 Serenity Vision · AI Buddhi Palm Analyzer (OpenCV Integrated)
+// main.js — V18.1 Divine Edge Glow Edition · AI Buddhi Palm Analyzer (OpenCV Glow Integrated)
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
 import { drawPalm } from "./lines.js";
-import { detectPalmLines } from "./opencv-helper.js"; // 🔮 OpenCV edge detection helper
+import { analyzeEdges } from "./opencv-helper.js"; // ✨ OpenCV glow edge detection
 
 // 🗣️ Voice system
 function speak(text) {
@@ -45,22 +45,24 @@ document.addEventListener("DOMContentLoaded", () => {
     leftStart.onclick = () => startCam("left");
     rightStart.onclick = () => startCam("right");
 
-    leftCapture.onclick = () => {
+    leftCapture.onclick = async () => {
       capture("left");
       const canvas = document.getElementById("canvasLeft");
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
-      detectPalmLines("canvasLeft"); // 🔮 new OpenCV overlay
       lockAnimation(canvas);
+      await new Promise(r => setTimeout(r, 800)); // delay for frame stability
+      await analyzeEdges("canvasLeft"); // ✨ glowing OpenCV overlay
     };
 
-    rightCapture.onclick = () => {
+    rightCapture.onclick = async () => {
       capture("right");
       const canvas = document.getElementById("canvasRight");
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
-      detectPalmLines("canvasRight"); // 🔮 new OpenCV overlay
       lockAnimation(canvas);
+      await new Promise(r => setTimeout(r, 800)); // delay for frame stability
+      await analyzeEdges("canvasRight"); // ✨ glowing OpenCV overlay
     };
   } else {
     console.error("❌ Camera buttons not found — check HTML IDs!");
