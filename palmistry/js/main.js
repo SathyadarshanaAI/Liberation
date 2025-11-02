@@ -1,8 +1,9 @@
-// main.js — V18.1 Divine Edge Glow Edition · AI Buddhi Palm Analyzer (OpenCV Glow Integrated)
+// main.js — V18.2 Golden 3D Fusion Edition · AI Buddhi Palm Analyzer
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
 import { drawPalm } from "./lines.js";
 import { analyzeEdges } from "./opencv-helper.js"; // ✨ OpenCV glow edge detection
+import { initGoldenPalm3D } from "./lines-3d.js";   // 🪷 NEW: 3D Golden Renderer
 
 // 🗣️ Voice system
 function speak(text) {
@@ -51,8 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
       lockAnimation(canvas);
-      await new Promise(r => setTimeout(r, 800)); // delay for frame stability
-      await analyzeEdges("canvasLeft"); // ✨ glowing OpenCV overlay
+      await new Promise(r => setTimeout(r, 800)); 
+      await analyzeEdges("canvasLeft");
     };
 
     rightCapture.onclick = async () => {
@@ -61,8 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
       lockAnimation(canvas);
-      await new Promise(r => setTimeout(r, 800)); // delay for frame stability
-      await analyzeEdges("canvasRight"); // ✨ glowing OpenCV overlay
+      await new Promise(r => setTimeout(r, 800)); 
+      await analyzeEdges("canvasRight");
+
+      // 🪷 After capture, trigger 3D aura animation
+      setTimeout(() => initGoldenPalm3D("canvasRight"), 1000);
     };
   } else {
     console.error("❌ Camera buttons not found — check HTML IDs!");
