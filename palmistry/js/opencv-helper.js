@@ -1,60 +1,82 @@
-// 🧠 Sathyadarshana OpenCV Helper — V18.2 Pure Palm Filter Edition
-// Purpose: Detect palm lines precisely, remove noisy background edges, and blend with soft glow.
+// 🧠 Sathyadarshana OpenCV Helper — V19.0 True Line Bezier Analyzer Edition
+// Purpose: Detect true palm line curvature using Bezier path tracing
 
-export async function analyzeEdges(canvasId) {
+export async function detectPalmLines(canvasId) {
   const canvas = document.getElementById(canvasId);
   const ctx = canvas.getContext("2d");
   const src = cv.imread(canvas);
   const gray = new cv.Mat();
   const blur = new cv.Mat();
   const edges = new cv.Mat();
-  const mask = new cv.Mat();
-  const final = new cv.Mat();
 
   try {
-    // 🌓 Convert to grayscale
+    // 1️⃣ Convert to grayscale and reduce noise
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+    cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 1.4, 1.4, cv.BORDER_DEFAULT);
 
-    // 🌫️ Reduce noise (gentle blur)
-    cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 1.5, 1.5, cv.BORDER_DEFAULT);
+    // 2️⃣ Detect edges
+    cv.Canny(blur, edges, 50, 130, 3, false);
 
-    // ⚡ Detect palm edges (Canny)
-    cv.Canny(blur, edges, 60, 140, 3, false);
+    // 3️⃣ Find contours (potential palm lines)
+    const contours = new cv.MatVector();
+    const hierarchy = new cv.Mat();
+    cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-    // 🪷 Focus only on palm center area (ROI crop)
-    let roi = new cv.Rect(25, 60, src.cols - 50, src.rows - 100);
-    let cropped = edges.roi(roi);
-
-    // 🔮 Brighten palm edges slightly for better visibility
-    cv.convertScaleAbs(cropped, cropped, 1.3, 25);
-
-    // 🌈 Create a clean binary mask
-    cv.threshold(cropped, mask, 40, 255, cv.THRESH_BINARY);
-
-    // ✨ Blend mask with source (keep only hand region)
-    cv.bitwise_and(src, src, final, mask);
-
-    // 🧘 Draw to canvas with glow
+    // 4️⃣ Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    cv.imshow(canvas, final);
+    cv.imshow(canvas, src);
 
-    // 🩵 Soft glow overlay
-    ctx.globalCompositeOperation = "screen";
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "rgba(0,255,255,0.8)";
-    ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+    // 5️⃣ Draw filtered contours as smooth Bezier curves
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "rgba(0,255,255,0.6)";
+    ctx.globalAlpha = 0.85;
+
+    for (let i = 0; i < contours.size(); i++) {
+      const cnt = contours.get(i);
+      if (cv.arcLength(cnt, false) < 80) continue; // ignore short noise lines
+
+      const points = [];
+      for (let j = 0; j < cnt.data32S.length; j += 2) {
+        points.push({ x: cnt.data32S[j], y: cnt.data32S[j + 1] });
+      }
+
+      // Convert points to smooth Bezier curve
+      if (points.length > 3) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+
+        for (let k = 1; k < points.length - 2; k++) {
+          const xc = (points[k].x + points[k + 1].x) / 2;
+          const yc = (points[k].y + points[k + 1].y) / 2;
+          ctx.quadraticCurveTo(points[k].x, points[k].y, xc, yc);
+        }
+
+        // Finish curve
+        const last = points.length - 1;
+        ctx.quadraticCurveTo(
+          points[last - 1].x,
+          points[last - 1].y,
+          points[last].x,
+          points[last].y
+        );
+
+        // Dynamic color based on length
+        const hue = 40 + Math.min(points.length * 0.3, 200);
+        ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
+        ctx.stroke();
+      }
+    }
+
     ctx.shadowBlur = 0;
-    ctx.globalCompositeOperation = "source-over";
-
-    console.log("✅ Pure Palm Filtered Edge Glow Rendered.");
+    ctx.globalAlpha = 1;
+    console.log("✅ True Line Bezier Palm tracing complete.");
   } catch (err) {
-    console.error("⚠️ OpenCV palm detection error:", err);
+    console.error("⚠️ OpenCV Bezier tracing error:", err);
   } finally {
     src.delete();
     gray.delete();
     blur.delete();
     edges.delete();
-    mask.delete();
-    final.delete();
   }
 }
