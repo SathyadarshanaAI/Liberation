@@ -1,42 +1,70 @@
+/* ===========================
+   🕉️ SATHYADARSHANA PALM VISUALIZATION STYLE
+   Version: V17.8
+   =========================== */
+
+:root {
+  --bg: #0b0f16;
+  --card: #101820;
+  --neon: #00e5ff;
+  --aura: #16f0a7;
+  --txt: #e6f0ff;
+}
+
+/* 🌌 Base layout */
 body {
   margin: 0;
-  background: #0b0f16;
-  color: #e6f0ff;
+  background: var(--bg);
+  color: var(--txt);
   font-family: 'Segoe UI', sans-serif;
   text-align: center;
   overflow-x: hidden;
   position: relative;
   z-index: 1;
+  -webkit-user-select: none;
+  user-select: none;
 }
+
 h1 {
-  color: #00e5ff;
-  text-shadow: 0 0 15px #00e5ff;
+  color: var(--neon);
+  text-shadow: 0 0 15px var(--neon);
   margin-top: 16px;
   letter-spacing: 0.5px;
   position: relative;
   z-index: 5;
 }
+
+/* 📷 Camera columns */
 .camCol {
   display: inline-block;
   margin: 10px;
   padding: 10px;
   border-radius: 14px;
-  background: #101820;
-  box-shadow: 0 0 10px #00e5ff55;
+  background: var(--card);
+  box-shadow: 0 0 12px var(--neon)55;
   position: relative;
+  transition: 0.4s ease;
 }
+.camCol:hover {
+  box-shadow: 0 0 15px var(--aura)88;
+  transform: translateY(-3px);
+}
+
 video, canvas {
   width: 300px;
   height: 400px;
   border-radius: 10px;
   background: #000;
   margin: 6px 0;
-  border: 1px solid #00e5ff33;
+  border: 1px solid var(--neon)33;
+  display: block;
 }
+
+/* 🎛️ Buttons */
 button {
-  background: #00e5ff22;
-  border: 1px solid #00e5ff;
-  color: #e6f0ff;
+  background: var(--neon)22;
+  border: 1px solid var(--neon);
+  color: var(--txt);
   border-radius: 8px;
   padding: 6px 14px;
   margin: 4px;
@@ -47,16 +75,17 @@ button {
   z-index: 5;
 }
 button:hover {
-  background: #00e5ff44;
-  box-shadow: 0 0 8px #00e5ff88;
+  background: var(--neon)44;
+  box-shadow: 0 0 10px var(--neon)aa;
 }
+
 .analyzeBtn {
   margin: 18px auto;
   display: block;
-  background: #00e5ff22;
-  border: 1px solid #00e5ff;
+  background: var(--neon)22;
+  border: 1px solid var(--neon);
   border-radius: 10px;
-  color: #e6f0ff;
+  color: var(--txt);
   padding: 10px 18px;
   font-size: 1rem;
   cursor: pointer;
@@ -66,37 +95,36 @@ button:hover {
   z-index: 5;
 }
 .analyzeBtn:hover {
-  background: #16f0a744;
-  box-shadow: 0 0 12px #00e5ff88;
+  background: var(--aura)33;
+  box-shadow: 0 0 12px var(--aura)aa;
 }
+
+/* 📦 Report Box */
 .reportBox {
-  margin: 20px auto;
-  padding: 14px;
-  max-width: 600px;
+  margin: 22px auto;
+  padding: 14px 18px;
+  max-width: 620px;
   border-radius: 10px;
-  background: #101820;
-  box-shadow: 0 0 10px #00e5ff55;
-  line-height: 1.4em;
+  background: var(--card);
+  box-shadow: 0 0 10px var(--neon)55;
+  line-height: 1.45em;
   font-size: 0.95rem;
   position: relative;
   z-index: 5;
+  transition: 0.3s ease-in-out;
 }
-footer {
-  margin-top: 20px;
-  font-size: 0.9em;
-  color: #00e5ff99;
-  position: relative;
-  z-index: 5;
+.reportBox:hover {
+  box-shadow: 0 0 15px var(--aura)66;
 }
 
-/* 🔮 Capture Overlay */
+/* 🔮 Capture Overlay (lock animation) */
 .lockOverlay {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.65);
-  color: #00e5ff;
+  color: var(--neon);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,29 +135,29 @@ footer {
   z-index: 9;
 }
 @keyframes pulse {
-  from { opacity: 0.5; text-shadow: 0 0 6px #00e5ff; }
-  to { opacity: 1; text-shadow: 0 0 14px #16f0a7; }
+  from { opacity: 0.5; text-shadow: 0 0 6px var(--neon); }
+  to { opacity: 1; text-shadow: 0 0 14px var(--aura); }
 }
 
-/* 🌐 Floating Translate */
+/* 🌐 Floating Translate Button */
 #google_translate_element {
   position: fixed;
   bottom: 20px !important;
   right: 15px !important;
   background: rgba(0,0,0,0.55);
-  border: 1px solid #00e5ff;
+  border: 1px solid var(--neon);
   border-radius: 12px;
   padding: 6px 12px;
-  color: #e6f0ff;
+  color: var(--txt);
   font-family: 'Segoe UI', sans-serif;
   font-size: 0.9rem;
-  box-shadow: 0 0 12px #00e5ff;
+  box-shadow: 0 0 12px var(--neon);
   z-index: 9999 !important;
   animation: glowPulse 2s infinite alternate;
 }
 @keyframes glowPulse {
-  from { box-shadow: 0 0 10px #00e5ff55; }
-  to { box-shadow: 0 0 15px #16f0a7aa; }
+  from { box-shadow: 0 0 10px var(--neon)55; }
+  to { box-shadow: 0 0 15px var(--aura)aa; }
 }
 
 /* 🧩 Hide Google overlay completely */
@@ -141,3 +169,28 @@ footer {
 body { top: 0 !important; }
 .goog-logo-link, .goog-te-gadget-icon { display: none !important; }
 .goog-te-gadget-simple { background: none !important; border: none !important; }
+
+/* 💫 Footer */
+footer {
+  margin-top: 25px;
+  font-size: 0.9em;
+  color: var(--neon)99;
+  position: relative;
+  z-index: 5;
+}
+
+/* 📱 Responsive tweaks */
+@media (max-width: 700px) {
+  video, canvas {
+    width: 92vw;
+    height: auto;
+  }
+  .camCol {
+    width: 94%;
+  }
+  .reportBox {
+    width: 90%;
+    font-size: 0.9rem;
+  }
+  h1 { font-size: 1.1rem; }
+}
