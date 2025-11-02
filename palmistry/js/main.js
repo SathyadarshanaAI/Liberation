@@ -1,9 +1,10 @@
 // main.js — V17.8 Palm Visualization Edition
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
-import { drawPalm } from "./lines.js"; // 🪷 add this line
+import { drawPalm } from "./lines.js";
+import { paintPalmLines } from "./paintLayer.js";  // ✨ AI paint layer
 
-// 🔊 Voice system
+// 🔊 Voice system (AI Buddhi speaking)
 function speak(text) {
   const synth = window.speechSynthesis;
   if (!synth) return;
@@ -15,15 +16,17 @@ function speak(text) {
   synth.speak(msg);
 }
 
-// 🔮 Lock fade overlay
+// 🔒 Lock animation overlay
 function lockAnimation(canvas) {
   const overlay = document.createElement("div");
   overlay.className = "lockOverlay";
   overlay.textContent = "🔒 Captured — analyzing...";
+  canvas.parentElement.style.position = "relative";
   canvas.parentElement.appendChild(overlay);
   setTimeout(() => overlay.remove(), 1800);
 }
 
+// 🌸 Boot logic
 document.addEventListener("DOMContentLoaded", () => {
   const status = document.getElementById("status");
   const reportBox = document.getElementById("reportBox");
@@ -44,18 +47,21 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("startCamLeft").onclick = () => startCam("left");
   document.getElementById("startCamRight").onclick = () => startCam("right");
 
-  // === Capture Buttons (draw glowing lines + animation) ===
-  document.getElementById("captureLeft").onclick = () => {
+  // === Capture Buttons (with visualization + animation) ===
+  document.getElementById("captureLeft").onclick = async () => {
     capture("left");
     const canvas = document.getElementById("canvasLeft");
     const ctx = canvas.getContext("2d");
-    drawPalm(ctx);
+    await paintPalmLines(ctx);   // 🌈 Real AI surface paint
+    drawPalm(ctx);               // 🪷 Neon labeled overlay
     lockAnimation(canvas);
   };
-  document.getElementById("captureRight").onclick = () => {
+
+  document.getElementById("captureRight").onclick = async () => {
     capture("right");
     const canvas = document.getElementById("canvasRight");
     const ctx = canvas.getContext("2d");
+    await paintPalmLines(ctx);   // 🌈 AI color lines
     drawPalm(ctx);
     lockAnimation(canvas);
   };
@@ -70,11 +76,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const report = await analyzePalm("right", "canvasRight");
 
-      // show report
+      // show report in box
       reportBox.innerHTML = `<p>${report}</p>`;
       console.log("AI Buddhi report generated →", report);
 
-      // 🗣️ voice reading
+      // 🗣️ AI voice reading
       speak(report);
     } catch (err) {
       console.error("AI analysis error:", err);
