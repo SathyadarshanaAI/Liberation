@@ -1,7 +1,8 @@
-// main.js — V17.8 Stable · AI Buddhi Palm Analyzer
+// main.js — V17.9 Serenity Vision · AI Buddhi Palm Analyzer (OpenCV Integrated)
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
-import { drawPalm } from "./lines.js"; // 🪷 Palm line visual overlay
+import { drawPalm } from "./lines.js";
+import { detectPalmLines } from "./opencv-helper.js"; // 🔮 OpenCV edge detection helper
 
 // 🗣️ Voice system
 function speak(text) {
@@ -49,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const canvas = document.getElementById("canvasLeft");
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
+      detectPalmLines("canvasLeft"); // 🔮 new OpenCV overlay
       lockAnimation(canvas);
     };
 
@@ -57,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const canvas = document.getElementById("canvasRight");
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
+      detectPalmLines("canvasRight"); // 🔮 new OpenCV overlay
       lockAnimation(canvas);
     };
   } else {
@@ -95,16 +98,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // 🧾 Camera Permission Auto-Check
-window.addEventListener("click", async () => {
-  if (!navigator.mediaDevices) {
-    alert("Camera not supported on this device.");
-    return;
-  }
-  try {
-    await navigator.mediaDevices.getUserMedia({ video: true });
-    console.log("✅ Camera permission granted.");
-  } catch (err) {
-    alert("⚠️ Please allow camera access for AI Buddhi to read your palm.");
-    console.error(err);
-  }
-}, { once: true });
+window.addEventListener(
+  "click",
+  async () => {
+    if (!navigator.mediaDevices) {
+      alert("Camera not supported on this device.");
+      return;
+    }
+    try {
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log("✅ Camera permission granted.");
+    } catch (err) {
+      alert("⚠️ Please allow camera access for AI Buddhi to read your palm.");
+      console.error(err);
+    }
+  },
+  { once: true }
+);
