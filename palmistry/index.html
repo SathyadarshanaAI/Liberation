@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V17.6 Overlay Fix Edition</title>
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V18.0 Serenity Vision Edition</title>
+  <link rel="stylesheet" href="css/style.css">
 
-<!-- 🌐 Google Translate -->
-<meta name="google" content="notranslate">
-<script type="text/javascript">
-function loadGoogleTranslate(){
-  new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    includedLanguages: 'en,si,ta,hi,fr,de,es,ar,ja,zh,ru,it',
-    layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL,
-    autoDisplay: false
-  }, 'google_translate_element');
-}
-</script>
-<script src="https://translate.google.com/translate_a/element.js?cb=loadGoogleTranslate"></script>
-<script type="module" src="js/main.js" defer></script>
+  <!-- 🧠 OpenCV.js (Edge + Line Detection Engine) -->
+  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+
+  <!-- 🌐 Google Translate -->
+  <meta name="google" content="notranslate">
+  <script type="text/javascript">
+    function loadGoogleTranslate() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,si,ta,hi,fr,de,es,ar,ja,zh,ru,it',
+        layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script src="https://translate.google.com/translate_a/element.js?cb=loadGoogleTranslate"></script>
+
+  <!-- 🌌 Main Application Script -->
+  <script type="module" src="js/main.js" defer></script>
 </head>
 
 <body>
@@ -55,21 +60,22 @@ function loadGoogleTranslate(){
     🌸 AI Buddhi is ready to read your palm lines...
   </div>
 
+  <!-- Footer -->
   <footer>© Sathyadarshana Dharma Vision · Built by Anuruddha & Buddhi</footer>
 
   <!-- Floating Translate Button -->
   <div id="google_translate_element">🌐 Translate</div>
 
-  <!-- 🧹 Remove translate toolbar overlay -->
+  <!-- 🧹 Remove Google Translate toolbar overlay -->
   <script>
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      const frames = document.querySelectorAll('iframe');
-      frames.forEach(f => {
-        if (f.src && f.src.includes('translate.googleapis.com')) f.remove();
-      });
-    }, 1200);
-  });
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const frames = document.querySelectorAll("iframe");
+        frames.forEach(f => {
+          if (f.src && f.src.includes("translate.googleapis.com")) f.remove();
+        });
+      }, 1200);
+    });
   </script>
 </body>
 </html>
