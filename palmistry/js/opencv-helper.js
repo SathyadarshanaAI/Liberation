@@ -1,57 +1,47 @@
-// ✨ opencv-helper.js — No Aura Version
+// 🕉️ Sathyadarshana Palm Analyzer - Pure Line Final Edition
 export async function analyzeEdges(canvasId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = img.data;
 
-  // 🟢 Convert to grayscale
-  const gray = new Uint8ClampedArray(imgData.data.length / 4);
-  for (let i = 0; i < imgData.data.length; i += 4) {
+  // Grayscale convert
+  const gray = new Uint8ClampedArray(canvas.width * canvas.height);
+  for (let i = 0; i < data.length; i += 4) {
     gray[i / 4] =
-      0.299 * imgData.data[i] +
-      0.587 * imgData.data[i + 1] +
-      0.114 * imgData.data[i + 2];
+      0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2];
   }
 
-  // 🟡 Basic Edge Detection (No glow, no overlay)
-  const edges = new Uint8ClampedArray(gray.length);
+  // Sobel edge detection
+  const edge = new Uint8ClampedArray(gray.length);
+  const w = canvas.width;
   for (let y = 1; y < canvas.height - 1; y++) {
     for (let x = 1; x < canvas.width - 1; x++) {
-      const i = y * canvas.width + x;
+      const i = y * w + x;
       const gx =
-        -gray[i - canvas.width - 1] -
-        2 * gray[i - 1] -
-        gray[i + canvas.width - 1] +
-        gray[i - canvas.width + 1] +
-        2 * gray[i + 1] +
-        gray[i + canvas.width + 1];
+        -gray[i - w - 1] - 2 * gray[i - 1] - gray[i + w - 1] +
+        gray[i - w + 1] + 2 * gray[i + 1] + gray[i + w + 1];
       const gy =
-        -gray[i - canvas.width - 1] -
-        2 * gray[i - canvas.width] -
-        gray[i - canvas.width + 1] +
-        gray[i + canvas.width - 1] +
-        2 * gray[i + canvas.width] +
-        gray[i + canvas.width + 1];
-      edges[i] = Math.sqrt(gx * gx + gy * gy) > 100 ? 255 : 0;
+        -gray[i - w - 1] - 2 * gray[i - w] - gray[i - w + 1] +
+        gray[i + w - 1] + 2 * gray[i + w] + gray[i + w + 1];
+      edge[i] = Math.sqrt(gx * gx + gy * gy);
     }
   }
 
-  // 🖤 Clean background before drawing
-  ctx.putImageData(imgData, 0, 0);
+  // Draw clean thin lines only
+  ctx.putImageData(img, 0, 0);
   ctx.globalCompositeOperation = "source-over";
-
-  // ✨ Draw only thin green edges (no yellow glow)
-  ctx.lineWidth = 1.2;
-  ctx.strokeStyle = "#00ffcc";
+  ctx.strokeStyle = "#FFD700"; // pure gold lines
+  ctx.lineWidth = 1.1;
   ctx.beginPath();
   for (let y = 0; y < canvas.height; y += 2) {
     for (let x = 0; x < canvas.width; x += 2) {
-      const i = y * canvas.width + x;
-      if (edges[i] > 200) ctx.lineTo(x, y);
+      const i = y * w + x;
+      if (edge[i] > 180) ctx.moveTo(x, y), ctx.lineTo(x + 1, y + 1);
     }
   }
   ctx.stroke();
 
-  console.log("✅ Aura layer removed — showing only edge lines.");
+  console.log("✅ Clean golden line rendering — aura and noise removed.");
 }
