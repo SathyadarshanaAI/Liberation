@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>🌌 Sathyadarshana · Seed Core Digital Screen</title>
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at center, #000814 40%, #000 100%);
+      color: #e6f0ff;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+    #msg {
+      position: absolute;
+      top: 8%;
+      width: 100%;
+      text-align: center;
+      color: gold;
+      font-size: 1.3rem;
+      text-shadow: 0 0 10px #ffd700;
+      z-index: 2;
+    }
+
+    /* 🧬 User Form */
+    .userForm {
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      border-radius: 16px;
+      padding: 16px 24px;
+      color: #e6f0ff;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+      width: 320px;
+      text-align: left;
+      z-index: 3;
+    }
+    .userForm h3 {
+      text-align: center;
+      margin-top: 0;
+      color: #00e5ff;
+      text-shadow: 0 0 10px #00e5ff;
+    }
+    .userForm input {
+      width: 100%;
+      margin: 6px 0;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 0.9rem;
+    }
+    .userForm button {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #16f0a7, #00e5ff);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .userForm button:hover {
+      background: linear-gradient(90deg, #00e5ff, #16f0a7);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="seedCanvas"></canvas>
+  <div id="msg">🕉️ Initiating AI Buddhi Core...</div>
+
+  <form class="userForm" id="userForm">
+    <h3>🧬 User Information</h3>
+    <label>🪪 User ID:</label>
+    <input type="text" id="userID" placeholder="ex: SDX-2025-001" required>
+    <label>Full Name:</label>
+    <input type="text" id="name" placeholder="Enter your name" required>
+    <label>Date of Birth:</label>
+    <input type="date" id="dob" required>
+    <label>Birth Time:</label>
+    <input type="time" id="birthTime" required>
+    <label>Birth Place:</label>
+    <input type="text" id="birthPlace" placeholder="City / Village" required>
+    <button type="submit">Activate Core</button>
+  </form>
+
+  <script type="module" src="js/seed-core.js"></script>
+</body>
+</html>
