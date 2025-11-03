@@ -1,4 +1,5 @@
-// main.js — V18.3 Core Linked Analyzer Edition
+
+// main.js — V18.5 Perfect Sync Edition
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
 import { drawPalm } from "./lines.js";
@@ -40,6 +41,23 @@ function lockAnimation(canvas) {
   setTimeout(() => overlay.remove(), 1800);
 }
 
+// 🌟 Core Overlay Display
+function showCoreOverlay() {
+  if (!coreData.name) return;
+  const overlay = document.createElement("div");
+  overlay.className = "coreOverlay";
+  overlay.innerHTML = `
+    <h2>🌟 ${coreData.name}</h2>
+    <p>ID: ${coreData.id}</p>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    overlay.style.opacity = "0";
+    overlay.style.transform = "translateY(-30px)";
+    setTimeout(() => overlay.remove(), 2000);
+  }, 4000);
+}
+
 // 🧠 Initialize system
 document.addEventListener("DOMContentLoaded", () => {
   const status = document.getElementById("status");
@@ -49,6 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
     status.textContent = "🧠 Initializing AI Modules...";
   else
     status.textContent = `🌟 AI Buddhi Ready — Linked to ${coreData.name}`;
+
+  showCoreOverlay();
 
   // 🎥 Camera controls
   const leftStart = document.getElementById("startCamLeft");
@@ -66,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
       lockAnimation(canvas);
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 1500)); // more stable delay
       await analyzeEdges("canvasLeft");
     };
 
@@ -76,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
       lockAnimation(canvas);
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 1500)); // more stable delay
       await analyzeEdges("canvasRight");
     };
   } else {
