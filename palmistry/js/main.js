@@ -1,9 +1,24 @@
-// main.js — V18.2 Golden 3D Fusion Edition · AI Buddhi Palm Analyzer
+// main.js — V18.3 Core Linked Analyzer Edition
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
 import { drawPalm } from "./lines.js";
-import { analyzeEdges } from "./opencv-helper.js"; // ✨ OpenCV glow edge detection
-import { initGoldenPalm3D } from "./lines-3d.js";   // 🪷 NEW: 3D Golden Renderer
+import { analyzeEdges } from "./opencv-helper.js";
+
+// 🌱 Load Seed Core data
+let coreData = {};
+try {
+  coreData = JSON.parse(localStorage.getItem("userData")) || {};
+  if (coreData.name) {
+    console.log(`🔗 Core Linked: ${coreData.name} (${coreData.id})`);
+    const statusEl = document.getElementById("status");
+    if (statusEl)
+      statusEl.textContent = `🌟 Welcome ${coreData.name} (${coreData.id}) — Core Linked`;
+  } else {
+    console.warn("⚠️ No Seed Core data found.");
+  }
+} catch (e) {
+  console.error("Core data read error:", e);
+}
 
 // 🗣️ Voice system
 function speak(text) {
@@ -16,7 +31,7 @@ function speak(text) {
   window.speechSynthesis.speak(msg);
 }
 
-// 🔒 Lock overlay animation
+// 🔒 Capture lock animation
 function lockAnimation(canvas) {
   const overlay = document.createElement("div");
   overlay.className = "lockOverlay";
@@ -30,11 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const status = document.getElementById("status");
   const reportBox = document.getElementById("reportBox");
 
-  // 🌸 Boot message
-  status.textContent = "🧠 Initializing AI Modules...";
-  setTimeout(() => {
-    status.textContent = "✅ AI Buddhi Ready for Palm Analysis";
-  }, 1200);
+  if (!coreData.name)
+    status.textContent = "🧠 Initializing AI Modules...";
+  else
+    status.textContent = `🌟 AI Buddhi Ready — Linked to ${coreData.name}`;
 
   // 🎥 Camera controls
   const leftStart = document.getElementById("startCamLeft");
@@ -52,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
       lockAnimation(canvas);
-      await new Promise(r => setTimeout(r, 800)); 
+      await new Promise(r => setTimeout(r, 800));
       await analyzeEdges("canvasLeft");
     };
 
@@ -62,39 +76,33 @@ document.addEventListener("DOMContentLoaded", () => {
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
       lockAnimation(canvas);
-      await new Promise(r => setTimeout(r, 800)); 
+      await new Promise(r => setTimeout(r, 800));
       await analyzeEdges("canvasRight");
-
-      // 🪷 After capture, trigger 3D aura animation
-      setTimeout(() => initGoldenPalm3D("canvasRight"), 1000);
     };
   } else {
     console.error("❌ Camera buttons not found — check HTML IDs!");
   }
 
-  // 🧘 Create AI Analyze button dynamically
+  // 🧘 AI Analyze Button
   const aiBtn = document.createElement("button");
   aiBtn.textContent = "🧠 AI Analyze Palm";
   aiBtn.className = "analyzeBtn";
   document.body.appendChild(aiBtn);
 
-  // ⚡ Analyze button logic
   aiBtn.onclick = async () => {
     aiBtn.disabled = true;
     aiBtn.textContent = "🤖 Reading your palm...";
-    reportBox.textContent =
-      "AI Buddhi is perceiving energy lines and subtle vibrations ...";
+    reportBox.textContent = "AI Buddhi is perceiving energy lines...";
     reportBox.style.textShadow = "0 0 12px #16f0a7";
 
     try {
       const report = await analyzePalm("right", "canvasRight");
-      reportBox.innerHTML = `<p>${report}</p>`;
-      speak(report);
-      console.log("✅ AI Buddhi report generated →", report);
+      const header = coreData.name ? `<h3>🌟 ${coreData.name} (${coreData.id})</h3>` : "";
+      reportBox.innerHTML = `${header}<p>${report}</p>`;
+      speak(`${coreData.name ? coreData.name + "," : ""} ${report}`);
     } catch (err) {
-      console.error("AI analysis error:", err);
-      reportBox.textContent =
-        "⚠️ Error reading palm data – check camera or reload page.";
+      console.error(err);
+      reportBox.textContent = "⚠️ Error reading palm data.";
     }
 
     aiBtn.textContent = "🧠 AI Analyze Palm";
@@ -103,19 +111,15 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 });
 
-// 🧾 Camera Permission Auto-Check
+// 🧾 Camera Permission Check
 window.addEventListener(
   "click",
   async () => {
-    if (!navigator.mediaDevices) {
-      alert("Camera not supported on this device.");
-      return;
-    }
     try {
       await navigator.mediaDevices.getUserMedia({ video: true });
       console.log("✅ Camera permission granted.");
     } catch (err) {
-      alert("⚠️ Please allow camera access for AI Buddhi to read your palm.");
+      alert("⚠️ Please allow camera access for AI Buddhi.");
       console.error(err);
     }
   },
