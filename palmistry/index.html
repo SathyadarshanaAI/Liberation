@@ -3,10 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V18.5 Perfect Sync Edition</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V19.0 Research Mode</title>
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- 🧠 OpenCV.js -->
+  <!-- 🧠 TensorFlow + HandPose AI -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+
+  <!-- 🧬 OpenCV.js -->
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
 
   <!-- 🌐 Google Translate -->
@@ -29,13 +34,13 @@
 
 <body>
   <h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
-  <p id="status">Initializing system...</p>
+  <p id="status">🧠 Initializing AI Modules...</p>
 
   <div class="wrap">
     <!-- Left Hand -->
     <div class="camCol">
       <h3>Left Hand</h3>
-      <video id="vidLeft" autoplay playsinline></video>
+      <video id="vidLeft" autoplay playsinline muted></video>
       <canvas id="canvasLeft" width="300" height="400"></canvas>
       <div>
         <button id="startCamLeft">📷 Start Camera</button>
@@ -46,7 +51,7 @@
     <!-- Right Hand -->
     <div class="camCol">
       <h3>Right Hand</h3>
-      <video id="vidRight" autoplay playsinline></video>
+      <video id="vidRight" autoplay playsinline muted></video>
       <canvas id="canvasRight" width="300" height="400"></canvas>
       <div>
         <button id="startCamRight">📷 Start Camera</button>
@@ -65,8 +70,11 @@
 
   <!-- 🧠 AI Report Box -->
   <div id="reportBox" class="reportBox">
-    🌸 AI Buddhi is ready to read your palm lines...
+    AI Buddhi is ready to analyze your palm structure...
   </div>
+
+  <!-- 🧘 AI Analyze Button -->
+  <button id="analyzeBtn" class="analyzeBtn">🧠 AI Analyze Palm</button>
 
   <!-- 🕊️ Footer -->
   <footer>© Sathyadarshana Dharma Vision · Built by Anuruddha & Buddhi</footer>
