@@ -1,6 +1,6 @@
 /* ===========================
    🕉️ SATHYADARSHANA PALM VISUALIZATION STYLE
-   Version: V18.5 Perfect Sync Edition
+   Version: V18.6 AI Palm Fit Alignment Edition
    =========================== */
 
 :root {
@@ -19,9 +19,9 @@ body {
   font-family: 'Segoe UI', sans-serif;
   text-align: center;
   overflow-x: hidden;
-  position: relative;
   -webkit-user-select: none;
   user-select: none;
+  position: relative;
 }
 
 h1 {
@@ -48,6 +48,7 @@ h1 {
   transform: translateY(-3px);
 }
 
+/* 📸 Camera & Canvas Fit */
 video, canvas {
   width: 300px;
   height: 400px;
@@ -56,6 +57,13 @@ video, canvas {
   margin: 6px 0;
   border: 1px solid rgba(0, 229, 255, 0.3);
   display: block;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 0 20px rgba(0,229,255,0.25);
+  transition: all 0.3s ease;
+}
+video:focus, canvas:focus {
+  outline: 2px solid var(--aura);
 }
 
 /* 🎛️ Buttons */
@@ -127,92 +135,4 @@ button:hover {
   animation: pulse 1.4s infinite alternate;
   z-index: 9;
 }
-@keyframes pulse {
-  from { opacity: 0.5; text-shadow: 0 0 6px var(--neon); }
-  to { opacity: 1; text-shadow: 0 0 14px var(--aura); }
-}
-
-/* 🌱 Core Overlay */
-.coreOverlay {
-  position: fixed;
-  top: 25px;
-  right: 25px;
-  background: rgba(0, 229, 255, 0.1);
-  border: 1px solid #00e5ff;
-  border-radius: 12px;
-  padding: 10px 18px;
-  color: #00e5ff;
-  text-align: right;
-  box-shadow: 0 0 15px #00e5ff80;
-  animation: glowIn 1s ease-out;
-  transition: all 1.5s ease-in-out;
-  z-index: 50;
-}
-.coreOverlay h2 {
-  margin: 0;
-  font-size: 1.1rem;
-  text-shadow: 0 0 12px #00e5ff;
-}
-.coreOverlay p {
-  margin: 4px 0 0;
-  font-size: 0.9rem;
-  color: #16f0a7;
-}
-@keyframes glowIn {
-  from {opacity: 0; transform: translateY(-15px);}
-  to {opacity: 1; transform: translateY(0);}
-}
-
-/* 🌐 Floating Translate Button */
-#google_translate_element {
-  position: fixed;
-  bottom: 20px !important;
-  right: 15px !important;
-  background: rgba(0,0,0,0.55);
-  border: 1px solid var(--neon);
-  border-radius: 12px;
-  padding: 6px 12px;
-  color: var(--txt);
-  font-family: 'Segoe UI', sans-serif;
-  font-size: 0.9rem;
-  box-shadow: 0 0 12px var(--neon);
-  z-index: 9999 !important;
-  animation: glowPulse 2s infinite alternate;
-}
-@keyframes glowPulse {
-  from { box-shadow: 0 0 10px rgba(0,229,255,0.4); }
-  to { box-shadow: 0 0 16px rgba(22,240,167,0.7); }
-}
-
-/* 🧩 Hide Google overlay */
-.goog-te-banner-frame.skiptranslate,
-.goog-te-balloon-frame {
-  display: none !important;
-  visibility: hidden !important;
-}
-body { top: 0 !important; }
-.goog-logo-link, .goog-te-gadget-icon { display: none !important; }
-.goog-te-gadget-simple { background: none !important; border: none !important; }
-
-/* 💫 Footer */
-footer {
-  margin-top: 25px;
-  font-size: 0.9em;
-  color: rgba(0,229,255,0.7);
-}
-
-/* 📱 Responsive */
-@media (max-width: 700px) {
-  video, canvas {
-    width: 92vw;
-    height: auto;
-  }
-  .camCol {
-    width: 94%;
-  }
-  .reportBox {
-    width: 90%;
-    font-size: 0.9rem;
-  }
-  h1 { font-size: 1.1rem; }
-}
+@key
