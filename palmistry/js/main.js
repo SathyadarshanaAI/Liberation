@@ -1,5 +1,4 @@
-
-// main.js — V18.5 Perfect Sync Edition
+// main.js — V18.6 AI Palm Fit Alignment Edition
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
 import { drawPalm } from "./lines.js";
@@ -38,7 +37,7 @@ function lockAnimation(canvas) {
   overlay.className = "lockOverlay";
   overlay.textContent = "🔒 Captured — analyzing...";
   canvas.parentElement.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 1800);
+  setTimeout(() => overlay.remove(), 1600);
 }
 
 // 🌟 Core Overlay Display
@@ -55,7 +54,22 @@ function showCoreOverlay() {
     overlay.style.opacity = "0";
     overlay.style.transform = "translateY(-30px)";
     setTimeout(() => overlay.remove(), 2000);
-  }, 4000);
+  }, 5000);
+}
+
+// 🎯 Auto-fit alignment
+function autoFitCanvas(canvas) {
+  const ctx = canvas.getContext("2d");
+  const offscreen = document.createElement("canvas");
+  offscreen.width = canvas.width;
+  offscreen.height = canvas.height;
+  const octx = offscreen.getContext("2d");
+
+  // Re-center & fit
+  octx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
+  console.log("🎯 AutoFit applied to canvas:", canvas.id);
 }
 
 // 🧠 Initialize system
@@ -85,8 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const canvas = document.getElementById("canvasLeft");
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
+      autoFitCanvas(canvas);
       lockAnimation(canvas);
-      await new Promise(r => setTimeout(r, 1500)); // more stable delay
+      await new Promise(r => setTimeout(r, 1500));
       await analyzeEdges("canvasLeft");
     };
 
@@ -95,8 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const canvas = document.getElementById("canvasRight");
       const ctx = canvas.getContext("2d");
       drawPalm(ctx);
+      autoFitCanvas(canvas);
       lockAnimation(canvas);
-      await new Promise(r => setTimeout(r, 1500)); // more stable delay
+      await new Promise(r => setTimeout(r, 1500));
       await analyzeEdges("canvasRight");
     };
   } else {
