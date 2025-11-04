@@ -1,4 +1,4 @@
-// main.js — V18.6 AI Palm Fit Alignment Edition
+// main.js — V18.7 Depth Beam Edition (Line Fix + Glow Aura)
 import { startCam, capture } from "./camera.js";
 import { analyzePalm } from "./brain.js";
 import { drawPalm } from "./lines.js";
@@ -37,7 +37,7 @@ function lockAnimation(canvas) {
   overlay.className = "lockOverlay";
   overlay.textContent = "🔒 Captured — analyzing...";
   canvas.parentElement.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 1600);
+  setTimeout(() => overlay.remove(), 1500);
 }
 
 // 🌟 Core Overlay Display
@@ -54,7 +54,25 @@ function showCoreOverlay() {
     overlay.style.opacity = "0";
     overlay.style.transform = "translateY(-30px)";
     setTimeout(() => overlay.remove(), 2000);
-  }, 5000);
+  }, 4000);
+}
+
+// 🌌 Depth Beam aura layer
+function addGlowBeam(canvas) {
+  const beam = document.createElement("div");
+  beam.style.position = "absolute";
+  beam.style.top = "0";
+  beam.style.left = "0";
+  beam.style.width = "100%";
+  beam.style.height = "100%";
+  beam.style.borderRadius = "10px";
+  beam.style.pointerEvents = "none";
+  beam.style.background =
+    "radial-gradient(circle at center, rgba(0,229,255,0.15), transparent 70%)";
+  beam.style.boxShadow = "0 0 20px #00e5ff55 inset";
+  beam.style.animation = "auraPulse 2s infinite alternate";
+  canvas.parentElement.style.position = "relative";
+  canvas.parentElement.appendChild(beam);
 }
 
 // 🎯 Auto-fit alignment
@@ -64,8 +82,6 @@ function autoFitCanvas(canvas) {
   offscreen.width = canvas.width;
   offscreen.height = canvas.height;
   const octx = offscreen.getContext("2d");
-
-  // Re-center & fit
   octx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
@@ -84,7 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   showCoreOverlay();
 
-  // 🎥 Camera controls
   const leftStart = document.getElementById("startCamLeft");
   const rightStart = document.getElementById("startCamRight");
   const leftCapture = document.getElementById("captureLeft");
@@ -98,9 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
       capture("left");
       const canvas = document.getElementById("canvasLeft");
       const ctx = canvas.getContext("2d");
-      drawPalm(ctx);
       autoFitCanvas(canvas);
       lockAnimation(canvas);
+      requestAnimationFrame(() => drawPalm(ctx));
+      addGlowBeam(canvas);
       await new Promise(r => setTimeout(r, 1500));
       await analyzeEdges("canvasLeft");
     };
@@ -109,9 +125,10 @@ document.addEventListener("DOMContentLoaded", () => {
       capture("right");
       const canvas = document.getElementById("canvasRight");
       const ctx = canvas.getContext("2d");
-      drawPalm(ctx);
       autoFitCanvas(canvas);
       lockAnimation(canvas);
+      requestAnimationFrame(() => drawPalm(ctx));
+      addGlowBeam(canvas);
       await new Promise(r => setTimeout(r, 1500));
       await analyzeEdges("canvasRight");
     };
@@ -161,3 +178,12 @@ window.addEventListener(
   },
   { once: true }
 );
+
+// ✨ CSS Animation for aura (inject)
+const style = document.createElement("style");
+style.textContent = `
+@keyframes auraPulse {
+  from { opacity: 0.4; box-shadow: 0 0 20px #16f0a755 inset; }
+  to { opacity: 1; box-shadow: 0 0 35px #00e5ffaa inset; }
+}`;
+document.head.appendChild(style);
