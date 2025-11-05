@@ -1,4 +1,4 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V20.0 TrueScan Integration Edition
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V20.1 Fast Dual Scan Edition
 import { drawPalm } from "./lines.js";
 
 let detector;
@@ -20,7 +20,7 @@ async function initAI() {
   }
 }
 
-// === ⚡ Preload / Warmup Camera (reduce delay) ===
+// === ⚡ Preload / Warmup Camera ===
 async function warmupCam() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -31,24 +31,39 @@ async function warmupCam() {
   }
 }
 
-// === 🎥 Start Camera ===
+// === 🎥 Start Camera (fixed dual logic) ===
 async function startCam(side) {
   activeSide = side;
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const status = document.getElementById("status");
 
+  // 🧹 Stop any previously running streams before starting new one
+  document.querySelectorAll("video").forEach(v => {
+    if (v.srcObject) {
+      v.srcObject.getTracks().forEach(t => t.stop());
+      v.srcObject = null;
+    }
+  });
+
   try {
+    const facing = side === "right" ? "user" : "environment";
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: side === "right" ? "user" : "environment" },
+      video: {
+        facingMode: { ideal: facing },
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
       audio: false
     });
+
     vid.srcObject = stream;
     await vid.play();
     status.textContent = `🎥 ${side.toUpperCase()} camera active`;
+    console.log(`✅ ${side} camera started successfully`);
     detectPalm(side);
   } catch (e) {
     console.error(e);
-    alert("Please allow camera access.");
+    status.textContent = `⚠️ Unable to start ${side} camera`;
   }
 }
 
@@ -92,10 +107,11 @@ function miniReport() {
   const reportBox = document.getElementById("reportBox");
   reportBox.textContent = "🧠 Analyzing palm structure...";
   setTimeout(() => {
-    reportBox.textContent = `🌿 Based on initial palm scan:
-    You possess a balanced mind and a compassionate heart.
-    The lines show determination, creativity, and spiritual depth.
-    Success arises when thought and feeling align with purpose.`;
+    reportBox.textContent = `🌿 Based on your palm scan:
+Your lines show strong vitality and emotional intelligence.
+You're spiritually sensitive, analytical, and deeply empathetic.
+You find purpose through creativity and service.
+Inner harmony strengthens when wisdom guides desire.`;
   }, 2500);
 }
 
