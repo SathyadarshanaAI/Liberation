@@ -1,102 +1,52 @@
-import { drawPalm } from "./lines.js";
+// lines.js — V21.9 Animated Glow Lines Edition
+export function drawPalm(ctx) {
+  if (!ctx) return;
 
-let leftCaptured = false;
-let rightCaptured = false;
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
 
-async function startCam(side) {
-  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
-  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
+  const lines = [
+    { name: "Life", color: "#FFD700", p: [[w*0.25,h*0.85],[w*0.1,h*0.45],[w*0.45,h*0.75]] },
+    { name: "Head", color: "#00FFFF", p: [[w*0.2,h*0.55],[w*0.55,h*0.4],[w*0.85,h*0.45]] },
+    { name: "Heart", color: "#FF69B4", p: [[w*0.25,h*0.4],[w*0.55,h*0.3],[w*0.85,h*0.25]] },
+    { name: "Fate", color: "#00FF7F", p: [[w*0.5,h*0.95],[w*0.55,h*0.6],[w*0.5,h*0.15]] },
+    { name: "Sun", color: "#FFA500", p: [[w*0.7,h*0.9],[w*0.75,h*0.6],[w*0.8,h*0.25]] },
+    { name: "Health", color: "#FF4500", p: [[w*0.15,h*0.9],[w*0.4,h*0.55]] },
+    { name: "Manikanda", color: "#00FFEA", p: [[w*0.45,h*0.9],[w*0.5,h*0.6],[w*0.55,h*0.3]] }
+  ];
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false
+  ctx.save();
+  ctx.lineWidth = 2;
+
+  // --- Animation pulse setup ---
+  let t = 0;
+  function animate() {
+    t += 0.03;
+    ctx.clearRect(0, 0, w, h);
+
+    lines.forEach(line => {
+      const glow = Math.sin(t) * 6 + 8; // glow pulse range
+      ctx.strokeStyle = line.color;
+      ctx.shadowColor = line.color;
+      ctx.shadowBlur = glow;
+      ctx.globalAlpha = 0.8 + 0.2 * Math.sin(t / 2);
+      ctx.beginPath();
+      ctx.moveTo(line.p[0][0], line.p[0][1]);
+      for (let i = 1; i < line.p.length; i++) ctx.lineTo(line.p[i][0], line.p[i][1]);
+      ctx.stroke();
+
+      // Label
+      const last = line.p[line.p.length - 1];
+      ctx.shadowBlur = 0;
+      ctx.font = "bold 12px Segoe UI";
+      ctx.fillStyle = line.color;
+      ctx.fillText(line.name, last[0] + 4, last[1] - 4);
     });
-    vid.srcObject = stream;
-    vid.style.display = "block";
-    canvas.style.display = "none";
-    document.getElementById("status").textContent = `📷 ${side} camera started`;
-  } catch {
-    alert(`Please allow camera access for ${side} hand`);
+
+    requestAnimationFrame(animate);
   }
+
+  animate();
+  ctx.restore();
+  console.log("🌠 Animated palm lines active");
 }
-
-function capture(side) {
-  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
-  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
-  const ctx = canvas.getContext("2d");
-
-  const vw = vid.videoWidth;
-  const vh = vid.videoHeight;
-  const cw = canvas.width;
-  const ch = (vh / vw) * cw;
-  canvas.height = ch;
-
-  ctx.drawImage(vid, 0, 0, cw, ch);
-
-  const stream = vid.srcObject;
-  if (stream) stream.getTracks().forEach(t => t.stop());
-  vid.style.display = "none";
-  canvas.style.display = "block";
-
-  fixLighting(canvas);
-  addBeamOverlay(canvas);
-
-  // 🧠 Draw AI Palm Lines
-  drawPalm(ctx);
-
-  document.getElementById("status").textContent = `✅ ${side} palm captured`;
-  if (side === "left") leftCaptured = true;
-  else rightCaptured = true;
-  if (leftCaptured && rightCaptured) analyzeAI();
-}
-
-function fixLighting(canvas) {
-  const ctx = canvas.getContext("2d");
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = img.data;
-  let sum = 0;
-  for (let i = 0; i < data.length; i += 4)
-    sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
-  const brightness = sum / (data.length / 4);
-  const factor = brightness < 100 ? 1.2 : brightness > 180 ? 0.85 : 1.0;
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.min(255, data[i] * factor);
-    data[i + 1] = Math.min(255, data[i + 1] * factor);
-    data[i + 2] = Math.min(255, data[i + 2] * factor);
-  }
-  ctx.putImageData(img, 0, 0);
-}
-
-function addBeamOverlay(canvas) {
-  const ctx = canvas.getContext("2d");
-  const w = canvas.width, h = canvas.height;
-
-  const beam = document.createElement("canvas");
-  beam.width = w; beam.height = h;
-  const bctx = beam.getContext("2d");
-  const grad = bctx.createRadialGradient(w/2, h/2, 30, w/2, h/2, w/1.2);
-  grad.addColorStop(0, "rgba(0,255,255,0.20)");
-  grad.addColorStop(0.5, "rgba(255,215,0,0.10)");
-  grad.addColorStop(1, "rgba(0,0,0,0)");
-  bctx.fillStyle = grad;
-  bctx.fillRect(0, 0, w, h);
-
-  const img = ctx.getImageData(0, 0, w, h);
-  ctx.clearRect(0, 0, w, h);
-  ctx.drawImage(beam, 0, 0);
-  ctx.putImageData(img, 0, 0);
-}
-
-function analyzeAI() {
-  document.getElementById("status").textContent = "🤖 Buddhi AI analyzing palm lines...";
-  setTimeout(() => {
-    document.getElementById("status").textContent =
-      "✨ AI Report Ready – True Vision Mode Activated 🔮";
-  }, 2500);
-}
-
-document.getElementById("startCamLeft").onclick = () => startCam("left");
-document.getElementById("captureLeft").onclick = () => capture("left");
-document.getElementById("startCamRight").onclick = () => startCam("right");
-document.getElementById("captureRight").onclick = () => capture("right");
