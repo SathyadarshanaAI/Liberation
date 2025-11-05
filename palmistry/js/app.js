@@ -1,87 +1,100 @@
-import { drawPalm } from './drawPalm.js';
-import { startCam, capture } from './camera.js';
-import { saveUser, clearUser, loadUser } from './userForm.js';
-import { speak } from './voice.js';
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V20.0 TrueScan Base
+import { drawPalm } from "./lines.js";
 
-const $ = id => document.getElementById(id);
+let detector;
+let activeSide = null;
 
-// === INITIAL SETUP ===
-loadUser();
-$("saveBtn").onclick = saveUser;
-$("clearBtn").onclick = clearUser;
-$("startCamLeft").onclick = () => startCam("left");
-$("startCamRight").onclick = () => startCam("right");
+// === AI Model Initialization ===
+async function initAI() {
+  const status = document.getElementById("status");
+  status.textContent = "🧠 Loading AI Modules...";
+  try {
+    const model = handPoseDetection.SupportedModels.MediaPipeHands;
+    const config = { runtime: "tfjs", modelType: "lite", maxHands: 1 };
+    detector = await handPoseDetection.createDetector(model, config);
+    console.log("✅ AI Buddhi Model Ready");
+    status.textContent = "✅ AI Buddhi Ready for Scanning";
+  } catch (e) {
+    console.error("❌ Failed to initialize AI model:", e);
+    status.textContent = "⚠️ Error loading AI model";
+  }
+}
 
-// 🖐️ Capture buttons with confirmation popup
-$("captureLeft").onclick = async () => {
-  const ok = confirm("🖐️ Confirm: Is this your LEFT hand?");
-  if (!ok) return;
-  await capture("left", runSequence);
-};
-$("captureRight").onclick = async () => {
-  const ok = confirm("🖐️ Confirm: Is this your RIGHT hand?");
-  if (!ok) return;
-  await capture("right", runSequence);
-};
+// === Warmup Camera ===
+async function warmupCamera() {
+  try {
+    const test = await navigator.mediaDevices.getUserMedia({ video: true });
+    test.getTracks().forEach(t => t.stop());
+    console.log("⚡ Camera warmup complete");
+  } catch (err) {
+    console.warn("⚠️ Warmup camera failed:", err);
+  }
+}
 
-// === AI MINI INSIGHT DATABASE ===
-const insights = {
-  Career: "Your palm shows strong determination and logical focus. Success favors persistence.",
-  Love: "Emotional warmth and deep connection are visible. True harmony comes through trust.",
-  Health: "Energy flow is balanced. Maintain rest, hydration, and inner calm for stability.",
-  "Spiritual Path": "Lines reveal awakening wisdom. Meditation strengthens divine awareness.",
-  General: "Balanced aura detected. You are walking in harmony with universal energy."
-};
+// === Start Camera ===
+async function startCam(side) {
+  activeSide = side;
+  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
+  const status = document.getElementById("status");
 
-// === MAIN SEQUENCE ===
-async function runSequence() {
-  $("status").textContent = "🧠 AI analyzing both palms...";
-  await pause(800);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: side === "right" ? "user" : "environment" },
+      audio: false,
+    });
+    vid.srcObject = stream;
+    await vid.play();
+    console.log(`🎥 ${side} camera started`);
+    status.textContent = `🎥 ${side.toUpperCase()} Camera Active`;
+    detectHand(side);
+  } catch (err) {
+    console.error(`❌ ${side} camera error:`, err);
+    alert(`Please allow camera access for ${side} hand`);
+  }
+}
 
-  animateBeam("canvasLeft");
-  animateBeam("canvasRight");
-  await pause(2500);
+// === Detect Hand & Overlay ===
+async function detectHand(side) {
+  if (!detector) return;
+  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
+  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
+  const ctx = canvas.getContext("2d");
 
-  const leftPalm = localStorage.getItem("palmLeft");
-  const rightPalm = localStorage.getItem("palmRight");
-  if (!leftPalm || !rightPalm) {
-    $("status").textContent = "⚠️ Please capture BOTH hands before analysis.";
-    return;
+  try {
+    const hands = await detector.estimateHands(vid);
+    ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+
+    if (hands.length > 0) {
+      const keypoints = hands[0].keypoints;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#00e5ff";
+      drawPalm(ctx, keypoints);
+    }
+  } catch (e) {
+    console.warn(`⚠️ Detection (${side}) failed:`, e);
   }
 
-  // 🖐️ Draw palms (with orientation detection built-in)
-  drawPalm($("canvasLeft").getContext("2d"), "left");
-  drawPalm($("canvasRight").getContext("2d"), "right");
-
-  $("status").textContent = "✨ Beam Aura complete — main palm lines detected!";
-  await pause(600);
-
-  const u = JSON.parse(localStorage.getItem("userData") || "{}");
-  const focus = u.f || "General";
-  const name = u.n || "User";
-  const msg = insights[focus] || insights.General;
-
-  $("report").innerHTML = `
-  ⚡ ${name}, your dual-hand scan is complete.<br>
-  Energy lines mapped successfully for <b>${focus}</b> focus.<br><br>
-  <b>AI Insight:</b> ${msg}<br>
-  🌟 Wisdom Level: <b>High</b><br>
-  <small>(Awaiting AI Deep Palmistry Module…)</small>
-  `;
-
-  speak(`${name}, your ${focus} reading is ready. ${msg}`);
+  requestAnimationFrame(() => detectHand(side));
 }
 
-// === BEAM EFFECT ===
-function animateBeam(canvasId) {
-  const canvas = $(canvasId);
-  const beam = document.createElement("div");
-  beam.className = "beam";
-  canvas.parentElement.appendChild(beam);
-  setTimeout(() => beam.remove(), 2800);
+// === Capture ===
+function capture(side) {
+  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
+  const dataURL = canvas.toDataURL("image/png");
+  localStorage.setItem(`palm_${side}`, dataURL);
+  document.getElementById("status").textContent = `📸 ${side} palm captured`;
+  console.log(`💾 Saved ${side} palm image`);
 }
 
-// === PAUSE ===
-function pause(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+// === Initialize ===
+document.addEventListener("DOMContentLoaded", async () => {
+  await warmupCamera();
+  await initAI();
+
+  document.getElementById("startCamLeft").onclick = () => startCam("left");
+  document.getElementById("startCamRight").onclick = () => startCam("right");
+  document.getElementById("captureLeft").onclick = () => capture("left");
+  document.getElementById("captureRight").onclick = () => capture("right");
+});
+
+export { startCam, capture };
