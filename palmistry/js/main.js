@@ -1,128 +1,102 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V20.1 Fast Dual Scan Edition
 import { drawPalm } from "./lines.js";
 
 let detector;
-let activeSide = null;
+let leftStream, rightStream;
+let leftCaptured = false, rightCaptured = false;
 
-// === 🧠 Initialize AI Detector ===
+// === Initialize AI ===
 async function initAI() {
   const status = document.getElementById("status");
   status.textContent = "🧠 Loading AI modules...";
   try {
     const model = handPoseDetection.SupportedModels.MediaPipeHands;
-    const detectorConfig = { runtime: "tfjs", modelType: "lite", maxHands: 1 };
-    detector = await handPoseDetection.createDetector(model, detectorConfig);
-    console.log("✅ AI Model Ready");
+    const config = { runtime: "tfjs", modelType: "lite", maxHands: 1 };
+    detector = await handPoseDetection.createDetector(model, config);
     status.textContent = "✅ Buddhi AI Ready";
-  } catch (e) {
-    status.textContent = "⚠️ Error initializing AI model";
-    console.error(e);
+  } catch (err) {
+    status.textContent = "⚠️ AI initialization failed";
+    console.error(err);
   }
 }
 
-// === ⚡ Preload / Warmup Camera ===
-async function warmupCam() {
+// === Start Camera ===
+async function startCam(side) {
+  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    stream.getTracks().forEach(t => t.stop());
-    console.log("⚡ Camera warmed up successfully");
-  } catch (err) {
-    console.warn("Warmup failed:", err);
-  }
-}
-
-// === 🎥 Start Camera (fixed dual logic) ===
-async function startCam(side) {
-  activeSide = side;
-  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
-  const status = document.getElementById("status");
-
-  // 🧹 Stop any previously running streams before starting new one
-  document.querySelectorAll("video").forEach(v => {
-    if (v.srcObject) {
-      v.srcObject.getTracks().forEach(t => t.stop());
-      v.srcObject = null;
-    }
-  });
-
-  try {
-    const facing = side === "right" ? "user" : "environment";
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: facing },
-        width: { ideal: 640 },
-        height: { ideal: 480 }
-      },
-      audio: false
-    });
-
     vid.srcObject = stream;
-    await vid.play();
-    status.textContent = `🎥 ${side.toUpperCase()} camera active`;
-    console.log(`✅ ${side} camera started successfully`);
-    detectPalm(side);
-  } catch (e) {
-    console.error(e);
-    status.textContent = `⚠️ Unable to start ${side} camera`;
+    if (side === "left") leftStream = stream; else rightStream = stream;
+    document.getElementById("status").textContent = `📷 ${side} camera started`;
+  } catch {
+    alert(`Please allow camera access for ${side} hand`);
   }
 }
 
-// === ✋ Detect & Draw Palm in Real-Time ===
-async function detectPalm(side) {
-  if (!detector) return;
+// === Capture & Freeze ===
+function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
 
-  try {
-    const hands = await detector.estimateHands(vid);
-    ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+  vid.pause();
 
-    if (hands.length > 0) {
-      const pts = hands[0].keypoints;
-      drawPalm(ctx, pts);
+  // Stop camera stream
+  const stream = side === "left" ? leftStream : rightStream;
+  if (stream) stream.getTracks().forEach(t => t.stop());
 
-      ctx.font = "14px Segoe UI";
-      ctx.fillStyle = "#16f0a7";
-      ctx.fillText("Palm detected ✓", 10, 20);
-    }
-  } catch (err) {
-    console.warn("Detection error:", err);
+  if (side === "left") leftCaptured = true; else rightCaptured = true;
+  document.getElementById("status").textContent = `✅ ${side} palm captured`;
+
+  checkReady();
+}
+
+// === Check both captured ===
+function checkReady() {
+  if (leftCaptured && rightCaptured) {
+    document.getElementById("status").textContent = "🌟 Both palms captured – AI analyzing...";
+    startBeamEffect();
+    setTimeout(autoAnalyze, 2500);
   }
-
-  requestAnimationFrame(() => detectPalm(side));
 }
 
-// === 📸 Capture Snapshot ===
-function capture(side) {
-  const cvs = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
-  const imgData = cvs.toDataURL("image/png");
-  localStorage.setItem(`palm_${side}`, imgData);
-  document.getElementById("status").textContent = `📸 ${side} palm saved`;
-  console.log(`💾 ${side} palm stored`);
+// === Beam Animation ===
+function startBeamEffect() {
+  const beam = document.createElement("div");
+  beam.style.position = "fixed";
+  beam.style.top = "0";
+  beam.style.left = "0";
+  beam.style.width = "100%";
+  beam.style.height = "100%";
+  beam.style.background = "radial-gradient(circle, rgba(0,255,255,0.2) 0%, rgba(0,0,0,0.9) 70%)";
+  beam.style.animation = "beamPulse 2s infinite alternate";
+  beam.style.pointerEvents = "none";
+  document.body.appendChild(beam);
+
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes beamPulse {
+      from {opacity: 0.2; filter: blur(3px);}
+      to {opacity: 0.6; filter: blur(10px);}
+    }`;
+  document.head.appendChild(style);
 }
 
-// === 🤖 Mini Report Generator ===
-function miniReport() {
-  const reportBox = document.getElementById("reportBox");
-  reportBox.textContent = "🧠 Analyzing palm structure...";
+// === Auto Analyze ===
+async function autoAnalyze() {
+  const status = document.getElementById("status");
+  status.textContent = "🤖 Buddhi AI analyzing both palms...";
+
+  // Simulate AI logic (replace later with real model)
   setTimeout(() => {
-    reportBox.textContent = `🌿 Based on your palm scan:
-Your lines show strong vitality and emotional intelligence.
-You're spiritually sensitive, analytical, and deeply empathetic.
-You find purpose through creativity and service.
-Inner harmony strengthens when wisdom guides desire.`;
+    status.textContent = "✨ AI Report Ready – Divine Balance Detected 💫";
   }, 2500);
 }
 
-// === 🌺 Initialize All ===
-document.addEventListener("DOMContentLoaded", async () => {
-  await warmupCam();
-  await initAI();
+// === Bind Buttons ===
+document.getElementById("startCamLeft").onclick = () => startCam("left");
+document.getElementById("startCamRight").onclick = () => startCam("right");
+document.getElementById("captureLeft").onclick = () => capture("left");
+document.getElementById("captureRight").onclick = () => capture("right");
 
-  document.getElementById("startCamLeft").onclick = () => startCam("left");
-  document.getElementById("startCamRight").onclick = () => startCam("right");
-  document.getElementById("captureLeft").onclick = () => capture("left");
-  document.getElementById("captureRight").onclick = () => capture("right");
-  document.getElementById("analyzeBtn").onclick = miniReport;
-});
+initAI();
