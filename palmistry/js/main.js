@@ -1,20 +1,17 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V19.2 Dual Camera Stable Edition
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V19.5 Freeze Lock + Save Confirm Edition
 import { drawPalm } from "./lines.js";
 
 let detector;
+let activeStream = { left: null, right: null };
+let isCaptured = { left: false, right: false };
 
 // === Initialize AI Model ===
 async function initAI() {
   const status = document.getElementById("status");
   try {
     const model = handPoseDetection.SupportedModels.MediaPipeHands;
-    const detectorConfig = {
-      runtime: "tfjs",
-      modelType: "lite",
-      maxHands: 1,
-    };
+    const detectorConfig = { runtime: "tfjs", modelType: "lite", maxHands: 1 };
     detector = await handPoseDetection.createDetector(model, detectorConfig);
-    console.log("✅ AI Palm Detector Ready");
     status.textContent = "✅ AI Palm Detector Ready";
   } catch (err) {
     console.error("❌ Error initializing AI model:", err);
@@ -22,25 +19,20 @@ async function initAI() {
   }
 }
 
-// === Start Camera (select by side) ===
+// === Start Camera ===
 async function startCam(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
-  if (!vid) return;
-
+  const status = document.getElementById("status");
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: "environment" }, // Rear camera
-        width: { ideal: 640 },
-        height: { ideal: 480 },
-      },
+      video: { facingMode: { ideal: "environment" }, width: 640, height: 480 },
       audio: false,
     });
-
     vid.srcObject = stream;
+    activeStream[side] = stream;
+    isCaptured[side] = false;
     await vid.play();
-    console.log(`🎥 ${side} camera started`);
-    document.getElementById("status").textContent = `🎥 ${side} camera active`;
+    status.textContent = `🎥 ${side} camera active`;
     detectHand(side);
   } catch (err) {
     console.error(`❌ ${side} camera error:`, err);
@@ -48,7 +40,7 @@ async function startCam(side) {
   }
 }
 
-// === Hand Detection Loop ===
+// === Live Detection Loop ===
 async function detectHand(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(
@@ -57,6 +49,8 @@ async function detectHand(side) {
   const ctx = canvas.getContext("2d");
 
   if (!detector || !vid) return;
+
+  if (isCaptured[side]) return; // stop loop after capture
 
   try {
     const predictions = await detector.estimateHands(vid);
@@ -70,7 +64,6 @@ async function detectHand(side) {
       ctx.shadowColor = "#16f0a7";
       ctx.shadowBlur = 10;
 
-      // Simple palm base contour
       const wrist = keypoints[0];
       const indexBase = keypoints[5];
       const pinkyBase = keypoints[17];
@@ -82,7 +75,6 @@ async function detectHand(side) {
       ctx.closePath();
       ctx.stroke();
 
-      // Call palm line drawer
       drawPalm(ctx, keypoints);
     }
   } catch (err) {
@@ -94,13 +86,26 @@ async function detectHand(side) {
 
 // === Capture Function ===
 function capture(side) {
+  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(
     side === "left" ? "canvasLeft" : "canvasRight"
   );
+  const ctx = canvas.getContext("2d");
+
+  // Draw final frame & freeze
+  ctx.filter = "brightness(1.2) contrast(1.1)";
+  ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+
+  // Stop camera stream
+  const stream = activeStream[side];
+  if (stream) stream.getTracks().forEach(t => t.stop());
+
+  isCaptured[side] = true;
+
+  // Save snapshot
   const img = canvas.toDataURL("image/png");
   localStorage.setItem(`palm_${side}`, img);
   document.getElementById("status").textContent = `📸 ${side} palm captured`;
-  console.log(`💾 ${side} palm image saved to localStorage`);
 }
 
 // === Initialize ===
@@ -113,16 +118,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("captureLeft").onclick = () => capture("left");
   document.getElementById("captureRight").onclick = () => capture("right");
 
-  const analyzeBtn = document.getElementById("analyzeBtn");
-  if (analyzeBtn) {
-    analyzeBtn.onclick = () => {
-      const reportBox = document.getElementById("reportBox");
-      reportBox.textContent =
-        "🤖 AI Buddhi is analyzing your palm structure...";
-      setTimeout(() => {
-        reportBox.textContent =
-          "🌟 Analysis Complete — Your palm lines have been successfully recorded!";
-      }, 2000);
-    };
-  }
+  document.getElementById("analyzeBtn").onclick = () => {
+    const reportBox = document.getElementById("reportBox");
+    reportBox.textContent =
+      "🌟 Analysis Complete — Your palm lines have been successfully recorded!";
+  };
 });
