@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V19.0 Research Mode</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V19.3 Async Stable Build</title>
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- 🧠 TensorFlow + HandPose AI -->
+  <!-- 🧠 TensorFlow + MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
 
-  <!-- 🧬 OpenCV.js -->
+  <!-- 🧬 OpenCV -->
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
 
   <!-- 🌐 Google Translate -->
@@ -27,14 +27,11 @@
     }
   </script>
   <script src="https://translate.google.com/translate_a/element.js?cb=loadGoogleTranslate"></script>
-
-  <!-- 🌌 Main Application Script -->
-  <script type="module" src="js/main.js" defer></script>
 </head>
 
 <body>
   <h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
-  <p id="status">🧠 Initializing AI Modules...</p>
+  <p id="status">🧠 Loading AI model, please wait...</p>
 
   <div class="wrap">
     <!-- Left Hand -->
@@ -62,15 +59,14 @@
 
   <!-- 🌱 Core Link -->
   <div class="coreLink" style="text-align:center;margin:15px 0;">
-    <a href="seed-core.html" target="_blank"
-       style="color:#00e5ff;text-decoration:none;font-weight:500;">
-       🌱 Open Seed Core Form
+    <a href="seed-core.html" target="_blank" style="color:#00e5ff;text-decoration:none;font-weight:500;">
+      🌱 Open Seed Core Form
     </a>
   </div>
 
   <!-- 🧠 AI Report Box -->
   <div id="reportBox" class="reportBox">
-    AI Buddhi is ready to analyze your palm structure...
+    🌸 AI Buddhi is ready to analyze your palm structure...
   </div>
 
   <!-- 🧘 AI Analyze Button -->
@@ -93,5 +89,8 @@
       }, 1200);
     });
   </script>
+
+  <!-- 🌌 Main Script (Load Last for Stability) -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
