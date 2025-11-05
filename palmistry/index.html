@@ -3,91 +3,75 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V20.0 TrueScan Edition</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V21.0 Beam AutoAnalyze Edition</title>
   <link rel="stylesheet" href="css/style.css">
-
-  <!-- 🧠 TensorFlow + MediaPipe -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
-
-  <!-- 🌐 Google Translate -->
-  <meta name="google" content="notranslate">
-  <script type="text/javascript">
-    function loadGoogleTranslate() {
-      new google.translate.TranslateElement({
-        pageLanguage: 'en',
-        includedLanguages: 'en,si,ta,hi,fr,de,es,ar,ja,zh,ru,it',
-        layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL,
-        autoDisplay: false
-      }, 'google_translate_element');
+  <script type="module" src="js/main.js" defer></script>
+  <style>
+    body {
+      background: #0b0f16;
+      color: #e6f0ff;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
     }
-  </script>
-  <script src="https://translate.google.com/translate_a/element.js?cb=loadGoogleTranslate"></script>
-
-  <!-- 🌌 Application Script -->
-  <script type="module" src="js/app.js" defer></script>
+    h1 {
+      color: #00e5ff;
+      text-shadow: 0 0 15px #00e5ff;
+      margin: 16px 0;
+      font-size: 1.2rem;
+    }
+    .wrap {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .camCol {
+      background: #101820;
+      padding: 12px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px #00e5ff22;
+    }
+    video, canvas {
+      width: 280px;
+      height: 360px;
+      border-radius: 10px;
+      background: #000;
+    }
+    button {
+      margin: 6px;
+      padding: 8px 16px;
+      background: #00e5ff22;
+      color: #00e5ff;
+      border: 1px solid #00e5ff;
+      border-radius: 8px;
+    }
+    #status {
+      margin-top: 10px;
+      color: #FFD700;
+      text-shadow: 0 0 8px #FFD700;
+    }
+  </style>
 </head>
-
 <body>
   <h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
-  <p id="status">🧠 Initializing Buddhi AI...</p>
+  <p id="status">Initializing system...</p>
 
   <div class="wrap">
-    <!-- Left Hand -->
     <div class="camCol">
       <h3>Left Hand</h3>
-      <video id="vidLeft" autoplay playsinline muted></video>
-      <canvas id="canvasLeft" width="300" height="400"></canvas>
-      <div>
-        <button id="startCamLeft">📷 Start Camera</button>
-        <button id="captureLeft">📸 Capture</button>
-      </div>
+      <video id="vidLeft" autoplay playsinline></video>
+      <canvas id="canvasLeft" width="280" height="360"></canvas><br>
+      <button id="startCamLeft">Start Left Camera</button>
+      <button id="captureLeft">Capture Left</button>
     </div>
 
-    <!-- Right Hand -->
     <div class="camCol">
       <h3>Right Hand</h3>
-      <video id="vidRight" autoplay playsinline muted></video>
-      <canvas id="canvasRight" width="300" height="400"></canvas>
-      <div>
-        <button id="startCamRight">📷 Start Camera</button>
-        <button id="captureRight">📸 Capture</button>
-      </div>
+      <video id="vidRight" autoplay playsinline></video>
+      <canvas id="canvasRight" width="280" height="360"></canvas><br>
+      <button id="startCamRight">Start Right Camera</button>
+      <button id="captureRight">Capture Right</button>
     </div>
   </div>
-
-  <!-- 🌱 Core Link -->
-  <div class="coreLink" style="text-align:center;margin:15px 0;">
-    <a href="seed-core.html" target="_blank" style="color:#00e5ff;text-decoration:none;font-weight:500;">
-      🌱 Open Seed Core Form
-    </a>
-  </div>
-
-  <!-- 🧠 AI Report Box -->
-  <div id="reportBox" class="reportBox">
-    🌸 AI Buddhi is ready to analyze your palm lines...
-  </div>
-
-  <!-- 🧘 Analyze Button -->
-  <button id="analyzeBtn" class="analyzeBtn">🧠 AI Analyze Palm</button>
-
-  <!-- 🕊️ Footer -->
-  <footer>© Sathyadarshana Dharma Vision · Built by Anuruddha & Buddhi</footer>
-
-  <!-- 🌐 Translate Button -->
-  <div id="google_translate_element">🌐 Translate</div>
-
-  <!-- 🧹 Remove Translate Toolbar -->
-  <script>
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        const frames = document.querySelectorAll("iframe");
-        frames.forEach(f => {
-          if (f.src && f.src.includes("translate.googleapis.com")) f.remove();
-        });
-      }, 1200);
-    });
-  </script>
 </body>
 </html>
