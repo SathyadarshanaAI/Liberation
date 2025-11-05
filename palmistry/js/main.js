@@ -1,25 +1,9 @@
 import { drawPalm } from "./lines.js";
 
-let detector;
 let leftStream, rightStream;
 let leftCaptured = false, rightCaptured = false;
 
-// === Initialize AI ===
-async function initAI() {
-  const status = document.getElementById("status");
-  status.textContent = "🧠 Loading AI modules...";
-  try {
-    const model = handPoseDetection.SupportedModels.MediaPipeHands;
-    const config = { runtime: "tfjs", modelType: "lite", maxHands: 1 };
-    detector = await handPoseDetection.createDetector(model, config);
-    status.textContent = "✅ Buddhi AI Ready";
-  } catch (err) {
-    status.textContent = "⚠️ AI initialization failed";
-    console.error(err);
-  }
-}
-
-// === Start Camera (Force Back Camera) ===
+// === Start camera (Force back) ===
 async function startCam(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
@@ -31,63 +15,82 @@ async function startCam(side) {
     });
     vid.srcObject = stream;
     if (side === "left") leftStream = stream; else rightStream = stream;
-
     vid.style.display = "block";
     canvas.style.display = "none";
     document.getElementById("status").textContent = `📷 ${side} camera started`;
-  } catch (err) {
+  } catch {
     alert(`Please allow camera access for ${side} hand`);
   }
 }
 
-// === Capture + Natural Tone Normalize ===
+// === Capture and Natural-Restore ===
 function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
-
   ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
 
-  // 🧩 Natural tone correction
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = img.data;
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.min(255, data[i] * 1.05);     // R boost
-    data[i + 1] = Math.min(255, data[i + 1] * 1.05); // G
-    data[i + 2] = Math.min(255, data[i + 2] * 1.1);  // B slight
-  }
-  ctx.putImageData(img, 0, 0);
-
-  // Stop stream
+  // stop stream
   const stream = side === "left" ? leftStream : rightStream;
   if (stream) stream.getTracks().forEach(t => t.stop());
   vid.style.display = "none";
   canvas.style.display = "block";
 
+  // 🎨 restore natural palm tone
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    // remove camera yellow tint
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    const avg = (r + g + b) / 3;
+    d[i] = Math.min(255, r * 0.98 + avg * 0.02);
+    d[i + 1] = Math.min(255, g * 0.98 + avg * 0.02);
+    d[i + 2] = Math.min(255, b * 0.95 + avg * 0.05);
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // add soft beam aura
+  addBeamOverlay(canvas);
+
   if (side === "left") leftCaptured = true; else rightCaptured = true;
   document.getElementById("status").textContent = `✅ ${side} palm captured`;
-
-  addBeamOverlay(canvas);  // 🌈 add canvas beam overlay
   checkReady();
 }
 
-// === Add AI Beam Overlay inside Canvas ===
+// === Beam overlay + pulse animation ===
 function addBeamOverlay(canvas) {
   const ctx = canvas.getContext("2d");
-  const gradient = ctx.createRadialGradient(
+  const grd = ctx.createRadialGradient(
     canvas.width / 2, canvas.height / 2, 20,
-    canvas.width / 2, canvas.height / 2, canvas.width / 1.2
+    canvas.width / 2, canvas.height / 2, canvas.width / 1.1
   );
-  gradient.addColorStop(0, "rgba(0,255,255,0.15)");
-  gradient.addColorStop(0.5, "rgba(255,215,0,0.10)");
-  gradient.addColorStop(1, "rgba(0,0,0,0.6)");
+  grd.addColorStop(0, "rgba(0,255,255,0.12)");
+  grd.addColorStop(0.5, "rgba(255,215,0,0.10)");
+  grd.addColorStop(1, "rgba(0,0,0,0.55)");
   ctx.globalCompositeOperation = "lighter";
-  ctx.fillStyle = gradient;
+  ctx.fillStyle = grd;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.globalCompositeOperation = "source-over";
+
+  // 🌊 animated life-wave pulse
+  let pulse = 0;
+  function animate() {
+    pulse += 0.05;
+    const w = canvas.width, h = canvas.height;
+    ctx.save();
+    ctx.globalAlpha = 0.15 + 0.05 * Math.sin(pulse);
+    const ring = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/1.3);
+    ring.addColorStop(0, "rgba(0,255,255,0.25)");
+    ring.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = ring;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+    requestAnimationFrame(animate);
+  }
+  animate();
 }
 
-// === Check both captured ===
+// === check both captured ===
 function checkReady() {
   if (leftCaptured && rightCaptured) {
     document.getElementById("status").textContent =
@@ -96,8 +99,8 @@ function checkReady() {
   }
 }
 
-// === Auto Analyze (Simulated) ===
-async function autoAnalyze() {
+// === auto analyze ===
+function autoAnalyze() {
   const status = document.getElementById("status");
   status.textContent = "🤖 Buddhi AI analyzing both palms...";
   setTimeout(() => {
@@ -105,10 +108,8 @@ async function autoAnalyze() {
   }, 3000);
 }
 
-// === Button Bindings ===
+// === button bindings ===
 document.getElementById("startCamLeft").onclick = () => startCam("left");
 document.getElementById("startCamRight").onclick = () => startCam("right");
 document.getElementById("captureLeft").onclick = () => capture("left");
 document.getElementById("captureRight").onclick = () => capture("right");
-
-initAI();
