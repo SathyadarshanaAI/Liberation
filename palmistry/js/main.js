@@ -4,7 +4,7 @@ let detector;
 let leftStream, rightStream;
 let leftCaptured = false, rightCaptured = false;
 
-// === 🧠 Initialize AI ===
+// === Initialize AI ===
 async function initAI() {
   const status = document.getElementById("status");
   status.textContent = "🧠 Loading AI modules...";
@@ -19,22 +19,22 @@ async function initAI() {
   }
 }
 
-// === 🎥 Start Camera (Force Back Camera) ===
+// === Start Camera (Force Back Camera) ===
 async function startCam(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
+  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: "environment" }, // 🔙 Always back camera
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      },
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
     });
 
     vid.srcObject = stream;
     if (side === "left") leftStream = stream; else rightStream = stream;
 
+    vid.style.display = "block";
+    canvas.style.display = "none";
     document.getElementById("status").textContent = `📷 ${side} camera started`;
   } catch (err) {
     alert(`Please allow camera access for ${side} hand`);
@@ -42,32 +42,28 @@ async function startCam(side) {
   }
 }
 
-// === 📸 Capture and Freeze ===
+// === Capture and Freeze ===
 function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
 
-  // Draw captured frame
   ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
 
-  // Freeze preview
-  vid.pause();
-
-  // Stop stream
+  // Stop camera and hide video
   const stream = side === "left" ? leftStream : rightStream;
   if (stream) stream.getTracks().forEach(t => t.stop());
 
-  // Mark captured
-  if (side === "left") leftCaptured = true;
-  else rightCaptured = true;
+  vid.style.display = "none";
+  canvas.style.display = "block";
+
+  if (side === "left") leftCaptured = true; else rightCaptured = true;
 
   document.getElementById("status").textContent = `✅ ${side} palm captured`;
-
   checkReady();
 }
 
-// === 🔍 Check if both hands captured ===
+// === Check both captured ===
 function checkReady() {
   if (leftCaptured && rightCaptured) {
     document.getElementById("status").textContent =
@@ -77,7 +73,7 @@ function checkReady() {
   }
 }
 
-// === 🌈 Beam Animation ===
+// === Beam Animation ===
 function startBeamEffect() {
   const beam = document.createElement("div");
   beam.style.position = "fixed";
@@ -101,18 +97,16 @@ function startBeamEffect() {
   document.head.appendChild(style);
 }
 
-// === 🤖 Auto AI Analyze ===
+// === Auto Analyze ===
 async function autoAnalyze() {
   const status = document.getElementById("status");
   status.textContent = "🤖 Buddhi AI analyzing both palms...";
-
-  // Simulated AI logic
   setTimeout(() => {
     status.textContent = "✨ AI Report Ready – Divine Energy Balanced 💫";
   }, 3000);
 }
 
-// === 🔘 Button Bindings ===
+// === Button Bindings ===
 document.getElementById("startCamLeft").onclick = () => startCam("left");
 document.getElementById("startCamRight").onclick = () => startCam("right");
 document.getElementById("captureLeft").onclick = () => capture("left");
