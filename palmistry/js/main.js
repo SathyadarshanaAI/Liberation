@@ -1,20 +1,13 @@
-import { drawPalm } from "./lines.js";
-
-let leftStream, rightStream;
-let leftCaptured = false, rightCaptured = false;
-
-// === Start camera (Force back) ===
 async function startCam(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode: { ideal: "environment" } },
       audio: false
     });
     vid.srcObject = stream;
-    if (side === "left") leftStream = stream; else rightStream = stream;
     vid.style.display = "block";
     canvas.style.display = "none";
     document.getElementById("status").textContent = `📷 ${side} camera started`;
@@ -23,93 +16,91 @@ async function startCam(side) {
   }
 }
 
-// === Capture and Natural-Restore ===
+// === Capture and preserve true ratio ===
 function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
-  ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
 
-  // stop stream
-  const stream = side === "left" ? leftStream : rightStream;
+  // Preserve natural aspect ratio
+  const vw = vid.videoWidth;
+  const vh = vid.videoHeight;
+  const cw = canvas.width;
+  const ch = (vh / vw) * cw; // auto height to match true ratio
+  canvas.height = ch;
+
+  // Draw image centered without stretch
+  ctx.drawImage(vid, 0, 0, cw, ch);
+
+  // Stop stream
+  const stream = vid.srcObject;
   if (stream) stream.getTracks().forEach(t => t.stop());
   vid.style.display = "none";
   canvas.style.display = "block";
 
-  // 🎨 restore natural palm tone
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    // remove camera yellow tint
-    const r = d[i], g = d[i + 1], b = d[i + 2];
-    const avg = (r + g + b) / 3;
-    d[i] = Math.min(255, r * 0.98 + avg * 0.02);
-    d[i + 1] = Math.min(255, g * 0.98 + avg * 0.02);
-    d[i + 2] = Math.min(255, b * 0.95 + avg * 0.05);
-  }
-  ctx.putImageData(img, 0, 0);
-
-  // add soft beam aura
+  fixLighting(canvas);
   addBeamOverlay(canvas);
 
-  if (side === "left") leftCaptured = true; else rightCaptured = true;
   document.getElementById("status").textContent = `✅ ${side} palm captured`;
-  checkReady();
+  if (side === "left") leftCaptured = true;
+  else rightCaptured = true;
+  if (leftCaptured && rightCaptured) analyzeAI();
 }
 
-// === Beam overlay + pulse animation ===
+// === Fix brightness / exposure ===
+function fixLighting(canvas) {
+  const ctx = canvas.getContext("2d");
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = img.data;
+
+  let sum = 0;
+  for (let i = 0; i < data.length; i += 4)
+    sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+  const brightness = sum / (data.length / 4);
+  const factor = brightness < 100 ? 1.2 : brightness > 180 ? 0.85 : 1.0;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = Math.min(255, data[i] * factor);
+    data[i + 1] = Math.min(255, data[i + 1] * factor);
+    data[i + 2] = Math.min(255, data[i + 2] * factor);
+  }
+
+  ctx.putImageData(img, 0, 0);
+}
+
+// === Beam background (not covering palm) ===
 function addBeamOverlay(canvas) {
   const ctx = canvas.getContext("2d");
-  const grd = ctx.createRadialGradient(
-    canvas.width / 2, canvas.height / 2, 20,
-    canvas.width / 2, canvas.height / 2, canvas.width / 1.1
-  );
-  grd.addColorStop(0, "rgba(0,255,255,0.12)");
-  grd.addColorStop(0.5, "rgba(255,215,0,0.10)");
-  grd.addColorStop(1, "rgba(0,0,0,0.55)");
-  ctx.globalCompositeOperation = "lighter";
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.globalCompositeOperation = "source-over";
+  const w = canvas.width, h = canvas.height;
 
-  // 🌊 animated life-wave pulse
-  let pulse = 0;
-  function animate() {
-    pulse += 0.05;
-    const w = canvas.width, h = canvas.height;
-    ctx.save();
-    ctx.globalAlpha = 0.15 + 0.05 * Math.sin(pulse);
-    const ring = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/1.3);
-    ring.addColorStop(0, "rgba(0,255,255,0.25)");
-    ring.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = ring;
-    ctx.fillRect(0, 0, w, h);
-    ctx.restore();
-    requestAnimationFrame(animate);
-  }
-  animate();
+  // Create beam on temp layer
+  const beam = document.createElement("canvas");
+  beam.width = w; beam.height = h;
+  const bctx = beam.getContext("2d");
+  const grad = bctx.createRadialGradient(w/2, h/2, 30, w/2, h/2, w/1.2);
+  grad.addColorStop(0, "rgba(0,255,255,0.25)");
+  grad.addColorStop(0.5, "rgba(255,215,0,0.12)");
+  grad.addColorStop(1, "rgba(0,0,0,0)");
+  bctx.fillStyle = grad;
+  bctx.fillRect(0, 0, w, h);
+
+  // Combine: beam behind palm
+  const img = ctx.getImageData(0, 0, w, h);
+  ctx.clearRect(0, 0, w, h);
+  ctx.drawImage(beam, 0, 0);
+  ctx.putImageData(img, 0, 0);
 }
 
-// === check both captured ===
-function checkReady() {
-  if (leftCaptured && rightCaptured) {
-    document.getElementById("status").textContent =
-      "🌟 Both palms captured – AI analyzing...";
-    setTimeout(autoAnalyze, 2500);
-  }
-}
-
-// === auto analyze ===
-function autoAnalyze() {
-  const status = document.getElementById("status");
-  status.textContent = "🤖 Buddhi AI analyzing both palms...";
+// === Analyze simulation ===
+function analyzeAI() {
+  document.getElementById("status").textContent = "🤖 Buddhi AI analyzing...";
   setTimeout(() => {
-    status.textContent = "✨ AI Report Ready – Divine Energy Balanced 💫";
+    document.getElementById("status").textContent = "✨ AI Report Ready – Divine Energy Restored 💫";
   }, 3000);
 }
 
-// === button bindings ===
+// === Buttons ===
 document.getElementById("startCamLeft").onclick = () => startCam("left");
-document.getElementById("startCamRight").onclick = () => startCam("right");
 document.getElementById("captureLeft").onclick = () => capture("left");
+document.getElementById("startCamRight").onclick = () => startCam("right");
 document.getElementById("captureRight").onclick = () => capture("right");
