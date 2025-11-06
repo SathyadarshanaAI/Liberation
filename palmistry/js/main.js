@@ -1,3 +1,9 @@
+import { drawPalm } from "./lines.js";
+
+let leftCaptured = false;
+let rightCaptured = false;
+
+// === Start Camera ===
 async function startCam(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
@@ -16,88 +22,75 @@ async function startCam(side) {
   }
 }
 
-// === Capture and preserve true ratio ===
+// === Capture ===
 function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
 
-  // Preserve natural aspect ratio
   const vw = vid.videoWidth;
   const vh = vid.videoHeight;
   const cw = canvas.width;
-  const ch = (vh / vw) * cw; // auto height to match true ratio
+  const ch = (vh / vw) * cw;
   canvas.height = ch;
 
-  // Draw image centered without stretch
   ctx.drawImage(vid, 0, 0, cw, ch);
 
-  // Stop stream
+  // stop stream
   const stream = vid.srcObject;
   if (stream) stream.getTracks().forEach(t => t.stop());
   vid.style.display = "none";
   canvas.style.display = "block";
 
-  fixLighting(canvas);
+  // Beam aura under palm
   addBeamOverlay(canvas);
 
+  // Draw glowing palm lines with small delay
+  setTimeout(() => {
+    try {
+      drawPalm(ctx);
+      console.log("✨ Palm lines overlay rendered successfully");
+    } catch (e) {
+      console.error("⚠️ lines.js overlay error:", e);
+    }
+  }, 500);
+
   document.getElementById("status").textContent = `✅ ${side} palm captured`;
+
   if (side === "left") leftCaptured = true;
   else rightCaptured = true;
-  if (leftCaptured && rightCaptured) analyzeAI();
-}
-
-// === Fix brightness / exposure ===
-function fixLighting(canvas) {
-  const ctx = canvas.getContext("2d");
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = img.data;
-
-  let sum = 0;
-  for (let i = 0; i < data.length; i += 4)
-    sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
-  const brightness = sum / (data.length / 4);
-  const factor = brightness < 100 ? 1.2 : brightness > 180 ? 0.85 : 1.0;
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.min(255, data[i] * factor);
-    data[i + 1] = Math.min(255, data[i + 1] * factor);
-    data[i + 2] = Math.min(255, data[i + 2] * factor);
+  if (leftCaptured && rightCaptured) {
+    document.getElementById("status").textContent = "🌟 Both palms captured – Ready for AI Analysis";
   }
-
-  ctx.putImageData(img, 0, 0);
 }
 
-// === Beam background (not covering palm) ===
+// === Beam background ===
 function addBeamOverlay(canvas) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
-
-  // Create beam on temp layer
   const beam = document.createElement("canvas");
   beam.width = w; beam.height = h;
   const bctx = beam.getContext("2d");
   const grad = bctx.createRadialGradient(w/2, h/2, 30, w/2, h/2, w/1.2);
-  grad.addColorStop(0, "rgba(0,255,255,0.25)");
-  grad.addColorStop(0.5, "rgba(255,215,0,0.12)");
+  grad.addColorStop(0, "rgba(0,255,255,0.20)");
+  grad.addColorStop(0.5, "rgba(255,215,0,0.10)");
   grad.addColorStop(1, "rgba(0,0,0,0)");
   bctx.fillStyle = grad;
   bctx.fillRect(0, 0, w, h);
-
-  // Combine: beam behind palm
   const img = ctx.getImageData(0, 0, w, h);
   ctx.clearRect(0, 0, w, h);
   ctx.drawImage(beam, 0, 0);
   ctx.putImageData(img, 0, 0);
 }
 
-// === Analyze simulation ===
-function analyzeAI() {
-  document.getElementById("status").textContent = "🤖 Buddhi AI analyzing...";
+// === AI Analyze Button ===
+document.getElementById("analyzeAI").onclick = () => {
+  document.getElementById("status").textContent = "🧠 Buddhi AI analyzing palm lines...";
   setTimeout(() => {
-    document.getElementById("status").textContent = "✨ AI Report Ready – Divine Energy Restored 💫";
+    document.getElementById("status").textContent =
+      "✨ AI Report Ready – Divine Harmony Restored 💫";
   }, 3000);
-}
+};
 
 // === Buttons ===
 document.getElementById("startCamLeft").onclick = () => startCam("left");
