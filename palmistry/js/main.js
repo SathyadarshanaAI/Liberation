@@ -1,6 +1,5 @@
 // main.js — V24.9.1 Hybrid Camera Fix Edition
 
-// Stub imports (replace with your actual files if needed)
 import { drawPalm } from "./js/lines.js";
 import { initBuddhiPipeline } from "./js/palmPipeline.js";
 import { initNaturalPalm3D } from "./js/naturalPalm3D.js";
@@ -11,7 +10,6 @@ let leftCaptured = false, rightCaptured = false;
 async function startCam(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
-
   let constraints = {
     video: { facingMode: side === "left" ? "user" : { ideal: "environment" } },
     audio: false
@@ -24,7 +22,6 @@ async function startCam(side) {
     canvas.style.display = "none";
     document.getElementById("status").textContent = `📷 ${side} camera started`;
   } catch (err) {
-    // fallback camera
     try {
       const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       vid.srcObject = fallbackStream;
@@ -34,6 +31,7 @@ async function startCam(side) {
       document.getElementById("status").textContent = `📷 ${side} (fallback) camera started`;
     } catch (fallbackErr) {
       alert(`Camera not available for ${side} hand.`);
+      document.getElementById("status").textContent = "🚫 Camera not available!";
     }
   }
 }
@@ -54,7 +52,6 @@ function capture(side) {
     if (side === "left") {
       ctx.drawImage(vid, 0, 0, cw, ch);
     } else {
-      // Mirror for right hand
       ctx.save();
       ctx.translate(cw, 0);
       ctx.scale(-1, 1);
@@ -62,7 +59,6 @@ function capture(side) {
       ctx.restore();
     }
 
-    // Stop camera
     let stream = vid.srcObject;
     if (stream) stream.getTracks().forEach(t => t.stop());
     vid.srcObject = null;
@@ -87,7 +83,6 @@ function capture(side) {
     }
   }
 
-  // Metadata loaded check for safe capture!
   if (vid.readyState < 2) vid.onloadedmetadata = doCapture;
   else doCapture();
 }
@@ -109,22 +104,21 @@ function addBeamOverlay(canvas) {
   ctx.drawImage(beam, 0, 0);
 }
 
-// === AI Analysis Button ===
-document.getElementById("analyzeAI").onclick = () => {
-  document.getElementById("status").textContent = "🧠 Activating Buddhi Neural Pipeline...";
-  initBuddhiPipeline();
-  setTimeout(() => {
-    document.getElementById("status").textContent = "✨ Neural Flow Stable – Palm Analyzer Ready";
-  }, 3500);
-};
-
-// === Control Buttons ===
-document.getElementById("startCamLeft").onclick = () => startCam("left");
-document.getElementById("captureLeft").onclick = () => capture("left");
-document.getElementById("startCamRight").onclick = () => startCam("right");
-document.getElementById("captureRight").onclick = () => capture("right");
-
-// === Natural Palm 3D Initialization ===
+// === DOM bindings on DOMContentLoaded ===
 window.addEventListener("DOMContentLoaded", () => {
+  // Bind buttons safely AFTER DOM is ready
+  document.getElementById("startCamLeft").onclick = () => startCam("left");
+  document.getElementById("captureLeft").onclick = () => capture("left");
+  document.getElementById("startCamRight").onclick = () => startCam("right");
+  document.getElementById("captureRight").onclick = () => capture("right");
+
+  document.getElementById("analyzeAI").onclick = () => {
+    document.getElementById("status").textContent = "🧠 Activating Buddhi Neural Pipeline...";
+    initBuddhiPipeline();
+    setTimeout(() => {
+      document.getElementById("status").textContent = "✨ Neural Flow Stable – Palm Analyzer Ready";
+    }, 3500);
+  };
+
   initNaturalPalm3D("canvasRight");
 });
