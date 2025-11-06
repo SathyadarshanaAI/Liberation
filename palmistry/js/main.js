@@ -1,22 +1,21 @@
-// main.js — V24.9.1 Hybrid Camera Fallback Edition
-import { drawPalm } from "./lines.js";
-import { initBuddhiPipeline } from "./palmPipeline.js";
-import { initNaturalPalm3D } from "./naturalPalm3D.js";
+// main.js — V24.9.1 Hybrid Camera Fix Edition
 
-let leftCaptured = false;
-let rightCaptured = false;
+// Stub imports (replace with your actual files if needed)
+import { drawPalm } from "./js/lines.js";
+import { initBuddhiPipeline } from "./js/palmPipeline.js";
+import { initNaturalPalm3D } from "./js/naturalPalm3D.js";
 
-// === Start Camera (Auto Fallback) ===
+let leftCaptured = false, rightCaptured = false;
+
+// === Start Camera with Fallback ===
 async function startCam(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
 
-  // Base constraints
   let constraints = {
     video: { facingMode: side === "left" ? "user" : { ideal: "environment" } },
     audio: false
   };
-
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     vid.srcObject = stream;
@@ -25,9 +24,8 @@ async function startCam(side) {
     canvas.style.display = "none";
     document.getElementById("status").textContent = `📷 ${side} camera started`;
   } catch (err) {
-    console.warn("⚠️ Environment camera failed, switching fallback:", err);
+    // fallback camera
     try {
-      // 🧭 fallback — use default camera
       const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       vid.srcObject = fallbackStream;
       await vid.play();
@@ -35,60 +33,63 @@ async function startCam(side) {
       canvas.style.display = "none";
       document.getElementById("status").textContent = `📷 ${side} (fallback) camera started`;
     } catch (fallbackErr) {
-      console.error("🚫 No available camera:", fallbackErr);
       alert(`Camera not available for ${side} hand.`);
     }
   }
 }
 
-// === Capture (same as before) ===
+// === Capture with Metadata Ready Check ===
 function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
-
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const vw = vid.videoWidth || canvas.width;
-  const vh = vid.videoHeight || canvas.height;
-  const cw = canvas.width;
-  const ch = (vh / vw) * cw;
-  canvas.height = ch;
+  function doCapture() {
+    const vw = vid.videoWidth || 280;
+    const vh = vid.videoHeight || 360;
+    const cw = canvas.width = 280;
+    const ch = canvas.height = (vh / vw) * 280;
 
-  if (side === "left") {
-    ctx.drawImage(vid, 0, 0, cw, ch);
-  } else {
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.drawImage(vid, -cw, 0, cw, ch);
-    ctx.restore();
-  }
-
-  const stream = vid.srcObject;
-  if (stream) stream.getTracks().forEach(t => t.stop());
-  vid.srcObject = null;
-  vid.style.display = "none";
-  canvas.style.display = "block";
-
-  addBeamOverlay(canvas);
-
-  setTimeout(() => {
-    try {
-      drawPalm(ctx);
-      console.log(`✨ ${side} palm overlay rendered`);
-    } catch (e) {
-      console.error("⚠️ drawPalm error:", e);
+    if (side === "left") {
+      ctx.drawImage(vid, 0, 0, cw, ch);
+    } else {
+      // Mirror for right hand
+      ctx.save();
+      ctx.translate(cw, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(vid, 0, 0, cw, ch);
+      ctx.restore();
     }
-  }, 700);
 
-  document.getElementById("status").textContent = `✅ ${side} palm captured`;
+    // Stop camera
+    let stream = vid.srcObject;
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    vid.srcObject = null;
+    vid.style.display = "none";
+    canvas.style.display = "block";
 
-  if (side === "left") leftCaptured = true;
-  else rightCaptured = true;
+    addBeamOverlay(canvas);
 
-  if (leftCaptured && rightCaptured) {
-    document.getElementById("status").textContent = "🌟 Both palms captured – Ready for AI Analysis";
+    setTimeout(() => {
+      try {
+        drawPalm(ctx);
+      } catch (e) {
+        console.error("⚠️ drawPalm error:", e);
+      }
+    }, 700);
+
+    document.getElementById("status").textContent = `✅ ${side} palm captured`;
+    if (side === "left") leftCaptured = true;
+    else rightCaptured = true;
+    if (leftCaptured && rightCaptured) {
+      document.getElementById("status").textContent = "🌟 Both palms captured – Ready for AI Analysis";
+    }
   }
+
+  // Metadata loaded check for safe capture!
+  if (vid.readyState < 2) vid.onloadedmetadata = doCapture;
+  else doCapture();
 }
 
 // === Beam Overlay ===
@@ -108,7 +109,7 @@ function addBeamOverlay(canvas) {
   ctx.drawImage(beam, 0, 0);
 }
 
-// === AI Analysis ===
+// === AI Analysis Button ===
 document.getElementById("analyzeAI").onclick = () => {
   document.getElementById("status").textContent = "🧠 Activating Buddhi Neural Pipeline...";
   initBuddhiPipeline();
@@ -117,13 +118,13 @@ document.getElementById("analyzeAI").onclick = () => {
   }, 3500);
 };
 
-// === Buttons ===
+// === Control Buttons ===
 document.getElementById("startCamLeft").onclick = () => startCam("left");
 document.getElementById("captureLeft").onclick = () => capture("left");
 document.getElementById("startCamRight").onclick = () => startCam("right");
 document.getElementById("captureRight").onclick = () => capture("right");
 
+// === Natural Palm 3D Initialization ===
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("🌿 Initializing Natural 3D Palm Interface...");
   initNaturalPalm3D("canvasRight");
 });
