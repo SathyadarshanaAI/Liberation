@@ -1,9 +1,7 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer
-// V24.7 · Natural Neural Fusion Edition
-
+// main.js — V24.8 Natural Neural Fusion Edition
 import { drawPalm } from "./lines.js";
 import { initBuddhiPipeline } from "./palmPipeline.js";
-import { initNaturalPalm3D } from "./naturalPalm3D.js"; // 🌿 Natural 3D Palm render import
+import { initNaturalPalm3D } from "./naturalPalm3D.js";
 
 let leftCaptured = false;
 let rightCaptured = false;
@@ -22,23 +20,29 @@ async function startCam(side) {
     vid.style.display = "block";
     canvas.style.display = "none";
     document.getElementById("status").textContent = `📷 ${side} camera started`;
-  } catch {
+  } catch (err) {
+    console.error(err);
     alert(`Please allow camera access for ${side} hand`);
   }
 }
 
-// === Capture ===
+// === Capture (with previous-overlay clear) ===
 function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
 
-  const vw = vid.videoWidth;
-  const vh = vid.videoHeight;
+  // clear previous
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // adjust canvas height to keep aspect ratio
+  const vw = vid.videoWidth || canvas.width;
+  const vh = vid.videoHeight || canvas.height;
   const cw = canvas.width;
   const ch = (vh / vw) * cw;
   canvas.height = ch;
 
+  // draw new capture
   ctx.drawImage(vid, 0, 0, cw, ch);
 
   // stop stream
@@ -47,14 +51,14 @@ function capture(side) {
   vid.style.display = "none";
   canvas.style.display = "block";
 
-  // Beam aura under palm
+  // Beam overlay (subtle) — optional, keeps natural feel
   addBeamOverlay(canvas);
 
-  // Draw glowing palm lines with small delay
+  // draw palm overlay after slight delay
   setTimeout(() => {
     try {
       drawPalm(ctx);
-      console.log("✨ Palm lines overlay rendered successfully");
+      console.log(`✨ New ${side} palm overlay rendered`);
     } catch (e) {
       console.error("⚠️ lines.js overlay error:", e);
     }
@@ -71,30 +75,36 @@ function capture(side) {
   }
 }
 
-// === Beam background ===
+// === Beam background (subtle) ===
 function addBeamOverlay(canvas) {
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
   const beam = document.createElement("canvas");
   beam.width = w; beam.height = h;
   const bctx = beam.getContext("2d");
-  const grad = bctx.createRadialGradient(w / 2, h / 2, 30, w / 2, h / 2, w / 1.2);
-  grad.addColorStop(0, "rgba(0,255,255,0.20)");
-  grad.addColorStop(0.5, "rgba(255,215,0,0.10)");
+  const grad = bctx.createRadialGradient(w/2, h/2, 30, w/2, h/2, Math.max(w,h)/1.2);
+  grad.addColorStop(0, "rgba(0,255,255,0.06)");
+  grad.addColorStop(0.5, "rgba(255,215,0,0.03)");
   grad.addColorStop(1, "rgba(0,0,0,0)");
   bctx.fillStyle = grad;
   bctx.fillRect(0, 0, w, h);
-  const img = ctx.getImageData(0, 0, w, h);
-  ctx.clearRect(0, 0, w, h);
-  ctx.drawImage(beam, 0, 0);
-  ctx.putImageData(img, 0, 0);
+
+  try {
+    const img = ctx.getImageData(0, 0, w, h);
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(beam, 0, 0);
+    ctx.putImageData(img, 0, 0);
+  } catch (e) {
+    // some browsers may throw if canvas is tainted — fallback to drawImage only
+    ctx.drawImage(beam, 0, 0);
+  }
 }
 
 // === AI Analyze Button (connect pipeline) ===
 document.getElementById("analyzeAI").onclick = () => {
   document.getElementById("status").textContent =
     "🧠 Activating Buddhi Neural Pipeline...";
-  initBuddhiPipeline(); // 🌐 Link Buddhi → Palm → Overlay
+  initBuddhiPipeline();
   setTimeout(() => {
     document.getElementById("status").textContent =
       "✨ Neural Flow Stable – Palm Analyzer Ready";
@@ -107,8 +117,8 @@ document.getElementById("captureLeft").onclick = () => capture("left");
 document.getElementById("startCamRight").onclick = () => startCam("right");
 document.getElementById("captureRight").onclick = () => capture("right");
 
-// === Natural 3D Palm Initialization ===
+// === Initialize natural 3D palm once DOM ready ===
 window.addEventListener("DOMContentLoaded", () => {
   console.log("🌿 Initializing Natural 3D Palm Interface...");
-  initNaturalPalm3D("canvasRight"); // 🪶 Render natural palm on right canvas
+  initNaturalPalm3D("canvasRight");
 });
