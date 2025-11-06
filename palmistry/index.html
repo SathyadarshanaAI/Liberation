@@ -3,53 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V22.0 True Vision Mode</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V24.8</title>
   <link rel="stylesheet" href="css/style.css">
   <script type="module" src="js/main.js" defer></script>
   <style>
-    body {
-      background: #0b0f16;
-      color: #e6f0ff;
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-    }
-    h1 {
-      color: #00e5ff;
-      text-shadow: 0 0 15px #00e5ff;
-      margin: 16px 0;
-      font-size: 1.3rem;
-    }
-    .wrap {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-    }
-    .camCol {
-      background: #101820;
-      padding: 12px;
-      border-radius: 16px;
-      box-shadow: 0 0 15px #00e5ff22;
-    }
-    video, canvas {
-      width: 280px;
-      height: 360px;
-      border-radius: 10px;
-      background: #000;
-    }
-    button {
-      margin: 6px;
-      padding: 8px 16px;
-      background: #00e5ff22;
-      color: #00e5ff;
-      border: 1px solid #00e5ff;
-      border-radius: 8px;
-    }
-    #status {
-      margin-top: 10px;
-      color: #FFD700;
-      text-shadow: 0 0 8px #FFD700;
-    }
+    body { background:#0b0f16; color:#e6f0ff; font-family:'Segoe UI',sans-serif; text-align:center; }
+    h1 { color:#00e5ff; text-shadow:0 0 15px #00e5ff; margin:16px 0; font-size:1.2rem; }
+    .wrap { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:20px; }
+    .camCol { background:#101820; padding:18px; border-radius:16px; box-shadow:0 0 15px #00e5ff22; width:320px; }
+    video, canvas { width:280px; height:360px; border-radius:10px; background:#000; display:block; margin:0 auto 8px; }
+    button { margin:6px; padding:8px 16px; background:#00e5ff22; color:#00e5ff; border:1px solid #00e5ff; border-radius:8px; cursor:pointer; }
+    #status { margin-top:10px; color:#FFD700; text-shadow:0 0 8px #FFD700; }
   </style>
 </head>
 <body>
@@ -60,23 +24,26 @@
     <div class="camCol">
       <h3>Left Hand</h3>
       <video id="vidLeft" autoplay playsinline></video>
-      <canvas id="canvasLeft" width="280" height="360"></canvas><br>
-      <button id="startCamLeft">Start Left Camera</button>
-      <button id="captureLeft">Capture Left</button>
+      <canvas id="canvasLeft" width="280" height="360"></canvas>
+      <div style="text-align:center;">
+        <button id="startCamLeft">Start Left Camera</button>
+        <button id="captureLeft">Capture Left</button>
+      </div>
     </div>
 
     <div class="camCol">
       <h3>Right Hand</h3>
       <video id="vidRight" autoplay playsinline></video>
-      <canvas id="canvasRight" width="280" height="360"></canvas><br>
-      <button id="startCamRight">Start Right Camera</button>
-      <button id="captureRight">Capture Right</button>
+      <canvas id="canvasRight" width="280" height="360"></canvas>
+      <div style="text-align:center;">
+        <button id="startCamRight">Start Right Camera</button>
+        <button id="captureRight">Capture Right</button>
+      </div>
     </div>
   </div>
 
-  <div style="margin-top:30px;">
-    <button id="analyzeAI"
-      style="padding:10px 18px;background:#00e5ff22;border:1px solid #00e5ff;color:#00e5ff;border-radius:8px;">
+  <div style="margin-top:20px;">
+    <button id="analyzeAI" style="padding:10px 18px;background:#00e5ff22;border:1px solid #00e5ff;color:#00e5ff;border-radius:8px;">
       🤖 Analyze with AI Buddhi
     </button>
   </div>
