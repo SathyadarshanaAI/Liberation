@@ -1,31 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V24.8</title>
-  <link rel="stylesheet" href="css/style.css">
-  <script type="module" src="js/main.js" defer></script>
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
   <style>
-    body { background:#0b0f16; color:#e6f0ff; font-family:'Segoe UI',sans-serif; text-align:center; }
-    h1 { color:#00e5ff; text-shadow:0 0 15px #00e5ff; margin:16px 0; font-size:1.2rem; }
-    .wrap { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:20px; }
-    .camCol { background:#101820; padding:18px; border-radius:16px; box-shadow:0 0 15px #00e5ff22; width:320px; }
-    video, canvas { width:280px; height:360px; border-radius:10px; background:#000; display:block; margin:0 auto 8px; }
-    button { margin:6px; padding:8px 16px; background:#00e5ff22; color:#00e5ff; border:1px solid #00e5ff; border-radius:8px; cursor:pointer; }
-    #status { margin-top:10px; color:#FFD700; text-shadow:0 0 8px #FFD700; }
+    body {
+      background: #0b0f16;
+      color: #e6f0ff;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    h1 {
+      color: #00e5ff;
+      text-shadow: 0 0 15px #00e5ff;
+      margin: 16px 0;
+      font-size: 1.4rem;
+    }
+    .wrap {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+    .camCol {
+      background: #101820;
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px #00e5ff22;
+      width: 320px;
+    }
+    video, canvas {
+      width: 280px;
+      height: 360px;
+      border-radius: 10px;
+      background: #000;
+      display: block;
+      margin: 0 auto 8px;
+    }
+    button {
+      margin: 6px;
+      padding: 8px 16px;
+      background: #00e5ff22;
+      color: #00e5ff;
+      border: 1px solid #00e5ff;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 10px;
+      color: #FFD700;
+      text-shadow: 0 0 8px #FFD700;
+    }
+    footer {
+      margin-top: 40px;
+      color: #888;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
+
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
-  <p id="status">Initializing system...</p>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V24.8</h1>
+  <p id="status">🧠 Initializing Neural Palm System...</p>
 
   <div class="wrap">
     <div class="camCol">
       <h3>Left Hand</h3>
       <video id="vidLeft" autoplay playsinline></video>
       <canvas id="canvasLeft" width="280" height="360"></canvas>
-      <div style="text-align:center;">
+      <div>
         <button id="startCamLeft">Start Left Camera</button>
         <button id="captureLeft">Capture Left</button>
       </div>
@@ -35,7 +85,7 @@
       <h3>Right Hand</h3>
       <video id="vidRight" autoplay playsinline></video>
       <canvas id="canvasRight" width="280" height="360"></canvas>
-      <div style="text-align:center;">
+      <div>
         <button id="startCamRight">Start Right Camera</button>
         <button id="captureRight">Capture Right</button>
       </div>
@@ -43,9 +93,88 @@
   </div>
 
   <div style="margin-top:20px;">
-    <button id="analyzeAI" style="padding:10px 18px;background:#00e5ff22;border:1px solid #00e5ff;color:#00e5ff;border-radius:8px;">
-      🤖 Analyze with AI Buddhi
+    <button id="analyzeAI"
+      style="padding:10px 18px;background:#00e5ff22;border:1px solid #00e5ff;color:#00e5ff;border-radius:8px;">
+      🤖 Analyze with Buddhi AI
     </button>
   </div>
+
+  <footer>
+    <p>© 2025 Sathyadarshana | Palmistry Console v12</p>
+  </footer>
+
+  <!-- 🌐 Main Module -->
+  <script type="module">
+    import { initNaturalPalm3D } from "./js/naturalPalm3D.js";
+    import { initBuddhiPipeline } from "./js/palmPipeline.js";
+    import { drawPalm } from "./js/lines.js";
+
+    console.log("🕉️ Palmistry V24.8 Loaded | Console v12 Active");
+
+    const status = document.getElementById("status");
+    const cams = {
+      left: { vid: vidLeft, canvas: canvasLeft },
+      right: { vid: vidRight, canvas: canvasRight }
+    };
+    let leftCaptured = false, rightCaptured = false;
+
+    async function startCam(side) {
+      const { vid, canvas } = cams[side];
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        vid.srcObject = stream;
+        vid.style.display = "block";
+        canvas.style.display = "none";
+        status.textContent = `📷 ${side} camera started`;
+        console.log(`✅ Camera started for ${side} hand`);
+      } catch (err) {
+        console.error(`🚫 Camera access denied for ${side}:`, err);
+      }
+    }
+
+    function capture(side) {
+      const { vid, canvas } = cams[side];
+      const ctx = canvas.getContext("2d");
+      const vw = vid.videoWidth, vh = vid.videoHeight;
+      canvas.width = 280; canvas.height = (vh / vw) * 280;
+      ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+
+      const stream = vid.srcObject;
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      vid.style.display = "none";
+      canvas.style.display = "block";
+
+      console.log(`📸 ${side} palm captured successfully`);
+      status.textContent = `✅ ${side} palm captured`;
+      drawPalm(ctx);
+
+      if (side === "left") leftCaptured = true;
+      else rightCaptured = true;
+
+      if (leftCaptured && rightCaptured) {
+        status.textContent = "🌟 Both palms captured — ready for AI analysis.";
+        console.log("🧠 Ready for Buddhi AI analysis.");
+      }
+    }
+
+    document.getElementById("startCamLeft").onclick = () => startCam("left");
+    document.getElementById("captureLeft").onclick = () => capture("left");
+    document.getElementById("startCamRight").onclick = () => startCam("right");
+    document.getElementById("captureRight").onclick = () => capture("right");
+
+    document.getElementById("analyzeAI").onclick = () => {
+      status.textContent = "🧠 Activating Buddhi Neural Pipeline...";
+      console.log("🔗 Linking Buddhi Neural Pipeline...");
+      initBuddhiPipeline();
+      setTimeout(() => {
+        status.textContent = "✨ Neural flow stable – Palm Analyzer ready.";
+        console.log("💫 AI analysis system stabilized.");
+      }, 3000);
+    };
+
+    // 3D canvas init
+    initNaturalPalm3D("canvasRight");
+    console.log("🎨 Natural Palm 3D canvas initialized");
+  </script>
 </body>
 </html>
