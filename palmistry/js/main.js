@@ -1,8 +1,9 @@
 // 🕉️ Sathyadarshana Quantum Palm Analyzer
-// V24.5 · Neural Pipeline Linked Edition
+// V24.7 · Natural Neural Fusion Edition
 
 import { drawPalm } from "./lines.js";
-import { initBuddhiPipeline } from "./palmPipeline.js"; // 🧠 add this import
+import { initBuddhiPipeline } from "./palmPipeline.js";
+import { initNaturalPalm3D } from "./naturalPalm3D.js"; // 🌿 Natural 3D Palm render import
 
 let leftCaptured = false;
 let rightCaptured = false;
@@ -63,6 +64,7 @@ function capture(side) {
 
   if (side === "left") leftCaptured = true;
   else rightCaptured = true;
+
   if (leftCaptured && rightCaptured) {
     document.getElementById("status").textContent =
       "🌟 Both palms captured – Ready for AI Analysis";
@@ -104,3 +106,9 @@ document.getElementById("startCamLeft").onclick = () => startCam("left");
 document.getElementById("captureLeft").onclick = () => capture("left");
 document.getElementById("startCamRight").onclick = () => startCam("right");
 document.getElementById("captureRight").onclick = () => capture("right");
+
+// === Natural 3D Palm Initialization ===
+window.addEventListener("DOMContentLoaded", () => {
+  console.log("🌿 Initializing Natural 3D Palm Interface...");
+  initNaturalPalm3D("canvasRight"); // 🪶 Render natural palm on right canvas
+});
