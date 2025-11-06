@@ -1,4 +1,8 @@
+// 🕉️ Sathyadarshana Quantum Palm Analyzer
+// V24.5 · Neural Pipeline Linked Edition
+
 import { drawPalm } from "./lines.js";
+import { initBuddhiPipeline } from "./palmPipeline.js"; // 🧠 add this import
 
 let leftCaptured = false;
 let rightCaptured = false;
@@ -60,7 +64,8 @@ function capture(side) {
   if (side === "left") leftCaptured = true;
   else rightCaptured = true;
   if (leftCaptured && rightCaptured) {
-    document.getElementById("status").textContent = "🌟 Both palms captured – Ready for AI Analysis";
+    document.getElementById("status").textContent =
+      "🌟 Both palms captured – Ready for AI Analysis";
   }
 }
 
@@ -71,7 +76,7 @@ function addBeamOverlay(canvas) {
   const beam = document.createElement("canvas");
   beam.width = w; beam.height = h;
   const bctx = beam.getContext("2d");
-  const grad = bctx.createRadialGradient(w/2, h/2, 30, w/2, h/2, w/1.2);
+  const grad = bctx.createRadialGradient(w / 2, h / 2, 30, w / 2, h / 2, w / 1.2);
   grad.addColorStop(0, "rgba(0,255,255,0.20)");
   grad.addColorStop(0.5, "rgba(255,215,0,0.10)");
   grad.addColorStop(1, "rgba(0,0,0,0)");
@@ -83,13 +88,15 @@ function addBeamOverlay(canvas) {
   ctx.putImageData(img, 0, 0);
 }
 
-// === AI Analyze Button ===
+// === AI Analyze Button (connect pipeline) ===
 document.getElementById("analyzeAI").onclick = () => {
-  document.getElementById("status").textContent = "🧠 Buddhi AI analyzing palm lines...";
+  document.getElementById("status").textContent =
+    "🧠 Activating Buddhi Neural Pipeline...";
+  initBuddhiPipeline(); // 🌐 Link Buddhi → Palm → Overlay
   setTimeout(() => {
     document.getElementById("status").textContent =
-      "✨ AI Report Ready – Divine Harmony Restored 💫";
-  }, 3000);
+      "✨ Neural Flow Stable – Palm Analyzer Ready";
+  }, 4000);
 };
 
 // === Buttons ===
