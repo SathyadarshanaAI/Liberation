@@ -23,22 +23,39 @@
   <p id="status">🧠 Initializing Neural Palm System...</p>
 
   <div class="wrap">
+    <!-- LEFT HAND CAMERA -->
     <div class="camCol">
       <h3>Left Hand</h3>
       <video id="vidLeft" autoplay playsinline></video>
-      <canvas id="canvasLeft" width="280" height="360"></canvas>
-      <button id="startCamLeft">Start Left Cam</button>
-      <button id="captureLeft">Capture</button>
+      <canvas id="canvasLeft"></canvas>
+      <div>
+        <button id="startCamLeft">📷 Start Camera</button>
+        <button id="captureLeft">🖐️ Capture</button>
+      </div>
+    </div>
+
+    <!-- RIGHT HAND CAMERA -->
+    <div class="camCol">
+      <h3>Right Hand</h3>
+      <video id="vidRight" autoplay playsinline></video>
+      <canvas id="canvasRight"></canvas>
+      <div>
+        <button id="startCamRight">📷 Start Camera</button>
+        <button id="captureRight">🖐️ Capture</button>
+      </div>
     </div>
   </div>
 
-  <button id="analyzeBtn">🧬 AI Deep Analyze</button>
+  <!-- 🔮 AI ANALYZE BUTTON -->
+  <button id="aiAnalyze" style="margin-top:20px;">🤖 AI Deep Palm Analysis</button>
 
+  <!-- 🧾 RESULT AREA -->
   <div id="resultBox">
-    <h3>🔍 Analysis Result</h3>
-    <pre id="analysisText">Awaiting input...</pre>
+    <h4>AI Results:</h4>
+    <p id="aiOutput">Awaiting Analysis...</p>
   </div>
 
+  <footer>© 2025 Sathyadarshana Quantum Vision Lab</footer>
   <script type="module" src="main.js"></script>
 </body>
 </html>
