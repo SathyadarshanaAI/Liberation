@@ -1,10 +1,44 @@
-// main.js — V24.9.1 Stable Dual Camera Edition
+// main.js — V25.0 Quantum Palm Analyzer (Camera Toggle + Dual Palm System)
 import { drawPalm } from "./lines.js";
 import { initBuddhiPipeline } from "./palmPipeline.js";
 import { initNaturalPalm3D } from "./naturalPalm3D.js";
 
 let leftCaptured = false;
 let rightCaptured = false;
+let useFrontCam = true; // ✅ toggle camera mode (default = front cam)
+
+// === TOGGLE CAMERA MODE ===
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.createElement("button");
+  toggleBtn.textContent = "🔄 Switch to Back Camera";
+  toggleBtn.style = `
+    position: fixed; top: 15px; right: 15px;
+    background: #00e5ff22; color: #00e5ff;
+    border: 1px solid #00e5ff; border-radius: 8px;
+    padding: 8px 14px; cursor: pointer; z-index: 999;
+  `;
+  document.body.appendChild(toggleBtn);
+
+  toggleBtn.onclick = () => {
+    useFrontCam = !useFrontCam;
+    toggleBtn.textContent = useFrontCam
+      ? "🔄 Switch to Back Camera"
+      : "🔄 Switch to Front Camera";
+    document.getElementById("status").textContent = useFrontCam
+      ? "📷 Using FRONT camera mode"
+      : "📷 Using BACK camera mode";
+  };
+
+  // link capture & start buttons after DOM loaded
+  linkButtonEvents();
+});
+
+function linkButtonEvents() {
+  document.getElementById("startCamLeft").onclick = () => startCam("left");
+  document.getElementById("startCamRight").onclick = () => startCam("right");
+  document.getElementById("captureLeft").onclick = () => capture("left");
+  document.getElementById("captureRight").onclick = () => capture("right");
+}
 
 // === Start Camera ===
 async function startCam(side) {
@@ -12,38 +46,31 @@ async function startCam(side) {
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
 
   try {
-    console.log(`🎥 Starting ${side} camera...`);
+    const mode = useFrontCam ? "user" : "environment";
+    console.log(`🎥 Starting ${side} camera in ${mode} mode...`);
 
-    const constraints = {
-      video: { facingMode: side === "left" ? "user" : { ideal: "environment" } },
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: mode } },
       audio: false
-    };
+    });
 
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
     vid.srcObject = stream;
-    vid.play();
+    await vid.play();
     vid.style.display = "block";
     canvas.style.display = "none";
 
-    document.getElementById("status").textContent = `📷 ${side.toUpperCase()} camera active`;
+    document.getElementById("status").textContent = `📷 ${side.toUpperCase()} (${mode}) camera active`;
   } catch (err) {
     console.error(`❌ Camera start error (${side}):`, err);
     alert(`Please allow camera access for ${side} hand.`);
   }
 }
 
-// === Capture Image ===
+// === Capture Function ===
 function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
-
-  if (!vid.srcObject) {
-    alert(`⚠️ ${side} camera is not active!`);
-    return;
-  }
-
-  console.log(`📸 Capturing ${side} hand...`);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -53,72 +80,57 @@ function capture(side) {
   const ch = (vh / vw) * cw;
   canvas.height = ch;
 
-  if (side === "left") {
-    ctx.drawImage(vid, 0, 0, cw, ch);
-  } else {
+  // Mirror left-hand if using front cam
+  if (useFrontCam && side === "left") {
     ctx.save();
     ctx.scale(-1, 1);
     ctx.drawImage(vid, -cw, 0, cw, ch);
     ctx.restore();
+  } else {
+    ctx.drawImage(vid, 0, 0, cw, ch);
   }
 
-  // stop stream
+  // Stop stream
   const stream = vid.srcObject;
   if (stream) stream.getTracks().forEach(t => t.stop());
   vid.srcObject = null;
   vid.style.display = "none";
   canvas.style.display = "block";
 
+  // Add subtle palm beam
   addBeamOverlay(canvas);
 
-  // Delay for rendering lines
+  // Delay and draw palm lines
   setTimeout(() => {
     try {
       drawPalm(ctx);
-      console.log(`✨ ${side} palm overlay drawn successfully`);
+      console.log(`✨ ${side} palm overlay rendered`);
     } catch (e) {
-      console.error("⚠️ Palm overlay error:", e);
+      console.error("⚠️ lines.js overlay error:", e);
     }
   }, 600);
 
   document.getElementById("status").textContent = `✅ ${side} palm captured`;
+  if (side === "left") leftCaptured = true; else rightCaptured = true;
 
-  if (side === "left") leftCaptured = true;
-  else rightCaptured = true;
-
-  // trigger full system once both captured
   if (leftCaptured && rightCaptured) {
-    console.log("🧠 Both palms ready → launching Buddhi pipeline...");
-    initNaturalPalm3D();
     initBuddhiPipeline();
-    document.getElementById("status").textContent = "🔮 Dual palm neural link established!";
+    initNaturalPalm3D();
+    document.getElementById("status").textContent =
+      "🌟 Both palms captured — Ready for Quantum Analysis";
   }
 }
 
-// === Add subtle beam effect ===
+// === Beam Overlay Effect ===
 function addBeamOverlay(canvas) {
   const ctx = canvas.getContext("2d");
-  const grad = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 20, canvas.width / 2, canvas.height / 2, 180);
-  grad.addColorStop(0, "rgba(0,229,255,0.15)");
-  grad.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = grad;
+  const g = ctx.createRadialGradient(
+    canvas.width / 2, canvas.height * 0.8, 10,
+    canvas.width / 2, canvas.height, canvas.width / 1.2
+  );
+  g.addColorStop(0, "rgba(0,229,255,0.1)");
+  g.addColorStop(1, "rgba(0,0,0,0.9)");
+  ctx.fillStyle = g;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  console.log("🌐 Beam overlay added");
+  console.log("🌈 Beam overlay added.");
 }
-
-// === Event bindings ===
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("🧩 Initializing system...");
-
-  const startLeft = document.getElementById("startCamLeft");
-  const startRight = document.getElementById("startCamRight");
-  const capLeft = document.getElementById("captureLeft");
-  const capRight = document.getElementById("captureRight");
-
-  if (startLeft) startLeft.addEventListener("click", () => startCam("left"));
-  if (startRight) startRight.addEventListener("click", () => startCam("right"));
-  if (capLeft) capLeft.addEventListener("click", () => capture("left"));
-  if (capRight) capRight.addEventListener("click", () => capture("right"));
-
-  console.log("✅ Event listeners attached. Ready for user action.");
-});
