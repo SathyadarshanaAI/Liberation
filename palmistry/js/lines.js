@@ -19,7 +19,7 @@ export function drawPalm(ctx) {
   ctx.lineWidth = 2;
   ctx.globalAlpha = 0.95;
 
-  // Simple non-blocking animation using a single-pass sin for subtle pulse
+  // ✨ Simple pulsing glow animation (subtle)
   const t = Date.now() / 600;
 
   lines.forEach(line => {
@@ -27,18 +27,24 @@ export function drawPalm(ctx) {
     ctx.strokeStyle = line.color;
     ctx.shadowColor = line.color;
     ctx.shadowBlur = glow;
+
     ctx.beginPath();
     ctx.moveTo(line.p[0][0], line.p[0][1]);
-    for (let i = 1; i < line.p.length; i++) ctx.lineTo(line.p[i][0], line.p[i][1]);
+    for (let i = 1; i < line.p.length; i++) {
+      ctx.lineTo(line.p[i][0], line.p[i][1]);
+    }
     ctx.stroke();
 
-    // Label text
-    ctx.shadowBlur = 0;
-    ctx.font = "bold 12px Segoe UI";
-    ctx.fillStyle = line.color;
+    // === Label text ===
     const last = line.p[line.p.length - 1];
+    ctx.font = "12px Segoe UI";
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = line.color;
     ctx.fillText(line.name, last[0] + 6, last[1] - 6);
   });
 
   ctx.restore();
+
+  // 🔁 Optional: small flicker update for "living" palm effect
+  requestAnimationFrame(() => drawPalm(ctx));
 }
