@@ -5,9 +5,9 @@ import { initNaturalPalm3D } from "./naturalPalm3D.js";
 
 let leftCaptured = false;
 let rightCaptured = false;
-let useFrontCam = true; // ✅ toggle camera mode (default = front cam)
+let useFrontCam = true; // ✅ Default = front cam
 
-// === TOGGLE CAMERA MODE ===
+// === TOGGLE CAMERA MODE BUTTON ===
 document.addEventListener("DOMContentLoaded", () => {
   const toggleBtn = document.createElement("button");
   toggleBtn.textContent = "🔄 Switch to Back Camera";
@@ -29,10 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
       : "📷 Using BACK camera mode";
   };
 
-  // link capture & start buttons after DOM loaded
+  // link buttons
   linkButtonEvents();
 });
 
+// === LINK BUTTONS ===
 function linkButtonEvents() {
   document.getElementById("startCamLeft").onclick = () => startCam("left");
   document.getElementById("startCamRight").onclick = () => startCam("right");
@@ -40,7 +41,7 @@ function linkButtonEvents() {
   document.getElementById("captureRight").onclick = () => capture("right");
 }
 
-// === Start Camera ===
+// === START CAMERA ===
 async function startCam(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
@@ -59,14 +60,14 @@ async function startCam(side) {
     vid.style.display = "block";
     canvas.style.display = "none";
 
-    document.getElementById("status").textContent = `📷 ${side.toUpperCase()} (${mode}) camera active`;
+    document.getElementById("status").textContent = `✅ ${side} camera started (${mode})`;
   } catch (err) {
-    console.error(`❌ Camera start error (${side}):`, err);
-    alert(`Please allow camera access for ${side} hand.`);
+    console.error("Camera start error:", err);
+    alert(`⚠️ Please allow camera access for ${side} hand`);
   }
 }
 
-// === Capture Function ===
+// === CAPTURE IMAGE ===
 function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
@@ -80,8 +81,8 @@ function capture(side) {
   const ch = (vh / vw) * cw;
   canvas.height = ch;
 
-  // Mirror left-hand if using front cam
-  if (useFrontCam && side === "left") {
+  // 🪞 Mirror front cam only
+  if (useFrontCam) {
     ctx.save();
     ctx.scale(-1, 1);
     ctx.drawImage(vid, -cw, 0, cw, ch);
@@ -90,47 +91,32 @@ function capture(side) {
     ctx.drawImage(vid, 0, 0, cw, ch);
   }
 
-  // Stop stream
+  // stop camera stream
   const stream = vid.srcObject;
   if (stream) stream.getTracks().forEach(t => t.stop());
   vid.srcObject = null;
   vid.style.display = "none";
   canvas.style.display = "block";
 
-  // Add subtle palm beam
-  addBeamOverlay(canvas);
+  document.getElementById("status").textContent = `📸 Captured ${side} hand`;
 
-  // Delay and draw palm lines
+  // run palm analysis pipeline
   setTimeout(() => {
-    try {
-      drawPalm(ctx);
-      console.log(`✨ ${side} palm overlay rendered`);
-    } catch (e) {
-      console.error("⚠️ lines.js overlay error:", e);
-    }
-  }, 600);
+    processPalmImage(canvas, side);
+  }, 300);
+}
 
-  document.getElementById("status").textContent = `✅ ${side} palm captured`;
-  if (side === "left") leftCaptured = true; else rightCaptured = true;
-
-  if (leftCaptured && rightCaptured) {
-    initBuddhiPipeline();
-    initNaturalPalm3D();
-    document.getElementById("status").textContent =
-      "🌟 Both palms captured — Ready for Quantum Analysis";
+// === PALM PROCESSING ===
+function processPalmImage(canvas, side) {
+  try {
+    const dataURL = canvas.toDataURL("image/png");
+    console.log(`🧠 Processing ${side} hand...`);
+    drawPalm(canvas, side);
+    initBuddhiPipeline(dataURL, side);
+    initNaturalPalm3D(canvas, side);
+  } catch (e) {
+    console.error("Palm processing error:", e);
   }
 }
 
-// === Beam Overlay Effect ===
-function addBeamOverlay(canvas) {
-  const ctx = canvas.getContext("2d");
-  const g = ctx.createRadialGradient(
-    canvas.width / 2, canvas.height * 0.8, 10,
-    canvas.width / 2, canvas.height, canvas.width / 1.2
-  );
-  g.addColorStop(0, "rgba(0,229,255,0.1)");
-  g.addColorStop(1, "rgba(0,0,0,0.9)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  console.log("🌈 Beam overlay added.");
-}
+console.log("🌿 Quantum Palm Analyzer V25.0 loaded successfully");
