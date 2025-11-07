@@ -1,13 +1,13 @@
-// main.js — V25.0 Quantum Palm Analyzer (Camera Toggle + Dual Palm System)
+// main.js — V25.5 Quantum Palm Analyzer (AI Palm Detection + Camera Toggle)
 import { drawPalm } from "./lines.js";
-import { initBuddhiPipeline } from "./palmPipeline.js";
+import { detectPalmLines } from "./palmPipeline.js";
 import { initNaturalPalm3D } from "./naturalPalm3D.js";
 
 let leftCaptured = false;
 let rightCaptured = false;
-let useFrontCam = true; // ✅ Default = front cam
+let useFrontCam = true; // ✅ Default: front camera
 
-// === TOGGLE CAMERA MODE BUTTON ===
+// === CAMERA MODE TOGGLE BUTTON ===
 document.addEventListener("DOMContentLoaded", () => {
   const toggleBtn = document.createElement("button");
   toggleBtn.textContent = "🔄 Switch to Back Camera";
@@ -29,11 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
       : "📷 Using BACK camera mode";
   };
 
-  // link buttons
+  // link all buttons
   linkButtonEvents();
 });
 
-// === LINK BUTTONS ===
+// === LINK CAMERA BUTTONS ===
 function linkButtonEvents() {
   document.getElementById("startCamLeft").onclick = () => startCam("left");
   document.getElementById("startCamRight").onclick = () => startCam("right");
@@ -59,29 +59,27 @@ async function startCam(side) {
     await vid.play();
     vid.style.display = "block";
     canvas.style.display = "none";
-
-    document.getElementById("status").textContent = `✅ ${side} camera started (${mode})`;
+    document.getElementById("status").textContent = `📷 ${side} camera started (${mode})`;
   } catch (err) {
     console.error("Camera start error:", err);
-    alert(`⚠️ Please allow camera access for ${side} hand`);
+    alert(`Please allow camera access for ${side} hand`);
   }
 }
 
-// === CAPTURE IMAGE ===
-function capture(side) {
+// === CAPTURE FRAME ===
+async function capture(side) {
   const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
   const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
   const ctx = canvas.getContext("2d");
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   const vw = vid.videoWidth || canvas.width;
   const vh = vid.videoHeight || canvas.height;
   const cw = canvas.width;
   const ch = (vh / vw) * cw;
   canvas.height = ch;
 
-  // 🪞 Mirror front cam only
+  // Mirror correction (front cam)
   if (useFrontCam) {
     ctx.save();
     ctx.scale(-1, 1);
@@ -98,25 +96,24 @@ function capture(side) {
   vid.style.display = "none";
   canvas.style.display = "block";
 
-  document.getElementById("status").textContent = `📸 Captured ${side} hand`;
+  document.getElementById("status").textContent = `✅ ${side} palm captured`;
 
-  // run palm analysis pipeline
-  setTimeout(() => {
-    processPalmImage(canvas, side);
-  }, 300);
-}
-
-// === PALM PROCESSING ===
-function processPalmImage(canvas, side) {
+  // === Try AI Palm Detection ===
   try {
-    const dataURL = canvas.toDataURL("image/png");
-    console.log(`🧠 Processing ${side} hand...`);
-    drawPalm(canvas, side);
-    initBuddhiPipeline(dataURL, side);
-    initNaturalPalm3D(canvas, side);
+    await detectPalmLines(canvas);
+    document.getElementById("status").textContent = `🤖 ${side} palm analyzed`;
   } catch (e) {
-    console.error("Palm processing error:", e);
+    console.warn("AI detection fallback to drawn lines:", e);
+    drawPalm(ctx); // fallback
   }
 }
 
-console.log("🌿 Quantum Palm Analyzer V25.0 loaded successfully");
+// === OPTIONAL VISUAL BEAM EFFECT ===
+function addBeamOverlay(canvas) {
+  const ctx = canvas.getContext("2d");
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, "rgba(0,229,255,0.1)");
+  grad.addColorStop(1, "rgba(255,255,255,0.05)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
