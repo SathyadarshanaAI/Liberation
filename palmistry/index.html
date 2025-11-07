@@ -6,72 +6,16 @@
   <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.3</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
   <style>
-    body {
-      background: #0b0f16;
-      color: #e6f0ff;
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      margin: 0;
-      overflow-x: hidden;
-    }
-    h1 {
-      color: #00e5ff;
-      text-shadow: 0 0 15px #00e5ff;
-      margin: 16px 0;
-      font-size: 1.4rem;
-    }
-    .wrap {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      padding: 20px;
-    }
-    .camCol {
-      background: #101820;
-      padding: 18px;
-      border-radius: 16px;
-      box-shadow: 0 0 15px #00e5ff22;
-      width: 320px;
-    }
-    video, canvas {
-      width: 280px;
-      height: 360px;
-      border-radius: 10px;
-      background: #000;
-      display: block;
-      margin: 0 auto 8px;
-    }
-    button {
-      margin: 6px;
-      padding: 8px 16px;
-      background: #00e5ff22;
-      color: #00e5ff;
-      border: 1px solid #00e5ff;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+    body { background: #0b0f16; color: #e6f0ff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow-x: hidden; }
+    h1 { color: #00e5ff; text-shadow: 0 0 15px #00e5ff; margin: 16px 0; font-size: 1.4rem; }
+    .wrap { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+    .camCol { background: #101820; padding: 18px; border-radius: 16px; box-shadow: 0 0 15px #00e5ff22; width: 320px; }
+    video, canvas { width: 280px; height: 360px; border-radius: 10px; background: #000; display: block; margin: 0 auto 8px; }
+    button { margin: 6px; padding: 8px 16px; background: #00e5ff22; color: #00e5ff; border: 1px solid #00e5ff; border-radius: 8px; cursor: pointer; transition: 0.3s; }
     button:hover { background: #00e5ff55; }
-    #status {
-      margin-top: 10px;
-      color: #FFD700;
-      text-shadow: 0 0 8px #FFD700;
-    }
-    #resultBox {
-      background: #0f1a24;
-      border-radius: 12px;
-      padding: 10px;
-      margin: 20px auto;
-      width: 90%;
-      max-width: 700px;
-      box-shadow: 0 0 10px #00e5ff44;
-      text-align: left;
-      font-size: 0.9rem;
-      white-space: pre-wrap;
-    }
+    #status { margin-top: 10px; color: #FFD700; text-shadow: 0 0 8px #FFD700; }
+    pre { background: #0f1a24; border-radius: 8px; padding: 10px; color: #9be7ff; text-align: left; font-size: 0.8rem; overflow-x: auto; }
   </style>
 </head>
 <body>
@@ -81,30 +25,29 @@
   <div class="wrap">
     <!-- LEFT HAND -->
     <div class="camCol">
-      <h2 class="text-blue-400 mb-2">✋ Left Hand</h2>
+      <h3>✋ Left Hand</h3>
       <video id="vidLeft" autoplay playsinline></video>
-      <canvas id="canvasLeft" width="280" height="360"></canvas>
-      <button id="startCamLeft">Start Left Camera</button>
-      <button id="captureLeft">Capture Left</button>
+      <canvas id="canvasLeft" width="280" height="360" style="display:none;"></canvas>
+      <div>
+        <button id="startCamLeft">Start Camera</button>
+        <button id="captureLeft">Capture</button>
+        <button id="analyzeLeft">AI Analyze</button>
+      </div>
+      <pre id="analysisTextLeft"></pre>
     </div>
 
     <!-- RIGHT HAND -->
     <div class="camCol">
-      <h2 class="text-blue-400 mb-2">🤚 Right Hand</h2>
+      <h3>🤚 Right Hand</h3>
       <video id="vidRight" autoplay playsinline></video>
-      <canvas id="canvasRight" width="280" height="360"></canvas>
-      <button id="startCamRight">Start Right Camera</button>
-      <button id="captureRight">Capture Right</button>
+      <canvas id="canvasRight" width="280" height="360" style="display:none;"></canvas>
+      <div>
+        <button id="startCamRight">Start Camera</button>
+        <button id="captureRight">Capture</button>
+        <button id="analyzeRight">AI Analyze</button>
+      </div>
+      <pre id="analysisTextRight"></pre>
     </div>
-  </div>
-
-  <div>
-    <button id="flipCameraBtn">🔄 Flip Camera (Front/Back)</button>
-    <button id="analyzeBtn">🤖 AI Deep Analyze</button>
-  </div>
-
-  <div id="resultBox">
-    <pre id="analysisText">Awaiting palm capture...</pre>
   </div>
 
   <script type="module" src="js/main.js"></script>
