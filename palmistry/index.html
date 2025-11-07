@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=280, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V24.9.1</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V25.6</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
@@ -19,42 +19,39 @@
   </style>
 </head>
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V24.9.1</h1>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V25.6</h1>
   <p id="status">🧠 Initializing Neural Palm System...</p>
 
   <div class="wrap">
-    <!-- LEFT CAMERA -->
+    <!-- LEFT HAND -->
     <div class="camCol">
       <h3>Left Hand</h3>
       <video id="vidLeft" autoplay playsinline></video>
       <canvas id="canvasLeft" width="280" height="360"></canvas>
       <div>
-        <button id="startCamLeft">Start Left Camera</button>
-        <button id="captureLeft">Capture Left</button>
+        <button id="startCamLeft">🎥 Start Camera</button>
+        <button id="captureLeft">📸 Capture</button>
+        <button id="analyzeLeft">🤖 AI Analyze</button>
       </div>
     </div>
 
-    <!-- RIGHT CAMERA -->
+    <!-- RIGHT HAND -->
     <div class="camCol">
       <h3>Right Hand</h3>
       <video id="vidRight" autoplay playsinline></video>
       <canvas id="canvasRight" width="280" height="360"></canvas>
       <div>
-        <button id="startCamRight">Start Right Camera</button>
-        <button id="captureRight">Capture Right</button>
+        <button id="startCamRight">🎥 Start Camera</button>
+        <button id="captureRight">📸 Capture</button>
+        <button id="analyzeRight">🤖 AI Analyze</button>
       </div>
     </div>
   </div>
 
-  <footer>© 2025 Sathyadarshana Quantum Vision · All Rights Reserved</footer>
+  <footer>
+    <p>© 2025 Quantum Palm Analyzer — Developed by Sathyadarshana Research Labs</p>
+  </footer>
 
-  <!-- Connect to main.js -->
-  <script type="module" src="js/main.js"></script>
-
-  <!-- Developer Console Test -->
-  <script>
-    console.log("🧩 Quantum Palm Analyzer Console Initialized — V24.9.1");
-    console.log("💡 Tip: Press buttons and check here for real-time camera logs.");
-  </script>
+  <script type="module" src="main.js"></script>
 </body>
 </html>
