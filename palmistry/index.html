@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.1</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.3</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
   <style>
     body {
       background: #0b0f16;
@@ -64,7 +65,8 @@
       border-radius: 12px;
       padding: 10px;
       margin: 20px auto;
-      width: 320px;
+      width: 90%;
+      max-width: 700px;
       box-shadow: 0 0 10px #00e5ff44;
       text-align: left;
       font-size: 0.9rem;
@@ -73,36 +75,38 @@
   </style>
 </head>
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.1</h1>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.3</h1>
   <p id="status">🧠 Initializing Neural Palm System...</p>
 
   <div class="wrap">
-    <!-- LEFT HAND CAMERA -->
+    <!-- LEFT HAND -->
     <div class="camCol">
-      <h3>Left Hand</h3>
+      <h2 class="text-blue-400 mb-2">✋ Left Hand</h2>
       <video id="vidLeft" autoplay playsinline></video>
       <canvas id="canvasLeft" width="280" height="360"></canvas>
+      <button id="startCamLeft">Start Left Camera</button>
+      <button id="captureLeft">Capture Left</button>
+    </div>
 
-      <div>
-        <button id="startCamLeft">🎥 Start Camera</button>
-        <button id="captureLeft">📸 Capture</button>
-        <button id="toggleCam">🔄 Switch Camera</button>
-      </div>
+    <!-- RIGHT HAND -->
+    <div class="camCol">
+      <h2 class="text-blue-400 mb-2">🤚 Right Hand</h2>
+      <video id="vidRight" autoplay playsinline></video>
+      <canvas id="canvasRight" width="280" height="360"></canvas>
+      <button id="startCamRight">Start Right Camera</button>
+      <button id="captureRight">Capture Right</button>
     </div>
   </div>
 
-  <button id="analyzeBtn">🧠 Deep AI Analyze</button>
-
-  <div id="resultBox">
-    <strong>AI Analysis:</strong>
-    <pre id="analysisText">No data yet...</pre>
+  <div>
+    <button id="flipCameraBtn">🔄 Flip Camera (Front/Back)</button>
+    <button id="analyzeBtn">🤖 AI Deep Analyze</button>
   </div>
 
-  <footer>© 2025 Sathyadarshana Quantum Palm Analyzer · V26.1</footer>
+  <div id="resultBox">
+    <pre id="analysisText">Awaiting palm capture...</pre>
+  </div>
 
-  <!-- ✅ Correct JS linking (inside js folder) -->
-  <script type="module" src="./js/main.js"></script>
-  <script type="module" src="./js/palmPipeline.js"></script>
-  <script type="module" src="./js/edgeLines.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
