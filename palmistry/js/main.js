@@ -1,14 +1,11 @@
-// main.js — V25.5 Quantum Palm Analyzer (AI Palm Detection + Camera Toggle)
-import { drawPalm } from "./lines.js";
-import { detectPalmLines } from "./palmPipeline.js";
-import { initNaturalPalm3D } from "./naturalPalm3D.js";
+// main.js — V26.2 (Camera Selector + Deep AI Analyzer)
+import { analyzePalmAI } from "./palmPipeline.js";
 
-let leftCaptured = false;
-let rightCaptured = false;
-let useFrontCam = true; // ✅ Default: front camera
+let useFrontCam = true;
+let capturedImage = null;
 
-// === CAMERA MODE TOGGLE BUTTON ===
 document.addEventListener("DOMContentLoaded", () => {
+  // === CAMERA TOGGLE BUTTON ===
   const toggleBtn = document.createElement("button");
   toggleBtn.textContent = "🔄 Switch to Back Camera";
   toggleBtn.style = `
@@ -25,95 +22,76 @@ document.addEventListener("DOMContentLoaded", () => {
       ? "🔄 Switch to Back Camera"
       : "🔄 Switch to Front Camera";
     document.getElementById("status").textContent = useFrontCam
-      ? "📷 Using FRONT camera mode"
-      : "📷 Using BACK camera mode";
+      ? "📷 Front Camera Selected"
+      : "📷 Back Camera Selected";
   };
 
-  // link all buttons
-  linkButtonEvents();
+  // === LINK MAIN BUTTONS ===
+  const startBtn = document.getElementById("startCamLeft");
+  const captureBtn = document.getElementById("captureLeft");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+
+  if (!startBtn || !captureBtn || !analyzeBtn) {
+    console.error("❌ Buttons not found in DOM!");
+    return;
+  }
+
+  startBtn.onclick = startCam;
+  captureBtn.onclick = capture;
+  analyzeBtn.onclick = deepAnalyze;
 });
 
-// === LINK CAMERA BUTTONS ===
-function linkButtonEvents() {
-  document.getElementById("startCamLeft").onclick = () => startCam("left");
-  document.getElementById("startCamRight").onclick = () => startCam("right");
-  document.getElementById("captureLeft").onclick = () => capture("left");
-  document.getElementById("captureRight").onclick = () => capture("right");
-}
-
 // === START CAMERA ===
-async function startCam(side) {
-  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
-  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
+async function startCam() {
+  const vid = document.getElementById("vidLeft");
+  const canvas = document.getElementById("canvasLeft");
 
   try {
-    const mode = useFrontCam ? "user" : "environment";
-    console.log(`🎥 Starting ${side} camera in ${mode} mode...`);
-
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: mode } },
+      video: { facingMode: useFrontCam ? "user" : "environment" },
       audio: false
     });
-
     vid.srcObject = stream;
     await vid.play();
     vid.style.display = "block";
     canvas.style.display = "none";
-    document.getElementById("status").textContent = `📷 ${side} camera started (${mode})`;
+    document.getElementById("status").textContent = `📸 Camera Active (${useFrontCam ? "Front" : "Back"})`;
   } catch (err) {
-    console.error("Camera start error:", err);
-    alert(`Please allow camera access for ${side} hand`);
+    alert("Camera access denied or unavailable!");
+    console.error(err);
   }
 }
 
-// === CAPTURE FRAME ===
-async function capture(side) {
-  const vid = document.getElementById(side === "left" ? "vidLeft" : "vidRight");
-  const canvas = document.getElementById(side === "left" ? "canvasLeft" : "canvasRight");
+// === CAPTURE ===
+function capture() {
+  const vid = document.getElementById("vidLeft");
+  const canvas = document.getElementById("canvasLeft");
   const ctx = canvas.getContext("2d");
+  ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const vw = vid.videoWidth || canvas.width;
-  const vh = vid.videoHeight || canvas.height;
-  const cw = canvas.width;
-  const ch = (vh / vw) * cw;
-  canvas.height = ch;
-
-  // Mirror correction (front cam)
-  if (useFrontCam) {
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.drawImage(vid, -cw, 0, cw, ch);
-    ctx.restore();
-  } else {
-    ctx.drawImage(vid, 0, 0, cw, ch);
-  }
-
-  // stop camera stream
   const stream = vid.srcObject;
   if (stream) stream.getTracks().forEach(t => t.stop());
-  vid.srcObject = null;
   vid.style.display = "none";
   canvas.style.display = "block";
 
-  document.getElementById("status").textContent = `✅ ${side} palm captured`;
-
-  // === Try AI Palm Detection ===
-  try {
-    await detectPalmLines(canvas);
-    document.getElementById("status").textContent = `🤖 ${side} palm analyzed`;
-  } catch (e) {
-    console.warn("AI detection fallback to drawn lines:", e);
-    drawPalm(ctx); // fallback
-  }
+  capturedImage = canvas.toDataURL("image/png");
+  document.getElementById("status").textContent = "✅ Palm Captured";
 }
 
-// === OPTIONAL VISUAL BEAM EFFECT ===
-function addBeamOverlay(canvas) {
-  const ctx = canvas.getContext("2d");
-  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  grad.addColorStop(0, "rgba(0,229,255,0.1)");
-  grad.addColorStop(1, "rgba(255,255,255,0.05)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+// === DEEP AI ANALYSIS ===
+async function deepAnalyze() {
+  if (!capturedImage) {
+    alert("Please capture your palm first!");
+    return;
+  }
+  document.getElementById("status").textContent = "🧠 Performing Deep AI Analysis...";
+  
+  try {
+    const result = await analyzePalmAI(capturedImage);
+    document.getElementById("analysisText").textContent = JSON.stringify(result, null, 2);
+    document.getElementById("status").textContent = "✨ Deep Analysis Complete!";
+  } catch (err) {
+    console.error("AI Analysis Failed:", err);
+    document.getElementById("status").textContent = "❌ AI Analysis Error!";
+  }
 }
