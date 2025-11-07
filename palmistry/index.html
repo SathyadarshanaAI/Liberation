@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=280, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V25.6</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.0</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
@@ -15,42 +15,29 @@
     button { margin: 6px; padding: 8px 16px; background: #00e5ff22; color: #00e5ff; border: 1px solid #00e5ff; border-radius: 8px; cursor: pointer; transition: 0.3s; }
     button:hover { background: #00e5ff55; }
     #status { margin-top: 10px; color: #FFD700; text-shadow: 0 0 8px #FFD700; }
-    footer { margin-top: 40px; color: #888; font-size: 0.8rem; }
+    #resultBox { background: #0f1a24; border-radius: 12px; padding: 10px; margin: 20px auto; width: 320px; box-shadow: 0 0 10px #00e5ff44; }
   </style>
 </head>
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V25.6</h1>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.0</h1>
   <p id="status">🧠 Initializing Neural Palm System...</p>
 
   <div class="wrap">
-    <!-- LEFT HAND -->
     <div class="camCol">
       <h3>Left Hand</h3>
       <video id="vidLeft" autoplay playsinline></video>
       <canvas id="canvasLeft" width="280" height="360"></canvas>
-      <div>
-        <button id="startCamLeft">🎥 Start Camera</button>
-        <button id="captureLeft">📸 Capture</button>
-        <button id="analyzeLeft">🤖 AI Analyze</button>
-      </div>
-    </div>
-
-    <!-- RIGHT HAND -->
-    <div class="camCol">
-      <h3>Right Hand</h3>
-      <video id="vidRight" autoplay playsinline></video>
-      <canvas id="canvasRight" width="280" height="360"></canvas>
-      <div>
-        <button id="startCamRight">🎥 Start Camera</button>
-        <button id="captureRight">📸 Capture</button>
-        <button id="analyzeRight">🤖 AI Analyze</button>
-      </div>
+      <button id="startCamLeft">Start Left Cam</button>
+      <button id="captureLeft">Capture</button>
     </div>
   </div>
 
-  <footer>
-    <p>© 2025 Quantum Palm Analyzer — Developed by Sathyadarshana Research Labs</p>
-  </footer>
+  <button id="analyzeBtn">🧬 AI Deep Analyze</button>
+
+  <div id="resultBox">
+    <h3>🔍 Analysis Result</h3>
+    <pre id="analysisText">Awaiting input...</pre>
+  </div>
 
   <script type="module" src="main.js"></script>
 </body>
