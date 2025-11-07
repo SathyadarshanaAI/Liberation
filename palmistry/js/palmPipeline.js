@@ -1,83 +1,37 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer
-// V24.9 — Dual Neural Pipeline + Overlay Clear Edition
+// palmPipeline.js — Quantum Palm Analyzer Core (AI Palm Detection Stub)
 
-import { initNaturalPalm3D } from "./naturalPalm3D.js";
-import { drawPalm } from "./lines.js";
+// === Detect Palm Lines ===
+// This function mimics palm line detection — replace with real ML model later.
+export async function detectPalmLines(canvas) {
+  if (!canvas) return;
 
-export const BuddhiPipeline = {
-  sensors: {},
-  depthMap: null,
-  palmMesh: null,
-  overlayCtx: null,
-  isLinked: false,
-};
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width;
+  const h = canvas.height;
 
-// === Initialize Neural Pipeline ===
-export async function initBuddhiPipeline() {
-  console.log("🔌 Initializing Buddhi–Palm Neural Pipeline...");
+  // Simulated AI delay
+  document.getElementById("status").textContent = "🤖 AI analyzing palm lines...";
+  await new Promise(r => setTimeout(r, 1200));
 
-  // Initialize both hand canvases safely
-  initNaturalPalm3D("canvasLeft");
-  initNaturalPalm3D("canvasRight");
+  // Draw detected lines (simple random pattern for now)
+  ctx.strokeStyle = "#00e5ff";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.3, h * 0.8);
+  ctx.lineTo(w * 0.5, h * 0.5);
+  ctx.lineTo(w * 0.7, h * 0.2);
+  ctx.stroke();
 
-  // Wait a bit for canvases to mount before linking
-  setTimeout(() => {
-    const rightCanvas = document.getElementById("canvasRight");
-    const leftCanvas = document.getElementById("canvasLeft");
+  ctx.beginPath();
+  ctx.moveTo(w * 0.25, h * 0.6);
+  ctx.lineTo(w * 0.75, h * 0.4);
+  ctx.stroke();
 
-    if (!rightCanvas && !leftCanvas) {
-      console.warn("⚠️ No canvases found for pipeline overlay linking.");
-      return;
-    }
+  ctx.beginPath();
+  ctx.moveTo(w * 0.4, h * 0.9);
+  ctx.lineTo(w * 0.5, h * 0.7);
+  ctx.lineTo(w * 0.6, h * 0.3);
+  ctx.stroke();
 
-    BuddhiPipeline.overlayCtx =
-      rightCanvas?.getContext("2d") || leftCanvas?.getContext("2d");
-
-    BuddhiPipeline.palmMesh = true;
-    BuddhiPipeline.isLinked = true;
-    console.log("🌐 Pipeline Linked: Buddhi ↔ Palm 3D ↔ Overlay");
-
-    simulateSignalFlow();
-  }, 2000);
-}
-
-// === Signal Simulation ===
-function simulateSignalFlow() {
-  if (!BuddhiPipeline.isLinked) return;
-
-  console.log("🔄 Energy flow: Camera → AI Brain → Palm Surface → Overlay");
-
-  const aiSignal = {
-    pulse: Math.random(),
-    focus: "life_line",
-    intensity: (Math.random() * 0.5 + 0.5).toFixed(2),
-    ts: new Date().toLocaleTimeString(),
-  };
-
-  BuddhiPipeline.sensors = aiSignal;
-
-  // Get correct context (right-hand prioritized)
-  const ctx =
-    BuddhiPipeline.overlayCtx ||
-    document.getElementById("canvasRight")?.getContext("2d") ||
-    document.getElementById("canvasLeft")?.getContext("2d");
-
-  if (ctx) {
-    try {
-      // 🧽 Clear previous overlay before drawing new lines
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-      // 🖐️ Draw fresh palm overlay
-      drawPalm(ctx);
-
-      console.log("✨ Buddhi AI signal transmitted →", aiSignal);
-    } catch (e) {
-      console.error("⚠️ Pipeline overlay draw error:", e);
-    }
-  } else {
-    console.warn("No drawing context found for pipeline overlay.");
-  }
-
-  // Continuous refresh (like live pulse)
-  setTimeout(simulateSignalFlow, 4500);
+  document.getElementById("status").textContent = "✅ Palm line analysis complete!";
 }
