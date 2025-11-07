@@ -3,23 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.0</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.1</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
-    body { background: #0b0f16; color: #e6f0ff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow-x: hidden; }
-    h1 { color: #00e5ff; text-shadow: 0 0 15px #00e5ff; margin: 16px 0; font-size: 1.4rem; }
-    .wrap { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
-    .camCol { background: #101820; padding: 18px; border-radius: 16px; box-shadow: 0 0 15px #00e5ff22; width: 320px; }
-    video, canvas { width: 280px; height: 360px; border-radius: 10px; background: #000; display: block; margin: 0 auto 8px; }
-    button { margin: 6px; padding: 8px 16px; background: #00e5ff22; color: #00e5ff; border: 1px solid #00e5ff; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+    body {
+      background: #0b0f16;
+      color: #e6f0ff;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    h1 {
+      color: #00e5ff;
+      text-shadow: 0 0 15px #00e5ff;
+      margin: 16px 0;
+      font-size: 1.4rem;
+    }
+    .wrap {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+    .camCol {
+      background: #101820;
+      padding: 18px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px #00e5ff22;
+      width: 320px;
+    }
+    video, canvas {
+      width: 280px;
+      height: 360px;
+      border-radius: 10px;
+      background: #000;
+      display: block;
+      margin: 0 auto 8px;
+    }
+    button {
+      margin: 6px;
+      padding: 8px 16px;
+      background: #00e5ff22;
+      color: #00e5ff;
+      border: 1px solid #00e5ff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
     button:hover { background: #00e5ff55; }
-    #status { margin-top: 10px; color: #FFD700; text-shadow: 0 0 8px #FFD700; }
-    #resultBox { background: #0f1a24; border-radius: 12px; padding: 10px; margin: 20px auto; width: 320px; box-shadow: 0 0 10px #00e5ff44; }
+    #status {
+      margin-top: 10px;
+      color: #FFD700;
+      text-shadow: 0 0 8px #FFD700;
+    }
+    #resultBox {
+      background: #0f1a24;
+      border-radius: 12px;
+      padding: 10px;
+      margin: 20px auto;
+      width: 320px;
+      box-shadow: 0 0 10px #00e5ff44;
+      text-align: left;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.0</h1>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.1</h1>
   <p id="status">🧠 Initializing Neural Palm System...</p>
 
   <div class="wrap">
@@ -27,35 +81,28 @@
     <div class="camCol">
       <h3>Left Hand</h3>
       <video id="vidLeft" autoplay playsinline></video>
-      <canvas id="canvasLeft"></canvas>
-      <div>
-        <button id="startCamLeft">📷 Start Camera</button>
-        <button id="captureLeft">🖐️ Capture</button>
-      </div>
-    </div>
+      <canvas id="canvasLeft" width="280" height="360"></canvas>
 
-    <!-- RIGHT HAND CAMERA -->
-    <div class="camCol">
-      <h3>Right Hand</h3>
-      <video id="vidRight" autoplay playsinline></video>
-      <canvas id="canvasRight"></canvas>
       <div>
-        <button id="startCamRight">📷 Start Camera</button>
-        <button id="captureRight">🖐️ Capture</button>
+        <button id="startCamLeft">🎥 Start Camera</button>
+        <button id="captureLeft">📸 Capture</button>
+        <button id="toggleCam">🔄 Switch Camera</button>
       </div>
     </div>
   </div>
 
-  <!-- 🔮 AI ANALYZE BUTTON -->
-  <button id="aiAnalyze" style="margin-top:20px;">🤖 AI Deep Palm Analysis</button>
+  <button id="analyzeBtn">🧠 Deep AI Analyze</button>
 
-  <!-- 🧾 RESULT AREA -->
   <div id="resultBox">
-    <h4>AI Results:</h4>
-    <p id="aiOutput">Awaiting Analysis...</p>
+    <strong>AI Analysis:</strong>
+    <pre id="analysisText">No data yet...</pre>
   </div>
 
-  <footer>© 2025 Sathyadarshana Quantum Vision Lab</footer>
-  <script type="module" src="main.js"></script>
+  <footer>© 2025 Sathyadarshana Quantum Palm Analyzer · V26.1</footer>
+
+  <!-- ✅ Correct JS linking (inside js folder) -->
+  <script type="module" src="./js/main.js"></script>
+  <script type="module" src="./js/palmPipeline.js"></script>
+  <script type="module" src="./js/edgeLines.js"></script>
 </body>
 </html>
