@@ -1,14 +1,39 @@
-// main.js — V26.0 (Camera + AI Analyzer)
+// main.js — V26.1 (Camera Selector + AI Analyzer)
 import { analyzePalmAI } from "./palmPipeline.js";
 
 let useFrontCam = true;
 let capturedImage = null;
 
-// === CAMERA ===
-document.getElementById("startCamLeft").onclick = startCam;
-document.getElementById("captureLeft").onclick = capture;
-document.getElementById("analyzeBtn").onclick = deepAnalyze;
+// === CAMERA BUTTONS ===
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.createElement("button");
+  toggleBtn.textContent = "🔄 Switch to Back Camera";
+  toggleBtn.style = `
+    position: fixed; top: 15px; right: 15px;
+    background: #00e5ff22; color: #00e5ff;
+    border: 1px solid #00e5ff; border-radius: 8px;
+    padding: 8px 14px; cursor: pointer; z-index: 999;
+  `;
+  document.body.appendChild(toggleBtn);
 
+  toggleBtn.onclick = () => {
+    useFrontCam = !useFrontCam;
+    toggleBtn.textContent = useFrontCam
+      ? "🔄 Switch to Back Camera"
+      : "🔄 Switch to Front Camera";
+
+    document.getElementById("status").textContent = useFrontCam
+      ? "📷 Front Camera Selected"
+      : "📷 Back Camera Selected";
+  };
+
+  // Link main buttons after DOM loaded
+  document.getElementById("startCamLeft").onclick = startCam;
+  document.getElementById("captureLeft").onclick = capture;
+  document.getElementById("analyzeBtn").onclick = deepAnalyze;
+});
+
+// === START CAMERA ===
 async function startCam() {
   const vid = document.getElementById("vidLeft");
   const canvas = document.getElementById("canvasLeft");
@@ -22,13 +47,14 @@ async function startCam() {
     vid.play();
     vid.style.display = "block";
     canvas.style.display = "none";
-    document.getElementById("status").textContent = "📷 Camera Active";
+    document.getElementById("status").textContent = `📸 Camera Active (${useFrontCam ? "Front" : "Back"})`;
   } catch (err) {
-    alert("Camera access denied!");
+    alert("Camera access denied or unavailable!");
     console.error(err);
   }
 }
 
+// === CAPTURE ===
 function capture() {
   const vid = document.getElementById("vidLeft");
   const canvas = document.getElementById("canvasLeft");
@@ -53,5 +79,5 @@ async function deepAnalyze() {
   document.getElementById("status").textContent = "🧠 Analyzing palm lines...";
   const result = await analyzePalmAI(capturedImage);
   document.getElementById("analysisText").textContent = JSON.stringify(result, null, 2);
-  document.getElementById("status").textContent = "✨ Analysis complete!";
+  document.getElementById("status").textContent = "✨ Deep Analysis Complete!";
 }
