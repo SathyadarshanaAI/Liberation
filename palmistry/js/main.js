@@ -1,11 +1,11 @@
-// main.js — V26.2 (Camera Selector + Deep AI Analyzer)
+// js/main.js — V26.3 (Dual Hand + Single Camera Selector)
 import { analyzePalmAI } from "./palmPipeline.js";
 
 let useFrontCam = true;
-let capturedImage = null;
+let capturedImages = { left: null, right: null };
 
 document.addEventListener("DOMContentLoaded", () => {
-  // === CAMERA TOGGLE BUTTON ===
+  // === GLOBAL CAMERA TOGGLE BUTTON ===
   const toggleBtn = document.createElement("button");
   toggleBtn.textContent = "🔄 Switch to Back Camera";
   toggleBtn.style = `
@@ -26,46 +26,41 @@ document.addEventListener("DOMContentLoaded", () => {
       : "📷 Back Camera Selected";
   };
 
-  // === LINK MAIN BUTTONS ===
-  const startBtn = document.getElementById("startCamLeft");
-  const captureBtn = document.getElementById("captureLeft");
-  const analyzeBtn = document.getElementById("analyzeBtn");
-
-  if (!startBtn || !captureBtn || !analyzeBtn) {
-    console.error("❌ Buttons not found in DOM!");
-    return;
-  }
-
-  startBtn.onclick = startCam;
-  captureBtn.onclick = capture;
-  analyzeBtn.onclick = deepAnalyze;
+  // === SETUP BUTTONS FOR BOTH HANDS ===
+  ["left", "right"].forEach(side => {
+    document.getElementById(`startCam${capitalize(side)}`).onclick = () => startCam(side);
+    document.getElementById(`capture${capitalize(side)}`).onclick = () => capture(side);
+    document.getElementById(`analyze${capitalize(side)}`).onclick = () => deepAnalyze(side);
+  });
 });
 
-// === START CAMERA ===
-async function startCam() {
-  const vid = document.getElementById("vidLeft");
-  const canvas = document.getElementById("canvasLeft");
+// === CAMERA START ===
+async function startCam(side) {
+  const vid = document.getElementById(`vid${capitalize(side)}`);
+  const canvas = document.getElementById(`canvas${capitalize(side)}`);
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: useFrontCam ? "user" : "environment" },
       audio: false
     });
+
     vid.srcObject = stream;
     await vid.play();
     vid.style.display = "block";
     canvas.style.display = "none";
-    document.getElementById("status").textContent = `📸 Camera Active (${useFrontCam ? "Front" : "Back"})`;
+    document.getElementById("status").textContent =
+      `📸 ${capitalize(side)} camera active (${useFrontCam ? "Front" : "Back"})`;
   } catch (err) {
     alert("Camera access denied or unavailable!");
     console.error(err);
   }
 }
 
-// === CAPTURE ===
-function capture() {
-  const vid = document.getElementById("vidLeft");
-  const canvas = document.getElementById("canvasLeft");
+// === CAPTURE PALM ===
+function capture(side) {
+  const vid = document.getElementById(`vid${capitalize(side)}`);
+  const canvas = document.getElementById(`canvas${capitalize(side)}`);
   const ctx = canvas.getContext("2d");
   ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
 
@@ -74,24 +69,25 @@ function capture() {
   vid.style.display = "none";
   canvas.style.display = "block";
 
-  capturedImage = canvas.toDataURL("image/png");
-  document.getElementById("status").textContent = "✅ Palm Captured";
+  capturedImages[side] = canvas.toDataURL("image/png");
+  document.getElementById("status").textContent = `✅ ${capitalize(side)} palm captured`;
 }
 
-// === DEEP AI ANALYSIS ===
-async function deepAnalyze() {
-  if (!capturedImage) {
-    alert("Please capture your palm first!");
+// === DEEP AI ANALYZE ===
+async function deepAnalyze(side) {
+  const img = capturedImages[side];
+  if (!img) {
+    alert(`Please capture your ${side} palm first!`);
     return;
   }
-  document.getElementById("status").textContent = "🧠 Performing Deep AI Analysis...";
-  
-  try {
-    const result = await analyzePalmAI(capturedImage);
-    document.getElementById("analysisText").textContent = JSON.stringify(result, null, 2);
-    document.getElementById("status").textContent = "✨ Deep Analysis Complete!";
-  } catch (err) {
-    console.error("AI Analysis Failed:", err);
-    document.getElementById("status").textContent = "❌ AI Analysis Error!";
-  }
+
+  document.getElementById("status").textContent = `🧠 Analyzing ${side} palm...`;
+  const result = await analyzePalmAI(img);
+  document.getElementById(`analysisText${capitalize(side)}`).textContent =
+    JSON.stringify(result, null, 2);
+  document.getElementById("status").textContent = `✨ ${capitalize(side)} analysis complete!`;
+}
+
+function capitalize(txt) {
+  return txt.charAt(0).toUpperCase() + txt.slice(1);
 }
