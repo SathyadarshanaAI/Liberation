@@ -1,11 +1,11 @@
-// main.js — V26.1 (Camera Selector + AI Analyzer)
+// main.js — V26.2 (Camera Selector + Deep AI Analyzer)
 import { analyzePalmAI } from "./palmPipeline.js";
 
 let useFrontCam = true;
 let capturedImage = null;
 
-// === CAMERA BUTTONS ===
 document.addEventListener("DOMContentLoaded", () => {
+  // === CAMERA TOGGLE BUTTON ===
   const toggleBtn = document.createElement("button");
   toggleBtn.textContent = "🔄 Switch to Back Camera";
   toggleBtn.style = `
@@ -21,16 +21,24 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleBtn.textContent = useFrontCam
       ? "🔄 Switch to Back Camera"
       : "🔄 Switch to Front Camera";
-
     document.getElementById("status").textContent = useFrontCam
       ? "📷 Front Camera Selected"
       : "📷 Back Camera Selected";
   };
 
-  // Link main buttons after DOM loaded
-  document.getElementById("startCamLeft").onclick = startCam;
-  document.getElementById("captureLeft").onclick = capture;
-  document.getElementById("analyzeBtn").onclick = deepAnalyze;
+  // === LINK MAIN BUTTONS ===
+  const startBtn = document.getElementById("startCamLeft");
+  const captureBtn = document.getElementById("captureLeft");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+
+  if (!startBtn || !captureBtn || !analyzeBtn) {
+    console.error("❌ Buttons not found in DOM!");
+    return;
+  }
+
+  startBtn.onclick = startCam;
+  captureBtn.onclick = capture;
+  analyzeBtn.onclick = deepAnalyze;
 });
 
 // === START CAMERA ===
@@ -44,7 +52,7 @@ async function startCam() {
       audio: false
     });
     vid.srcObject = stream;
-    vid.play();
+    await vid.play();
     vid.style.display = "block";
     canvas.style.display = "none";
     document.getElementById("status").textContent = `📸 Camera Active (${useFrontCam ? "Front" : "Back"})`;
@@ -76,8 +84,14 @@ async function deepAnalyze() {
     alert("Please capture your palm first!");
     return;
   }
-  document.getElementById("status").textContent = "🧠 Analyzing palm lines...";
-  const result = await analyzePalmAI(capturedImage);
-  document.getElementById("analysisText").textContent = JSON.stringify(result, null, 2);
-  document.getElementById("status").textContent = "✨ Deep Analysis Complete!";
+  document.getElementById("status").textContent = "🧠 Performing Deep AI Analysis...";
+  
+  try {
+    const result = await analyzePalmAI(capturedImage);
+    document.getElementById("analysisText").textContent = JSON.stringify(result, null, 2);
+    document.getElementById("status").textContent = "✨ Deep Analysis Complete!";
+  } catch (err) {
+    console.error("AI Analysis Failed:", err);
+    document.getElementById("status").textContent = "❌ AI Analysis Error!";
+  }
 }
