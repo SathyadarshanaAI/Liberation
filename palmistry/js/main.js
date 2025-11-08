@@ -1,5 +1,6 @@
-// js/main.js — V26.3 (Dual Hand + Single Camera Selector)
+// js/main.js — V26.4 (Dual Hand + Mobile Friendly + Palm Overlay)
 import { analyzePalmAI } from "./palmPipeline.js";
+import { drawPalmEdges } from "./edgeLines.js";
 
 let useFrontCam = true;
 let capturedImages = { left: null, right: null };
@@ -9,11 +10,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleBtn = document.createElement("button");
   toggleBtn.textContent = "🔄 Switch to Back Camera";
   toggleBtn.style = `
-    position: fixed; top: 15px; right: 15px;
-    background: #00e5ff22; color: #00e5ff;
-    border: 1px solid #00e5ff; border-radius: 8px;
-    padding: 8px 14px; cursor: pointer; z-index: 999;
+    position: fixed;
+    top: 12px; right: 12px;
+    background: rgba(0, 229, 255, 0.15);
+    color: #00e5ff;
+    border: 1px solid #00e5ff;
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 999;
+    box-shadow: 0 0 8px rgba(0,229,255,0.4);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease-in-out;
   `;
+  toggleBtn.onpointerdown = e => e.stopPropagation(); // prevent accidental double-touch
+  toggleBtn.onpointerup = e => e.stopPropagation();
+  toggleBtn.onmouseenter = () => (toggleBtn.style.background = "rgba(0,229,255,0.25)");
+  toggleBtn.onmouseleave = () => (toggleBtn.style.background = "rgba(0,229,255,0.15)");
+
   document.body.appendChild(toggleBtn);
 
   toggleBtn.onclick = () => {
@@ -70,7 +86,12 @@ function capture(side) {
   canvas.style.display = "block";
 
   capturedImages[side] = canvas.toDataURL("image/png");
-  document.getElementById("status").textContent = `✅ ${capitalize(side)} palm captured`;
+
+  // ✅ Apply palm edge overlay effect
+  drawPalmEdges(canvas);
+
+  document.getElementById("status").textContent =
+    `✅ ${capitalize(side)} palm captured + overlay applied`;
 }
 
 // === DEEP AI ANALYZE ===
