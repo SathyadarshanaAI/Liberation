@@ -1,28 +1,34 @@
-// palmPipeline.js — V26.0 Quantum Analyzer Core
+export async function analyzePalmAI(edges, landmarks) {
+  // Basic AI logic (combine visual + skeletal)
+  const lineCount = countWhitePixels(edges);
+  const fingerSpread = landmarks.length ? measureSpread(landmarks) : 0;
 
-export async function analyzePalmAI(base64Image) {
-  console.log("🧠 Deep palm analysis initiated...");
-
-  // Fake deep learning delay simulation
-  await new Promise(res => setTimeout(res, 2000));
-
-  // Example AI-like palm feature extraction (simulated)
-  const predictions = [
-    { line: "Life Line", strength: "Strong", meaning: "Long life and stable health" },
-    { line: "Head Line", clarity: "Clear", meaning: "Logical mind and balanced emotions" },
-    { line: "Heart Line", depth: "Deep", meaning: "Loving and emotionally intelligent" },
-    { mark: "Mount of Jupiter", level: "High", meaning: "Strong leadership and ambition" },
-    { mark: "Mount of Venus", level: "Balanced", meaning: "Warmth and compassion" },
-  ];
-
-  // Example personality profile
-  const profile = {
-    personality: "Empathetic Visionary",
-    energyFlow: "Centered and Harmonious",
-    focusIndex: Math.round(Math.random() * 100),
-    spiritualInsight: "Awakening Stage — steady awareness growth",
+  return {
+    type: "REAL PALM ANALYSIS",
+    lines_detected: lineCount,
+    finger_spread: fingerSpread.toFixed(2),
+    meaning: interpretPattern(lineCount, fingerSpread)
   };
+}
 
-  console.log("✅ Palm analysis complete!");
-  return { predictions, profile, timestamp: new Date().toISOString() };
+function countWhitePixels(mat) {
+  let count = 0;
+  for (let r = 0; r < mat.rows; r++) {
+    for (let c = 0; c < mat.cols; c++) {
+      if (mat.ucharPtr(r, c)[0] > 200) count++;
+    }
+  }
+  return Math.round(count / 1000);
+}
+
+function measureSpread(landmarks) {
+  if (landmarks.length < 5) return 0;
+  return Math.abs(landmarks[0].x - landmarks[4].x) * 100; // thumb to pinky spread
+}
+
+function interpretPattern(lines, spread) {
+  if (lines > 500 && spread > 25) return "Energetic and open-minded personality";
+  if (lines > 500 && spread < 25) return "Deep thinker, prefers solitude";
+  if (lines < 400) return "Calm, peaceful temperament";
+  return "Balanced and intuitive person";
 }
