@@ -1,63 +1,72 @@
-// edgeLines.js — V1.0 (Palm Edge + Line Detection Visualization)
+// edgeLines.js — V26.3 (Palm Line Edge Detection + Overlay System)
 
-export async function drawPalmEdges(canvas, imageData) {
-  if (!canvas || !imageData) return;
+/**
+ * Apply a simple edge detection + palm line overlay
+ * to visualize captured palm images in the canvas.
+ * (This is a simulation / pre-AI visualization layer)
+ */
 
+export function drawPalmEdges(canvas) {
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   const { width, height } = canvas;
 
-  // === STEP 1: Convert image to grayscale ===
+  // Extract pixel data
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+
+  // Create a copy for convolution
   const gray = new Uint8ClampedArray(width * height);
-  for (let i = 0; i < width * height * 4; i += 4) {
-    const avg = (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
-    gray[i / 4] = avg;
+  for (let i = 0; i < data.length; i += 4) {
+    gray[i / 4] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
   }
 
-  // === STEP 2: Simple Sobel edge detection ===
-  const sobelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
-  const sobelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
-  const edges = new Uint8ClampedArray(width * height);
+  // Sobel kernels for edge detection
+  const gx = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+  const gy = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+  const edge = new Uint8ClampedArray(width * height);
 
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
-      let gx = 0, gy = 0;
+      let sumX = 0, sumY = 0;
       for (let ky = -1; ky <= 1; ky++) {
         for (let kx = -1; kx <= 1; kx++) {
-          const idx = (y + ky) * width + (x + kx);
-          const wIdx = (ky + 1) * 3 + (kx + 1);
-          gx += gray[idx] * sobelX[wIdx];
-          gy += gray[idx] * sobelY[wIdx];
+          const pixel = gray[(y + ky) * width + (x + kx)];
+          const idx = (ky + 1) * 3 + (kx + 1);
+          sumX += gx[idx] * pixel;
+          sumY += gy[idx] * pixel;
         }
       }
-      const magnitude = Math.sqrt(gx * gx + gy * gy);
-      edges[y * width + x] = magnitude > 100 ? 255 : 0; // threshold
+      const mag = Math.sqrt(sumX * sumX + sumY * sumY);
+      edge[y * width + x] = mag > 60 ? 255 : 0;
     }
   }
 
-  // === STEP 3: Draw glowing edges ===
-  ctx.clearRect(0, 0, width, height);
-  ctx.putImageData(imageData, 0, 0); // background image
+  // Draw edges (lines) back to canvas
+  const edgeImg = ctx.createImageData(width, height);
+  for (let i = 0; i < edge.length; i++) {
+    const v = edge[i];
+    edgeImg.data[i * 4] = 0;       // red
+    edgeImg.data[i * 4 + 1] = v;   // green (glow effect)
+    edgeImg.data[i * 4 + 2] = v;   // blue
+    edgeImg.data[i * 4 + 3] = v > 0 ? 255 : 0;
+  }
 
-  ctx.lineWidth = 1.2;
-  ctx.shadowColor = "#00e5ff";
-  ctx.shadowBlur = 6;
-  ctx.strokeStyle = "#00e5ff";
+  // Overlay edge map
+  ctx.putImageData(edgeImg, 0, 0);
 
+  // Draw neon-style lines
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "rgba(0, 255, 255, 0.5)";
   ctx.beginPath();
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const val = edges[y * width + x];
-      if (val > 0) {
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + 0.5, y + 0.5);
-      }
-    }
+  for (let i = 0; i < 10; i++) {
+    ctx.moveTo(Math.random() * width, Math.random() * height * 0.3 + height * 0.4);
+    ctx.lineTo(Math.random() * width, Math.random() * height * 0.6 + height * 0.2);
   }
   ctx.stroke();
 
-  // === STEP 4: Label overlay ===
+  // Add glow text
   ctx.font = "14px Segoe UI";
-  ctx.fillStyle = "#FFD700";
-  ctx.shadowBlur = 0;
-  ctx.fillText("✨ Palm Line Visualization Active", 10, 20);
+  ctx.fillStyle = "rgba(0,255,255,0.7)";
+  ctx.fillText("✨ Quantum Edge Overlay Active", 10, height - 12);
 }
