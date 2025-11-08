@@ -1,121 +1,38 @@
+<!-- 🕉️ Quantum Palm Analyzer -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.4</title>
-  <link rel="icon" type="image/png" href="assets/logo.png" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V27.0 Real AI Fusion</title>
   <style>
-    body {
-      background: #0b0f16;
-      color: #e6f0ff;
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      margin: 0;
-      overflow-x: hidden;
-    }
-    h1 {
-      color: #00e5ff;
-      text-shadow: 0 0 15px #00e5ff;
-      margin: 16px 0;
-      font-size: 1.4rem;
-    }
-    .wrap {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      padding: 20px;
-    }
-    .camCol {
-      background: #101820;
-      padding: 18px;
-      border-radius: 16px;
-      box-shadow: 0 0 15px #00e5ff22;
-      width: 320px;
-    }
-    video, canvas {
-      width: 280px;
-      height: 360px;
-      border-radius: 10px;
-      background: #000;
-      display: block;
-      margin: 0 auto 8px;
-    }
-    button {
-      margin: 6px;
-      padding: 8px 16px;
-      background: #00e5ff22;
-      color: #00e5ff;
-      border: 1px solid #00e5ff;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #00e5ff55;
-    }
-    #status {
-      margin-top: 10px;
-      color: #FFD700;
-      text-shadow: 0 0 8px #FFD700;
-    }
-    pre {
-      background: #0f1a24;
-      border-radius: 8px;
-      padding: 10px;
-      color: #9be7ff;
-      text-align: left;
-      font-size: 0.8rem;
-      overflow-x: auto;
-    }
+    body { background:#0b0f16;color:#e6f0ff;text-align:center;font-family:'Segoe UI',sans-serif; }
+    h1{color:#00e5ff;text-shadow:0 0 15px #00e5ff;}
+    video,canvas{width:300px;height:380px;border-radius:10px;margin:10px;background:#000;}
+    button{margin:5px;padding:8px 16px;border-radius:8px;border:1px solid #00e5ff;background:#00e5ff22;color:#00e5ff;}
+    button:hover{background:#00e5ff55;}
   </style>
 </head>
-
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.4</h1>
-  <p id="status">🧠 Initializing Neural Palm System...</p>
-
-  <div class="wrap">
-    <!-- LEFT HAND -->
-    <div class="camCol">
-      <h3>✋ Left Hand</h3>
-      <video id="vidLeft" autoplay playsinline></video>
-      <canvas id="canvasLeft" width="280" height="360" style="display:none;"></canvas>
-      <div>
-        <button id="startCamLeft">Start Camera</button>
-        <button id="captureLeft">Capture</button>
-        <button id="analyzeLeft">AI Analyze</button>
-      </div>
-      <pre id="analysisTextLeft"></pre>
-    </div>
-
-    <!-- RIGHT HAND -->
-    <div class="camCol">
-      <h3>🤚 Right Hand</h3>
-      <video id="vidRight" autoplay playsinline></video>
-      <canvas id="canvasRight" width="280" height="360" style="display:none;"></canvas>
-      <div>
-        <button id="startCamRight">Start Camera</button>
-        <button id="captureRight">Capture</button>
-        <button id="analyzeRight">AI Analyze</button>
-      </div>
-      <pre id="analysisTextRight"></pre>
-    </div>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer</h1>
+  <p id="status">🧠 Initializing...</p>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" width="300" height="380"></canvas>
+  <div>
+    <button id="startCam">Start Camera</button>
+    <button id="capture">Capture & Analyze</button>
   </div>
+  <pre id="output"></pre>
 
-  <!-- 🧠 OpenCV Core (Load Once) -->
-  <script async src="https://docs.opencv.org/4.x/opencv.js"
-    onload="console.log('✅ OpenCV Loaded Successfully'); document.getElementById('status').textContent='🔍 OpenCV Loaded';"
-    onerror="console.error('❌ OpenCV Load Error'); document.getElementById('status').textContent='⚠️ OpenCV Load Failed';">
-  </script>
+  <!-- 🔗 Core Scripts -->
+  <script async src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
+  <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
 
-  <!-- ⚙️ Main Core Logic -->
-  <script type="module" src="./js/main.js"></script>
-
-  <!-- 🌌 Edge Line Analyzer (after OpenCV ready) -->
-  <script type="module" src="./js/edgeLines.js"></script>
+  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/edgeLines.js"></script>
+  <script type="module" src="js/handpose.js"></script>
+  <script type="module" src="js/palmPipeline.js"></script>
 </body>
 </html>
