@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.7</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.8</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
   <style>
     body {
       background: #0b0f16;
@@ -69,8 +70,9 @@
     }
   </style>
 </head>
+
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.7</h1>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V26.8</h1>
   <p id="status">🧠 Initializing Neural Palm System...</p>
 
   <div class="wrap">
@@ -99,15 +101,14 @@
     </div>
   </div>
 
-  <!-- 🧠 OpenCV Core -->
+  <!-- 🧠 OpenCV -->
   <script async src="https://docs.opencv.org/4.x/opencv.js"
-    onload="console.log('✅ OpenCV Loaded'); document.getElementById('status').textContent='🔍 OpenCV Ready';"
+    onload="document.getElementById('status').textContent='🔍 OpenCV Ready'; console.log('✅ OpenCV Loaded');"
     onerror="document.getElementById('status').textContent='⚠️ OpenCV Load Failed';">
   </script>
 
-  <!-- 🧩 TensorFlow.js Core + WebGL Backend -->
+  <!-- 🧩 TensorFlow.js (Load Once Only) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.10.0/dist/tf-backend-webgl.min.js"></script>
 
   <!-- 🧠 Analyzer Modules -->
   <script type="module" src="./js/edgeLines.js"></script>
