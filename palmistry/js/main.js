@@ -1,82 +1,52 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V26.7 Quantum Core
-// — Main Controller integrating OpenCV + TensorFlow Fusion —
+// ==============================
+// 🧠 main.js - Browser Compatible
+// ==============================
 
-import { detectPalmEdges } from "./edgeLines.js";
-import { detectHandLandmarks } from "./handpose.js";
-import { analyzePalmAI } from "./palmPipeline.js";
+// 1️⃣ TensorFlow.js Import (CDN)
+import * as tf from 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js';
+import 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.10.0/dist/tf-backend-webgl.min.js';
 
-const hands = ["left", "right"];
-
-// === Initialize TensorFlow backend ===
-async function initTensorFlow() {
-  try {
-    if (typeof tf === "undefined") {
-      console.error("❌ TensorFlow.js not loaded. Check your CDN link.");
-      document.getElementById("status").textContent = "⚠️ TensorFlow not loaded!";
-      return;
-    }
-
-    await tf.setBackend("webgl");
+// 2️⃣ Initialize TF WebGL Backend
+async function initTF() {
+    await tf.setBackend('webgl');
     await tf.ready();
-    console.log("✅ TensorFlow WebGL backend ready");
-    document.getElementById("status").textContent = "🧠 TensorFlow WebGL Ready";
-  } catch (err) {
-    console.error("TensorFlow Init Error:", err);
-    document.getElementById("status").textContent = "⚠️ TensorFlow Initialization Failed";
-  }
+    console.log('✅ TensorFlow WebGL backend ready');
+    document.getElementById('status').textContent = '🔍 TensorFlow Ready';
 }
-initTensorFlow();
 
-// === Main Logic for Both Hands ===
-hands.forEach(side => {
-  const name = side.charAt(0).toUpperCase() + side.slice(1);
-  const vid = document.getElementById(`vid${name}`);
-  const canvas = document.getElementById(`canvas${name}`);
-  const ctx = canvas.getContext("2d");
-
-  // === 🎥 Start Camera ===
-  document.getElementById(`startCam${name}`).onclick = async () => {
+// 3️⃣ Camera Handling
+async function startCamera(videoId, facingMode = 'user') {
+    const vid = document.getElementById(videoId);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      vid.srcObject = stream;
-      await vid.play();
-      document.getElementById("status").textContent = `📷 ${name} Camera Active`;
-      console.log(`🎦 ${name} camera started successfully`);
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: facingMode },
+            audio: false
+        });
+        vid.srcObject = stream;
+        await vid.play();
+        console.log(`✅ Camera started for ${videoId}`);
     } catch (err) {
-      console.error("Camera Error:", err);
-      alert("Camera Error: " + err.message);
+        console.error(`⚠️ Camera error for ${videoId}:`, err);
+        document.getElementById('status').textContent = `⚠️ Camera error: ${err.message}`;
     }
-  };
+}
 
-  // === 📸 Capture & Analyze ===
-  document.getElementById(`capture${name}`).onclick = async () => {
-    try {
-      ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-      canvas.style.display = "block";
-      document.getElementById("status").textContent = `🧠 Analyzing ${name} Hand...`;
+// 4️⃣ Button Listeners
+document.getElementById('startCamLeft').addEventListener('click', () => startCamera('vidLeft', 'user'));
+document.getElementById('startCamRight').addEventListener('click', () => startCamera('vidRight', 'user'));
 
-      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+// 5️⃣ Capture Button Example
+function captureFrame(videoId, canvasId, outputId) {
+    const vid = document.getElementById(videoId);
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
 
-      // Step 1️⃣ – Detect palm edges (OpenCV-based)
-      const edges = await detectPalmEdges(frame, canvas);
+    ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+    document.getElementById(outputId).textContent = '✅ Frame Captured!';
+}
 
-      // Step 2️⃣ – Detect hand landmarks (TensorFlow / MediaPipe hybrid)
-      const landmarks = await detectHandLandmarks(vid);
+document.getElementById('captureLeft').addEventListener('click', () => captureFrame('vidLeft', 'canvasLeft', 'analysisTextLeft'));
+document.getElementById('captureRight').addEventListener('click', () => captureFrame('vidRight', 'canvasRight', 'analysisTextRight'));
 
-      // Step 3️⃣ – Deep AI Fusion Analysis
-      const result = await analyzePalmAI(edges, landmarks);
-
-      // Display Output
-      document.getElementById(`analysisText${name}`).textContent =
-        JSON.stringify(result, null, 2);
-
-      document.getElementById("status").textContent = "✨ Real AI Analysis Complete!";
-      console.log(`✅ ${name} hand analysis complete`);
-    } catch (err) {
-      console.error(`❌ ${name} Analysis Error:`, err);
-      document.getElementById("status").textContent = `⚠️ ${name} Analysis Failed`;
-    }
-  };
-});
+// 6️⃣ Initialize
+initTF();
