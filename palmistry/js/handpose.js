@@ -1,16 +1,11 @@
-let detector;
+import * as handpose from "https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose";
+import "@tensorflow/tfjs-backend-webgl";
 
+let model;
 export async function detectHandLandmarks(video) {
-  if (!detector) {
-    const model = handPoseDetection.SupportedModels.MediaPipeHands;
-    const config = {
-      runtime: "mediapipe",
-      modelType: "full",
-      solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands"
-    };
-    detector = await handPoseDetection.createDetector(model, config);
+  if (!model) {
+    model = await handpose.load();
   }
-
-  const hands = await detector.estimateHands(video);
-  return hands.length > 0 ? hands[0].keypoints3D : [];
+  const predictions = await model.estimateHands(video);
+  return predictions.length ? predictions[0].landmarks : [];
 }
