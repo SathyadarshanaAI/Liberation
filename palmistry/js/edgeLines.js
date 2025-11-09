@@ -1,14 +1,10 @@
 export async function detectPalmEdges(frame, canvas) {
-  const src = cv.matFromImageData(frame);
-  let gray = new cv.Mat();
-  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-  cv.GaussianBlur(gray, gray, new cv.Size(3, 3), 0);
-  let edges = new cv.Mat();
-  cv.Canny(gray, edges, 50, 120);
-
-  // visualize
+  const mat = cv.matFromImageData(frame);
+  const gray = new cv.Mat();
+  cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
+  const edges = new cv.Mat();
+  cv.Canny(gray, edges, 80, 150);
   cv.imshow(canvas, edges);
-
-  src.delete(); gray.delete();
+  mat.delete(); gray.delete();
   return edges;
 }
