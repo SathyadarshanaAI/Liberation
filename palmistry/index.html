@@ -1,74 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V27.8 TruePalm AI Edition</title>
-<link rel="icon" type="image/png" href="assets/logo.png" />
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-<style>
-  body {background:#0b0f16;color:#e6f0ff;font-family:'Segoe UI',sans-serif;text-align:center;margin:0}
-  h1 {color:#00e5ff;text-shadow:0 0 15px #00e5ff;margin:16px 0;font-size:1.3rem}
-  .wrap {display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px}
-  .camCol {background:#101820;padding:18px;border-radius:16px;box-shadow:0 0 15px #00e5ff22;width:320px}
-  video, canvas {width:280px;height:360px;border-radius:10px;background:#000;display:block;margin:0 auto 8px}
-  button {margin:5px;padding:8px 14px;background:#00e5ff22;color:#00e5ff;border:1px solid #00e5ff;border-radius:8px;cursor:pointer;transition:0.3s}
-  button:hover {background:#00e5ff55}
-  select {background:#111a22;color:#00e5ff;border:1px solid #00e5ff;border-radius:8px;padding:6px;margin-bottom:6px}
-  #status {margin-top:10px;color:#FFD700;text-shadow:0 0 8px #FFD700}
-  pre {background:#0f1a24;border-radius:8px;padding:10px;color:#9be7ff;text-align:left;font-size:0.8rem;overflow-x:auto}
-</style>
-</head>
-
-<body>
-<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V27.8 TruePalm AI Edition</h1>
-<p id="status">🧠 Initializing System...</p>
-
-<div class="wrap">
-  <!-- LEFT HAND -->
-  <div class="camCol">
-    <h3>✋ Left Hand</h3>
-    <select id="cameraSelectLeft"></select>
-    <video id="vidLeft" autoplay playsinline muted></video>
-    <canvas id="canvasLeft" width="280" height="360" style="display:none;"></canvas>
-    <div>
-      <button id="startCamLeft">Start Camera</button>
-      <button id="captureLeft">Capture</button>
-      <button id="analyzeLeft">Analyze Palm</button>
-    </div>
-    <h4>Mini Report</h4>
-    <pre id="miniReportLeft"></pre>
-    <h4>Deep Report</h4>
-    <pre id="deepReportLeft"></pre>
-  </div>
-
-  <!-- RIGHT HAND -->
-  <div class="camCol">
-    <h3>🤚 Right Hand</h3>
-    <select id="cameraSelectRight"></select>
-    <video id="vidRight" autoplay playsinline muted></video>
-    <canvas id="canvasRight" width="280" height="360" style="display:none;"></canvas>
-    <div>
-      <button id="startCamRight">Start Camera</button>
-      <button id="captureRight">Capture</button>
-      <button id="analyzeRight">Analyze Palm</button>
-    </div>
-    <h4>Mini Report</h4>
-    <pre id="miniReportRight"></pre>
-    <h4>Deep Report</h4>
-    <pre id="deepReportRight"></pre>
-  </div>
-</div>
-
-<!-- 🧠 OpenCV -->
-<script async src="https://docs.opencv.org/4.x/opencv.js"></script>
-
 <script type="module">
 import { detectPalmEdges } from './js/edgeLines.js';
 
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 
-// 🕒 Wait until OpenCV ready
+// 🕒 Wait for OpenCV to be ready
 async function waitForOpenCV(){
   return new Promise(resolve=>{
     const check=setInterval(()=>{
@@ -77,78 +12,82 @@ async function waitForOpenCV(){
   });
 }
 
-await waitForOpenCV();
-document.getElementById('status').textContent='🔍 OpenCV Ready';
+// 🧠 Initialize App
+async function initPalmAnalyzer(){
+  await waitForOpenCV();
+  document.getElementById('status').textContent='🔍 OpenCV Ready';
 
-// Main Logic
-const hands=["left","right"];
-let streams={};
+  const hands=["left","right"];
+  let streams={};
 
-for(const side of hands){
-  const video=document.getElementById(`vid${cap(side)}`);
-  const canvas=document.getElementById(`canvas${cap(side)}`);
-  const ctx=canvas.getContext("2d");
-  const selectEl=document.getElementById(`cameraSelect${cap(side)}`);
+  for(const side of hands){
+    const video=document.getElementById(`vid${cap(side)}`);
+    const canvas=document.getElementById(`canvas${cap(side)}`);
+    const ctx=canvas.getContext("2d");
+    const selectEl=document.getElementById(`cameraSelect${cap(side)}`);
 
-  // list cameras
-  navigator.mediaDevices.enumerateDevices().then(devices=>{
-    selectEl.innerHTML="";
-    devices.filter(d=>d.kind==="videoinput").forEach((cam,i)=>{
-      const opt=document.createElement("option");
-      opt.value=cam.deviceId;
-      opt.textContent=cam.label||`Camera ${i}`;
-      selectEl.appendChild(opt);
+    // 📸 List cameras
+    navigator.mediaDevices.enumerateDevices().then(devices=>{
+      selectEl.innerHTML="";
+      devices.filter(d=>d.kind==="videoinput").forEach((cam,i)=>{
+        const opt=document.createElement("option");
+        opt.value=cam.deviceId;
+        opt.textContent=cam.label||`Camera ${i}`;
+        selectEl.appendChild(opt);
+      });
     });
-  });
 
-  // start camera
-  document.getElementById(`startCam${cap(side)}`).onclick=async()=>{
-    const deviceId=selectEl.value;
-    try{
-      const stream=await navigator.mediaDevices.getUserMedia({video:{deviceId}});
-      video.srcObject=stream;
-      streams[side]=stream;
-      document.getElementById("status").textContent=`📷 ${side.toUpperCase()} camera running`;
-    }catch(e){alert("Camera error: "+e.message);}
-  };
+    // ▶️ Start camera
+    document.getElementById(`startCam${cap(side)}`).onclick=async()=>{
+      const deviceId=selectEl.value;
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({video:{deviceId}});
+        video.srcObject=stream;
+        streams[side]=stream;
+        document.getElementById("status").textContent=`📷 ${side.toUpperCase()} camera running`;
+      }catch(e){alert("Camera error: "+e.message);}
+    };
 
-  // capture freeze
-  document.getElementById(`capture${cap(side)}`).onclick=()=>{
-    if(!streams[side])return alert("Start camera first!");
-    ctx.drawImage(video,0,0,canvas.width,canvas.height);
-    canvas.style.display="block";
-    video.pause();
-    document.getElementById("status").textContent=`📸 ${side} captured`;
-  };
+    // 📷 Capture freeze
+    document.getElementById(`capture${cap(side)}`).onclick=()=>{
+      if(!streams[side])return alert("Start camera first!");
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      canvas.style.display="block";
+      video.pause();
+      document.getElementById("status").textContent=`📸 ${side} captured`;
+    };
 
-  // analyze palm
-  document.getElementById(`analyze${cap(side)}`).onclick=async()=>{
-    document.getElementById("status").textContent=`🧠 Analyzing ${side} hand...`;
-    const frame=ctx.getImageData(0,0,canvas.width,canvas.height);
-    try{
-      await detectPalmEdges(frame,canvas);
-    }catch(err){
-      console.error("Edge detection failed:",err);
-      return;
-    }
+    // 🔮 Analyze palm
+    document.getElementById(`analyze${cap(side)}`).onclick=async()=>{
+      document.getElementById("status").textContent=`🧠 Analyzing ${side} hand...`;
 
-    // AI mock text
-    const mini=`Life line: clear\nHeart line: strong curve\nFate line: visible medium strength`;
-    const deep=`Palm reveals emotional balance, courage and steady intuition.\nEnergy flow around thumb region indicates resilience & calm focus.`;
-    document.getElementById(`miniReport${cap(side)}`).textContent=mini;
-    document.getElementById(`deepReport${cap(side)}`).textContent=deep;
+      const frame=ctx.getImageData(0,0,canvas.width,canvas.height);
+      try{
+        await detectPalmEdges(frame,canvas);
+      }catch(err){
+        console.error("Edge detection failed:",err);
+        return;
+      }
 
-    // Sinhala + English voice
-    const msg=side==="left"
-      ?"ඔයාගේ වම් අතේ රේඛා පිරිසිදුයි. ශක්තිමත් ආත්ම ශක්තියක් පෙන්වයි."
-      :"ඔයාගේ දකුණු අතේ රේඛා විශ්වාස සහ නායකත්ව ගුණ පෙන්වයි.";
-    const u=new SpeechSynthesisUtterance(msg);
-    u.lang="si-LK";u.pitch=1;u.rate=1;
-    speechSynthesis.speak(u);
+      // 📑 AI mock report
+      const mini=`Life line: clear\nHeart line: strong curve\nFate line: visible medium strength`;
+      const deep=`Palm reveals emotional balance, courage and steady intuition.\nEnergy flow around thumb region indicates resilience & calm focus.`;
+      document.getElementById(`miniReport${cap(side)}`).textContent=mini;
+      document.getElementById(`deepReport${cap(side)}`).textContent=deep;
 
-    document.getElementById("status").textContent="✨ AI Analysis complete!";
-  };
+      // 🎙 Sinhala + English voice
+      const msg=side==="left"
+        ?"ඔයාගේ වම් අතේ රේඛා පිරිසිදුයි. ශක්තිමත් ආත්ම ශක්තියක් පෙන්වයි."
+        :"ඔයාගේ දකුණු අතේ රේඛා විශ්වාස සහ නායකත්ව ගුණ පෙන්වයි.";
+      const u=new SpeechSynthesisUtterance(msg);
+      u.lang="si-LK";u.pitch=1;u.rate=1;
+      speechSynthesis.speak(u);
+
+      document.getElementById("status").textContent="✨ AI Analysis complete!";
+    };
+  }
 }
+
+// 🚀 Run app after OpenCV fully loads
+initPalmAnalyzer();
 </script>
-</body>
-</html>
