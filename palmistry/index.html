@@ -1,181 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ TruePalm AI Analyzer · V27.5 Stable Final Build</title>
-
-  <!-- 🧠 TensorFlow.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
-
-  <!-- 🧩 OpenCV.js -->
-  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
-
-  <style>
-    body {
-      background: #0a0a0a;
-      color: #fff;
-      font-family: sans-serif;
-      text-align: center;
-    }
-    h1 {
-      color: #00ffff;
-      margin: 12px;
-    }
-    .block {
-      border: 1px solid #0ff;
-      border-radius: 15px;
-      margin: 15px;
-      padding: 10px;
-    }
-    button {
-      margin: 5px;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 10px;
-      background: #00ffff33;
-      color: #fff;
-      font-weight: bold;
-    }
-    video, canvas {
-      width: 90%;
-      max-width: 340px;
-      border-radius: 10px;
-      margin-top: 10px;
-      border: 1px solid #00ffff55;
-    }
-    pre {
-      text-align: left;
-      background: #0005;
-      border-radius: 8px;
-      padding: 8px;
-      color: #0ff;
-      font-size: 0.9em;
-    }
-    #status {
-      margin-top: 10px;
-      color: #00ffff;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🕉️ Sathyadarshana Quantum Palm Analyzer · V27.0 TruePalm AI Edition</title>
+<link rel="icon" type="image/png" href="assets/logo.png" />
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+<style>
+  body{background:#0b0f16;color:#e6f0ff;font-family:'Segoe UI',sans-serif;text-align:center;margin:0}
+  h1{color:#00e5ff;text-shadow:0 0 15px #00e5ff;margin:16px 0;font-size:1.3rem}
+  .wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px}
+  .camCol{background:#101820;padding:18px;border-radius:16px;box-shadow:0 0 15px #00e5ff22;width:320px}
+  video,canvas{width:280px;height:360px;border-radius:10px;background:#000;display:block;margin:0 auto 8px}
+  button{margin:5px;padding:8px 14px;background:#00e5ff22;color:#00e5ff;border:1px solid #00e5ff;border-radius:8px;cursor:pointer;transition:0.3s}
+  button:hover{background:#00e5ff55}
+  select{background:#111a22;color:#00e5ff;border:1px solid #00e5ff;border-radius:8px;padding:6px;margin-bottom:6px}
+  #status{margin-top:10px;color:#FFD700;text-shadow:0 0 8px #FFD700}
+  pre{background:#0f1a24;border-radius:8px;padding:10px;color:#9be7ff;text-align:left;font-size:0.8rem;overflow-x:auto}
+</style>
 </head>
 <body>
-  <h1>🕉️ TruePalm AI Analyzer</h1>
-  <div id="status">🧩 Initializing...</div>
+<h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V27.0 TruePalm AI Edition</h1>
+<p id="status">🧠 Initializing System...</p>
 
-  <!-- ✋ Left Hand -->
-  <div class="block">
+<div class="wrap">
+  <!-- LEFT HAND -->
+  <div class="camCol">
     <h3>✋ Left Hand</h3>
-    <video id="vidLeft" autoplay muted playsinline></video><br/>
-    <canvas id="canvasLeft" width="320" height="240"></canvas><br/>
-    <button id="startCamLeft">Start Camera</button>
-    <button id="captureLeft">Capture</button>
-    <button id="analyzeLeft">Analyze Palm</button>
-    <pre id="analysisTextLeft"></pre>
+    <select id="cameraSelectLeft"></select>
+    <video id="vidLeft" autoplay playsinline muted></video>
+    <canvas id="canvasLeft" width="280" height="360" style="display:none;"></canvas>
+    <div>
+      <button id="startCamLeft">Start Camera</button>
+      <button id="captureLeft">Capture</button>
+      <button id="analyzeLeft">Analyze Palm</button>
+    </div>
+    <h4>Mini Report</h4>
+    <pre id="miniReportLeft"></pre>
+    <h4>Deep Report</h4>
+    <pre id="deepReportLeft"></pre>
   </div>
 
-  <!-- 🤚 Right Hand -->
-  <div class="block">
+  <!-- RIGHT HAND -->
+  <div class="camCol">
     <h3>🤚 Right Hand</h3>
-    <video id="vidRight" autoplay muted playsinline></video><br/>
-    <canvas id="canvasRight" width="320" height="240"></canvas><br/>
-    <button id="startCamRight">Start Camera</button>
-    <button id="captureRight">Capture</button>
-    <button id="analyzeRight">Analyze Palm</button>
-    <pre id="analysisTextRight"></pre>
+    <select id="cameraSelectRight"></select>
+    <video id="vidRight" autoplay playsinline muted></video>
+    <canvas id="canvasRight" width="280" height="360" style="display:none;"></canvas>
+    <div>
+      <button id="startCamRight">Start Camera</button>
+      <button id="captureRight">Capture</button>
+      <button id="analyzeRight">Analyze Palm</button>
+    </div>
+    <h4>Mini Report</h4>
+    <pre id="miniReportRight"></pre>
+    <h4>Deep Report</h4>
+    <pre id="deepReportRight"></pre>
   </div>
+</div>
 
-<script>
-/* ==============================================
-   🕉️ TruePalm AI Analyzer – Stable V27.5
-   ============================================== */
+<script async src="https://docs.opencv.org/4.x/opencv.js"
+  onload="console.log('✅ OpenCV Loaded');document.getElementById('status').textContent='🔍 OpenCV Ready';">
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
 
-// 🧠 Initialize TensorFlow (Optional)
-async function initTF() {
-  try {
-    await tf.setBackend('webgl');
-    await tf.ready();
-    document.getElementById('status').textContent = '✅ TensorFlow Ready';
-    console.log('✅ TensorFlow Ready');
-  } catch (err) {
-    console.warn('⚠️ TensorFlow init failed:', err);
-  }
+<script type="module">
+import { detectPalmEdges } from './js/edgeLines.js';
+
+const hands = ["left","right"];
+let streams = {};
+
+for (const side of hands) {
+  const video = document.getElementById(`vid${cap(side)}`);
+  const canvas = document.getElementById(`canvas${cap(side)}`);
+  const ctx = canvas.getContext("2d");
+  const selectEl = document.getElementById(`cameraSelect${cap(side)}`);
+  
+  // list cameras
+  navigator.mediaDevices.enumerateDevices().then(devices=>{
+    selectEl.innerHTML="";
+    devices.filter(d=>d.kind==="videoinput").forEach(cam=>{
+      const opt=document.createElement("option");
+      opt.value=cam.deviceId;
+      opt.textContent=cam.label||`Camera ${selectEl.length+1}`;
+      selectEl.appendChild(opt);
+    });
+  });
+
+  // start camera
+  document.getElementById(`startCam${cap(side)}`).onclick=async()=>{
+    const deviceId=selectEl.value;
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({video:{deviceId}});
+      video.srcObject=stream;
+      streams[side]=stream;
+      document.getElementById("status").textContent=`📷 ${side.toUpperCase()} camera running`;
+    }catch(e){alert("Camera error: "+e.message);}
+  };
+
+  // capture freeze
+  document.getElementById(`capture${cap(side)}`).onclick=()=>{
+    if(!streams[side])return alert("Start camera first!");
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    canvas.style.display="block";
+    video.pause();
+    document.getElementById("status").textContent=`📸 ${side} captured`;
+  };
+
+  // analyze
+  document.getElementById(`analyze${cap(side)}`).onclick=async()=>{
+    document.getElementById("status").textContent=`🧠 Analyzing ${side} hand...`;
+    const frame=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const edges=await detectPalmEdges(frame,canvas);
+
+    // simple mock AI text (later plug your real model)
+    const mini=`Life line clear\nHeart line curved\nFate line medium strength`;
+    const deep=`Detailed palm interpretation indicates balanced emotional and physical state.\nPotential leadership and creativity seen in line junctions.`;
+    document.getElementById(`miniReport${cap(side)}`).textContent=mini;
+    document.getElementById(`deepReport${cap(side)}`).textContent=deep;
+    speak(`Your ${side} hand shows calm energy and clarity of purpose.`);
+
+    document.getElementById("status").textContent="✨ AI Analysis complete!";
+  };
 }
 
-// 📷 Start Camera
-async function startCamera(videoId, facing="environment") {
-  const video = document.getElementById(videoId);
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } });
-    video.srcObject = stream;
-    await video.play();
-    document.getElementById('status').textContent = `📷 Camera active (${facing})`;
-  } catch (err) {
-    alert("⚠️ Camera Error: " + err.message);
-  }
-}
-
-// 🖼️ Capture Frame
-function captureFrame(videoId, canvasId) {
-  const video = document.getElementById(videoId);
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext('2d');
-  if (!video.srcObject) return alert("Start camera first!");
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  video.pause();
-  document.getElementById('status').textContent = "📸 Frame captured!";
-}
-
-// 🧠 Analyze Palm (Mock Report)
-function analyzePalm(canvasId, reportId, side) {
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext('2d');
-  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-  if (!frame) return alert("Capture a palm image first!");
-
-  // 🧩 OpenCV edge visualization
-  if (window.cv && cv.Mat) {
-    const mat = cv.matFromImageData(frame);
-    let gray = new cv.Mat();
-    cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY);
-    let blur = new cv.Mat();
-    cv.GaussianBlur(gray, blur, new cv.Size(5,5), 0);
-    let edges = new cv.Mat();
-    cv.Canny(blur, edges, 40, 150);
-    cv.imshow(canvas, edges);
-    mat.delete(); gray.delete(); blur.delete(); edges.delete();
-  }
-
-  // 🧘 Mock AI Reading
-  const report = `
-Life Line: Strong & Balanced
-Heart Line: Deep & Gentle
-Fate Line: Rising Steady
-  `;
-  document.getElementById(reportId).textContent = report;
-  document.getElementById('status').textContent = "✨ Palm Analyzed";
-
-  // 🎙️ Sinhala Voice Output
-  const msg = side === "left"
-    ? "ඔයාගේ වම් අතේ රේඛා ශක්තිමත් සහ පිරිසිදුයි."
-    : "ඔයාගේ දකුණු අතේ රේඛා විශ්වාස සහ නායකත්ව ගුණ පෙන්වයි.";
-  const u = new SpeechSynthesisUtterance(msg);
-  u.lang = "si-LK";
-  u.pitch = 1;
-  u.rate = 1;
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function speak(txt){
+  if(!window.speechSynthesis)return;
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang="en-US"; u.pitch=1; u.rate=1;
   speechSynthesis.speak(u);
 }
-
-// 🪷 Event Listeners
-document.getElementById("startCamLeft").onclick = () => startCamera("vidLeft", "user");
-document.getElementById("startCamRight").onclick = () => startCamera("vidRight", "environment");
-document.getElementById("captureLeft").onclick = () => captureFrame("vidLeft", "canvasLeft");
-document.getElementById("captureRight").onclick = () => captureFrame("vidRight", "canvasRight");
-document.getElementById("analyzeLeft").onclick = () => analyzePalm("canvasLeft", "analysisTextLeft", "left");
-document.getElementById("analyzeRight").onclick = () => analyzePalm("canvasRight", "analysisTextRight", "right");
-
-initTF();
 </script>
 </body>
 </html>
