@@ -1,40 +1,25 @@
-// 🧠 Quantum Palm Analyzer - Edge Detection Core
-// Uses OpenCV to isolate and enhance real palm lines
-
-export async function detectPalmEdges(frame, canvas) {
-  // Convert raw image to matrix
-  const src = cv.matFromImageData(frame);
+export function detectPalmEdges(frame, canvas) {
+  const mat = cv.matFromImageData(frame);
   const gray = new cv.Mat();
+  cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
   const blur = new cv.Mat();
+  cv.GaussianBlur(gray, blur, new cv.Size(3,3), 0);
   const edges = new cv.Mat();
+  cv.Canny(blur, edges, 60, 140);
 
-  try {
-    // Step 1️⃣ – Convert to grayscale
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  // Line segment detection
+  const lines = new cv.Mat();
+  cv.HoughLinesP(edges, lines, 1, Math.PI / 180, 50, 50, 10);
 
-    // Step 2️⃣ – Reduce noise (Gaussian blur)
-    cv.GaussianBlur(gray, blur, new cv.Size(3, 3), 0);
-
-    // Step 3️⃣ – Edge detection (Canny)
-    cv.Canny(blur, edges, 70, 140);
-
-    // Step 4️⃣ – Optional contrast enhancement
-    const enhanced = new cv.Mat();
-    cv.convertScaleAbs(edges, enhanced, 1.2, 0);
-
-    // Step 5️⃣ – Display on canvas (for visual feedback)
-    cv.imshow(canvas, enhanced);
-
-    // Step 6️⃣ – Return enhanced edge matrix
-    return enhanced;
-  } catch (err) {
-    console.error("Edge detection error:", err);
-    return null;
-  } finally {
-    // Memory cleanup
-    src.delete();
-    gray.delete();
-    blur.delete();
-    edges.delete();
+  // Draw color overlay
+  const color = new cv.Mat.zeros(edges.rows, edges.cols, cv.CV_8UC3);
+  for (let i = 0; i < lines.rows; ++i) {
+    let [x1, y1, x2, y2] = lines.intPtr(i);
+    cv.line(color, new cv.Point(x1, y1), new cv.Point(x2, y2), [0,255,255,255], 1);
   }
+
+  cv.addWeighted(color, 1, mat, 0.7, 0, mat);
+  cv.imshow(canvas, mat);
+
+  mat.delete(); gray.delete(); blur.delete(); edges.delete(); lines.delete(); color.delete();
 }
