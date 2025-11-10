@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ TruePalm AI Analyzer · V31.0 Living Report Build</title>
+  <title>🕉️ TruePalm AI Analyzer · V32.0 Mobile Camera Fixed Build</title>
+
+  <!-- 🧠 OpenCV Library -->
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
 
-  <!-- ✅ Mobile Console -->
+  <!-- ✅ Mobile Console (Eruda) -->
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>eruda.init();</script>
 
@@ -24,9 +26,9 @@
   <h1>TruePalm AI Analyzer · Stage 2</h1>
   <div id="status">🧩 Initializing...</div>
 
+  <!-- ✋ LEFT HAND -->
   <div class="block">
     <h3>✋ Left Hand</h3>
-    <select id="cameraSelectLeft"></select><br/>
     <video id="vidLeft" autoplay muted playsinline></video><br/>
     <canvas id="canvasLeft" width="320" height="240"></canvas><br/>
     <button id="startCamLeft">Start Camera</button>
@@ -36,9 +38,9 @@
     <pre id="deepReportLeft"></pre>
   </div>
 
+  <!-- 🤚 RIGHT HAND -->
   <div class="block">
     <h3>🤚 Right Hand</h3>
-    <select id="cameraSelectRight"></select><br/>
     <video id="vidRight" autoplay muted playsinline></video><br/>
     <canvas id="canvasRight" width="320" height="240"></canvas><br/>
     <button id="startCamRight">Start Camera</button>
@@ -48,91 +50,93 @@
     <pre id="deepReportRight"></pre>
   </div>
 
-<script type="module">
-import { detectPalmEdges } from './edgeLines.js';
+  <script type="module">
+    import { detectPalmEdges } from './edgeLines.js';
 
-function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+    function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 
-async function waitForOpenCV(){
-  return new Promise(resolve=>{
-    const check=setInterval(()=>{
-      if(window.cv && cv.Mat){clearInterval(check);resolve(true);}
-    },500);
-  });
-}
-
-async function initPalmAnalyzer(){
-  await waitForOpenCV();
-  document.getElementById('status').textContent='✅ OpenCV Ready';
-  console.log("✅ OpenCV loaded:", window.cv); // Debug log
-  const hands=["left","right"];
-  let streams={};
-
-  for(const side of hands){
-    const video=document.getElementById(`vid${cap(side)}`);
-    const canvas=document.getElementById(`canvas${cap(side)}`);
-    const ctx=canvas.getContext("2d");
-    const selectEl=document.getElementById(`cameraSelect${cap(side)}`);
-
-    navigator.mediaDevices.enumerateDevices().then(devices=>{
-      selectEl.innerHTML="";
-      devices.filter(d=>d.kind==="videoinput").forEach((cam,i)=>{
-        const opt=document.createElement("option");
-        opt.value=cam.deviceId;
-        opt.textContent=cam.label||`Camera ${i}`;
-        selectEl.appendChild(opt);
+    async function waitForOpenCV(){
+      return new Promise(resolve=>{
+        const check=setInterval(()=>{
+          if(window.cv && cv.Mat){clearInterval(check);resolve(true);}
+        },500);
       });
-      console.log(`📸 Cameras detected for ${side}:`, devices);
-    });
+    }
 
-    document.getElementById(`startCam${cap(side)}`).onclick=async()=>{
-      const deviceId=selectEl.value;
-      try{
-        const stream=await navigator.mediaDevices.getUserMedia({video:{deviceId}});
-        video.srcObject=stream; streams[side]=stream;
-        document.getElementById("status").textContent=`📷 ${side.toUpperCase()} camera running`;
-        console.log(`🎥 ${side} camera started:`, stream);
-      }catch(e){
-        console.error("Camera error:", e);
-        alert("Camera error: "+e.message);
+    async function initPalmAnalyzer(){
+      await waitForOpenCV();
+      document.getElementById('status').textContent='✅ OpenCV Ready';
+      console.log("✅ OpenCV loaded:", window.cv);
+
+      const hands=["left","right"];
+      let streams={};
+
+      for(const side of hands){
+        const video=document.getElementById(`vid${cap(side)}`);
+        const canvas=document.getElementById(`canvas${cap(side)}`);
+        const ctx=canvas.getContext("2d");
+
+        // ✅ Camera Start
+        document.getElementById(`startCam${cap(side)}`).onclick = async () => {
+          document.getElementById("status").textContent = `🔄 Trying to access ${side} camera...`;
+          try {
+            const constraints = {
+              video: {
+                facingMode: side === "left" ? "user" : "environment" // front / back
+              }
+            };
+            console.log("🎥 Camera constraints:", constraints);
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = stream;
+            streams[side] = stream;
+
+            document.getElementById("status").textContent = `📷 ${side.toUpperCase()} camera running`;
+            console.log(`✅ ${side} camera started successfully`, stream);
+
+          } catch (e) {
+            console.error("Camera error:", e);
+            alert("⚠️ Camera error: " + e.message + "\nPlease refresh and allow camera permission again.");
+          }
+        };
+
+        // 🖼️ Capture Image
+        document.getElementById(`capture${cap(side)}`).onclick=()=>{
+          if(!streams[side])return alert("Start camera first!");
+          ctx.drawImage(video,0,0,canvas.width,canvas.height);
+          video.pause();
+          document.getElementById("status").textContent=`📸 ${side} captured`;
+          console.log(`🖼️ ${side} image captured`);
+        };
+
+        // 🧠 Analyze Palm
+        document.getElementById(`analyze${cap(side)}`).onclick=async()=>{
+          document.getElementById("status").textContent=`🧠 Analyzing ${side} hand...`;
+          const frame=ctx.getImageData(0,0,canvas.width,canvas.height);
+          try {
+            const analysis=await detectPalmEdges(frame,canvas);
+            const mini=`Life line: ${analysis.life}\nHeart line: ${analysis.heart}\nFate line: ${analysis.fate}`;
+            const deep=`Palm shows ${analysis.heart}, ${analysis.fate}, ${analysis.life}. Emotional balance and inner strength are stable.`;
+            document.getElementById(`miniReport${cap(side)}`).textContent=mini;
+            document.getElementById(`deepReport${cap(side)}`).textContent=deep;
+
+            const msg=side==="left"
+              ?`ඔයාගේ වම් අතේ රේඛා ${analysis.life} ලෙස පෙනෙන්නෙ. ඒක ශක්තිමත් ආත්ම ශක්තියක් පෙන්වයි.`
+              :`ඔයාගේ දකුණු අතේ රේඛා ${analysis.heart} ලෙස පෙනෙන්නෙ. ඒක විශ්වාස සහ නායකත්ව ගුණ පෙන්වයි.`;
+            const u=new SpeechSynthesisUtterance(msg);
+            u.lang="si-LK";u.pitch=1;u.rate=1;
+            speechSynthesis.speak(u);
+
+            document.getElementById("status").textContent="✨ AI Analysis complete!";
+          } catch(err){
+            console.error("Palm analysis failed:",err);
+            document.getElementById("status").textContent="⚠️ Analysis error — try recapturing.";
+          }
+        };
       }
-    };
+    }
 
-    document.getElementById(`capture${cap(side)}`).onclick=()=>{
-      if(!streams[side])return alert("Start camera first!");
-      ctx.drawImage(video,0,0,canvas.width,canvas.height);
-      video.pause();
-      document.getElementById("status").textContent=`📸 ${side} captured`;
-      console.log(`🖼️ ${side} image captured`);
-    };
-
-    document.getElementById(`analyze${cap(side)}`).onclick=async()=>{
-      document.getElementById("status").textContent=`🧠 Analyzing ${side} hand...`;
-      const frame=ctx.getImageData(0,0,canvas.width,canvas.height);
-      try {
-        const analysis=await detectPalmEdges(frame,canvas);
-        const mini=`Life line: ${analysis.life}\nHeart line: ${analysis.heart}\nFate line: ${analysis.fate}`;
-        const deep=`Palm shows ${analysis.heart}, ${analysis.fate}, ${analysis.life}. Emotional balance and inner strength are stable.`;
-        document.getElementById(`miniReport${cap(side)}`).textContent=mini;
-        document.getElementById(`deepReport${cap(side)}`).textContent=deep;
-        console.log("🧠 AI Analysis result:", analysis);
-
-        const msg=side==="left"
-          ?`ඔයාගේ වම් අතේ රේඛා ${analysis.life} ලෙස පෙනෙන්නෙ. ඒක ශක්තිමත් ආත්ම ශක්තියක් පෙන්වයි.`
-          :`ඔයාගේ දකුණු අතේ රේඛා ${analysis.heart} ලෙස පෙනෙන්නෙ. ඒක විශ්වාස සහ නායකත්ව ගුණ පෙන්වයි.`;
-        const u=new SpeechSynthesisUtterance(msg);
-        u.lang="si-LK";u.pitch=1;u.rate=1;
-        speechSynthesis.speak(u);
-
-        document.getElementById("status").textContent="✨ AI Analysis complete!";
-      } catch(err){
-        console.error("Palm analysis failed:",err);
-        document.getElementById("status").textContent="⚠️ Analysis error — try recapturing.";
-      }
-    };
-  }
-}
-initPalmAnalyzer();
-</script>
+    initPalmAnalyzer();
+  </script>
 </body>
 </html>
