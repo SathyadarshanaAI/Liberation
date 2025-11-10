@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🕉️ TruePalm AI Analyzer · V31.0 Living Report Build</title>
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+
+  <!-- ✅ Mobile Console -->
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
+
   <style>
     body { background:#0a0a0a; color:#fff; font-family:sans-serif; text-align:center; }
     h1 { color:#00ffff; }
@@ -59,6 +64,7 @@ async function waitForOpenCV(){
 async function initPalmAnalyzer(){
   await waitForOpenCV();
   document.getElementById('status').textContent='✅ OpenCV Ready';
+  console.log("✅ OpenCV loaded:", window.cv); // Debug log
   const hands=["left","right"];
   let streams={};
 
@@ -76,6 +82,7 @@ async function initPalmAnalyzer(){
         opt.textContent=cam.label||`Camera ${i}`;
         selectEl.appendChild(opt);
       });
+      console.log(`📸 Cameras detected for ${side}:`, devices);
     });
 
     document.getElementById(`startCam${cap(side)}`).onclick=async()=>{
@@ -84,7 +91,11 @@ async function initPalmAnalyzer(){
         const stream=await navigator.mediaDevices.getUserMedia({video:{deviceId}});
         video.srcObject=stream; streams[side]=stream;
         document.getElementById("status").textContent=`📷 ${side.toUpperCase()} camera running`;
-      }catch(e){alert("Camera error: "+e.message);}
+        console.log(`🎥 ${side} camera started:`, stream);
+      }catch(e){
+        console.error("Camera error:", e);
+        alert("Camera error: "+e.message);
+      }
     };
 
     document.getElementById(`capture${cap(side)}`).onclick=()=>{
@@ -92,6 +103,7 @@ async function initPalmAnalyzer(){
       ctx.drawImage(video,0,0,canvas.width,canvas.height);
       video.pause();
       document.getElementById("status").textContent=`📸 ${side} captured`;
+      console.log(`🖼️ ${side} image captured`);
     };
 
     document.getElementById(`analyze${cap(side)}`).onclick=async()=>{
@@ -103,6 +115,7 @@ async function initPalmAnalyzer(){
         const deep=`Palm shows ${analysis.heart}, ${analysis.fate}, ${analysis.life}. Emotional balance and inner strength are stable.`;
         document.getElementById(`miniReport${cap(side)}`).textContent=mini;
         document.getElementById(`deepReport${cap(side)}`).textContent=deep;
+        console.log("🧠 AI Analysis result:", analysis);
 
         const msg=side==="left"
           ?`ඔයාගේ වම් අතේ රේඛා ${analysis.life} ලෙස පෙනෙන්නෙ. ඒක ශක්තිමත් ආත්ම ශක්තියක් පෙන්වයි.`
