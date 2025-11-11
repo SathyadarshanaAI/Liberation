@@ -1,7 +1,6 @@
 export async function initApp() {
   const sides = ["left", "right"];
   const ctx = {};
-
   for (const side of sides) {
     const video = document.getElementById(`vid${capitalize(side)}`);
     const canvas = document.getElementById(`canvas${capitalize(side)}`);
