@@ -1,6 +1,3 @@
-// =====================================================
-// 🧩 App Controller – Camera & Capture Logic
-// =====================================================
 export async function initApp() {
   const sides = ["left", "right"];
   const ctx = {};
@@ -28,7 +25,6 @@ export async function initApp() {
   return ctx;
 }
 
-// Utility: Capitalize first letter
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
