@@ -1,28 +1,20 @@
-// =====================================================
-// palmPipeline.js — Edge + AI integration
-// =====================================================
+import { analyzePalm } from "./brain.js"; // Import your AI palm reader
 
-import { detectPalmEdges } from "./edgeLines.js";
+export async function runPalmPipeline(side, ctx) {
+  console.log(`🔍 Running Palm Analyzer for ${side} hand...`);
 
-export async function runPalmPipeline(side, canvas) {
-  document.getElementById("status").textContent = `🧠 Analyzing ${side} hand...`;
-  const ctx = canvas.getContext("2d");
-  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const lines = await detectPalmEdges(frame, canvas);
+  // 1. AI Dharma Reading (canvas id: "canvasLeft"/"canvasRight")
+  const buddhiReport = await analyzePalm(side, ctx.canvas.id);
 
-  const mini = `Life line: ${lines.life}\nHeart line: ${lines.heart}\nFate line: ${lines.fate}`;
-  const deep = `Inner strength and emotional calm visible through ${lines.life} and ${lines.heart}.`;
-  document.getElementById(`miniReport${cap(side)}`).textContent = mini;
-  document.getElementById(`deepReport${cap(side)}`).textContent = deep;
+  // 2. Update Panels
+  document.getElementById(`miniReport${capitalize(side)}`).textContent =
+    buddhiReport.split('\n')[3] || "Palm summary unavailable";
+  document.getElementById(`deepReport${capitalize(side)}`).textContent = buddhiReport;
 
-  document.getElementById("status").textContent = "✨ Analysis Complete!";
-  return {
-    voice: side === "left"
-      ? "ඔයාගේ වම් අතේ රේඛා පිරිසිදුයි. ඔබේ ආත්ම ශක්තිය විශාලයි."
-      : "ඔයාගේ දකුණු අතේ රේඛා විශ්වාස සහ නායකත්වය පෙන්වයි.",
-  };
+  // 3. Voice output (return for main.js)
+  return { voice: buddhiReport };
 }
 
-function cap(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
