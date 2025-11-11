@@ -1,30 +1,36 @@
+.// =====================================================
+// 🧩 Sathyadarshana Quantum Palm Analyzer – App Core
 // =====================================================
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V28.0
-// Core Controller (main.js)
-// =====================================================
+export async function initApp() {
+  const sides = ["left", "right"];
+  const ctx = {};
 
-import { initApp } from "./app.js";
-import { initAI } from "./aiCore.js";
-import { runPalmPipeline } from "./palmPipeline.js";
-import { speakSinhala } from "./voice.js";
+  for (const side of sides) {
+    const video = document.getElementById(`vid${capitalize(side)}`);
+    const canvas = document.getElementById(`canvas${capitalize(side)}`);
+    const c = canvas.getContext("2d");
 
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("🕉️ Initializing Sathyadarshana Quantum Palm Analyzer...");
-
-  // 1️⃣ Initialize AI Core
-  await initAI();
-
-  // 2️⃣ Initialize App + Camera controls
-  const appCtx = await initApp();
-
-  // 3️⃣ Bind Analyze button
-  document.querySelectorAll("[id^='analyze']").forEach(btn => {
-    btn.addEventListener("click", async e => {
-      const side = e.target.id.includes("Left") ? "left" : "right";
-      const report = await runPalmPipeline(side, appCtx[side]);
-      speakSinhala(report.voice);
+    // 🎥 Start Camera Button
+    document.getElementById(`startCam${capitalize(side)}`).addEventListener("click", async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+      } catch (err) {
+        console.error(`Camera error (${side}):`, err);
+      }
     });
-  });
 
-  document.getElementById("status").textContent = "✨ System Ready for Palm Analysis!";
-});
+    // 📸 Capture Button
+    document.getElementById(`capture${capitalize(side)}`).addEventListener("click", () => {
+      c.drawImage(video, 0, 0, canvas.width, canvas.height);
+    });
+
+    ctx[side] = { video, canvas, ctx: c };
+  }
+
+  return ctx;
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
