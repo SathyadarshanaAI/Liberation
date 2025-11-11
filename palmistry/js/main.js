@@ -6,14 +6,15 @@ import { speakSinhala } from "./voice.js";
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🕉️ Initializing Sathyadarshana Quantum Palm Analyzer...");
   try {
-    await initAI(); // OpenCV ready
+    await initAI(); // OpenCV and tf ready
     const appCtx = await initApp(); // Camera, canvas, ctx
 
+    // Analyze Palm click handler (left/right)
     document.querySelectorAll("[id^='analyze']").forEach(btn => {
       btn.addEventListener("click", async e => {
         const side = e.target.id.includes("Left") ? "left" : "right";
         const result = await runPalmPipeline(side, appCtx[side]);
-        speakSinhala(result.voice);
+        speakSinhala(result.voice); // Voice output
       });
     });
 
