@@ -1,40 +1,34 @@
- // =====================================================
-// app.js — Handles camera and canvas operations
 // =====================================================
-
+// 🧩 App Controller – Camera & Capture Logic
+// =====================================================
 export async function initApp() {
-  const hands = ["left", "right"];
-  let streams = {};
+  const sides = ["left", "right"];
+  const ctx = {};
 
-  for (const side of hands) {
-    const video = document.getElementById(`vid${cap(side)}`);
-    const canvas = document.getElementById(`canvas${cap(side)}`);
-    const ctx = canvas.getContext("2d");
+  for (const side of sides) {
+    const video = document.getElementById(`vid${capitalize(side)}`);
+    const canvas = document.getElementById(`canvas${capitalize(side)}`);
+    const c = canvas.getContext("2d");
 
-    // Start camera
-    document.getElementById(`startCam${cap(side)}`).onclick = async () => {
+    document.getElementById(`startCam${capitalize(side)}`).addEventListener("click", async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
-        streams[side] = stream;
-        document.getElementById("status").textContent = `📷 ${side.toUpperCase()} camera running`;
       } catch (err) {
-        alert("⚠️ Camera access denied or unavailable: " + err.message);
+        document.getElementById("status").textContent = "💢 Camera Error: " + err.message;
       }
-    };
+    });
 
-    // Capture image
-    document.getElementById(`capture${cap(side)}`).onclick = () => {
-      if (!streams[side]) return alert("Start camera first!");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      video.pause();
-      document.getElementById("status").textContent = `📸 ${side} captured`;
-    };
+    document.getElementById(`capture${capitalize(side)}`).addEventListener("click", () => {
+      c.drawImage(video, 0, 0, canvas.width, canvas.height);
+    });
+
+    ctx[side] = { video, canvas, ctx: c };
   }
-
-  return { left: document.getElementById("canvasLeft"), right: document.getElementById("canvasRight") };
+  return ctx;
 }
 
-function cap(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+// Utility: Capitalize first letter
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
