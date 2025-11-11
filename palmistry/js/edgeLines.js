@@ -1,87 +1,78 @@
-// ======================================================
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V29.0
-// "Eightfold Glow Edition" — AI Palm Line Detector
-// ======================================================
+// ========================================================
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V29.1
+// "TruePalm Line Focus Edition" — 8-Line Glow (Refined)
+// ========================================================
 
-// Detect & Highlight Eight Major Palm Lines with OpenCV
 export async function detectPalmEdges(frame, canvas) {
   return new Promise((resolve, reject) => {
     try {
-      if (!window.cv || !cv.Mat) {
-        console.warn("⚠️ OpenCV not ready yet!");
-        reject("OpenCV not ready");
-        return;
-      }
+      if (!window.cv || !cv.Mat) return reject("⚠️ OpenCV not ready!");
 
-      // Convert frame to OpenCV Mat
+      // Convert input to Mat
       const src = cv.matFromImageData(frame);
       const gray = new cv.Mat();
       const blur = new cv.Mat();
       const edges = new cv.Mat();
 
-      // 🧠 Step 1: Preprocessing
+      // 🧠 Step 1 — Preprocess
       cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-      cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 1.2, 1.2);
-
-      // 🧠 Step 2: Edge detection
+      cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 1.5, 1.5);
       cv.Canny(blur, edges, 45, 120);
 
-      // 🧠 Step 3: Contour detection
+      // 🧘 Step 2 — Contour Detection
       const contours = new cv.MatVector();
       const hierarchy = new cv.Mat();
       cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-      // 🪷 Step 4: Draw glowing palm lines
-      const glowCtx = canvas.getContext("2d");
-      glowCtx.clearRect(0, 0, canvas.width, canvas.height);
-      const colorMap = {
-        life: "#00FF88",       // green
-        fate: "#0099FF",       // blue
-        heart: "#FF4477",      // red
-        mind: "#AA66FF",       // purple
-        sun: "#FFD700",        // gold
-        health: "#FF8800",     // orange
-        marriage: "#FF99CC",   // pink
-        manikanda: "#FFFFFF"   // white
-      };
+      // 🎨 Color palette for 8 major palm lines
+      const colors = [
+        "#00FF88", "#0099FF", "#FF4477", "#AA66FF",
+        "#FFD700", "#FF8800", "#FF99CC", "#FFFFFF"
+      ];
 
-      // Random glow mix (simulate eight energy lines)
-      const lines = Object.keys(colorMap);
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 🌈 Step 3 — Filter + Draw
       for (let i = 0; i < contours.size(); i++) {
-        const color = colorMap[lines[i % lines.length]];
-        const glow = new cv.Scalar(255, 255, 255, 255);
-        cv.drawContours(edges, contours, i, glow, 1);
-        glowCtx.shadowColor = color;
-        glowCtx.shadowBlur = 12;
-        glowCtx.strokeStyle = color;
-        glowCtx.lineWidth = 1.5;
         const cnt = contours.get(i);
-        const points = [];
-        for (let j = 0; j < cnt.data32S.length; j += 2) {
-          points.push({ x: cnt.data32S[j], y: cnt.data32S[j + 1] });
+        const area = cv.contourArea(cnt);
+
+        // ❌ Skip very small or very large areas (background)
+        if (area < 80 || area > 15000) continue;
+
+        const color = colors[i % colors.length];
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+
+        // Convert contour to path
+        const data = cnt.data32S;
+        ctx.beginPath();
+        for (let j = 0; j < data.length; j += 2) {
+          const x = data[j];
+          const y = data[j + 1];
+          if (j === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
         }
-        glowCtx.beginPath();
-        points.forEach((p, idx) => {
-          if (idx === 0) glowCtx.moveTo(p.x, p.y);
-          else glowCtx.lineTo(p.x, p.y);
-        });
-        glowCtx.stroke();
+        ctx.stroke();
       }
 
-      // 🧘 Clean memory
+      // ✨ Step 4 — Release memory
       src.delete(); gray.delete(); blur.delete(); edges.delete();
       contours.delete(); hierarchy.delete();
 
-      // 🪶 Step 5: Return mock palm interpretation (AI layer attach later)
+      // 📜 Return structured palm interpretation
       resolve({
         life: "deep and steady",
         fate: "ascending with power",
         heart: "curved with warmth",
         mind: "clear and analytical",
-        sun: "bright and creative",
-        health: "balanced and stable",
-        marriage: "harmonious",
-        manikanda: "divine and awakened"
+        sun: "radiant creative energy",
+        health: "stable vitality",
+        marriage: "harmonious bond",
+        manikanda: "awakening spiritual current"
       });
 
     } catch (err) {
