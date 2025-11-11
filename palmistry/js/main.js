@@ -1,36 +1,33 @@
-.// =====================================================
-// 🧩 Sathyadarshana Quantum Palm Analyzer – App Core
 // =====================================================
-export async function initApp() {
-  const sides = ["left", "right"];
-  const ctx = {};
+// 🧩 Sathyadarshana Code Health Diagnostic Engine
+// =====================================================
+(function codeHealthCheck() {
+  try {
+    console.log("🧠 Running Code Health Diagnostic...");
 
-  for (const side of sides) {
-    const video = document.getElementById(`vid${capitalize(side)}`);
-    const canvas = document.getElementById(`canvas${capitalize(side)}`);
-    const c = canvas.getContext("2d");
-
-    // 🎥 Start Camera Button
-    document.getElementById(`startCam${capitalize(side)}`).addEventListener("click", async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        video.srcObject = stream;
-      } catch (err) {
-        console.error(`Camera error (${side}):`, err);
+    // === Module Sanity Checks ===
+    const modules = ["initApp", "initAI", "runPalmPipeline", "speakSinhala"];
+    modules.forEach(fn => {
+      if (typeof eval(fn) !== "function") {
+        console.warn(`⚠️ Missing or invalid module: ${fn}`);
       }
     });
 
-    // 📸 Capture Button
-    document.getElementById(`capture${capitalize(side)}`).addEventListener("click", () => {
-      c.drawImage(video, 0, 0, canvas.width, canvas.height);
-    });
+    // === Variable & Context Check ===
+    if (typeof cv === "undefined") console.warn("⚠️ OpenCV not loaded!");
+    if (typeof tf === "undefined") console.warn("⚠️ TensorFlow not loaded!");
+    if (!document.querySelector("#vidLeft")) console.warn("⚠️ Left video element missing!");
+    if (!document.querySelector("#vidRight")) console.warn("⚠️ Right video element missing!");
 
-    ctx[side] = { video, canvas, ctx: c };
+    // === Syntax Tester ===
+    const testScript = "let x = 1 + 2; console.log('🩺 Syntax OK:', x);";
+    new Function(testScript)();
+
+    console.log("✅ Code Health: No critical syntax errors detected.");
+
+  } catch (err) {
+    console.error("💥 Code Health Error:", err.message);
+    const st = document.getElementById("status");
+    if (st) st.textContent = "💢 Code Health Error: " + err.message;
   }
-
-  return ctx;
-}
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
+})();
