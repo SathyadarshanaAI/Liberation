@@ -30,4 +30,15 @@
     const st = document.getElementById("status");
     if (st) st.textContent = "💢 Code Health Error: " + err.message;
   }
-})();
+})();// 🩺 Quick Check
+try {
+  if (typeof initApp !== "function") {
+    console.error("🚨 initApp() not found in module scope.");
+    const st = document.getElementById("status");
+    if (st) st.innerHTML = "💢 initApp() not loaded — check js/app.js path or export.";
+  } else {
+    console.log("✅ initApp() available.");
+  }
+} catch (err) {
+  console.error("💥 initApp load test failed:", err);
+}
