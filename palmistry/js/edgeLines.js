@@ -1,45 +1,59 @@
-// 🧠 Advanced Palm Edge Detection (V28.2)
+// 🧠 Sathyadarshana Quantum Palm Analyzer – V28.5 ColorMap Analyzer Edition
+// Detects palm edges, applies color segmentation for key lines (Life, Heart, Fate)
+
 export async function detectPalmEdges(frame, canvas) {
+  const ctx = canvas.getContext("2d");
   const mat = cv.matFromImageData(frame);
 
-  // Convert to HSV color space for skin detection
-  const hsv = new cv.Mat();
-  cv.cvtColor(mat, hsv, cv.COLOR_RGBA2RGB);
-  cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
-
-  // Define skin color range (works for most skin tones)
-  const low = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [0, 30, 60, 0]);
-  const high = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [20, 150, 255, 255]);
-  const mask = new cv.Mat();
-  cv.inRange(hsv, low, high, mask);
-
-  // Morphological operations (clean mask)
-  const kernel = cv.Mat.ones(5, 5, cv.CV_8U);
-  cv.morphologyEx(mask, mask, cv.MORPH_CLOSE, kernel);
-  cv.morphologyEx(mask, mask, cv.MORPH_OPEN, kernel);
-
-  // Apply mask to original
-  const skinOnly = new cv.Mat();
-  cv.bitwise_and(mat, mat, skinOnly, mask);
-
-  // Convert to gray for edge detection
+  // --- Convert to gray ---
   const gray = new cv.Mat();
-  cv.cvtColor(skinOnly, gray, cv.COLOR_RGBA2GRAY, 0);
-
-  // Slight blur to smooth lines
+  cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
   cv.GaussianBlur(gray, gray, new cv.Size(3, 3), 0);
 
-  // Detect edges only on palm area
+  // --- Detect edges ---
   const edges = new cv.Mat();
-  cv.Canny(gray, edges, 70, 150);
+  cv.Canny(gray, edges, 70, 160);
 
-  // Show on canvas
-  cv.imshow(canvas, edges);
+  // --- Create colored canvas ---
+  const colorMat = new cv.Mat();
+  cv.cvtColor(edges, colorMat, cv.COLOR_GRAY2BGR, 0);
 
-  // Cleanup memory
-  mat.delete(); hsv.delete(); gray.delete();
-  low.delete(); high.delete(); mask.delete();
-  kernel.delete(); skinOnly.delete(); edges.delete();
+  // --- Simulated palm line zones ---
+  const height = canvas.height;
+  const width = canvas.width;
 
-  return true;
+  // Life line → lower-left curve region
+  const lifeMask = new cv.Mat.zeros(height, width, cv.CV_8UC3);
+  cv.rectangle(lifeMask, new cv.Point(20, height * 0.6), new cv.Point(width / 2, height), [0, 0, 255, 255], -1);
+
+  // Heart line → upper part
+  const heartMask = new cv.Mat.zeros(height, width, cv.CV_8UC3);
+  cv.rectangle(heartMask, new cv.Point(0, 0), new cv.Point(width, height * 0.4), [0, 255, 0, 255], -1);
+
+  // Fate line → center vertical band
+  const fateMask = new cv.Mat.zeros(height, width, cv.CV_8UC3);
+  cv.rectangle(fateMask, new cv.Point(width * 0.45, 0), new cv.Point(width * 0.55, height), [255, 0, 0, 255], -1);
+
+  // Apply color overlay (Life = red, Heart = green, Fate = blue)
+  const colorResult = new cv.Mat();
+  cv.addWeighted(colorMat, 1, lifeMask, 0.4, 0, colorResult);
+  cv.addWeighted(colorResult, 1, heartMask, 0.4, 0, colorResult);
+  cv.addWeighted(colorResult, 1, fateMask, 0.4, 0, colorResult);
+
+  // Display final result
+  cv.imshow(canvas, colorResult);
+
+  // --- Label Texts ---
+  ctx.font = "bold 14px Segoe UI";
+  ctx.fillStyle = "#FF4D4D";
+  ctx.fillText("Life Line", 25, height * 0.9);
+  ctx.fillStyle = "#4DFF4D";
+  ctx.fillText("Heart Line", 30, height * 0.1 + 20);
+  ctx.fillStyle = "#4DB8FF";
+  ctx.fillText("Fate Line", width / 2 - 20, height / 2);
+
+  // --- Cleanup ---
+  mat.delete(); gray.delete(); edges.delete();
+  colorMat.delete(); colorResult.delete();
+  lifeMask.delete(); heartMask.delete(); fateMask.delete();
 }
