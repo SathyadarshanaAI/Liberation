@@ -1,84 +1,59 @@
-// 🕉️ Sathyadarshana Quantum Palm Analyzer · V28.5 Serenity Focus Edition (Fixed)
 import { detectPalmEdges } from "./edgeLines.js";
+import { analyzePalm } from "./brain.js";
 
-// 🧠 Wait until OpenCV fully loaded
-async function waitForOpenCV() {
-  return new Promise((resolve) => {
-    const check = setInterval(() => {
-      if (window.cv && cv.Mat) {
-        clearInterval(check);
-        resolve(true);
-      }
-    }, 300);
-  });
-}
-await waitForOpenCV();
-document.getElementById("status").textContent = "🧠 OpenCV Ready";
+const hands = ["left", "right"];
+let streams = {};
 
-// 🎥 Camera Control
-async function startCamera(side) {
-  const video = document.getElementById(`vid${side}`);
-  const status = document.getElementById("status");
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        facingMode: { ideal: "environment" },
-      },
-      audio: false,
-    });
-    video.srcObject = stream;
-    await video.play();
-    status.textContent = `📷 ${side} camera active`;
-  } catch (err) {
-    console.warn("Camera access error:", err);
-    status.textContent = "⚠️ Camera failed. Enable permissions and retry.";
-    alert("Please allow camera permission in your browser settings.");
-  }
-}
-
-// ✋ UI EVENTS
-["Left", "Right"].forEach((side) => {
-  const video = document.getElementById(`vid${side}`);
-  const canvas = document.getElementById(`canvas${side}`);
+for (const side of hands) {
+  const vid = document.getElementById(`vid${cap(side)}`);
+  const canvas = document.getElementById(`canvas${cap(side)}`);
   const ctx = canvas.getContext("2d");
 
-  document
-    .getElementById(`startCam${side}`)
-    .addEventListener("click", () => startCamera(side));
+  // ✅ Start camera
+  document.getElementById(`startCam${cap(side)}`).onclick = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      vid.srcObject = stream;
+      streams[side] = stream;
+      document.getElementById("status").textContent = `📷 ${side.toUpperCase()} camera active`;
+    } catch (e) {
+      document.getElementById("status").textContent = "⚠️ Camera error: " + e.message;
+    }
+  };
 
-  document
-    .getElementById(`capture${side}`)
-    .addEventListener("click", () => {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      document.getElementById("status").textContent = "📸 Palm captured";
-    });
+  // ✅ Capture Frame
+  document.getElementById(`capture${cap(side)}`).onclick = () => {
+    if (!streams[side]) return alert("Start camera first!");
+    ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+    vid.pause();
+    document.getElementById("status").textContent = `📸 ${side} hand captured`;
+  };
 
-  document
-    .getElementById(`analyze${side}`)
-    .addEventListener("click", async () => {
-      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      document.getElementById("status").textContent =
-        "🧘 Serenity Analysis Running...";
+  // ✅ Analyze Palm
+  document.getElementById(`analyze${cap(side)}`).onclick = async () => {
+    const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    document.getElementById("status").textContent = `🧠 Analyzing ${side} hand...`;
 
-      // Use detectPalmEdges from edgeLines.js
-      await detectPalmEdges(frame, canvas);
+    const edges = await detectPalmEdges(frame, canvas);
+    const reports = analyzePalm(edges);
 
-      document.getElementById(`miniReport${side}`).textContent =
-        "Life line: clear\nHeart line: calm\nFate line: strong direction";
-      document.getElementById(`deepReport${side}`).textContent =
-        "Palm Serenity indicates balanced emotions, strong willpower, and clarity of life purpose.";
+    document.getElementById(`miniReport${cap(side)}`).textContent = reports.mini;
+    document.getElementById(`deepReport${cap(side)}`).textContent = reports.deep;
 
-      // Voice feedback
-      const msg = new SpeechSynthesisUtterance(
-        "Serenity analysis complete. Calm and focused energy detected."
-      );
-      msg.lang = "en-US";
-      speechSynthesis.speak(msg);
+    speak(reports.voice);
+    document.getElementById("status").textContent = "✨ Analysis Complete!";
+  };
+}
 
-      document.getElementById("status").textContent =
-        "✨ AI Serenity Analysis Complete!";
-    });
-});
+function cap(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "si-LK";
+  u.pitch = 1;
+  u.rate = 1;
+  speechSynthesis.speak(u);
+}
