@@ -6,6 +6,7 @@
   <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V29.0 Serenity Edition</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+
   <style>
     body {
       background: #0b0f16;
@@ -52,7 +53,9 @@
       cursor: pointer;
       transition: 0.3s;
     }
-    button:hover { background: #00e5ff55; }
+    button:hover {
+      background: #00e5ff55;
+    }
     #status {
       margin-top: 10px;
       color: #FFD700;
@@ -73,11 +76,13 @@
   <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
   <script async src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
 </head>
+
 <body>
   <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V29.0 Serenity Edition</h1>
   <p id="status">🧠 Initializing System...</p>
 
   <div class="wrap">
+    <!-- ✋ Left Hand -->
     <div class="camCol">
       <h3>✋ Left Hand</h3>
       <video id="vidLeft" autoplay playsinline muted></video>
@@ -93,6 +98,7 @@
       <pre id="deepReportLeft"></pre>
     </div>
 
+    <!-- 🤚 Right Hand -->
     <div class="camCol">
       <h3>🤚 Right Hand</h3>
       <video id="vidRight" autoplay playsinline muted></video>
@@ -109,6 +115,8 @@
     </div>
   </div>
 
+  <!-- 🔗 Core JS Modules (Only these two are needed) -->
+  <script type="module" src="js/lines-3d.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
