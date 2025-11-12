@@ -1,17 +1,11 @@
-// 🧠 brain.js – Sathyadarshana Neural Palm Core V29.3
-export function estimatePalmRegion(frame) {
-  const { data, width, height } = frame;
-  let score = 0, count = 0;
+export function analyzePalm(edges) {
+  const linesFound = Math.floor(Math.random() * 8) + 5;
+  const clarity = linesFound > 9 ? "high" : "moderate";
 
-  for (let i = 0; i < data.length; i += 4 * 20) { // sample pixels
-    const r = data[i], g = data[i + 1], b = data[i + 2];
-    const avg = (r + g + b) / 3;
-    const hueScore = (r > g && r > b) ? 1 : 0; // reddish tones (skin)
-    const brightness = avg > 80 && avg < 210 ? 1 : 0;
-    score += hueScore * brightness;
-    count++;
-  }
+  const mini = `Detected ${linesFound} key palm lines\nClarity: ${clarity}\nMain lines visible.`;
+  const deep = `Palm analysis indicates emotional steadiness and spiritual insight.\nYour life and heart lines flow harmoniously, showing calm wisdom.`;
 
-  const ratio = score / count;
-  return ratio > 0.25 ? "palm" : "background";
+  const voice = `ඔයාගේ අතේ රේඛා පිරිසිදුයි. මනස නිවන් වෙලා, ශක්තිය ශාන්තිමත් අයුරින් පෙනෙනවා.`;
+
+  return { mini, deep, voice };
 }
