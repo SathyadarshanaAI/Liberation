@@ -1,127 +1,128 @@
-// ===========================
-// 🕉️ main.js — Camera Fix V28.1
-// ===========================
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · V28.2 Serenity Clarity Build
+// ============================================================
 
+// === 🧠 Import the Edge Analyzer ===
 import { detectPalmEdges } from "./edgeLines.js";
 
-// DOM Ready check (important for mobile browsers)
-document.addEventListener("DOMContentLoaded", () => {
+// === 🪄 Helper Function ===
+function cap(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// === 🌐 Wait for OpenCV to Load ===
+async function waitForOpenCV() {
+  return new Promise((resolve) => {
+    const check = setInterval(() => {
+      if (window.cv && cv.Mat) {
+        clearInterval(check);
+        resolve(true);
+      }
+    }, 500);
+  });
+}
+
+await waitForOpenCV();
+document.getElementById("status").textContent = "🧠 OpenCV Ready";
+
+// === 🎥 Initialize Camera ===
+async function startCamera(side, preferBack = true) {
+  const video = document.getElementById(`vid${cap(side)}`);
   const status = document.getElementById("status");
-  const hands = ["left", "right"];
-  let streams = {};
 
-  // 🔸 Core camera start function
-  async function startCamera(side, facingMode = "environment") {
-    const video = document.getElementById(`vid${cap(side)}`);
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: true });
 
-    try {
-      // Request permission and start stream
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
-        audio: false,
-      });
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter((d) => d.kind === "videoinput");
 
-      // Stop any previous stream (prevent conflict)
-      if (streams[side]) {
-        streams[side].getTracks().forEach(t => t.stop());
+    if (videoDevices.length === 0)
+      throw new Error("No camera detected on this device.");
+
+    // Try to pick back camera
+    let chosenDeviceId = videoDevices[0].deviceId;
+    if (preferBack && videoDevices.length > 1) {
+      const backCam = videoDevices.find((d) =>
+        d.label.toLowerCase().includes("back")
+      );
+      if (backCam) chosenDeviceId = backCam.deviceId;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: chosenDeviceId },
+      audio: false,
+    });
+
+    if (video.srcObject) video.srcObject.getTracks().forEach((t) => t.stop());
+    video.srcObject = stream;
+    await video.play();
+
+    status.textContent = `📷 ${cap(side)} camera active`;
+    console.log(`✅ ${side} camera started successfully.`);
+  } catch (err) {
+    console.error("⚠️ Camera start error:", err);
+    alert("Please enable camera permission in browser settings.");
+    status.textContent = `⚠️ ${err.message}`;
+  }
+}
+
+// === 📸 Capture and Analyze Logic ===
+const hands = ["left", "right"];
+for (const side of hands) {
+  const video = document.getElementById(`vid${cap(side)}`);
+  const canvas = document.getElementById(`canvas${cap(side)}`);
+  const ctx = canvas.getContext("2d");
+
+  // Start Camera Button
+  document
+    .getElementById(`startCam${cap(side)}`)
+    .addEventListener("click", () => startCamera(side));
+
+  // Capture Button
+  document
+    .getElementById(`capture${cap(side)}`)
+    .addEventListener("click", () => {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.style.display = "block";
+      video.pause();
+      document.getElementById("status").textContent = `📸 ${side} captured`;
+    });
+
+  // Analyze Button
+  document
+    .getElementById(`analyze${cap(side)}`)
+    .addEventListener("click", async () => {
+      document.getElementById("status").textContent = `🧠 Analyzing ${side} hand...`;
+
+      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      try {
+        await detectPalmEdges(frame, canvas);
+      } catch (err) {
+        console.error("Edge detection failed:", err);
+        return;
       }
 
-      // Bind new stream
-      streams[side] = stream;
-      video.srcObject = stream;
+      // === ✨ AI Reports (Sample Logic) ===
+      const mini = `Life line: deep and steady
+Heart line: balanced curve
+Fate line: clearly visible`;
+      const deep = `Your palm reveals a calm but determined spirit.
+Steady energy flow indicates inner harmony, persistence and wisdom.`;
 
-      // Ensure video plays properly
-      await video.play();
+      document.getElementById(`miniReport${cap(side)}`).textContent = mini;
+      document.getElementById(`deepReport${cap(side)}`).textContent = deep;
 
-      status.textContent = `📷 ${cap(side)} camera active`;
-      console.log(`✅ ${cap(side)} camera started`);
-    } catch (err) {
-      console.error("⚠️ Camera error:", err);
-      status.textContent = `⚠️ Camera access failed (${err.message})`;
-      alert("Please allow camera permission in your browser settings.");
-    }
-  }
+      // === 🗣️ Voice Narration (Sinhala) ===
+      const msg =
+        side === "left"
+          ? "ඔයාගේ වම් අතේ රේඛා පිරිසිදුයි. නිවන් සන්සුන් ශක්තියක් පෙන්වයි."
+          : "ඔයාගේ දකුණු අතේ රේඛා විශ්වාස සහ නායකත්ව ගුණ පෙන්වයි.";
+      const u = new SpeechSynthesisUtterance(msg);
+      u.lang = "si-LK";
+      u.pitch = 1;
+      u.rate = 1;
+      speechSynthesis.speak(u);
 
-  // 🔸 Capture frame
-  function captureFrame(side) {
-    const video = document.getElementById(`vid${cap(side)}`);
-    const canvas = document.getElementById(`canvas${cap(side)}`);
-    const ctx = canvas.getContext("2d");
-
-    if (!streams[side]) {
-      alert("Please start the camera first!");
-      return;
-    }
-
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    canvas.style.display = "block";
-    video.pause();
-    status.textContent = `📸 ${cap(side)} captured`;
-    console.log(`🧩 Frame captured for ${side}`);
-  }
-
-  // 🔸 Analyze palm
-  async function analyzePalm(side) {
-    const canvas = document.getElementById(`canvas${cap(side)}`);
-    const ctx = canvas.getContext("2d");
-    const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    status.textContent = `🧠 Analyzing ${side} hand...`;
-
-    try {
-      await detectPalmEdges(frame, canvas);
-    } catch (err) {
-      console.error("Edge detection error:", err);
-      status.textContent = `⚠️ AI analysis failed (${err.message})`;
-      return;
-    }
-
-    // Generate reports
-    const mini = `Life line: clear\nHeart line: steady curve\nFate line: visible medium strength`;
-    const deep = `Calm, emotionally stable nature. Clear thought patterns.\nResilience under pressure, grounded decision making.`;
-
-    document.getElementById(`miniReport${cap(side)}`).textContent = mini;
-    document.getElementById(`deepReport${cap(side)}`).textContent = deep;
-
-    // Sinhala voice feedback
-    const msg =
-      side === "left"
-        ? "ඔයාගේ වම් අත පිරිසිදුයි. ආත්ම ශක්තිය ස්ථාවරයි."
-        : "ඔයාගේ දකුණු අතේ රේඛා නායකත්ව සහ විශ්වාස පෙන්වයි.";
-    const u = new SpeechSynthesisUtterance(msg);
-    u.lang = "si-LK";
-    u.pitch = 1;
-    u.rate = 1;
-    speechSynthesis.speak(u);
-
-    status.textContent = "✨ AI Analysis Complete!";
-  }
-
-  // 🔸 Event bindings
-  hands.forEach(side => {
-    document
-      .getElementById(`startCam${cap(side)}`)
-      .addEventListener("click", () =>
-        startCamera(side, side === "right" ? "user" : "environment")
-      );
-
-    document
-      .getElementById(`capture${cap(side)}`)
-      .addEventListener("click", () => captureFrame(side));
-
-    document
-      .getElementById(`analyze${cap(side)}`)
-      .addEventListener("click", () => analyzePalm(side));
-  });
-
-  // 🔸 Helper
-  function cap(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  // 🪷 Serenity initialization
-  status.textContent = "🧘 Initializing calm neural system...";
-  setTimeout(() => {
-    status.textContent = "🔍 System Ready — Start Camera to begin.";
-  }, 1500);
-});
+      document.getElementById("status").textContent =
+        "✨ AI Serenity Analysis Complete!";
+    });
+}
