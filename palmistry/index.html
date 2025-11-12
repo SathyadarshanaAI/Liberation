@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V30.5 Divyachakra Real Palm Mode</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V31.0 Divyachakra Real Palm Mode</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
@@ -12,7 +12,7 @@
     h1 { color:#00e5ff; text-shadow:0 0 15px #00e5ff; margin:16px 0; font-size:1.3rem; }
     .wrap { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:20px; }
     .camCol { background:radial-gradient(circle at center,#e8e8e8 35%,#0b0f16 100%); padding:18px; border-radius:16px; box-shadow:0 0 25px #00e5ff22; width:320px; }
-    video, canvas { width:280px; height:360px; border-radius:10px; background:#000; display:block; margin:0 auto 8px; }
+    video,canvas { width:280px; height:360px; border-radius:10px; background:#000; display:block; margin:0 auto 8px; }
     button { margin:5px; padding:8px 14px; background:#00e5ff22; color:#00e5ff; border:1px solid #00e5ff; border-radius:8px; cursor:pointer; transition:0.3s; }
     button:hover { background:#00e5ff55; }
     #status { margin-top:10px; color:#FFD700; text-shadow:0 0 8px #FFD700; }
@@ -21,7 +21,7 @@
 </head>
 
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V30.5 Divyachakra Real Palm Mode</h1>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V31.0 Divyachakra Real Palm Mode</h1>
   <p id="status">🧠 Initializing System...</p>
 
   <div class="wrap">
@@ -36,8 +36,6 @@
       </div>
       <h4>Mini Report</h4>
       <pre id="miniReportLeft"></pre>
-      <h4>Deep Report</h4>
-      <pre id="deepReportLeft"></pre>
     </div>
 
     <div class="camCol">
@@ -51,33 +49,13 @@
       </div>
       <h4>Mini Report</h4>
       <pre id="miniReportRight"></pre>
-      <h4>Deep Report</h4>
-      <pre id="deepReportRight"></pre>
     </div>
   </div>
 
-  <!-- 🧠 Core Libraries -->
+  <!-- Core Libraries -->
   <script src="https://docs.opencv.org/4.x/opencv.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
 
-  <!-- 🔗 Auto Init Once OpenCV Ready -->
-  <script type="module">
-    import { renderPalmLines3D } from "./js/lines-3d.js";
-    import("./js/main.js").then(module => {
-      if (typeof cv === "undefined") {
-        document.getElementById("status").textContent = "⏳ Waiting for OpenCV to load...";
-      } else {
-        document.getElementById("status").textContent = "✅ Core modules loaded";
-      }
-
-      const waitForCV = setInterval(() => {
-        if (typeof cv !== "undefined" && cv.Mat) {
-          clearInterval(waitForCV);
-          document.getElementById("status").textContent = "✅ OpenCV & TensorFlow Ready!";
-          module.startAnalyzer(renderPalmLines3D);
-        }
-      }, 1000);
-    });
-  </script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
