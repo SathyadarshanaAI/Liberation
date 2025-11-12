@@ -1,68 +1,67 @@
-async function initOpenCV() {
+import { drawQuantumPalm } from "./lines-3d.js";
+import { analyzePalmEnergy } from "./brain.js";
+
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+async function waitForCV() {
   return new Promise(resolve => {
-    const check = setInterval(() => {
+    const timer = setInterval(() => {
       if (typeof cv !== "undefined" && cv.Mat) {
-        clearInterval(check);
+        clearInterval(timer);
         resolve();
       }
     }, 500);
   });
 }
 
-async function main() {
-  document.getElementById("status").textContent = "🧠 Loading OpenCV...";
-  await initOpenCV();
-  document.getElementById("status").textContent = "✅ OpenCV Ready. Initializing camera...";
+async function startSystem() {
+  const status = document.getElementById("status");
+  status.textContent = "🧠 Loading OpenCV...";
+  await waitForCV();
+  status.textContent = "✅ Quantum Systems Ready";
 
   const hands = ["left", "right"];
-  let streams = {};
+  const streams = {};
 
   for (const side of hands) {
     const vid = document.getElementById(`vid${cap(side)}`);
     const canvas = document.getElementById(`canvas${cap(side)}`);
     const ctx = canvas.getContext("2d");
 
-    // Start Camera
     document.getElementById(`startCam${cap(side)}`).onclick = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         vid.srcObject = stream;
         streams[side] = stream;
-        document.getElementById("status").textContent = `📷 ${side} camera active`;
-      } catch (err) {
-        document.getElementById("status").textContent = "⚠️ " + err.message;
-      }
+        status.textContent = `📷 ${side} camera active`;
+      } catch (e) { status.textContent = "⚠️ " + e.message; }
     };
 
-    // Capture
     document.getElementById(`capture${cap(side)}`).onclick = () => {
       if (!streams[side]) return alert("Start camera first!");
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
       vid.pause();
-      document.getElementById("status").textContent = `📸 ${side} hand captured`;
+      status.textContent = `📸 ${side} hand captured`;
     };
 
-    // Analyze
-    document.getElementById(`analyze${cap(side)}`).onclick = () => {
-      document.getElementById("status").textContent = `🧠 Analyzing ${side} hand...`;
-      analyzePalm(canvas);
-      document.getElementById("status").textContent = "✨ 3D Palm Outline Rendered!";
+    document.getElementById(`analyze${cap(side)}`).onclick = async () => {
+      status.textContent = `🧬 Quantum analyzing ${side} hand...`;
+      await drawQuantumPalm(canvas);
+      const report = analyzePalmEnergy(side);
+      document.getElementById(`miniReport${cap(side)}`).textContent = report.text;
+      speakSinhala(report.voice);
+      status.textContent = "✨ Analysis complete!";
     };
   }
 }
 
-function cap(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function speakSinhala(text) {
+  if (!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "si-LK";
+  u.pitch = 1.1;
+  u.rate = 1;
+  speechSynthesis.speak(u);
 }
 
-function analyzePalm(canvas) {
-  const src = cv.imread(canvas);
-  const gray = new cv.Mat();
-  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-  const dst = new cv.Mat();
-  cv.Canny(gray, dst, 50, 150, 3, false);
-  cv.imshow(canvas, dst);
-  src.delete(); gray.delete(); dst.delete();
-}
-
-main();
+startSystem();
