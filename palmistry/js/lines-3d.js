@@ -1,83 +1,75 @@
 // ===============================
-// 🌌 lines-3d.js · V30.0 Divyachakra Real Palm Mode
+// 🌌 lines-3d.js · V30.1 Divyachakra Real Palm Mode (Browser fixed)
 // ===============================
 
-// Load TensorFlow Handpose model
+// ✅ Import TensorFlow + Handpose via CDN
+import * as tf from "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js";
 import * as handpose from "https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose@0.0.7/dist/handpose.min.js";
-import "@tensorflow/tfjs-backend-webgl";
 
 let model = null;
 
-// Initialize model once
+// 🧠 Initialize model (with WebGL backend auto)
 export async function initHandModel() {
   if (!model) {
+    await tf.setBackend("webgl"); // auto switch
+    await tf.ready();
     model = await handpose.load();
-    console.log("🤖 Divyachakra Model Loaded");
+    console.log("🤖 Divyachakra Model Loaded with WebGL backend");
   }
   return model;
 }
 
-// Main real 3D render function
+// 🌈 Main render function
 export async function renderPalmLines3D(frame, canvas) {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Convert frame to image
-  const imageBitmap = await createImageBitmap(new ImageData(frame.data, frame.width, frame.height));
+  // 🖐 Convert frame to image
+  const img = new ImageData(frame.data, frame.width, frame.height);
+  const bitmap = await createImageBitmap(img);
 
-  // Draw base palm
-  ctx.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
-  // Load model
   const handposeModel = await initHandModel();
-  const predictions = await handposeModel.estimateHands(imageBitmap, true);
+  const predictions = await handposeModel.estimateHands(bitmap, true);
 
-  // If no hands detected
   if (!predictions.length) {
     ctx.fillStyle = "#FFD700";
     ctx.font = "14px Segoe UI";
-    ctx.fillText("Adjust camera closer to palm 🖐️", 20, canvas.height - 10);
+    ctx.fillText("Place your palm closer 🖐️", 40, canvas.height - 10);
     return;
   }
 
-  // For each detected hand
+  // 🪶 Draw detected points + glowing lines
   predictions.forEach((hand) => {
-    const landmarks = hand.landmarks;
-
-    // 🔮 Draw detected points (21 keypoints)
+    const points = hand.landmarks;
     ctx.fillStyle = "#00e5ff";
-    for (let [x, y] of landmarks) {
+    points.forEach(([x, y]) => {
       ctx.beginPath();
-      ctx.arc(x, y, 2, 0, 2 * Math.PI);
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
       ctx.fill();
-    }
+    });
 
-    // 🔮 Draw realistic glowing palm lines based on keypoint clusters
-    drawGlowLine(ctx, [landmarks[0], landmarks[1], landmarks[5], landmarks[9], landmarks[13]], "#00e5ff", "Life Line");
-    drawGlowLine(ctx, [landmarks[5], landmarks[9], landmarks[13], landmarks[17]], "#ff4081", "Heart Line");
-    drawGlowLine(ctx, [landmarks[0], landmarks[9], landmarks[13]], "#ffc107", "Head Line");
-    drawGlowLine(ctx, [landmarks[9], landmarks[0]], "#7c4dff", "Fate Line");
-    drawGlowLine(ctx, [landmarks[13], landmarks[17]], "#4caf50", "Health Line");
+    // Draw core lines
+    drawGlowLine(ctx, [points[0], points[1], points[5], points[9]], "#ff4081", "Heart Line");
+    drawGlowLine(ctx, [points[0], points[5], points[9], points[13]], "#00e5ff", "Life Line");
+    drawGlowLine(ctx, [points[9], points[13], points[17]], "#ffc107", "Head Line");
+    drawGlowLine(ctx, [points[0], points[9], points[17]], "#4caf50", "Fate Line");
+    drawGlowLine(ctx, [points[13], points[17]], "#ff9800", "Health Line");
   });
 }
 
-function drawGlowLine(ctx, points, color, label) {
-  const grad = ctx.createLinearGradient(points[0][0], points[0][1], points[points.length - 1][0], points[points.length - 1][1]);
-  grad.addColorStop(0, color);
-  grad.addColorStop(1, "#ffffff");
-
+function drawGlowLine(ctx, pts, color, label) {
   ctx.beginPath();
-  ctx.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
-  ctx.strokeStyle = grad;
-  ctx.lineWidth = 3;
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
   ctx.shadowBlur = 10;
   ctx.shadowColor = color;
   ctx.stroke();
-  ctx.closePath();
 
-  // Label
-  const mid = points[Math.floor(points.length / 2)];
+  const mid = pts[Math.floor(pts.length / 2)];
   ctx.font = "12px Segoe UI";
   ctx.fillStyle = color;
   ctx.fillText(label, mid[0] + 5, mid[1] - 5);
