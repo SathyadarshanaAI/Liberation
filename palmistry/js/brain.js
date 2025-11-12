@@ -1,11 +1,18 @@
-export function analyzePalm(edges) {
-  const linesFound = Math.floor(Math.random() * 8) + 5;
-  const clarity = linesFound > 9 ? "high" : "moderate";
+// ✅ Named export function for palm energy analysis
+export function analyzePalmEnergy(side) {
+  const report = {};
+  const rand = Math.random();
 
-  const mini = `Detected ${linesFound} key palm lines\nClarity: ${clarity}\nMain lines visible.`;
-  const deep = `Palm analysis indicates emotional steadiness and spiritual insight.\nYour life and heart lines flow harmoniously, showing calm wisdom.`;
+  if (rand < 0.33) {
+    report.text = "🟢 ජීවිතයේ ශක්තිය ශක්තිමත්ය. ඔබේ ආත්ම බලය දීප්තිමත්ය.";
+    report.voice = "ඔබේ අතේ රේඛා ඉතා ශක්තිමත්ය. ශක්තිය හා ආලෝකය ඔබ තුළින් විහිදෙයි.";
+  } else if (rand < 0.66) {
+    report.text = "🟡 අතේ රේඛා ගැඹුරුයි. ඔබේ මනෝ බලය හා නිරවද්‍යතාව වැඩි වේ.";
+    report.voice = "ඔබේ අත මගින් ප්‍රකාශ වෙන්නේ නිරවද්‍ය බලයක්ය.";
+  } else {
+    report.text = "🔵 අතේ රේඛා සන්සුන්ය. ඔබට මනෝශාන්ති හා නිවන් අවබෝධය ලැබිය හැක.";
+    report.voice = "ඔබේ අත නිරවද්‍ය නිවන් අවබෝධය විහිදෙයි.";
+  }
 
-  const voice = `ඔයාගේ අතේ රේඛා පිරිසිදුයි. මනස නිවන් වෙලා, ශක්තිය ශාන්තිමත් අයුරින් පෙනෙනවා.`;
-
-  return { mini, deep, voice };
+  return report;
 }
