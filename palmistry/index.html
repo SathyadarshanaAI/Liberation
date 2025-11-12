@@ -1,28 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="si">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V31.0 Divyachakra Real Palm Mode</title>
+  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V31.5 Quantum Intelligence Mode</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-
   <style>
-    body { background:#0b0f16; color:#e6f0ff; font-family:'Segoe UI',sans-serif; text-align:center; margin:0; }
-    h1 { color:#00e5ff; text-shadow:0 0 15px #00e5ff; margin:16px 0; font-size:1.3rem; }
+    body { background:#0b0f16; color:#e6f0ff; font-family:'Segoe UI',sans-serif; text-align:center; margin:0; overflow-x:hidden; }
+    h1 { color:#00e5ff; text-shadow:0 0 15px #00e5ff; margin:16px 0; font-size:1.4rem; }
     .wrap { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:20px; }
-    .camCol { background:radial-gradient(circle at center,#e8e8e8 35%,#0b0f16 100%); padding:18px; border-radius:16px; box-shadow:0 0 25px #00e5ff22; width:320px; }
-    video,canvas { width:280px; height:360px; border-radius:10px; background:#000; display:block; margin:0 auto 8px; }
+    .camCol { background:radial-gradient(circle at center,#d0d0d0 40%,#0b0f16 100%); padding:18px; border-radius:16px; box-shadow:0 0 25px #00e5ff33; width:320px; transition:0.4s; }
+    .camCol:hover { transform:scale(1.02); box-shadow:0 0 35px #00e5ffaa; }
+    video, canvas { width:280px; height:360px; border-radius:10px; background:#000; display:block; margin:0 auto 8px; }
     button { margin:5px; padding:8px 14px; background:#00e5ff22; color:#00e5ff; border:1px solid #00e5ff; border-radius:8px; cursor:pointer; transition:0.3s; }
     button:hover { background:#00e5ff55; }
-    #status { margin-top:10px; color:#FFD700; text-shadow:0 0 8px #FFD700; }
+    #status { margin-top:10px; color:#FFD700; text-shadow:0 0 8px #FFD700; font-size:0.9rem; }
     pre { background:#0f1a24; border-radius:8px; padding:10px; color:#9be7ff; text-align:left; font-size:0.8rem; overflow-x:auto; }
   </style>
 </head>
-
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V31.0 Divyachakra Real Palm Mode</h1>
-  <p id="status">🧠 Initializing System...</p>
+  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V31.5 Quantum Intelligence Mode</h1>
+  <p id="status">🧠 Initializing Quantum Systems...</p>
 
   <div class="wrap">
     <div class="camCol">
@@ -34,7 +33,7 @@
         <button id="captureLeft">Capture</button>
         <button id="analyzeLeft">Analyze Palm</button>
       </div>
-      <h4>Mini Report</h4>
+      <h4>Voice Summary</h4>
       <pre id="miniReportLeft"></pre>
     </div>
 
@@ -47,15 +46,12 @@
         <button id="captureRight">Capture</button>
         <button id="analyzeRight">Analyze Palm</button>
       </div>
-      <h4>Mini Report</h4>
+      <h4>Voice Summary</h4>
       <pre id="miniReportRight"></pre>
     </div>
   </div>
 
-  <!-- Core Libraries -->
   <script src="https://docs.opencv.org/4.x/opencv.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
-
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
