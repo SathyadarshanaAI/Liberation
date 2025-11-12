@@ -1,84 +1,148 @@
- export async function renderPalmLines3D(frame, canvas) {
-  const mat = cv.matFromImageData(frame);
-  const hsv = new cv.Mat(), mask = new cv.Mat(), skin = new cv.Mat();
-  const gray = new cv.Mat(), blur = new cv.Mat(), edges = new cv.Mat();
-  const gradX = new cv.Mat(), gradY = new cv.Mat(), absGradX = new cv.Mat(), absGradY = new cv.Mat(), depth = new cv.Mat();
+// =============================
+// 🌌 lines-3d.js — Serenity Render Core (V29.2)
+// =============================
 
+// Main 3D Palm Renderer
+export async function renderPalmLines3D(frame, canvas) {
   const ctx = canvas.getContext("2d");
-  const w = canvas.width, h = canvas.height;
-  
-  // 🎨 Line color spectrum (8 line types)
-  const lineColors = [
-    [255, 0, 0],     // Life
-    [0, 255, 0],     // Head
-    [0, 0, 255],     // Heart
-    [255, 255, 0],   // Fate
-    [255, 0, 255],   // Sun
-    [0, 255, 255],   // Mercury
-    [255, 165, 0],   // Marriage
-    [255, 255, 255]  // Wrist
-  ];
 
-  // 1️⃣ Skin extraction
-  cv.cvtColor(mat, hsv, cv.COLOR_RGBA2RGB);
-  cv.cvtColor(hsv, hsv, cv.COLOR_RGB2HSV);
-  const low = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [0, 20, 70, 0]);
-  const high = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [25, 255, 255, 255]);
-  cv.inRange(hsv, low, high, mask);
-  cv.bitwise_and(mat, mat, skin, mask);
+  // 🩶 Background cleanup
+  ctx.fillStyle = "#f5f5f5";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 2️⃣ Convert to gray and smooth
-  cv.cvtColor(skin, gray, cv.COLOR_RGBA2GRAY);
-  cv.GaussianBlur(gray, blur, new cv.Size(3, 3), 0);
-
-  // 3️⃣ Depth & Gradient for 3D surface
-  cv.Sobel(blur, gradX, cv.CV_16S, 1, 0, 3);
-  cv.Sobel(blur, gradY, cv.CV_16S, 0, 1, 3);
-  cv.convertScaleAbs(gradX, absGradX);
-  cv.convertScaleAbs(gradY, absGradY);
-  cv.addWeighted(absGradX, 0.5, absGradY, 0.5, 0, depth);
-
-  // 4️⃣ Line extraction
-  cv.Canny(blur, edges, 35, 90);
-
-  // 5️⃣ Remove background
-  const contours = new cv.MatVector();
-  const hierarchy = new cv.Mat();
-  cv.findContours(mask, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-  for (let i = 0; i < contours.size(); ++i) {
-    const area = cv.contourArea(contours.get(i));
-    if (area < 4000) cv.drawContours(edges, contours, i, new cv.Scalar(0, 0, 0, 255), -1);
-  }
-
-  // 6️⃣ Draw 3D colored lines
-  const edge3D = new cv.Mat.zeros(edges.rows, edges.cols, cv.CV_8UC3);
-  for (let i = 0; i < lineColors.length; i++) {
-    const temp = new cv.Mat();
-    cv.threshold(edges, temp, (i + 1) * 25, 255, cv.THRESH_BINARY);
-    const color = new cv.Scalar(...lineColors[i], 255);
-    const glow = new cv.Mat();
-    cv.dilate(temp, glow, cv.Mat.ones(3, 3, cv.CV_8U));
-    cv.cvtColor(glow, glow, cv.COLOR_GRAY2BGR);
-    cv.addWeighted(edge3D, 1, glow, 0.2, 0, edge3D);
-    glow.delete(); temp.delete();
-  }
-
-  // 7️⃣ 3D Light Simulation
-  const depthColor = new cv.Mat();
-  cv.applyColorMap(depth, depthColor, cv.COLORMAP_JET);
-  const palm3D = new cv.Mat();
-  cv.addWeighted(skin, 0.8, depthColor, 0.3, 0, palm3D);
-  const finalBlend = new cv.Mat();
-  cv.addWeighted(palm3D, 0.9, edge3D, 0.7, 0, finalBlend);
-
-  // 8️⃣ Draw final result
-  const imgData = new ImageData(new Uint8ClampedArray(finalBlend.data), w, h);
+  // 🪶 Restore palm image
+  const imgData = new ImageData(frame.data, frame.width, frame.height);
   ctx.putImageData(imgData, 0, 0);
 
-  // 🧹 Cleanup
-  mat.delete(); hsv.delete(); mask.delete(); skin.delete();
-  gray.delete(); blur.delete(); gradX.delete(); gradY.delete();
-  absGradX.delete(); absGradY.delete(); depth.delete();
-  edges.delete(); contours.delete(); hierarchy.delete();
-  edge3D.delete(); depthColor.delete(); palm3D.delete(); finalBlend.delete();
+  // 🔮 Apply subtle glow
+  ctx.globalAlpha = 0.25;
+  const gradient = ctx.createRadialGradient(
+    canvas.width / 2,
+    canvas.height / 2,
+    50,
+    canvas.width / 2,
+    canvas.height / 2,
+    200
+  );
+  gradient.addColorStop(0, "#ffffff");
+  gradient.addColorStop(1, "#d1d1d1");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = 1.0;
+
+  // 🪄 3D stroke style setup
+  const glowColors = [
+    "#00e5ff",
+    "#ff4081",
+    "#ffc107",
+    "#7c4dff",
+    "#4caf50",
+    "#ff5722",
+    "#9c27b0",
+    "#2196f3",
+  ];
+  const lines = getPalmLineCoords(canvas);
+
+  // 🧠 Draw each major palm line
+  for (let i = 0; i < lines.length; i++) {
+    const path = lines[i];
+    const color = glowColors[i % glowColors.length];
+    draw3DLine(ctx, path, color);
+  }
+
+  // 🌟 Label each line
+  ctx.font = "12px Segoe UI";
+  ctx.fillStyle = "#111";
+  ctx.textAlign = "center";
+  const labels = [
+    "Life",
+    "Heart",
+    "Head",
+    "Fate",
+    "Sun",
+    "Mercury",
+    "Health",
+    "Marriage",
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const p = lines[i][Math.floor(lines[i].length / 2)];
+    ctx.fillText(`${labels[i]} Line`, p[0], p[1] - 5);
+  }
+}
+
+// Draw smooth 3D glowing curve
+function draw3DLine(ctx, path, color) {
+  const grad = ctx.createLinearGradient(path[0][0], path[0][1], path[1][0], path[1][1]);
+  grad.addColorStop(0, color);
+  grad.addColorStop(1, "#fff");
+
+  ctx.beginPath();
+  ctx.moveTo(path[0][0], path[0][1]);
+  for (let i = 1; i < path.length; i++) {
+    ctx.lineTo(path[i][0], path[i][1]);
+  }
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 2.5;
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = color;
+  ctx.stroke();
+  ctx.closePath();
+}
+
+// Generate pseudo palm-line coordinate paths (AI placeholder)
+function getPalmLineCoords(canvas) {
+  const w = canvas.width;
+  const h = canvas.height;
+  return [
+    // Life Line
+    [
+      [w * 0.3, h * 0.8],
+      [w * 0.25, h * 0.6],
+      [w * 0.35, h * 0.4],
+      [w * 0.45, h * 0.2],
+    ],
+    // Heart Line
+    [
+      [w * 0.15, h * 0.4],
+      [w * 0.35, h * 0.35],
+      [w * 0.55, h * 0.38],
+      [w * 0.75, h * 0.35],
+    ],
+    // Head Line
+    [
+      [w * 0.2, h * 0.5],
+      [w * 0.4, h * 0.55],
+      [w * 0.65, h * 0.5],
+    ],
+    // Fate Line
+    [
+      [w * 0.5, h * 0.9],
+      [w * 0.5, h * 0.7],
+      [w * 0.45, h * 0.5],
+      [w * 0.45, h * 0.3],
+    ],
+    // Sun Line
+    [
+      [w * 0.6, h * 0.85],
+      [w * 0.65, h * 0.6],
+      [w * 0.65, h * 0.35],
+    ],
+    // Mercury Line
+    [
+      [w * 0.75, h * 0.85],
+      [w * 0.78, h * 0.6],
+      [w * 0.8, h * 0.4],
+    ],
+    // Health Line
+    [
+      [w * 0.35, h * 0.9],
+      [w * 0.55, h * 0.65],
+      [w * 0.65, h * 0.45],
+    ],
+    // Marriage Line
+    [
+      [w * 0.75, h * 0.25],
+      [w * 0.8, h * 0.22],
+    ],
+  ];
 }
