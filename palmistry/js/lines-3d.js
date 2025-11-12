@@ -1,26 +1,40 @@
-export async function renderPalmLines3D(frame, canvas) {
-  const ctx = canvas.getContext("2d");
-  const img = tf.browser.fromPixels(frame);
-  const gray = img.mean(2).toFloat().div(255);
-  const edges = await tf.image.sobelEdges(gray);
-  const sobel = edges.mean(3);
-  const data = await tf.browser.toPixels(sobel);
+// 🕉️ Sathyadarshana Quantum Palm Analyzer · lines-3d.js
+// ✅ Named export for drawQuantumPalm()
 
-  const tmp = document.createElement("canvas");
-  tmp.width = canvas.width;
-  tmp.height = canvas.height;
-  const tctx = tmp.getContext("2d");
-  const imgData = tctx.createImageData(canvas.width, canvas.height);
-  imgData.data.set(data);
-  tctx.putImageData(imgData, 0, 0);
+export async function drawQuantumPalm(canvas) {
+  try {
+    // Read the canvas image
+    const src = cv.imread(canvas);
+    const gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(tmp, 0, 0);
-  ctx.globalCompositeOperation = "screen";
-  ctx.strokeStyle = "#00ffff";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(canvas.width / 2, canvas.height / 2, 45, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.globalCompositeOperation = "source-over";
+    // Detect edges using Sobel filter
+    const edges = new cv.Mat();
+    cv.Sobel(gray, edges, cv.CV_8U, 1, 1, 3, 1, 0, cv.BORDER_DEFAULT);
+
+    // Apply color map for glow effect
+    const color = new cv.Mat();
+    cv.applyColorMap(edges, color, cv.COLORMAP_TURBO);
+
+    // Add smooth glow (Gaussian Blur)
+    const aura = new cv.Mat();
+    const glow = new cv.Mat();
+    cv.GaussianBlur(color, aura, new cv.Size(15, 15), 5, 5, cv.BORDER_DEFAULT);
+    cv.addWeighted(aura, 0.6, color, 1.2, 0, glow);
+
+    // Show result
+    cv.imshow(canvas, glow);
+
+    // Clean memory
+    src.delete();
+    gray.delete();
+    edges.delete();
+    color.delete();
+    aura.delete();
+    glow.delete();
+
+    console.log("✅ drawQuantumPalm() executed successfully");
+  } catch (err) {
+    console.error("❌ drawQuantumPalm() failed:", err);
+  }
 }
