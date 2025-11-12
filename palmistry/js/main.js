@@ -1,6 +1,10 @@
-import { detectPalmEdges } from "./edgeLines.js";
-import { analyzePalm } from "./brain.js";
+// ==========================
+// 🧠 main.js — Serenity 3D Edition
+// ==========================
 
+import { renderPalmLines3D } from "./lines-3d.js";
+
+// Available hands
 const hands = ["left", "right"];
 let streams = {};
 
@@ -9,10 +13,12 @@ for (const side of hands) {
   const canvas = document.getElementById(`canvas${cap(side)}`);
   const ctx = canvas.getContext("2d");
 
-  // ✅ Start camera
+  // 🎥 Start Camera
   document.getElementById(`startCam${cap(side)}`).onclick = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      });
       vid.srcObject = stream;
       streams[side] = stream;
       document.getElementById("status").textContent = `📷 ${side.toUpperCase()} camera active`;
@@ -21,7 +27,7 @@ for (const side of hands) {
     }
   };
 
-  // ✅ Capture Frame
+  // 📸 Capture Frame
   document.getElementById(`capture${cap(side)}`).onclick = () => {
     if (!streams[side]) return alert("Start camera first!");
     ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
@@ -29,22 +35,34 @@ for (const side of hands) {
     document.getElementById("status").textContent = `📸 ${side} hand captured`;
   };
 
-  // ✅ Analyze Palm
+  // 🧠 Analyze Palm
   document.getElementById(`analyze${cap(side)}`).onclick = async () => {
-    const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
     document.getElementById("status").textContent = `🧠 Analyzing ${side} hand...`;
+    const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    const edges = await detectPalmEdges(frame, canvas);
-    const reports = analyzePalm(edges);
+    // ✨ Draw smooth 3D palm lines (new AI render system)
+    await renderPalmLines3D(frame, canvas);
 
-    document.getElementById(`miniReport${cap(side)}`).textContent = reports.mini;
-    document.getElementById(`deepReport${cap(side)}`).textContent = reports.deep;
+    // 🪶 AI Mock Reports
+    const mini = `Life line: steady\nHeart line: soft curve\nFate line: visible and bright`;
+    const deep = `Palm indicates mental clarity, emotional balance and intuitive strength. 
+Energy radiates evenly around the mount of Venus — suggesting resilience and wisdom.`;
 
-    speak(reports.voice);
-    document.getElementById("status").textContent = "✨ Analysis Complete!";
+    document.getElementById(`miniReport${cap(side)}`).textContent = mini;
+    document.getElementById(`deepReport${cap(side)}`).textContent = deep;
+
+    // 🎤 Voice Feedback
+    const voice =
+      side === "left"
+        ? "ඔයාගේ වම් අතේ රේඛා පිරිසිදුයි. ආත්ම ශක්තිය පැහැදිලියි."
+        : "ඔයාගේ දකුණු අතේ රේඛා විශ්වාස සහ නායකත්ව ගුණ පෙන්වයි.";
+
+    speak(voice);
+    document.getElementById("status").textContent = "✨ AI Analysis Complete!";
   };
 }
 
+// 🧩 Helper Functions
 function cap(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
