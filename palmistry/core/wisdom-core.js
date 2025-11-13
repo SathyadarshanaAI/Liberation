@@ -1,12 +1,8 @@
-// ===============================
-// 🕉️ Wisdom Core Engine · V1.0
-// Heart of The Seed
-// ===============================
-
 export function initWisdomCore() {
   return {
+    system: "THE SEED · Quantum Palmistry Engine",
     version: "1.0",
-    status: "initialized",
-    message: "Wisdom Core Loaded"
+    message: "Wisdom Core Activated",
+    timestamp: new Date().toISOString()
   };
 }
