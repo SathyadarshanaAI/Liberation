@@ -1,8 +1,3 @@
-// Final Combined Truth Output
-
-export function createTruthReport(block) {
-  return {
-    summary: "No data",
-    confidence: 0
-  };
+export function renderPalm3D(points) {
+  return "Palm 3D Model (placeholder)";
 }
