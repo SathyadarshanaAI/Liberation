@@ -1,63 +1,57 @@
-// ===============================
-// 🌱 THE SEED · Palmistry Engine
-// Master Pipeline Loader (V1.0)
-// ===============================
+// 🔥 THE SEED — Full Pipeline Loader
 
-// --- Core ---
+// Core
 import { initWisdomCore } from "./core/wisdom-core.js";
-import { PRINCIPLES } from "./core/principles.js";
 import { generateHealingAdvice } from "./core/self-heal.js";
 
-// --- Vision ---
+// Vision
 import { detectPalm } from "./vision/palm-detect.js";
 import { detectAura } from "./vision/aura-detect.js";
 import { detectLines } from "./vision/line-detect.js";
 
-// --- Analysis ---
+// Analysis
 import { analyzeKarma } from "./analysis/karma-engine.js";
 import { detectPastLifeSignature } from "./analysis/pastlife-engine.js";
 import { mapTendencies } from "./analysis/tendency-map.js";
 
-// --- Render ---
+// Render
 import { createTruthReport } from "./render/truth-output.js";
-import { renderPalm3D } from "./render/palm-3d-render.js";
 
 
-// ===============================
-// 🚀 START ENGINE
-// ===============================
+// 🧠 Start Engine
+export async function startPalmistryEngine(imageData, handLandmarks) {
 
-async function startPalmistryEngine(imageData, handLandmarks) {
-    
-    console.log("🌱 Initializing THE SEED...");
+  console.log("🌱 Starting THE SEED Quantum Engine...");
 
-    // 1. Core
-    const wisdom = initWisdomCore();
+  // Core
+  const wisdom = initWisdomCore();
 
-    // 2. Vision
-    const palm = await detectPalm(imageData);
-    const aura = detectAura(imageData);
-    const lines = detectLines(handLandmarks);
+  // Vision
+  const palm = await detectPalm(imageData);
+  const aura = detectAura(imageData);
+  const lines = detectLines(handLandmarks);
 
-    // 3. Analysis
-    const karma = analyzeKarma(lines);
-    const pastlife = detectPastLifeSignature(lines);
-    const tendencies = mapTendencies(lines, palm.mounts ?? []);
+  // Analysis
+  const karma = analyzeKarma(lines);
+  const pastlife = detectPastLifeSignature(lines);
+  const tendencies = mapTendencies(lines, palm.mounts);
 
-    // 4. Healing
-    const heal = generateHealingAdvice(karma.karmicCycle);
+  // Healing
+  const heal = generateHealingAdvice(karma.karmicCycle);
 
-    // 5. Final Truth Output
-    const truth = createTruthReport({
-        wisdom, palm, aura, lines, karma, pastlife, tendencies, heal
-    });
+  // Final Truth Output
+  const truth = createTruthReport({
+    palm,
+    aura,
+    lines,
+    karma,
+    pastlife,
+    tendencies,
+    heal
+  });
 
-    console.log("🌟 FINAL TRUTH REPORT:");
-    console.log(truth);
-
-    return truth;
+  console.log("🌟 FINAL REPORT:", truth);
+  return truth;
 }
 
-
-// Export globally (if used in HTML)
 window.startPalmistryEngine = startPalmistryEngine;
