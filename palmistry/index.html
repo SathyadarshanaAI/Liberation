@@ -1,57 +1,141 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ Sathyadarshana Quantum Palm Analyzer · V31.5 Quantum Intelligence Mode</title>
-  <link rel="icon" type="image/png" href="assets/logo.png" />
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🕉️ THE SEED · Quantum Palmistry Engine</title>
+
   <style>
-    body { background:#0b0f16; color:#e6f0ff; font-family:'Segoe UI',sans-serif; text-align:center; margin:0; overflow-x:hidden; }
-    h1 { color:#00e5ff; text-shadow:0 0 15px #00e5ff; margin:16px 0; font-size:1.4rem; }
-    .wrap { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:20px; }
-    .camCol { background:radial-gradient(circle at center,#d0d0d0 40%,#0b0f16 100%); padding:18px; border-radius:16px; box-shadow:0 0 25px #00e5ff33; width:320px; transition:0.4s; }
-    .camCol:hover { transform:scale(1.02); box-shadow:0 0 35px #00e5ffaa; }
-    video, canvas { width:280px; height:360px; border-radius:10px; background:#000; display:block; margin:0 auto 8px; }
-    button { margin:5px; padding:8px 14px; background:#00e5ff22; color:#00e5ff; border:1px solid #00e5ff; border-radius:8px; cursor:pointer; transition:0.3s; }
-    button:hover { background:#00e5ff55; }
-    #status { margin-top:10px; color:#FFD700; text-shadow:0 0 8px #FFD700; font-size:0.9rem; }
-    pre { background:#0f1a24; border-radius:8px; padding:10px; color:#9be7ff; text-align:left; font-size:0.8rem; overflow-x:auto; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at center, #1a1a1a, #000);
+      color: #eee;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 95%;
+      max-width: 480px;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 10px;
+      color: #00eaff;
+      text-shadow: 0 0 10px #00eaff;
+    }
+
+    #video {
+      width: 100%;
+      margin-top: 15px;
+      border-radius: 12px;
+      border: 2px solid #00eaff;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+
+    #output {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      border: 1px solid #333;
+      color: #0ff;
+      font-size: 13px;
+      white-space: pre-wrap;
+      max-height: 280px;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    button {
+      width: 90%;
+      background: linear-gradient(90deg, #00eaff, #0099cc);
+      color: #000;
+      padding: 14px;
+      border: none;
+      border-radius: 50px;
+      font-size: 18px;
+      margin-top: 15px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+      transition: 0.2s ease;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #00c2ff;
+      transform: translateY(-3px);
+    }
+
   </style>
 </head>
+
 <body>
-  <h1>🕉️ Sathyadarshana Quantum Palm Analyzer · V31.5 Quantum Intelligence Mode</h1>
-  <p id="status">🧠 Initializing Quantum Systems...</p>
 
-  <div class="wrap">
-    <div class="camCol">
-      <h3>✋ Left Hand</h3>
-      <video id="vidLeft" autoplay playsinline muted></video>
-      <canvas id="canvasLeft" width="280" height="360"></canvas>
-      <div>
-        <button id="startCamLeft">Start Camera</button>
-        <button id="captureLeft">Capture</button>
-        <button id="analyzeLeft">Analyze Palm</button>
-      </div>
-      <h4>Voice Summary</h4>
-      <pre id="miniReportLeft"></pre>
-    </div>
+  <div class="container">
+    
+    <h1>🕉️ THE SEED<br>Quantum Palmistry Engine</h1>
 
-    <div class="camCol">
-      <h3>🤚 Right Hand</h3>
-      <video id="vidRight" autoplay playsinline muted></video>
-      <canvas id="canvasRight" width="280" height="360"></canvas>
-      <div>
-        <button id="startCamRight">Start Camera</button>
-        <button id="captureRight">Capture</button>
-        <button id="analyzeRight">Analyze Palm</button>
-      </div>
-      <h4>Voice Summary</h4>
-      <pre id="miniReportRight"></pre>
-    </div>
+    <button onclick="startCamera()">📷 Open Camera</button>
+
+    <video id="video" autoplay playsinline></video>
+
+    <button onclick="captureAndAnalyze()">🔮 Analyze Palm</button>
+
+    <div id="output">Awaiting analysis...</div>
+
   </div>
 
-  <script src="https://docs.opencv.org/4.x/opencv.js"></script>
-  <script type="module" src="js/main.js"></script>
+
+  <!-- Engine Pipeline -->
+  <script type="module" src="main.js"></script>
+
+  <script>
+    let stream;
+
+    async function startCamera() {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      document.getElementById("video").srcObject = stream;
+    }
+
+    function captureAndAnalyze() {
+      const video = document.getElementById("video");
+
+      // Canvas convert
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      // Mock landmarks (AI model plug later)
+      const mockLandmarks = [
+        { x: 0.32, y: 0.55 },
+        { x: 0.45, y: 0.40 },
+        { x: 0.60, y: 0.70 }
+      ];
+
+      startPalmistryEngine(imageData, mockLandmarks).then((result) => {
+        document.getElementById("output").textContent =
+          JSON.stringify(result, null, 2);
+      });
+    }
+  </script>
+
 </body>
 </html>
