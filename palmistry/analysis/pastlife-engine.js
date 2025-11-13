@@ -1,8 +1,6 @@
-// Past Life Pattern Identifier
-
-export function detectPastLifeSignature(data) {
+export function detectPastLifeSignature(lines) {
   return {
-    pastLife: "unknown",
-    influence: 0
+    identity: "Scholar / Healer",
+    influence: lines.heart.strength > 0.7 ? "High" : "Moderate",
   };
 }
