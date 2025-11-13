@@ -1,57 +1,98 @@
-// 🔥 THE SEED — Full Pipeline Loader
+/* ---------------------------------------------------------
+   THE SEED · Palmistry AI
+   main.js — Central Fusion Controller (v1.0)
+   Controls:
+   - Camera Engine
+   - Frame Capture
+   - Vision → Line Detect → Analysis
+   - Render Output
+----------------------------------------------------------*/
 
-// Core
-import { initWisdomCore } from "./core/wisdom-core.js";
-import { generateHealingAdvice } from "./core/self-heal.js";
-
-// Vision
 import { detectPalm } from "./vision/palm-detect.js";
-import { detectAura } from "./vision/aura-detect.js";
 import { detectLines } from "./vision/line-detect.js";
+import { WisdomCore } from "./core/wisdom-core.js";
+import { palmAnalysis } from "./analysis/palm-core.js";
+import { karmaAnalysis } from "./analysis/karma-engine.js";
+import { renderTruth } from "./render/truth-output.js";
 
-// Analysis
-import { analyzeKarma } from "./analysis/karma-engine.js";
-import { detectPastLifeSignature } from "./analysis/pastlife-engine.js";
-import { mapTendencies } from "./analysis/tendency-map.js";
+let stream = null;
+const video = document.getElementById("video");
+const overlay = document.getElementById("handOverlay");
+const outBox = document.getElementById("output");
+const msg = document.getElementById("handMsg");
 
-// Render
-import { createTruthReport } from "./render/truth-output.js";
+/* ---------------------------------------------------------
+   CAMERA ENGINE
+----------------------------------------------------------*/
+export async function startCamera() {
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+  }
 
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false
+    });
+  } catch {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  }
 
-// 🧠 Start Engine
-export async function startPalmistryEngine(imageData, handLandmarks) {
+  video.srcObject = stream;
+  await video.play();
 
-  console.log("🌱 Starting THE SEED Quantum Engine...");
-
-  // Core
-  const wisdom = initWisdomCore();
-
-  // Vision
-  const palm = await detectPalm(imageData);
-  const aura = detectAura(imageData);
-  const lines = detectLines(handLandmarks);
-
-  // Analysis
-  const karma = analyzeKarma(lines);
-  const pastlife = detectPastLifeSignature(lines);
-  const tendencies = mapTendencies(lines, palm.mounts);
-
-  // Healing
-  const heal = generateHealingAdvice(karma.karmicCycle);
-
-  // Final Truth Output
-  const truth = createTruthReport({
-    palm,
-    aura,
-    lines,
-    karma,
-    pastlife,
-    tendencies,
-    heal
-  });
-
-  console.log("🌟 FINAL REPORT:", truth);
-  return truth;
+  msg.innerHTML = "Hold your hand inside the guide and keep steady.";
 }
 
-window.startPalmistryEngine = startPalmistryEngine;
+/* ---------------------------------------------------------
+   CAPTURE + PROCESS
+----------------------------------------------------------*/
+export function captureHand() {
+
+  if (!video.srcObject) {
+    alert("Camera not active!");
+    return;
+  }
+
+  msg.innerHTML = "Scanning hand… please wait.";
+
+  // CREATE FRAME CANVAS
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+
+  // IMAGE DATA
+  const frame = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
+
+  /* ---------------------------------------------------------
+     PROCESS PIPELINE
+  ----------------------------------------------------------*/
+
+  // 1. PALM DETECT
+  const palm = detectPalm(frame);
+
+  // 2. LINE DETECT (8-line engine)
+  const lines = detectLines(palm);
+
+  // 3. STORE in WISDOM CORE
+  WisdomCore.setPalmistry("scan", {
+    raw: frame,
+    palm,
+    lines
+  });
+
+  // 4. PALM ANALYSIS
+  const palmReading = palmAnalysis(lines);
+
+  // 5. KARMA / SPIRITUAL ANALYSIS
+  const karmaReading = karmaAnalysis(lines);
+
+  // 6. MERGE FINAL TRUTH
+  const finalReport = renderTruth(palmReading, karmaReading);
+
+  // 7. SHOW OUTPUT
+  outBox.textContent = finalReport;
+
+  msg.innerHTML = "Hand scanned successfully. View your reading below.";
+}
