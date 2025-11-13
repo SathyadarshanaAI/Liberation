@@ -1,8 +1,9 @@
-// Palm Shape + Finger Classification AI
-
 export async function detectPalm(image) {
+  // Placeholder — real model connects here
   return {
-    palmType: "unknown",
-    fingerSet: "unknown"
+    shape: "Earth",
+    fingerType: "Balanced",
+    mounts: ["Jupiter", "Apollo"],
+    confidence: 0.82
   };
 }
