@@ -1,219 +1,344 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>🕉️ THE SEED · Universal Palmistry AI</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>🕉️ THE SEED · Universal Palmistry AI</title>
 
-  <style>
-    html { font-size: clamp(14px, 2vw, 17px); }
-    body {
-      background: radial-gradient(circle at center, #111, #000);
-      color: #eee;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 20px 0 50px 0;
-      text-align: center;
-    }
-    h1 {
-      color: #00eaff;
-      font-size: 1.6rem;
-      text-shadow: 0 0 8px #00eaff;
-      margin-bottom: 15px;
-    }
+<style>
+html { font-size: clamp(14px, 2vw, 17px); }
+body {
+  background: radial-gradient(circle at center, #111, #000);
+  color: #eee;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 20px 0 50px 0;
+  text-align: center;
+}
+h1 {
+  color: #00eaff;
+  font-size: 1.6rem;
+  text-shadow: 0 0 8px #00eaff;
+  margin-bottom: 15px;
+}
 
-    /* Language Selector */
-    #languageSelect {
-      width: 90%;
-      max-width: 300px;
-      padding: 10px;
-      border-radius: 8px;
-      background: #111;
-      color: #00eaff;
-      border: 1px solid #00eaff;
-      box-shadow: 0 0 8px #00eaff55;
-      margin-bottom: 18px;
-      font-size: 0.9rem;
-    }
+/* Language Selector */
+#languageSelect {
+  width: 90%;
+  max-width: 300px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #111;
+  color: #00eaff;
+  border: 1px solid #00eaff;
+  box-shadow: 0 0 8px #00eaff55;
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+}
 
-    /* Camera Selector Buttons */
-    .cameraSelector {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    .cameraSelector button {
-      background: linear-gradient(90deg, #00eaff, #0099cc);
-      padding: 10px 14px;
-      border-radius: 30px;
-      border: none;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 10px #00eaff88;
-      font-size: 0.9rem;
-    }
+/* Camera Selector Buttons */
+.cameraSelector {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.cameraSelector button {
+  background: linear-gradient(90deg, #00eaff, #0099cc);
+  padding: 10px 14px;
+  border-radius: 30px;
+  border: none;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 10px #00eaff88;
+  font-size: 0.9rem;
+}
 
-    /* Camera Window */
-    .camBox {
-      width: 92%;
-      max-width: 360px;
-      margin: 0 auto 20px auto;
-      position: relative;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 2px solid #00eaff;
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-    }
-    video {
-      width: 100%;
-      height: 380px;
-      object-fit: cover;
-      border-radius: 14px;
-      background: #000;
-    }
+/* Camera Window */
+.camBox {
+  width: 92%;
+  max-width: 360px;
+  margin: 0 auto 20px auto;
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid #00eaff;
+  box-shadow: 0 0 20px rgba(0,255,255,0.3);
+}
+video {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  border-radius: 14px;
+  background: #000;
+}
 
-    #handOverlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 70%;
-      opacity: 0.35;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      filter: drop-shadow(0 0 12px #00eaff);
-    }
+#handOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70%;
+  opacity: 0.35;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px #00eaff);
+}
 
-    #handMessage {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      padding: 8px;
-      background: rgba(0, 0, 0, 0.5);
-      color: #00eaff;
-      font-size: 0.92rem;
-      font-weight: 600;
-      border-top: 1px solid #00eaff77;
-      backdrop-filter: blur(5px);
-      pointer-events: none;
-      line-height: 1.3rem;
-    }
+#handMessage {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 8px;
+  background: rgba(0,0,0,0.5);
+  color: #00eaff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-top: 1px solid #00eaff77;
+  backdrop-filter: blur(5px);
+  pointer-events: none;
+  line-height: 1.3rem;
+}
 
-    button.actionBtn {
-      background: linear-gradient(90deg, #00eaff, #0099cc);
-      padding: 12px 20px;
-      border-radius: 40px;
-      border: none;
-      color: #000;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      width: 85%;
-      max-width: 300px;
-      margin-bottom: 15px;
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-    }
+button.actionBtn {
+  background: linear-gradient(90deg,#00eaff,#0099cc);
+  padding: 12px 20px;
+  border-radius: 40px;
+  border: none;
+  color: #000;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: 85%;
+  max-width: 300px;
+  margin-bottom: 15px;
+  box-shadow: 0 0 15px rgba(0,255,255,0.5);
+}
 
-    #output {
-      width: 92%;
-      max-width: 480px;
-      margin: 10px auto;
-      padding: 15px;
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 12px;
-      border: 1px solid #00eaff33;
-      color: #0ff;
-      text-align: left;
-      white-space: pre-wrap;
-      max-height: 250px;
-      overflow-y: auto;
-      font-size: 0.92rem;
-    }
-  </style>
+#output {
+  width: 92%;
+  max-width: 480px;
+  margin: 10px auto;
+  padding: 15px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  border: 1px solid #00eaff33;
+  color: #0ff;
+  text-align: left;
+  white-space: pre-wrap;
+  max-height: 250px;
+  overflow-y: auto;
+  font-size: 0.92rem;
+}
+
+/* User Form */
+#userForm {
+  width: 92%;
+  max-width: 420px;
+  margin: 25px auto;
+  background: rgba(255,255,255,0.06);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #00eaff55;
+  box-shadow: 0 0 15px rgba(0,255,255,0.2);
+  text-align: left;
+  display: none;
+}
+#userForm label {
+  color: #00eaff;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  display: block;
+}
+#userForm input, #userForm select {
+  width: 100%;
+  padding: 10px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid #00eaff55;
+  border-radius: 8px;
+  color: #00eaff;
+  margin-top: 5px;
+}
+</style>
 </head>
 
 <body>
 
-  <h1>🕉️ THE SEED · Universal Palmistry AI</h1>
+<h1>🕉️ THE SEED · Universal Palmistry AI</h1>
 
-  <select id="languageSelect"></select>
+<select id="languageSelect" onchange="setLanguage()"></select>
 
-  <div class="cameraSelector">
-    <button onclick="switchCamera('environment')">📷 Rear Camera</button>
-    <button onclick="switchCamera('user')">🤳 Front Camera</button>
-  </div>
+<div class="cameraSelector">
+  <button onclick="switchCamera('environment')">📷 Rear Camera</button>
+  <button onclick="switchCamera('user')">🤳 Front Camera</button>
+</div>
 
-  <div class="camBox">
-    <video id="video" autoplay playsinline muted></video>
-    <img id="handOverlay" src="assets/palm-overlay.png">
-    <div id="handMessage">Select a language to begin.</div>
-  </div>
+<div class="camBox">
+  <video id="video" autoplay playsinline muted></video>
+  <img id="handOverlay" src="assets/palm-overlay.png">
+  <div id="handMessage">Select a language to begin.</div>
+</div>
 
-  <button class="actionBtn" onclick="startCamera()">Open Camera</button>
-  <button class="actionBtn" onclick="captureAndAnalyze()">Scan Hand</button>
+<button class="actionBtn" onclick="startCamera()">Open Camera</button>
+<button class="actionBtn" onclick="captureAndAnalyze()">Scan Hand</button>
 
-  <div id="output">Awaiting analysis...</div>
+<div id="output">Awaiting analysis...</div>
 
-  <script>
-/* UNIVERSAL CAMERA v3.0 — FIXED */
-let currentStream = null;
+<!-- USER FORM (RESTORED) -->
+<div id="userForm">
+  <label>Full Name</label>
+  <input id="fullName"/>
 
-async function switchCamera(mode) {
-  if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+  <label>Gender</label>
+  <select id="gender">
+    <option>Male</option>
+    <option>Female</option>
+    <option>Other</option>
+  </select>
 
-  const video = document.getElementById("video");
+  <label>Date of Birth</label>
+  <input type="date" id="dob"/>
 
-  const constraints = {
-    audio: false,
-    video: {
-      facingMode: mode,
-      width: { ideal: 1280 },
-      height: { ideal: 720 }
+  <label>Identification Document Type</label>
+  <select id="idType">
+    <option>National ID</option>
+    <option>Passport</option>
+    <option>Driving License</option>
+    <option>Residency Permit</option>
+    <option>Citizen ID</option>
+    <option>Other</option>
+  </select>
+
+  <label>ID Number</label>
+  <input id="idNumber"/>
+
+  <label>Country of Issue</label>
+  <select id="countrySelect"></select>
+
+  <button class="actionBtn" onclick="submitUserForm()">Submit</button>
+</div>
+
+<script>
+/* ------------------- LANGUAGE SYSTEM ------------------- */
+
+const languages = {
+  en:{msg:"Position your hand in front of the camera as shown in the guide.",step:"First scan your left hand, then your right hand.",open:"Open Camera",scan:"Scan Hand"},
+  si:{msg:"නිදර්ශකයේ පෙන්වන පරිදි ඔබේ අත කැමරාව ඉදිරියේ තබන්න.",step:"පළමුව වම් අත, පසුව දකුණු අත scan කරන්න.",open:"කැමරා විවෘත කරන්න",scan:"අත් පරීක්ෂා කරන්න"},
+  ta:{msg:"வழிகாட்டியில் காட்டியபடி கையை கேமரா முன்னால் வையுங்கள்.",step:"முதலில் இடது கை, பின்னர் வலது கை ஸ்கேன் செய்யுங்கள்.",open:"கேமரா திறக்க",scan:"கை ஸ்கேன் செய்ய"},
+  hi:{msg:"मार्गदर्शक के अनुसार अपना हाथ कैमरे के सामने रखें.",step:"पहले बायाँ हाथ, फिर दायाँ हाथ स्कैन करें.",open:"कैमरा खोलें",scan:"हाथ स्कैन करें"},
+  te:{msg:"చూపినట్లు మీ చెయ్యిని కెమెరా ముందుంచండి.",step:"ముందు ఎడమ చెయ్యి, తర్వాత కుడి చెయ్యి.",open:"కెమేరా ఓపెన్",scan:"చేయి స్కాన్"},
+  kn:{msg:"ಮಾರ್ಗದರ್ಶಕದಂತೆ ಕೈಯನ್ನು ಕ್ಯಾಮೆರಾ ಮುಂದೆ ಇಡಿ.",step:"ಮೊದಲಿಗೆ ಎಡ ಕೈ, ನಂತರ ಬಲ ಕೈ.",open:"ಕ್ಯಾಮೆರಾ ಓಪನ್",scan:"ಕೈ ಸ್ಕ್ಯಾನ್"},
+  ml:{msg:"മാർഗ്ഗനിർദ്ദേശത്തിൽ പറയുന്നപോലെ കൈ ക്യാമറയ്‌ക്ക് മുൻപിൽ വയ്ക്കുക.",step:"ആദ്യം ഇടത് കൈ, പിന്നെ വലത് കൈ.",open:"ക്യാമറ തുറക്കുക",scan:"കൈ സ്കാൻ"},
+  bn:{msg:"নির্দেশিকা অনুযায়ী হাত ক্যামেরার সামনে রাখুন.",step:"প্রথমে বাম হাত, পরে ডান হাত স্ক্যান করুন.",open:"ক্যামেরা খুলুন",scan:"হাত স্ক্যান"},
+  zh:{msg:"请将手放在摄像头前，如指示图所示。",step:"先扫描左手，再扫描右手。",open:"打开相机",scan:"扫描手掌"},
+  ja:{msg:"ガイドのように手をカメラの前へ置いてください.",step:"まず左手、次に右手をスキャン。",open:"カメラを開く",scan:"手をスキャン"},
+  ar:{msg:"ضع يدك أمام الكاميرا كما هو موضح.",step:"امسح يدك اليسرى أولاً ثم اليمنى.",open:"افتح الكاميرا",scan:"مسح اليد"},
+  es:{msg:"Coloca tu mano frente a la cámara como en la guía.",step:"Primero la mano izquierda, luego la derecha.",open:"Abrir Cámara",scan:"Escanear Mano"}
+};
+
+function populateLanguages(){
+  let select=document.getElementById("languageSelect");
+  Object.keys(languages).forEach(l=>{
+    let o=document.createElement("option");
+    o.value=l;o.text=l.toUpperCase();
+    select.appendChild(o);
+  });
+}
+populateLanguages();
+
+function setLanguage(){
+  let lang=document.getElementById("languageSelect").value;
+  if(!lang) return;
+
+  document.getElementById("handMessage").innerHTML=
+    languages[lang].msg+"<br>"+languages[lang].step;
+
+  document.querySelectorAll(".actionBtn")[0].textContent=
+    languages[lang].open;
+
+  document.querySelectorAll(".actionBtn")[1].textContent=
+    languages[lang].scan;
+}
+
+/* ---------------------- CAMERA ENGINE ---------------------- */
+
+let currentStream=null;
+
+async function switchCamera(mode){
+  if(currentStream) currentStream.getTracks().forEach(t=>t.stop());
+
+  const video=document.getElementById("video");
+
+  const constraints={
+    audio:false,
+    video:{
+      facingMode:mode,
+      width:{ideal:1280},
+      height:{ideal:720}
     }
   };
 
-  try {
-    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-  } catch (e1) {
-    try {
-      currentStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: mode } }
-      });
-    } catch (e2) {
-      currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
+  try{
+    currentStream=await navigator.mediaDevices.getUserMedia(constraints);
+  }catch(e1){
+    try{
+      currentStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{exact:mode}}});
+    }catch(e2){
+      currentStream=await navigator.mediaDevices.getUserMedia({video:true});
     }
   }
 
-  video.srcObject = currentStream;
-  video.muted = true;
-  video.playsInline = true;
+  video.srcObject=currentStream;
+  video.muted=true;
+  video.playsInline=true;
   await video.play();
 }
 
-async function startCamera() {
-  switchCamera('environment');
-}
+async function startCamera(){ switchCamera("environment"); }
 
-/* Scan */
-function captureAndAnalyze() {
-  const video = document.getElementById("video");
+/* ---------------------- SCAN EVENT ---------------------- */
 
-  if (!video.srcObject) {
-    alert("Camera is not active.");
-    return;
-  }
+function captureAndAnalyze(){
+  const video=document.getElementById("video");
 
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  if(!video.srcObject){ alert("Camera is not active."); return; }
 
-  canvas.getContext("2d").drawImage(video, 0, 0);
+  const canvas=document.createElement("canvas");
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
 
-  document.getElementById("output").textContent =
+  canvas.getContext("2d").drawImage(video,0,0);
+
+  document.getElementById("output").textContent=
     "Palm scan complete.\nProcessing data...";
+
+  showUserForm();
 }
-  </script>
+
+/* ---------------------- USER FORM ---------------------- */
+
+function showUserForm(){
+  document.getElementById("userForm").style.display="block";
+}
+
+function submitUserForm(){
+  alert("Information submitted successfully.");
+}
+
+/* ---------------------- COUNTRY LIST ---------------------- */
+
+const countries=[
+"Sri Lanka","India","Japan","China","United States","United Kingdom","Singapore","Australia",
+"Canada","Saudi Arabia","UAE","Bangladesh","Nepal","Pakistan","France","Germany","Italy",
+"Spain","Malaysia","Indonesia","Brazil","Mexico","South Africa","Russia"
+];
+
+countries.forEach(c=>{
+  let o=document.createElement("option");
+  o.text=c;
+  document.getElementById("countrySelect").appendChild(o);
+});
+</script>
 
 </body>
 </html>
