@@ -1,9 +1,7 @@
-export function generateHealingAdvice(pattern) {
-  const advice = {
-    positive: "Your energy is aligned. Continue compassion and mindfulness.",
-    neutral: "You are stable, but inner healing will elevate your consciousness.",
-    negative: "Release old pain. Forgive. Rebuild your spiritual core.",
+export function detectAura(stream) {
+  return {
+    auraColor: "Blue",
+    vibration: "Calm",
+    intensity: 0.73
   };
-
-  return advice[pattern] || "Observe your mind. Healing begins with awareness.";
 }
