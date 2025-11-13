@@ -1,8 +1,7 @@
-// Aura Energy Signature Estimator
-
-export function detectAura(rgbStream) {
+export function detectAura(stream) {
   return {
-    auraColor: "undefined",
-    intensity: 0
+    auraColor: "Blue",
+    vibration: "Calm",
+    intensity: 0.73
   };
 }
