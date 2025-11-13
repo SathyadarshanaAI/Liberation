@@ -1,6 +1,5 @@
-// Universal Palmistry Principles Loader
-
 export const PRINCIPLES = {
-  fiveElements: ["Earth", "Water", "Fire", "Air", "Space"],
-  mounts: ["Jupiter", "Saturn", "Apollo", "Mercury", "Moon", "Venus", "Mars"]
+  elements: ["Earth", "Air", "Fire", "Water"],
+  mounts: ["Jupiter", "Saturn", "Apollo", "Mercury", "Moon", "Mars", "Venus"],
+  lines: ["Life", "Head", "Heart", "Fate"]
 };
