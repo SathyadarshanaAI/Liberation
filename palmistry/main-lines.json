@@ -1,0 +1,12 @@
+{
+  "main_lines": [
+    { "id": "life", "name": "Life Line", "label_si": "ජීව රේඛාව" },
+    { "id": "head", "name": "Head Line", "label_si": "මානසික රේඛාව" },
+    { "id": "heart", "name": "Heart Line", "label_si": "හෘදය රේඛාව" },
+    { "id": "fate", "name": "Fate Line", "label_si": "වාසනාව/දුරදිග" },
+    { "id": "sun", "name": "Sun Line", "label_si": "සූර්ය රේඛාව" },
+    { "id": "mercury", "name": "Mercury Line", "label_si": "බුධ රේඛාව" },
+    { "id": "mars", "name": "Mars Line", "label_si": "මංගල/ශක්ති රේඛාව" },
+    { "id": "manikanda", "name": "Spiritual Wrist Seal (Manikanda)", "label_si": "මණිකන්ඩා" }
+  ]
+}
