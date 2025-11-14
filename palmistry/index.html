@@ -23,7 +23,6 @@
       text-shadow: 0 0 10px #00eaff;
     }
 
-    /* CAMERA BOX FIXED — Autofit for all screens */
     #camBox {
       width: 100%;
       height: 65vh;
@@ -100,21 +99,19 @@
 
   <h1>🕉️ THE SEED · Palmistry AI</h1>
 
-  <!-- CAMERA -->
   <div id="camBox">
       <video id="video" autoplay playsinline muted></video>
       <img id="handOverlay" src="assets/palm-overlay.png">
       <div id="handMsg">Select a language to begin.</div>
   </div>
 
-  <!-- BUTTONS -->
   <button class="actionBtn" onclick="startCamera()">Open Camera</button>
   <button class="actionBtn" onclick="captureHand()">Scan Hand</button>
 
-  <!-- OUTPUT -->
   <div id="output">Awaiting scan...</div>
 
-  <script src="main.js"></script>
+  <!-- FIXED -->
+  <script type="module" src="main.js"></script>
 
 </body>
 </html>
