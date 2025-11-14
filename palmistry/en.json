@@ -1,0 +1,23 @@
+{
+  "name": "English",
+  "code": "en",
+  "ui": {
+    "select_language": "Select a language to begin.",
+    "open_camera": "Open Camera",
+    "scan_hand": "Scan Hand",
+    "scanning": "Scanning hand… please wait.",
+    "scan_complete": "Scan complete.",
+    "place_hand": "Place your hand inside the guide.",
+    "left_right": "First scan the left hand, then the right hand."
+  },
+  "labels": {
+    "palm_reading": "Palm Reading",
+    "karma_analysis": "Karma Analysis",
+    "final_report": "THE SEED — Final Palmistry Report"
+  },
+  "voice": {
+    "intro": "Your palm reveals a spiritual message.",
+    "reading_start": "Beginning analysis.",
+    "karma_start": "Interpreting karmic flow."
+  }
+}
