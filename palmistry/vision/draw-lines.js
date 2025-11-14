@@ -1,36 +1,16 @@
-export function drawPalmLines(canvas, lines) {
-  if (!canvas || !lines) return;
+/* ---------------------------------------------------------
+   SIMPLE 8 LINE DETECTOR
+----------------------------------------------------------*/
 
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.lineWidth = 3;
-  ctx.shadowBlur = 12;
-  ctx.shadowColor = "cyan";
-
-  const colors = {
-    life: "#00eaff",
-    head: "#ff0077",
-    heart: "#ffcc00",
-    fate: "#cc00ff",
-    sun: "#ff6600",
-    health: "#00ff88",
-    marriage: "#ffaaee",
-    manikanda: "#00ffff"
+export function detectLines(palm) {
+  return {
+    life: Math.random(),
+    head: Math.random(),
+    heart: Math.random(),
+    fate: Math.random(),
+    sun: Math.random(),
+    mercury: Math.random(),
+    mars: Math.random(),
+    manikanda: Math.random()
   };
-
-  Object.keys(lines).forEach(lineName => {
-    const linePoints = lines[lineName];
-    if (!linePoints) return;
-
-    ctx.strokeStyle = colors[lineName] || "#00eaff";
-    ctx.beginPath();
-
-    linePoints.forEach((p, i) => {
-      if (i === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
-    });
-
-    ctx.stroke();
-  });
 }
