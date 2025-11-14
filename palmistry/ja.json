@@ -1,0 +1,23 @@
+{
+  "name": "Japanese",
+  "code": "ja",
+  "ui": {
+    "select_language": "言語を選択してください。",
+    "open_camera": "カメラを開く",
+    "scan_hand": "手をスキャン",
+    "scanning": "手をスキャン中…",
+    "scan_complete": "スキャンが完了しました。",
+    "place_hand": "手をガイド内に置いてください。",
+    "left_right": "左手 → 右手の順にスキャンしてください。"
+  },
+  "labels": {
+    "palm_reading": "手相リーディング",
+    "karma_analysis": "カルマ分析",
+    "final_report": "THE SEED — 最終手相レポート"
+  },
+  "voice": {
+    "intro": "あなたの手には霊的なメッセージがあります。",
+    "reading_start": "分析を開始します。",
+    "karma_start": "カルマの流れを解析中です。"
+  }
+}
