@@ -1,0 +1,24 @@
+{
+  "name": "Hebrew",
+  "code": "he",
+  "direction": "rtl",
+  "ui": {
+    "select_language": "בחר שפה.",
+    "open_camera": "פתח מצלמה",
+    "scan_hand": "סרוק את כף היד",
+    "scanning": "סורק את כף היד… אנא המתן.",
+    "scan_complete": "הסריקה הושלמה.",
+    "place_hand": "מקם את כף היד בתוך הסימון.",
+    "left_right": "סרוק תחילה את יד שמאל ולאחר מכן את יד ימין."
+  },
+  "labels": {
+    "palm_reading": "פענוח קווי כף היד",
+    "karma_analysis": "ניתוח קארמה",
+    "final_report": "THE SEED — דו״ח פענוח סופי"
+  },
+  "voice": {
+    "intro": "כף היד שלך מגלה מסר רוחני.",
+    "reading_start": "מתחיל ניתוח.",
+    "karma_start": "מפרש את זרימת הקארמה."
+  }
+}
