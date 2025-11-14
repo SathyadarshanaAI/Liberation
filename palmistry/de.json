@@ -1,0 +1,23 @@
+{
+  "name": "German",
+  "code": "de",
+  "ui": {
+    "select_language": "Bitte wählen Sie eine Sprache.",
+    "open_camera": "Kamera öffnen",
+    "scan_hand": "Hand scannen",
+    "scanning": "Hand wird gescannt… bitte warten.",
+    "scan_complete": "Scan abgeschlossen.",
+    "place_hand": "Legen Sie Ihre Hand in die Markierung.",
+    "left_right": "Zuerst linke Hand, dann rechte Hand scannen."
+  },
+  "labels": {
+    "palm_reading": "Handlinien-Lesung",
+    "karma_analysis": "Karma-Analyse",
+    "final_report": "THE SEED — Abschließender Handlinien-Bericht"
+  },
+  "voice": {
+    "intro": "Deine Hand enthüllt eine spirituelle Botschaft.",
+    "reading_start": "Analyse beginnt.",
+    "karma_start": "Karmafluss wird interpretiert."
+  }
+}
