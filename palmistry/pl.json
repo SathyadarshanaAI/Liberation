@@ -1,0 +1,23 @@
+{
+  "name": "Polish",
+  "code": "pl",
+  "ui": {
+    "select_language": "Wybierz język.",
+    "open_camera": "Otwórz kamerę",
+    "scan_hand": "Skanuj dłoń",
+    "scanning": "Skanowanie dłoni… proszę czekać.",
+    "scan_complete": "Skanowanie zakończone.",
+    "place_hand": "Umieść dłoń w wyznaczonym miejscu.",
+    "left_right": "Najpierw lewa dłoń, potem prawa."
+  },
+  "labels": {
+    "palm_reading": "Czytanie z dłoni",
+    "karma_analysis": "Analiza karmy",
+    "final_report": "THE SEED — Ostateczny raport chiromancji"
+  },
+  "voice": {
+    "intro": "Twoja dłoń ujawnia duchowe przesłanie.",
+    "reading_start": "Rozpoczynam analizę.",
+    "karma_start": "Trwa analiza przepływu karmy."
+  }
+}
