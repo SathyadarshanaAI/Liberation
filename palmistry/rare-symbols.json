@@ -1,0 +1,58 @@
+{
+  "rare_symbols": [
+    {
+      "id": "trishul",
+      "name": "Trishul Mark",
+      "label_si": "ත්‍රිශූල ලකුණ",
+      "meaning": "Divine protection, mastery over past, present and future."
+    },
+    {
+      "id": "swastika",
+      "name": "Swastika Mark",
+      "label_si": "සිංහෝඩ්‍යාන/සත්මංගල",
+      "meaning": "Highly auspicious karmic blessing; prosperity and divine path."
+    },
+    {
+      "id": "lotus",
+      "name": "Lotus Mark",
+      "label_si": "පොදුමල මල",
+      "meaning": "Pure soul, spiritual awakening, enlightened destiny."
+    },
+    {
+      "id": "temple",
+      "name": "Temple Structure",
+      "label_si": "දේවාල හැඩය",
+      "meaning": "Indicates deep spiritual duty; carrier of ancient wisdom."
+    },
+    {
+      "id": "trident_star",
+      "name": "Star of Brahma",
+      "label_si": "බ්‍රහ්මේ සතරු මදි",
+      "meaning": "Once-in-a-lifetime mark; very high destiny; global leadership energy."
+    },
+    {
+      "id": "chain_line",
+      "name": "Chain Pattern",
+      "label_si": "ජාල රූපය",
+      "meaning": "Indicates karmic entanglement; deep life lessons."
+    },
+    {
+      "id": "cross_mystic",
+      "name": "Mystic Cross",
+      "label_si": "අද්භූත සළකුණ",
+      "meaning": "Mystic abilities, intuition, psychic resonance."
+    },
+    {
+      "id": "triangle_mark",
+      "name": "Divine Triangle",
+      "label_si": "ත්‍රිකෝණ සලකුණ",
+      "meaning": "Highly sharp intelligence; breakthrough success."
+    },
+    {
+      "id": "fish_mark",
+      "name": "Matsya Rekha",
+      "label_si": "මත්ස්‍ය ලකුණ",
+      "meaning": "Rare fortune symbol in Hindu palmistry; divine progress."
+    }
+  ]
+}
