@@ -1,0 +1,23 @@
+{
+  "name": "Italian",
+  "code": "it",
+  "ui": {
+    "select_language": "Seleziona una lingua.",
+    "open_camera": "Apri fotocamera",
+    "scan_hand": "Scansiona la mano",
+    "scanning": "Scansione della mano… attendi.",
+    "scan_complete": "Scansione completata.",
+    "place_hand": "Posiziona la mano all'interno della guida.",
+    "left_right": "Prima la mano sinistra, poi la destra."
+  },
+  "labels": {
+    "palm_reading": "Lettura della mano",
+    "karma_analysis": "Analisi del karma",
+    "final_report": "THE SEED — Rapporto finale di lettura palmare"
+  },
+  "voice": {
+    "intro": "La tua mano rivela un messaggio spirituale.",
+    "reading_start": "Inizio analisi.",
+    "karma_start": "Analisi del flusso karmico."
+  }
+}
