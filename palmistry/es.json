@@ -1,0 +1,23 @@
+{
+  "name": "Spanish",
+  "code": "es",
+  "ui": {
+    "select_language": "Seleccione un idioma.",
+    "open_camera": "Abrir cámara",
+    "scan_hand": "Escanear mano",
+    "scanning": "Escaneando la mano…",
+    "scan_complete": "Escaneo completado.",
+    "place_hand": "Coloque su mano dentro de la guía.",
+    "left_right": "Primero la mano izquierda, luego la derecha."
+  },
+  "labels": {
+    "palm_reading": "Lectura de palma",
+    "karma_analysis": "Análisis de karma",
+    "final_report": "THE SEED — Informe final de lectura de palma"
+  },
+  "voice": {
+    "intro": "Tu palma revela un mensaje espiritual.",
+    "reading_start": "Iniciando análisis.",
+    "karma_start": "Analizando el flujo del karma."
+  }
+}
