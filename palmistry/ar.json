@@ -1,0 +1,24 @@
+{
+  "name": "Arabic",
+  "code": "ar",
+  "direction": "rtl",
+  "ui": {
+    "select_language": "اختر اللغة للبدء.",
+    "open_camera": "افتح الكاميرا",
+    "scan_hand": "مسح اليد",
+    "scanning": "يتم مسح اليد…",
+    "scan_complete": "اكتمل المسح.",
+    "place_hand": "ضع يدك داخل الدليل.",
+    "left_right": "امسح اليد اليسرى أولاً، ثم اليمنى."
+  },
+  "labels": {
+    "palm_reading": "قراءة الكف",
+    "karma_analysis": "تحليل الكارما",
+    "final_report": "THE SEED — التقرير النهائي لقراءة الكف"
+  },
+  "voice": {
+    "intro": "تكشف يدك رسالة روحية.",
+    "reading_start": "بدء التحليل.",
+    "karma_start": "تحليل تدفق الكارما."
+  }
+}
