@@ -1,0 +1,23 @@
+{
+  "name": "French",
+  "code": "fr",
+  "ui": {
+    "select_language": "Sélectionnez une langue.",
+    "open_camera": "Ouvrir la caméra",
+    "scan_hand": "Scanner la main",
+    "scanning": "Analyse de la main… veuillez patienter.",
+    "scan_complete": "Analyse terminée.",
+    "place_hand": "Placez votre main dans le guide.",
+    "left_right": "Scannez d'abord la main gauche, puis la droite."
+  },
+  "labels": {
+    "palm_reading": "Lecture de la main",
+    "karma_analysis": "Analyse du karma",
+    "final_report": "THE SEED — Rapport final de chiromancie"
+  },
+  "voice": {
+    "intro": "Votre main révèle un message spirituel.",
+    "reading_start": "Début de l'analyse.",
+    "karma_start": "Analyse du flux karmique."
+  }
+}
