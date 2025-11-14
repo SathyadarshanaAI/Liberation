@@ -1,0 +1,23 @@
+{
+  "name": "Chinese",
+  "code": "zh",
+  "ui": {
+    "select_language": "请选择语言。",
+    "open_camera": "打开相机",
+    "scan_hand": "扫描手掌",
+    "scanning": "正在扫描手掌…",
+    "scan_complete": "扫描完成。",
+    "place_hand": "请将手放入指示区域。",
+    "left_right": "先扫描左手，再扫描右手。"
+  },
+  "labels": {
+    "palm_reading": "手相分析",
+    "karma_analysis": "因果分析",
+    "final_report": "THE SEED — 最终手相报告"
+  },
+  "voice": {
+    "intro": "你的手掌揭示了精神信息。",
+    "reading_start": "开始分析。",
+    "karma_start": "解析业力流动。"
+  }
+}
