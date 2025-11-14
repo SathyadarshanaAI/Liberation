@@ -1,0 +1,23 @@
+{
+  "name": "Romanian",
+  "code": "ro",
+  "ui": {
+    "select_language": "Selectați o limbă.",
+    "open_camera": "Deschide camera",
+    "scan_hand": "Scanează mâna",
+    "scanning": "Scanare în curs… vă rugăm așteptați.",
+    "scan_complete": "Scanare finalizată.",
+    "place_hand": "Așezați mâna în ghid.",
+    "left_right": "Mai întâi mâna stângă, apoi dreapta."
+  },
+  "labels": {
+    "palm_reading": "Citirea palmei",
+    "karma_analysis": "Analiza karmei",
+    "final_report": "THE SEED — Raport final de chiromanție"
+  },
+  "voice": {
+    "intro": "Palma ta dezvăluie un mesaj spiritual.",
+    "reading_start": "Încep analiza.",
+    "karma_start": "Analizez fluxul karmic."
+  }
+}
