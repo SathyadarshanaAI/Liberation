@@ -1,13 +1,6 @@
 /* ---------------------------------------------------------
    THE SEED · Palmistry AI
-   main.js — Central Fusion Controller (v2.0)
-   Entire Fusion System:
-   - Camera Engine
-   - International Language System
-   - Frame Capture
-   - Vision → Line Detect → Analysis
-   - Render Output
-   - User Form Trigger
+   main.js — Central Fusion Controller (v2.1 Stable Build)
 ----------------------------------------------------------*/
 
 import { detectPalm } from "./vision/palm-detect.js";
@@ -21,81 +14,44 @@ import { renderTruth } from "./render/truth-output.js";
    DOM ELEMENTS
 ----------------------------------------------------------*/
 let stream = null;
+
 const video = document.getElementById("video");
-const overlay = document.getElementById("handOverlay");
-const outBox = document.getElementById("output");
-const msg = document.getElementById("handMsg");
+const handMsg = document.getElementById("handMsg");
+const outputBox = document.getElementById("output");
 const languageSelect = document.getElementById("languageSelect");
 const userForm = document.getElementById("userForm");
 
 /* ---------------------------------------------------------
-   LANGUAGE SYSTEM (12 Languages)
+   LANGUAGE ENGINE (12 LANGS)
 ----------------------------------------------------------*/
 const LANG = {
-  en: {
-    msg: "Place your hand inside the guide.",
-    step: "First scan left hand, then right hand.",
-    open: "Open Camera",
-    scan: "Scan Hand"
-  },
-  si: {
-    msg: "අත නිදර්ශකය ඇතුළට තබන්න.",
-    step: "පළමුව වම් අත , පසුව දකුණු අත.",
-    open: "කැමරා විවෘත කරන්න",
-    scan: "අත් පරීක්ෂා කරන්න"
-  },
-  ta: {
-    msg: "கையை வழிகாட்டி உள்ளே வையுங்கள்.",
-    step: "முதல் இடது கை, பின்னர் வலது கை.",
-    open: "கேமரா திறக்க",
-    scan: "கை ஸ்கேன்"
-  },
-  hi: {
-    msg: "हाथ को गाइड के अंदर रखें.",
-    step: "पहले बायाँ, फिर दायाँ हाथ.",
-    open: "कैमरा खोलें",
-    scan: "हाथ स्कैन"
-  },
-  kn: {
-    msg: "ಕೈಯನ್ನು ಮಾರ್ಗದರ್ಶಕದೊಳಗೆ ಇಡಿ.",
-    step: "ಮೊದಲು ಎಡ ಕೈ, ನಂತರ ಬಲ ಕೈ.",
-    open: "ಕ್ಯಾಮೆರಾ ಓಪನ್",
-    scan: "ಕೈ ಸ್ಕ್ಯಾನ್"
-  },
-  bn: {
-    msg: "হাত গাইডের ভিতরে রাখুন।",
-    step: "বাম হাত → ডান হাত স্ক্যান।",
-    open: "ক্যামেরা চালু করুন",
-    scan: "হাত স্ক্যান"
-  },
-  ja: {
-    msg: "手をガイドの中に置いてください。",
-    step: "左手 → 右手をスキャン。",
-    open: "カメラを開く",
-    scan: "手をスキャン"
-  }
+  en: { msg: "Place your hand inside the guide.", step: "First scan left hand, then right hand.", open: "Open Camera", scan: "Scan Hand" },
+  si: { msg: "අත නිදර්ශකය ඇතුළට තබන්න.", step: "පළමුව වම් අත , පසුව දකුණු අත.", open: "කැමරා විවෘත කරන්න", scan: "අත් පරීක්ෂා කරන්න" },
+  ta: { msg: "கையை வழிகாட்டி உள்ளே வையுங்கள்.", step: "முதல் இடது கை, பின்னர் வலது கை.", open: "கேமரா திறக்க", scan: "கை ஸ்கேன்" },
+  hi: { msg: "हाथ को गाइड के अंदर रखें.", step: "पहले बायाँ, फिर दायाँ हाथ.", open: "कैमरा खोलें", scan: "हाथ स्कैन" },
+  kn: { msg: "ಕೈಯನ್ನು ಮಾರ್ಗದರ್ಶಕದೊಳಗೆ ಇಡಿ.", step: "ಎಡ ಕೈ → ಬಲ ಕೈ.", open: "ಕ್ಯಾಮೆರಾ ಓಪನ್", scan: "ಕೈ ಸ್ಕ್ಯಾನ್" },
+  bn: { msg: "হাত গাইডের ভিতরে রাখুন।", step: "বাম হাত → ডান হাত স্ক্যান।", open: "ক্যামেরা চালু করুন", scan: "হাত স্ক্যান" },
+  ja: { msg: "手をガイドの中に置いてください。", step: "左手 → 右手をスキャン。", open: "カメラを開く", scan: "手をスキャン" },
 };
 
-/* Fill languages */
+/* Load languages */
 export function loadLanguages() {
   if (!languageSelect) return;
-  Object.keys(LANG).forEach(l => {
-    let opt = document.createElement("option");
-    opt.value = l;
-    opt.textContent = l.toUpperCase();
-    languageSelect.appendChild(opt);
+  Object.keys(LANG).forEach(L => {
+    let o = document.createElement("option");
+    o.value = L;
+    o.textContent = L.toUpperCase();
+    languageSelect.appendChild(o);
   });
 }
-
 loadLanguages();
 
 /* Apply language */
 export function setLanguage() {
-  let L = languageSelect.value;
+  const L = languageSelect.value;
   if (!L) return;
 
-  msg.innerHTML = LANG[L].msg + "<br>" + LANG[L].step;
-
+  handMsg.innerHTML = `${LANG[L].msg}<br>${LANG[L].step}`;
   document.querySelectorAll(".actionBtn")[0].textContent = LANG[L].open;
   document.querySelectorAll(".actionBtn")[1].textContent = LANG[L].scan;
 }
@@ -104,7 +60,9 @@ export function setLanguage() {
    CAMERA ENGINE
 ----------------------------------------------------------*/
 export async function startCamera() {
-  if (stream) stream.getTracks().forEach(t => t.stop());
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+  }
 
   try {
     stream = await navigator.mediaDevices.getUserMedia({
@@ -118,11 +76,11 @@ export async function startCamera() {
   video.srcObject = stream;
   await video.play();
 
-  msg.innerHTML = "Hold your hand inside the guide.";
+  handMsg.innerHTML = "Hold your hand inside the guide.";
 }
 
 /* ---------------------------------------------------------
-   CAPTURE + PROCESS
+   CAPTURE + PROCESS AI PIPELINE
 ----------------------------------------------------------*/
 export function captureHand() {
 
@@ -131,8 +89,9 @@ export function captureHand() {
     return;
   }
 
-  msg.innerHTML = "Scanning hand… please wait.";
+  handMsg.innerHTML = "Scanning… Please wait.";
 
+  // canvas frame
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -140,31 +99,26 @@ export function captureHand() {
 
   const frame = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
 
-  // 1. PALM DETECT
+  // AI pipeline
   const palm = detectPalm(frame);
-
-  // 2. LINE DETECT
   const lines = detectLines(palm);
 
-  // 3. SAVE INTO WISDOM CORE
-  WisdomCore.setPalmistry("scan", { raw: frame, palm, lines });
+  WisdomCore.setPalmistry("scan", {
+    raw: frame,
+    palm: palm,
+    lines: lines
+  });
 
-  // 4. PALM ANALYSIS
   const palmReading = palmAnalysis(lines);
-
-  // 5. KARMA ANALYSIS
   const karmaReading = karmaAnalysis(lines);
 
-  // 6. MERGE TRUTH
-  const finalReport = renderTruth(palmReading, karmaReading);
+  const finalOutput = renderTruth(palmReading, karmaReading);
 
-  // 7. DISPLAY
-  outBox.textContent = finalReport;
+  // Display
+  outputBox.textContent = finalOutput;
+  handMsg.innerHTML = "Scan complete.";
 
-  // 8. SHOW USER FORM
   showUserForm();
-
-  msg.innerHTML = "Scan complete.";
 }
 
 /* ---------------------------------------------------------
@@ -175,5 +129,14 @@ export function showUserForm() {
 }
 
 export function submitUserForm() {
-  alert("User information saved.");
+  alert("User information saved successfully.");
 }
+
+/* ---------------------------------------------------------
+   GLOBAL EXPORTS (Fix for onclick errors)
+----------------------------------------------------------*/
+window.startCamera = startCamera;
+window.captureHand = captureHand;
+window.setLanguage = setLanguage;
+window.loadLanguages = loadLanguages;
+window.submitUserForm = submitUserForm;
