@@ -1,0 +1,23 @@
+{
+  "name": "Hindi",
+  "code": "hi",
+  "ui": {
+    "select_language": "भाषा चुनें।",
+    "open_camera": "कैमरा खोलें",
+    "scan_hand": "हाथ स्कैन करें",
+    "scanning": "हाथ स्कैन किया जा रहा है…",
+    "scan_complete": "स्कैन पूरा हुआ।",
+    "place_hand": "अपना हाथ मार्गदर्शक के अंदर रखें।",
+    "left_right": "पहले बायाँ हाथ, फिर दायाँ हाथ।"
+  },
+  "labels": {
+    "palm_reading": "हस्त रेखा पढ़ना",
+    "karma_analysis": "कर्म विश्लेषण",
+    "final_report": "THE SEED — अंतिम हस्तरेखा रिपोर्ट"
+  },
+  "voice": {
+    "intro": "आपकी हथेली एक आध्यात्मिक संदेश देती है।",
+    "reading_start": "विश्लेषण प्रारंभ।",
+    "karma_start": "कर्म प्रवाह का अध्ययन।"
+  }
+}
