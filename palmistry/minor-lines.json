@@ -1,0 +1,58 @@
+{
+  "minor_lines": [
+    {
+      "id": "marriage",
+      "name": "Marriage Line",
+      "label_si": "විවාහ රේඛාව",
+      "description": "Shows marriage stability, timing, and emotional bonding patterns."
+    },
+    {
+      "id": "relationship",
+      "name": "Relationship Lines",
+      "label_si": "සම්බන්ධතා රේඛා",
+      "description": "Indicates deep emotional connections and significant partnerships."
+    },
+    {
+      "id": "travel",
+      "name": "Travel Lines",
+      "label_si": "ප්‍රයాణ රේඛා",
+      "description": "Represents travel opportunities, foreign settlement tendencies."
+    },
+    {
+      "id": "children",
+      "name": "Children Lines",
+      "label_si": "දරුවන්ගේ රේඛා",
+      "description": "Marks the likelihood, nature, and spiritual qualities of children."
+    },
+    {
+      "id": "influence",
+      "name": "Influence Lines",
+      "label_si": "පැවැත්ම/උපාය රේඛා",
+      "description": "Shows influential people or karmic connections affecting the life path."
+    },
+    {
+      "id": "health_minor",
+      "name": "Minor Health Lines",
+      "label_si": "කුඩා සෞඛ්‍ය රේඛා",
+      "description": "Reflects minor health fluctuations and stress indicators."
+    },
+    {
+      "id": "barriers",
+      "name": "Barrier Lines",
+      "label_si": "බාධක රේඛා",
+      "description": "Shows obstacles, karmic resistance, and delays."
+    },
+    {
+      "id": "breaks",
+      "name": "Break Lines",
+      "label_si": "කඩාවැටීම්",
+      "description": "Represents shifts, turning points, and emotional breaks."
+    },
+    {
+      "id": "creativity",
+      "name": "Creative Marks",
+      "label_si": "ස්‍ර්‍රෙෂ්ඨාත්මක ලකුණු",
+      "description": "Denotes artistic ability, imagination, and spiritual intelligence."
+    }
+  ]
+}
