@@ -1,23 +1,17 @@
-export function renderTruth(palmReading, karmaReading) {
+/* ---------------------------------------------------------
+   FINAL REPORT RENDER
+----------------------------------------------------------*/
 
-  const palmText =
-    typeof palmReading === "object"
-      ? JSON.stringify(palmReading, null, 2)
-      : palmReading;
-
-  const karmaText =
-    typeof karmaReading === "object"
-      ? JSON.stringify(karmaReading, null, 2)
-      : karmaReading;
-
+export function renderTruth(palm, karma) {
   return `
-🔮 THE SEED — Final Palmistry Report
----------------------------------------------
+===== THE SEED · FINAL PALMISTRY REPORT =====
 
-🤲 Palm Reading:
-${palmText}
+${palm}
 
-🧘 Karma Analysis:
-${karmaText}
-`;
+--------------------------------------------
+
+${karma}
+
+============================================
+  `;
 }
