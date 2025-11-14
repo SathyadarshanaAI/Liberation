@@ -103,5 +103,21 @@
 <div id="output">Awaiting scan...</div>
 
 <script type="module" src="main.js"></script>
+
+<script type="module">
+  import {
+    startCamera,
+    captureHand,
+    setLanguage,
+    loadLanguages
+  } from "./main.js";
+
+  window.startCamera = startCamera;
+  window.captureHand = captureHand;
+  window.setLanguage = setLanguage;
+
+  loadLanguages();
+</script>
+
 </body>
 </html>
