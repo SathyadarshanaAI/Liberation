@@ -1,166 +1,28 @@
-/* ---------------------------------------------------------
-   THE SEED · Palmistry AI Vision
-   line-detect.js — 8-Line Detection Engine (v2.0)
-----------------------------------------------------------*/
+// vision/line-detect.js
+// Dummy line detector — returns 8 canonical lines with sample coordinates
+// Each line = { id, name, points: [[x,y],[x,y],...] , confidence }
 
-/*
- palmData = {
-   width,
-   height,
-   mask,
-   bbox: { minX, minY, maxX, maxY }
- }
-*/
+export async function detectLines(palm) {
+  const w = palm.bbox.w || 400;
+  const h = palm.bbox.h || 600;
 
-export function detectLines(palmData) {
+  // Generate synthetic lines roughly positioned
+  const lines = [
+    { id: "life", name: "Life Line", points: [[w*0.15,h*0.85],[w*0.25,h*0.6],[w*0.45,h*0.5]], confidence: 0.9 },
+    { id: "head", name: "Head Line", points: [[w*0.1,h*0.5],[w*0.45,h*0.45],[w*0.8,h*0.4]], confidence: 0.9 },
+    { id: "heart", name: "Heart Line", points: [[w*0.15,h*0.25],[w*0.45,h*0.2],[w*0.8,h*0.18]], confidence: 0.9 },
+    { id: "fate", name: "Fate Line", points: [[w*0.5,h*0.9],[w*0.5,h*0.3]], confidence: 0.65 },
+    { id: "sun", name: "Sun Line", points: [[w*0.7,h*0.85],[w*0.75,h*0.4]], confidence: 0.5 },
+    { id: "mercury", name: "Mercury Line", points: [[w*0.8,h*0.85],[w*0.82,h*0.55]], confidence: 0.45 },
+    { id: "mars", name: "Mars Line", points: [[w*0.2,h*0.9],[w*0.35,h*0.7]], confidence: 0.4 },
+    { id: "manikanda", name: "Manikanda (Spiritual Wrist Seal)", points: [[w*0.3,h*0.95],[w*0.7,h*0.95]], confidence: 0.8 }
+  ];
 
-    const { mask, width, height, bbox } = palmData;
+  // Attach simple metrics
+  lines.forEach(l => {
+    l.length = Math.hypot((l.points[0][0]- (l.points[l.points.length-1][0])),
+                          (l.points[0][1]- (l.points[l.points.length-1][1])));
+  });
 
-    // Extract palm crop
-    const palm = extractRegion(mask, width, height, bbox);
-
-    // 8 MAIN LINES OUTPUT
-    const lines = {
-        life: detectLifeLine(palm),
-        head: detectHeadLine(palm),
-        heart: detectHeartLine(palm),
-        fate: detectFateLine(palm),
-        sun: detectSunLine(palm),
-        mercury: detectMercuryLine(palm),
-        mars: detectMarsLine(palm),
-        manikanda: detectManikanda(palm),
-
-        // Extra (not analyzed yet)
-        minor: detectMinorLines(palm),
-        symbols: detectSymbols(palm)
-    };
-
-    return lines;
-}
-
-/* ---------------------------------------------------------
-   REGION EXTRACTOR
-----------------------------------------------------------*/
-function extractRegion(mask, w, h, box) {
-    const { minX, minY, maxX, maxY } = box;
-
-    const pw = maxX - minX;
-    const ph = maxY - minY;
-
-    const crop = {
-        width: pw,
-        height: ph,
-        data: new Uint8ClampedArray(pw * ph)
-    };
-
-    for (let y = minY; y < maxY; y++) {
-        for (let x = minX; x < maxX; x++) {
-            crop.data[(y - minY) * pw + (x - minX)] = mask[y * w + x];
-        }
-    }
-
-    return crop;
-}
-
-/* ---------------------------------------------------------
-   MAIN LINES (PLACEHOLDER ENGINE — AI-ready)
-----------------------------------------------------------*/
-
-function detectLifeLine(palm) {
-    return {
-        confidence: 0.72,
-        start: "near thumb",
-        curve: "medium-deep",
-        length: "long",
-        energy: "strong vitality"
-    };
-}
-
-function detectHeadLine(palm) {
-    return {
-        confidence: 0.68,
-        clarity: "clear",
-        direction: "straight",
-        focus: "analytical thinking"
-    };
-}
-
-function detectHeartLine(palm) {
-    return {
-        confidence: 0.66,
-        curve: "slightly curved",
-        emotionalNature: "balanced",
-        depth: "medium"
-    };
-}
-
-function detectFateLine(palm) {
-    return {
-        confidence: 0.60,
-        origin: "mid palm",
-        careerFlow: "consistent"
-    };
-}
-
-function detectSunLine(palm) {
-    return {
-        confidence: 0.55,
-        creativity: "high",
-        reputation: "growing"
-    };
-}
-
-function detectMercuryLine(palm) {
-    return {
-        confidence: 0.52,
-        communication: "strong",
-        intuition: "active"
-    };
-}
-
-function detectMarsLine(palm) {
-    return {
-        confidence: 0.48,
-        bravery: "good",
-        crisisHandling: "strong"
-    };
-}
-
-function detectManikanda(palm) {
-    return {
-        confidence: 0.80,
-        spiritualSeal: true,
-        meaning: "protection + divine intuition"
-    };
-}
-
-/* ---------------------------------------------------------
-   MINOR LINES (AI-ready stubs)
-----------------------------------------------------------*/
-function detectMinorLines(palm) {
-    return {
-        marriage: randomScore(),
-        travel: randomScore(),
-        health: randomScore(),
-        intuition: randomScore()
-    };
-}
-
-/* ---------------------------------------------------------
-   SYMBOL DETECTION (cross, fork, island, stars…)
-----------------------------------------------------------*/
-function detectSymbols(palm) {
-    return {
-        crosses: randomScore(),
-        stars: randomScore(),
-        forks: randomScore(),
-        islands: randomScore(),
-        breaks: randomScore(),
-        grille: randomScore()
-    };
-}
-
-/* Utility */
-function randomScore() {
-    return Math.round((Math.random() * 0.8 + 0.2) * 100) / 100;
+  return lines;
 }
