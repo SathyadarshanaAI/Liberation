@@ -1,93 +1,119 @@
 /* ---------------------------------------------------------
    THE SEED · Palmistry AI
-   main.js — Browser + Module Compatible Edition (v3.1)
+   main.js — Central Fusion Controller (v3.0)
+   Systems:
+   - Camera Engine
+   - Freeze Capture
+   - Palm Detect → Line Detect Pipeline
+   - A4 Builder Trigger
+   - 3D Render Trigger
+   - Live AI Mode Trigger
 ----------------------------------------------------------*/
+
+import { detectPalm } from "./vision/palm-detect.js";
+import { detectLines } from "./vision/line-detect.js";
+import { buildA4Sheet } from "./render/a4-builder.js";
+import { renderPalm3D } from "./render/palm-3d-render.js";
+import { finalReading } from "./render/truth-output.js";
+import { WisdomCore } from "./core/wisdom-core.js";
 
 let stream = null;
+const video     = document.getElementById("video");
+const handMsg   = document.getElementById("handMsg");
+const outputBox = document.getElementById("output");
 
-/* DOM */
-const video = document.getElementById("video");
-const msg = document.getElementById("handMsg");
-const outBox = document.getElementById("output");
-const langSelect = document.getElementById("languageSelect");
-
-/* LANG PACK (12 languages) */
-const LANG = {
-  en: { msg: "Place your hand inside the guide.", step: "Scan left → right.", open: "Open Camera", scan: "Scan Hand" },
-  si: { msg: "අත නිදර්ශකය තුළ තබන්න.", step: "වම් අත → දකුණු අත.", open: "කැමරා විවෘත කරන්න", scan: "අත් පරීක්ෂා කරන්න" },
-  ta: { msg: "கையை வழிகாட்டி உள்ளே வையுங்கள்.", step: "இடது → வலது.", open: "கேமரா திறக்க", scan: "ஸ்கேன்" },
-  hi: { msg: "हाथ गाइड के अंदर रखें.", step: "बायाँ → दायाँ.", open: "कैमरा खोलें", scan: "स्कैन" }
-  // (rest languages you added)
-};
-
-/* ---------------------------------------------------------
-   LOAD LANGUAGES
-----------------------------------------------------------*/
-export function loadLanguages() {
-  if (!langSelect) return;
-
-  Object.keys(LANG).forEach(code => {
-    const option = document.createElement("option");
-    option.value = code;
-    option.textContent = code.toUpperCase();
-    langSelect.appendChild(option);
-  });
-}
-
-/* ---------------------------------------------------------
-   APPLY LANGUAGE
-----------------------------------------------------------*/
-export function setLanguage() {
-  const L = langSelect.value;
-  if (!L) return;
-
-  msg.innerHTML = LANG[L].msg + "<br>" + LANG[L].step;
-
-  const btns = document.querySelectorAll(".actionBtn");
-  btns[0].textContent = LANG[L].open;
-  btns[1].textContent = LANG[L].scan;
-}
-
-/* ---------------------------------------------------------
+/* =========================================================
    CAMERA ENGINE
-----------------------------------------------------------*/
+========================================================= */
 export async function startCamera() {
-  if (stream) stream.getTracks().forEach(t => t.stop());
+    handMsg.innerHTML = "Opening camera…";
 
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-      audio: false
-    });
-  } catch {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  }
+    if (stream) stream.getTracks().forEach(t => t.stop());
 
-  video.srcObject = stream;
-  await video.play();
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false
+        });
+    } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    }
 
-  msg.innerHTML = "Hold your hand inside the guide.";
+    video.srcObject = stream;
+    await video.play();
+
+    handMsg.innerHTML = "Place your hand inside the frame.";
 }
 
-/* ---------------------------------------------------------
-   CAPTURE + PREVIEW
-----------------------------------------------------------*/
+/* =========================================================
+   CAPTURE FREEZE
+========================================================= */
 export function captureHand() {
-  if (!video.srcObject) {
-    alert("Camera not active!");
-    return;
-  }
+    if (!video.srcObject) {
+        alert("Camera is not active!");
+        return;
+    }
 
-  msg.innerHTML = "Scanning… please wait.";
+    handMsg.innerHTML = "Capturing… hold still…";
 
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+    
+    const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  const imageData = canvas.toDataURL("image/png");
+    processPalm(frame);
+}
 
-  outBox.textContent = "Palm scan captured.\nAI Engine loading…";
+/* =========================================================
+   PROCESS PIPELINE
+========================================================= */
+async function processPalm(frame) {
+
+    handMsg.innerHTML = "Detecting palm shape…";
+
+    const palm = await detectPalm(frame);
+
+    handMsg.innerHTML = "Reading palm lines…";
+
+    const lines = await detectLines(palm);
+
+    WisdomCore.saveScan({
+        raw: frame,
+        palm,
+        lines,
+        timestamp: Date.now()
+    });
+
+    handMsg.innerHTML = "Generating reading…";
+
+    const reading = finalReading(lines);
+
+    outputBox.textContent = reading;
+
+    handMsg.innerHTML = "Scan complete ✔ Your report is ready.";
+
+    // auto-trigger 3D + A4 build
+    renderPalm3D(lines);
+    buildA4Sheet(lines);
+}
+
+/* =========================================================
+   LIVE AI MODE
+========================================================= */
+export async function startLiveAI() {
+    outputBox.textContent = "🎙 Listening… Ask about your palm lines.";
+
+    const last = WisdomCore.getLastScan();
+
+    if (!last) {
+        outputBox.textContent = "No palm scan data available!";
+        return;
+    }
+
+    const answer = await WisdomCore.talk(last);
+    outputBox.textContent = answer;
 }
