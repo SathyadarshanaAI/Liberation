@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>🕉️ THE SEED · Palmistry AI</title>
 
   <style>
@@ -14,11 +15,23 @@
       color: #00eaff;
       text-align: center;
     }
+
     h1 {
       margin: 14px 0;
       font-size: 1.4rem;
       color: #00eaff;
       text-shadow: 0 0 8px #00eaff;
+    }
+
+    #languageSelect {
+      width: 90%;
+      max-width: 300px;
+      padding: 10px;
+      margin: 10px auto;
+      background: #000;
+      border: 1px solid cyan;
+      color: cyan;
+      border-radius: 10px;
     }
 
     #camBox {
@@ -30,11 +43,13 @@
       max-height: 520px;
       border-bottom: 1px solid #00eaff44;
     }
+
     #video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+
     #handOverlay {
       position: absolute;
       top: 50%;
@@ -45,12 +60,13 @@
       pointer-events: none;
       filter: drop-shadow(0 0 12px cyan);
     }
+
     #handMsg {
       position: absolute;
       bottom: 0;
       width: 100%;
       padding: 10px;
-      background: rgba(0,0,0,.45);
+      background: rgba(0, 0, 0, .45);
       color: cyan;
       border-top: 1px solid #00eaff66;
       font-size: .9rem;
@@ -84,12 +100,17 @@
       white-space: pre-wrap;
       border-radius: 12px;
     }
+
   </style>
 </head>
 
 <body>
 
 <h1>🕉️ THE SEED · Palmistry AI</h1>
+
+<select id="languageSelect" onchange="setLanguage()">
+  <option value="">Select Language</option>
+</select>
 
 <div id="camBox">
   <video id="video" autoplay muted playsinline></video>
@@ -105,12 +126,8 @@
 <script type="module" src="main.js"></script>
 
 <script type="module">
-  import {
-    startCamera,
-    captureHand,
-    setLanguage,
-    loadLanguages
-  } from "./main.js";
+  import { startCamera, captureHand, setLanguage, loadLanguages }
+  from "./main.js";
 
   window.startCamera = startCamera;
   window.captureHand = captureHand;
