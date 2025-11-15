@@ -63,7 +63,7 @@
             bottom: 0;
             width: 100%;
             padding: 10px;
-            background: rgba(0, 0, 0, 0.45);
+            background: rgba(0,0,0,0.45);
             color: cyan;
             font-size: 0.9rem;
             border-top: 1px solid #00eaff66;
@@ -89,7 +89,7 @@
             max-width: 500px;
             margin: 15px auto;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255,255,255,0.06);
             border: 1px solid #00eaff33;
             min-height: 150px;
             border-radius: 12px;
@@ -97,6 +97,24 @@
             white-space: pre-wrap;
             color: cyan;
         }
+
+        /* INTERNAL DEBUG BOX */
+        #debugConsole {
+            width: 92%;
+            max-width: 500px;
+            margin: 15px auto;
+            padding: 10px;
+            background: #111;
+            color: #0f0;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 12px;
+            height: 150px;
+            overflow-y: auto;
+            text-align: left;
+            font-family: monospace;
+        }
+
     </style>
 </head>
 
@@ -119,7 +137,36 @@
 
     <div id="output">Awaiting scan...</div>
 
+    <!-- INTERNAL DEBUG CONSOLE -->
+    <div id="debugConsole">Debug console ready…</div>
+
+    <!-- JS IMPORT + DEBUG LOGGER -->
     <script type="module">
+
+        /* ===============================
+           INTERNAL DEBUG LOGGER
+        ================================ */
+        function logDebug(msg) {
+            const box = document.getElementById("debugConsole");
+            box.innerHTML += "<br>" + msg;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        window.onerror = function(message, source, lineno) {
+            logDebug("❌ ERROR: " + message + " @ line " + lineno);
+        };
+
+        console.log = (msg) => logDebug("ℹ " + msg);
+        console.warn = (msg) => logDebug("⚠ " + msg);
+        console.error = (msg) => logDebug("❌ " + msg);
+
+        logDebug("index.html loaded.");
+
+
+        /* ===============================
+           IMPORT MAIN.JS
+        ================================ */
+
         import {
             startCamera,
             captureHand,
@@ -136,6 +183,9 @@
         window.setLanguage = setLanguage;
 
         loadLanguages();
+
+        logDebug("main.js imported.");
+
     </script>
 
 </body>
