@@ -1,130 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>THE SEED · Palmistry AI</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🕉️ THE SEED · Palmistry AI</title>
 
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      color: #00eaff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: #00eaff;
+            font-family: "Segoe UI", sans-serif;
+            text-align: center;
+        }
 
-    h1 {
-      margin: 14px 0;
-      font-size: 1.4rem;
-      text-shadow: 0 0 8px #00eaff;
-    }
+        h1 {
+            margin: 14px 0;
+            font-size: 1.4rem;
+            text-shadow: 0 0 8px #00eaff;
+        }
 
-    #languageSelect {
-      width: 90%;
-      max-width: 300px;
-      padding: 10px;
-      margin: 10px auto;
-      border: 1px solid cyan;
-      background: #000;
-      color: cyan;
-      border-radius: 10px;
-    }
+        #languageSelect {
+            width: 90%;
+            max-width: 300px;
+            padding: 10px;
+            margin: 10px auto;
+            border: 1px solid cyan;
+            background: #000;
+            color: cyan;
+            border-radius: 10px;
+        }
 
-    #camBox {
-      width: 100%;
-      height: 60vh;
-      background: #000;
-      overflow: hidden;
-      position: relative;
-      border-bottom: 1px solid #00eaff55;
-    }
+        #camBox {
+            width: 100%;
+            height: 55vh;
+            max-height: 480px;
+            overflow: hidden;
+            position: relative;
+            border-bottom: 1px solid #00eaff44;
+        }
 
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+        }
 
-    #handOverlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 60%;
-      transform: translate(-50%, -50%);
-      opacity: 0.35;
-      pointer-events: none;
-    }
+        #handOverlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60%;
+            transform: translate(-50%, -50%);
+            opacity: 0.35;
+            pointer-events: none;
+            filter: drop-shadow(0 0 12px cyan);
+        }
 
-    #handMsg {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      padding: 10px;
-      color: cyan;
-      background: rgba(0,0,0,0.45);
-    }
+        #handMsg {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.45);
+            color: cyan;
+            font-size: 0.9rem;
+            border-top: 1px solid #00eaff66;
+        }
 
-    .actionBtn {
-      width: 90%;
-      max-width: 420px;
-      padding: 14px;
-      margin: 10px auto;
-      border: none;
-      border-radius: 40px;
-      background: #00eaff;
-      color: black;
-      font-size: 1.1rem;
-      font-weight: bold;
-    }
+        .actionBtn {
+            width: 92%;
+            max-width: 420px;
+            padding: 14px;
+            margin: 10px auto;
+            border: none;
+            border-radius: 40px;
+            background: linear-gradient(90deg, #00eaff, #0099cc);
+            color: black;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 0 12px #00eaffaa;
+        }
 
-    #output {
-      width: 92%;
-      max-width: 500px;
-      margin: 15px auto;
-      padding: 15px;
-      color: cyan;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid #00eaff55;
-      border-radius: 12px;
-      min-height: 150px;
-      text-align: left;
-      white-space: pre-wrap;
-    }
-  </style>
+        #output {
+            width: 92%;
+            max-width: 500px;
+            margin: 15px auto;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid #00eaff33;
+            min-height: 150px;
+            border-radius: 12px;
+            text-align: left;
+            white-space: pre-wrap;
+            color: cyan;
+        }
+
+        /* Preview box */
+        #palmPreviewBox {
+            width: 92%;
+            max-width: 400px;
+            margin: 15px auto;
+            padding: 10px;
+            border: 1px solid #00eaff55;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            display: none;
+        }
+
+        /* Console */
+        #debugConsole {
+            width: 92%;
+            max-width: 500px;
+            margin: 15px auto;
+            padding: 10px;
+            border-radius: 12px;
+            background: #020;
+            color: #0f0;
+            font-size: 0.8rem;
+            min-height: 80px;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+    </style>
 </head>
 
 <body>
 
-  <h1>THE SEED · Palmistry AI</h1>
+    <h1>🕉️ THE SEED · Palmistry AI</h1>
 
-  <select id="languageSelect"></select>
+    <select id="languageSelect"></select>
 
-  <div id="camBox">
-    <video id="video" autoplay muted playsinline></video>
-    <img id="handOverlay" src="assets/palm-overlay.png" />
-    <div id="handMsg">Select a language to begin.</div>
-  </div>
+    <div id="camBox">
+        <video id="video" autoplay muted playsinline></video>
+        <img id="handOverlay" src="assets/palm-overlay.png" />
+        <div id="handMsg">Select a language to begin.</div>
+    </div>
 
-  <button class="actionBtn" onclick="startCamera()">Open Camera</button>
-  <button class="actionBtn" onclick="captureHand()">Scan Hand</button>
+    <button class="actionBtn" onclick="startCamera()">Open Camera</button>
+    <button class="actionBtn" onclick="captureHand()">Scan Hand</button>
 
-  <div id="output">Awaiting scan...</div>
+    <button class="actionBtn" onclick="startLiveAI()">🎙 Live AI Mode</button>
+    <button class="actionBtn" onclick="exportA4()">📄 Export A4</button>
 
-  <script type="module">
-    import {
-      startCamera,
-      captureHand,
-      loadLanguages,
-      setLanguage
-    } from "./main.js";
+    <div id="palmPreviewBox">
+        <h3 style="color: cyan; font-size: 1rem;">Palm Preview</h3>
+        <canvas id="palmPreview"></canvas>
+    </div>
 
-    window.startCamera = startCamera;
-    window.captureHand = captureHand;
-    window.setLanguage = setLanguage;
+    <div id="output">Awaiting scan...</div>
 
-    loadLanguages();
-  </script>
+    <div id="debugConsole">Debug console ready…</div>
+
+    <script type="module">
+        import {
+            startCamera,
+            captureHand,
+            startLiveAI,
+            exportA4,
+            loadLanguages,
+            setLanguage
+        } from "./main.js";
+
+        window.startCamera = startCamera;
+        window.captureHand = captureHand;
+        window.startLiveAI = startLiveAI;
+        window.exportA4 = exportA4;
+        window.setLanguage = setLanguage;
+
+        loadLanguages();
+    </script>
 
 </body>
 </html>
