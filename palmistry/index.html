@@ -1,139 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>🕉️ THE SEED · Palmistry AI</title>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🕉️ THE SEED · Palmistry AI</title>
 
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      font-family: 'Segoe UI', sans-serif;
-      color: #00eaff;
-      text-align: center;
-    }
+<style>
+body{
+  margin:0;
+  background:black;
+  font-family:'Segoe UI',sans-serif;
+  color:#00eaff;
+  text-align:center;
+}
 
-    h1 {
-      margin: 14px 0;
-      font-size: 1.4rem;
-      color: #00eaff;
-      text-shadow: 0 0 8px #00eaff;
-    }
+h1{
+  margin:14px 0;
+  font-size:1.4rem;
+  color:#00eaff;
+  text-shadow:0 0 8px #00eaff;
+}
 
-    #languageSelect {
-      width: 90%;
-      max-width: 300px;
-      padding: 10px;
-      margin: 10px auto;
-      background: #000;
-      border: 1px solid cyan;
-      color: cyan;
-      border-radius: 10px;
-    }
+/* Flash Effect */
+#flashFX{
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:white;
+  opacity:0;
+  transition:.15s ease-out;
+  pointer-events:none;
+  z-index:9999;
+}
 
-    #camBox {
-      width: 100%;
-      height: 65vh;
-      background: black;
-      overflow: hidden;
-      position: relative;
-      max-height: 520px;
-      border-bottom: 1px solid #00eaff44;
-    }
+/* Camera Box */
+#camBox{
+  width:100%;
+  height:65vh;
+  background:black;
+  overflow:hidden;
+  position:relative;
+  border-bottom:1px solid #00eaff55;
+}
+#video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+#handOverlay{
+  position:absolute;
+  top:50%; left:50%;
+  width:60%;
+  transform:translate(-50%,-50%);
+  opacity:.35;
+  pointer-events:none;
+  filter:drop-shadow(0 0 12px cyan);
+}
+#handMsg{
+  position:absolute;
+  bottom:0; width:100%;
+  padding:10px;
+  background:rgba(0,0,0,.45);
+  font-size:.9rem;
+  color:cyan;
+  border-top:1px solid #00eaff55;
+}
 
-    #video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+/* Buttons */
+.actionBtn{
+  width:92%;
+  max-width:420px;
+  padding:14px;
+  margin:10px auto;
+  border:none;
+  border-radius:40px;
+  background:linear-gradient(90deg,#00eaff,#0099cc);
+  font-weight:bold;
+  font-size:1.1rem;
+  color:black;
+  box-shadow:0 0 14px #00eaffaa;
+}
 
-    #handOverlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 60%;
-      transform: translate(-50%, -50%);
-      opacity: 0.35;
-      pointer-events: none;
-      filter: drop-shadow(0 0 12px cyan);
-    }
+/* Output */
+#output{
+  width:92%;
+  max-width:500px;
+  margin:15px auto;
+  padding:15px;
+  text-align:left;
+  color:#0ff;
+  background:rgba(255,255,255,0.06);
+  border:1px solid #00eaff33;
+  border-radius:12px;
+  white-space:pre-wrap;
+  min-height:130px;
+}
 
-    #handMsg {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      padding: 10px;
-      background: rgba(0, 0, 0, .45);
-      color: cyan;
-      border-top: 1px solid #00eaff66;
-      font-size: .9rem;
-      backdrop-filter: blur(4px);
-    }
+/* AI Live Button */
+#aiLiveBtn{
+  position:fixed;
+  bottom:30px;
+  right:30px;
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  border:none;
+  font-size:26px;
+  background:#00eaff;
+  box-shadow:0 0 25px #00eaff;
+  z-index:10000;
+}
 
-    .actionBtn {
-      width: 92%;
-      max-width: 420px;
-      padding: 14px;
-      margin: 10px auto;
-      border: none;
-      border-radius: 40px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      background: linear-gradient(90deg,#00eaff,#0099cc);
-      color: black;
-      box-shadow: 0 0 12px #00eaffaa;
-    }
+/* AI Chat Panel */
+#liveAIBox{
+  position:fixed;
+  bottom:0;
+  right:-380px;
+  width:360px;
+  height:70%;
+  background:rgba(0,0,0,0.85);
+  border-left:1px solid cyan;
+  backdrop-filter:blur(6px);
+  color:cyan;
+  transition:0.35s;
+  z-index:9999;
+}
 
-    #output {
-      width: 92%;
-      max-width: 500px;
-      margin: 15px auto;
-      padding: 15px;
-      color: #0ff;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid #00eaff33;
-      min-height: 130px;
-      text-align: left;
-      white-space: pre-wrap;
-      border-radius: 12px;
-    }
+#aiHeader{
+  padding:14px;
+  font-size:1.2rem;
+  border-bottom:1px solid cyan;
+}
 
-  </style>
+#aiChat{
+  height:calc(100% - 100px);
+  padding:10px;
+  overflow-y:auto;
+  text-align:left;
+}
+
+#aiInput{
+  width:100%;
+  padding:15px;
+  border:none;
+  outline:none;
+  background:black;
+  color:cyan;
+}
+</style>
 </head>
 
 <body>
 
 <h1>🕉️ THE SEED · Palmistry AI</h1>
 
-<select id="languageSelect" onchange="setLanguage()">
-  <option value="">Select Language</option>
-</select>
+<div id="flashFX"></div>
 
 <div id="camBox">
   <video id="video" autoplay muted playsinline></video>
-  <img id="handOverlay" src="assets/palm-overlay.png" />
-  <div id="handMsg">Select language to begin.</div>
+  <img id="handOverlay" src="assets/palm-overlay.png">
+  <div id="handMsg">Ready to scan.</div>
 </div>
 
 <button class="actionBtn" onclick="startCamera()">Open Camera</button>
 <button class="actionBtn" onclick="captureHand()">Scan Hand</button>
+<button class="actionBtn" onclick="exportA4()">Download A4 Report</button>
 
 <div id="output">Awaiting scan...</div>
+
+<button id="aiLiveBtn" onclick="openLiveAI()">🧿</button>
+
+<div id="liveAIBox">
+  <div id="aiHeader">THE SEED — Live Reading</div>
+  <div id="aiChat"></div>
+  <input id="aiInput" placeholder="Ask anything…" 
+         onkeypress="if(event.key==='Enter') sendAI()">
+</div>
 
 <script type="module" src="main.js"></script>
 
 <script type="module">
-  import { startCamera, captureHand, setLanguage, loadLanguages }
-  from "./main.js";
+import {
+  startCamera,
+  captureHand,
+  exportA4,
+  openLiveAI,
+  sendAI
+} from "./main.js";
 
-  window.startCamera = startCamera;
-  window.captureHand = captureHand;
-  window.setLanguage = setLanguage;
-
-  loadLanguages();
+window.startCamera = startCamera;
+window.captureHand = captureHand;
+window.exportA4 = exportA4;
+window.openLiveAI = openLiveAI;
+window.sendAI = sendAI;
 </script>
 
 </body>
