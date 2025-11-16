@@ -1,57 +1,102 @@
-// === LANGUAGE LOADER ===
-window.onload = () => {
-    const sel = document.getElementById("langSelect");
-    const langs = [
-        "Sinhala", "Tamil", "English",
-        "Hindi", "Japanese", "Chinese", "Arabic",
-        "Spanish", "French", "Russian", "German",
-        "Korean", "Portuguese", "Indonesian", "Malay", "Italian"
-    ];
-    langs.forEach(l => {
-        const opt = document.createElement("option");
-        opt.value = l; opt.textContent = l;
-        sel.appendChild(opt);
-    });
-    sel.value = "Sinhala";
-};
-
-
-// === CAMERA START ===
-window.startCamera = async function () {
-    const video = document.getElementById("video");
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" }
+// === CREATE REAL HAND DETECTOR ===
+window.HandDetector = function () {
+    return new Promise(resolve => {
+        const hands = new Hands({
+            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
         });
 
-        video.srcObject = stream;
-        await video.play();
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.6,
+            minTrackingConfidence: 0.6
+        });
 
-        document.getElementById("output").textContent =
-            "Camera started. Align your palm.";
-
-    } catch (err) {
-        document.getElementById("output").textContent =
-            "Camera permission denied.";
-        console.error(err);
-    }
+        resolve(hands);
+    });
 };
 
 
-// === CAPTURE PALM ===
-window.captureHand = function () {
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("palmCanvas");
+// === MAIN PALM ANALYSIS ===
+window.analyzePalm = async function (canvas) {
     const ctx = canvas.getContext("2d");
+    const hands = await window.HandDetector();
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    hands.onResults(results => {
+        if (!results.multiHandLandmarks?.length) {
+            document.getElementById("output").textContent = "Palm not detected.";
+            return;
+        }
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const lm = results.multiHandLandmarks[0];
 
-    document.getElementById("palmPreviewBox").style.display = "block";
-    document.getElementById("output").textContent = "Analyzing palm...";
+        // Draw 3 glowing palm lines (simple)
+        drawGlowLine(ctx, lm[0], lm[5], lm[17], "cyan");     // Life
+        drawGlowLine(ctx, lm[12], lm[9], lm[5], "magenta"); // Head
+        drawGlowLine(ctx, lm[17], lm[13], lm[8], "yellow"); // Heart
 
-    analyzePalm(canvas);
+        const reading = generateReading();
+        translateAndShow(reading);
+    });
+
+    await hands.send({ image: canvas });
 };
+
+
+// === DRAW GLOW LINE ===
+function drawGlowLine(ctx, p1, p2, p3, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20;
+
+    ctx.beginPath();
+    ctx.moveTo(p1.x * ctx.canvas.width, p1.y * ctx.canvas.height);
+    ctx.lineTo(p2.x * ctx.canvas.width, p2.y * ctx.canvas.height);
+    ctx.lineTo(p3.x * ctx.canvas.width, p3.y * ctx.canvas.height);
+    ctx.stroke();
+}
+
+
+// === AI READING ===
+function generateReading() {
+    return `
+🖐️ Palmistry AI V40 Analysis
+
+Life Line:
+Strong vital energy, long health span.
+
+Head Line:
+Clear thinking pattern, good focus.
+
+Heart Line:
+Balanced emotions, compassion.
+
+Destiny:
+Leadership, spiritual clarity, intuition.
+`;
+}
+
+
+// === MULTILINGUAL OUTPUT ===
+function translateAndShow(text) {
+    const lang = document.getElementById("langSelect").value;
+
+    if (lang === "Sinhala") {
+        text = text
+            .replace("Life Line", "ජීවිත රේඛාව")
+            .replace("Head Line", "මානසික රේඛාව")
+            .replace("Heart Line", "හද රේඛාව")
+            .replace("Destiny", "විනිශ්චය");
+    }
+
+    if (lang === "Tamil") {
+        text = text
+            .replace("Life Line", "உயிர் கோடு")
+            .replace("Head Line", "தலை கோடு")
+            .replace("Heart Line", "இதய கோடு")
+            .replace("Destiny", "விதி");
+    }
+
+    document.getElementById("output").textContent = text;
+}
