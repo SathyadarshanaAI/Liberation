@@ -6,62 +6,39 @@
 <title>🕉️ THE SEED · Palmistry AI</title>
 
 <style>
-    body {
-        margin: 0;
-        background: #000;
-        color: cyan;
-        font-family: Arial, sans-serif;
-        text-align: center;
-    }
-    h1 {
-        margin-top: 15px;
-        font-size: 1.5rem;
-        text-shadow: 0 0 8px cyan;
-    }
+    body { margin: 0; background: #000; color: cyan; font-family: Arial; text-align: center; }
+    h1 { margin-top: 15px; font-size: 1.5rem; text-shadow: 0 0 8px cyan; }
+
     #camBox {
-        width: 100%;
-        height: 55vh;
-        position: relative;
-        background: #000;
-        overflow: hidden;
+        width: 100%; height: 55vh; position: relative;
+        overflow: hidden; background: #000;
         border-bottom: 1px solid #0099cc;
     }
-    video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+    video { width: 100%; height: 100%; object-fit: cover; }
     #handOverlay {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 60%;
-        transform: translate(-50%, -50%);
-        opacity: .25;
-        pointer-events: none;
-        filter: drop-shadow(0 0 10px cyan);
+        position: absolute; top: 50%; left: 50%; width: 60%;
+        transform: translate(-50%, -50%); opacity: .25;
+        pointer-events: none; filter: drop-shadow(0 0 10px cyan);
     }
+
     .btn {
-        width: 90%;
-        max-width: 400px;
-        padding: 14px;
-        margin: 10px;
-        border-radius: 30px;
-        background: cyan;
-        color: black;
-        font-size: 1.1rem;
-        font-weight: bold;
-        border: none;
+        width: 90%; max-width: 400px; padding: 14px;
+        margin: 10px; border-radius: 30px;
+        background: cyan; color: black; font-size: 1.1rem;
+        border: none; font-weight: bold;
     }
+
+    #palmPreviewBox {
+        width: 90%; max-width: 420px; margin: 15px auto;
+        padding: 10px; background: rgba(255,255,255,0.05);
+        border: 1px solid cyan; border-radius: 10px; display: none;
+    }
+    canvas { width: 100%; border-radius: 10px; }
     #output {
-        width: 90%;
-        max-width: 450px;
-        margin: 15px auto;
-        padding: 15px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid #0099cc;
-        color: cyan;
-        border-radius: 10px;
+        width: 90%; max-width: 450px;
+        margin: 15px auto; padding: 15px;
+        border: 1px solid #0099cc; border-radius: 10px;
+        background: rgba(255,255,255,0.05);
     }
 </style>
 </head>
@@ -77,6 +54,11 @@
 
 <button class="btn" onclick="startCamera()">Open Camera</button>
 <button class="btn" onclick="captureHand()">Scan Hand</button>
+
+<div id="palmPreviewBox">
+    <h3 style="color:cyan;">Palm Preview</h3>
+    <canvas id="palmCanvas"></canvas>
+</div>
 
 <div id="output">Awaiting scan...</div>
 
