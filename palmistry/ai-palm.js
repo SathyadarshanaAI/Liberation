@@ -1,93 +1,103 @@
-// === AI PALM PROCESSOR ===
-window.analyzePalm = async function (canvas) {
-    const ctx = canvas.getContext("2d");
+// === CREATE REAL HAND DETECTOR ===
+window.HandDetector = function () {
+    return new Promise(resolve => {
+        const hands = new Hands({
+            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
 
-    // Load MediaPipe Model
-    const hands = await window.HandDetector();
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.6,
+            minTrackingConfidence: 0.6
+        });
 
-    // Get landmarks
-    const hand = await hands.detect(canvas);
-
-    if (!hand) {
-        document.getElementById("output").textContent =
-            "Hand not detected. Please try again.";
-        return;
-    }
-
-    // Draw real palm lines
-    drawAuraLine(ctx, hand.lifeLine, "cyan");
-    drawAuraLine(ctx, hand.headLine, "magenta");
-    drawAuraLine(ctx, hand.heartLine, "yellow");
-    drawAuraLine(ctx, hand.fateLine, "lime");
-
-    // Produce reading
-    const reading = generateReading(hand);
-
-    // Translate reading
-    const lang = document.getElementById("langSelect").value;
-    const translated = await translateText(reading, lang);
-
-    document.getElementById("output").textContent = translated;
+        resolve(hands);
+    });
 };
 
 
-// === DRAW GLOW LINES ===
-function drawAuraLine(ctx, points, color) {
+// === MAIN PALM ANALYSIS ===
+window.analyzePalm = async function (canvas) {
+    const ctx = canvas.getContext("2d");
+    const hands = await window.HandDetector();
+
+    hands.onResults(results => {
+        if (!results.multiHandLandmarks?.length) {
+            document.getElementById("output").textContent = "Palm not detected.";
+            return;
+        }
+
+        const lm = results.multiHandLandmarks[0];
+
+        // Draw 3 glowing palm lines (simple version)
+        drawGlowLine(ctx, lm[0], lm[5], lm[17], "cyan");     // Life
+        drawGlowLine(ctx, lm[12], lm[9], lm[5], "magenta"); // Head
+        drawGlowLine(ctx, lm[17], lm[13], lm[8], "yellow"); // Heart
+
+        const reading = generateReading();
+        translateAndShow(reading);
+    });
+
+    await hands.send({ image: canvas });
+};
+
+
+// === DRAW GLOW LINE ===
+function drawGlowLine(ctx, p1, p2, p3, color) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 4;
     ctx.shadowColor = color;
     ctx.shadowBlur = 20;
 
     ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    points.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.moveTo(p1.x * ctx.canvas.width, p1.y * ctx.canvas.height);
+    ctx.lineTo(p2.x * ctx.canvas.width, p2.y * ctx.canvas.height);
+    ctx.lineTo(p3.x * ctx.canvas.width, p3.y * ctx.canvas.height);
     ctx.stroke();
 }
 
 
-// === AI READING (Combined Scientific + Traditional) ===
-function generateReading(hand) {
+// === AI READING (SCIENCE + TRADITION) ===
+function generateReading() {
     return `
-🖐️ Palmistry AI V40 — Combined Analysis
+🖐️ Palmistry AI V40 Analysis
 
 Life Line:
-Strong, long curve = resilience, health, long vitality.
+Strong vital energy, long health span, inner resilience.
 
 Head Line:
-Clear = intelligence, focus, decision-making power.
+Clear thinking pattern, good focus, fast decision making.
 
 Heart Line:
-Balanced slope = emotional stability and deep compassion.
+Balanced emotional sensitivity and compassion.
 
-Fate Line:
-Straight = spiritual destiny + leadership qualities.
+Destiny:
+You possess leadership, spiritual clarity, and deep intuition.
 
-Overall:
-You have a powerful, compassionate, determined personality.
-Inner wisdom awakens naturally within you.
 `;
 }
 
 
-// === SIMPLE TRANSLATION API (Offline rules) ===
-async function translateText(text, lang) {
+// === MULTILINGUAL OUTPUT ===
+function translateAndShow(text) {
+    const lang = document.getElementById("langSelect").value;
+
     if (lang === "Sinhala") {
-        return text
+        text = text
             .replace("Life Line", "ජීවිත රේඛාව")
             .replace("Head Line", "මානසික රේඛාව")
             .replace("Heart Line", "හද රේඛාව")
-            .replace("Fate Line", "විනිශ්චය රේඛාව")
-            .replace("Overall", "සම්පූර්ණ වශයෙන්");
+            .replace("Destiny", "විනිශ්චය");
     }
 
     if (lang === "Tamil") {
-        return text
+        text = text
             .replace("Life Line", "உயிர் கோடு")
             .replace("Head Line", "தலை கோடு")
             .replace("Heart Line", "இதய கோடு")
-            .replace("Fate Line", "விதி கோடு");
+            .replace("Destiny", "விதி");
     }
 
-    // Other languages return English (upgrade later)
-    return text;
+    document.getElementById("output").textContent = text;
 }
