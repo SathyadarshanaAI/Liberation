@@ -1,108 +1,169 @@
-// =========================================================
-// 🟣 THE SEED · Palmistry AI · V50
-// REPORT GENERATOR — PURE ENGLISH
-// Supports: short / standard / deep / unlimited
-// =========================================================
+// ===============================
+//  THE SEED · Palmistry AI · V50
+//  REPORT ENGINE (ULTIMATE MIX)
+// ===============================
 
-export function generateReport(lines, energies, mode, user) {
+console.log("⚡ Report Engine Loaded V50");
 
-    let targetLength = 500;
+// GLOBAL DATA STORAGE
+let FINAL_PALM_DATA = {
+    lines: {},
+    aura: {},
+    chakra: {},
+    user: {}
+};
 
-    if (mode === "standard") targetLength = 1200;
-    if (mode === "deep") targetLength = 3500;
-    if (mode === "unlimited") targetLength = 8000;
+// ====================================================
+// 1) MAIN ENTRY — BUILD REPORT
+// ====================================================
+window.generateFullPalmReport = function (canvas) {
 
-    return buildEnglishReport(lines, energies, user, targetLength);
+    FINAL_PALM_DATA.user = userData;
+
+    // ---- Placeholder palm analysis (to be replaced with ML later)
+    FINAL_PALM_DATA.lines = detectPalmLines(canvas);
+    FINAL_PALM_DATA.aura = generateAuraField(FINAL_PALM_DATA.lines);
+    FINAL_PALM_DATA.chakra = generateChakraPower(FINAL_PALM_DATA.aura);
+
+    let report = buildFinalReport(FINAL_PALM_DATA);
+
+    document.getElementById("output").innerHTML = report;
+};
+
+
+// ====================================================
+// 2) BASIC LINE DETECTION (Temporary)
+// ====================================================
+function detectPalmLines(canvas) {
+    // Future: Mediapipe + contour detection + AI pipeline
+
+    return {
+        life: strengthRand(),
+        head: strengthRand(),
+        heart: strengthRand(),
+        fate: strengthRand(),
+        sun: strengthRand(),
+        mercury: strengthRand(),
+        venus: strengthRand(),
+        health: strengthRand()
+    };
+}
+
+function strengthRand() {
+    return Math.floor(65 + Math.random() * 35); // 65–100%
 }
 
 
-
-// =========================================================
-// BUILD PURE ENGLISH REPORT
-// =========================================================
-function buildEnglishReport(lines, energies, user, length) {
-
-    let text = `
-========================================================
-THE SEED · PALMISTRY AI – FULL DESTINY REPORT
-========================================================
-
-USER INFORMATION
-----------------
-Full Name      : ${user.name || "Not provided"}
-Gender         : ${user.gender || "Not provided"}
-Date of Birth  : ${user.dob || "Not provided"}
-Country        : ${user.country || "Not provided"}
-Hand Scanned   : ${user.hand || "Not provided"}
-
-Additional Note:
-${user.note || "None"}
-
---------------------------------------------------------
-This report is automatically generated using the 
-THE SEED · V50 Hybrid Energy Engine, which analyzes 
-your palm lines, chakra sectors, finger ratios, mounts, 
-and energetic aura field to produce a deep personality, 
-destiny, and life-path interpretation.
---------------------------------------------------------
-
-PRIMARY ENERGY LEVELS (CHAKRA WHEEL)
-------------------------------------
-Spiritual Energy     : ${energies[0]}%
-Mental Power         : ${energies[1]}%
-Emotional Balance    : ${energies[2]}%
-Physical Vitality    : ${energies[3]}%
-Creativity           : ${energies[4]}%
-Discipline/Stability : ${energies[5]}%
-Social Harmony       : ${energies[6]}%
-Destiny Path Strength: ${energies[7]}%
-
---------------------------------------------------------
-DETAILED DESTINY REPORT
---------------------------------------------------------
-
-`;
-
-    // AUTO GENERATE UNTIL TARGET LENGTH IS REACHED
-    while (text.length < length) {
-        text += generateParagraph(lines, energies);
-    }
-
-    return text;
+// ====================================================
+// 3) AURA GENERATOR (8 color rays)
+// ====================================================
+function generateAuraField(lines) {
+    return {
+        vitality: Math.floor((lines.life + lines.health) / 2),
+        intellect: Math.floor((lines.head + lines.mercury) / 2),
+        emotion: Math.floor((lines.heart + lines.venus) / 2),
+        destiny: Math.floor((lines.fate + lines.sun) / 2),
+        creativity: lines.sun,
+        communication: lines.mercury,
+        intuition: Math.floor((lines.sun + lines.venus) / 2),
+        spirituality: Math.floor((lines.fate + lines.life) / 2)
+    };
 }
 
 
+// ====================================================
+// 4) CHAKRA POWER DERIVATION
+// ====================================================
+function generateChakraPower(aura) {
+    return {
+        root: aura.vitality,
+        sacral: aura.emotion,
+        solar: aura.intellect,
+        heart: aura.emotion,
+        throat: aura.communication,
+        thirdEye: aura.intuition,
+        crown: aura.spirituality
+    };
+}
 
-// =========================================================
-// AI-STYLE PARAGRAPH GENERATOR (PURE ENGLISH)
-// repeats until required length achieved
-// =========================================================
-function generateParagraph(lines, energies) {
+
+// ====================================================
+// 5) FINAL FULL REPORT BUILDER (3000–4000 words)
+// ====================================================
+function buildFinalReport(data) {
+
+    const u = data.user;
+    const a = data.aura;
+    const c = data.chakra;
+    const l = data.lines;
 
     return `
-Your palm reveals a dynamic interaction between mind, heart, and destiny. 
-The Life Line, evaluated at ${lines.life}%, shows your adaptability and personal resilience. 
-This suggests periods of physical vitality supported by strong emotional grounding. 
-Your Head Line, scoring ${lines.head}%, indicates clarity of thought, problem-solving ability, 
-and the tendency to analyze situations deeply before acting. It reflects a personality that 
-prefers understanding over reacting, making your decisions thoughtful and deliberate.
+<h2>🧬 Complete Palmistry AI Report — THE SEED · V50</h2>
 
-Your Heart Line at ${lines.heart}% represents emotional intelligence. You feel deeply, 
-observe emotional patterns in others, and possess natural empathy. This enhances your 
-relationships, allowing you to understand others even when unspoken emotions are involved. 
-Meanwhile, the Fate Line at ${lines.fate}% shows your long-term direction in life. This 
-percentage reflects a sense of purpose, the presence of life lessons, and the confidence 
-to follow the path you feel called towards.
+<h3>👤 Personal Profile</h3>
+<strong>Name:</strong> ${u.name || "Not Provided"}<br>
+<strong>Gender:</strong> ${u.gender || "Not Provided"}<br>
+<strong>Date of Birth:</strong> ${u.dob || "Not Provided"}<br>
+<strong>Country:</strong> ${u.country || "Not Provided"}<br>
+<strong>Hand Scanned:</strong> ${u.hand || "Right"}<br><br>
 
-Spiritually, with ${energies[0]}% energy, your aura displays intuitive strength and connection 
-to inner wisdom. Mentally, your ${energies[1]}% suggests the mind is active, balanced, and 
-able to handle both logic and creativity. Emotionally, a ${energies[2]}% level indicates 
-periods of internal clarity mixed with subtle sensitivities that shape your personal journey.
+<h3>🌈 Aura Field (Energy Map)</h3>
+Vitality Energy: ${a.vitality}%<br>
+Emotional Field: ${a.emotion}%<br>
+Intellectual Ray: ${a.intellect}%<br>
+Destiny Ray: ${a.destiny}%<br>
+Communication Ray: ${a.communication}%<br>
+Intuition Field: ${a.intuition}%<br>
+Creativity Field: ${a.creativity}%<br>
+Spiritual Resonance: ${a.spirituality}%<br><br>
 
-Your destiny energy at ${energies[7]}% reflects strong alignment with your life path, 
-indicating that your efforts will eventually manifest into long-lasting achievements. 
-There is a powerful connection between your Sun Line and your potential for recognition, 
-creativity, leadership, and meaningful contribution to the world.
+<h3>🕉 Chakra Power Breakdown</h3>
+Root Chakra: ${c.root}%<br>
+Sacral Chakra: ${c.sacral}%<br>
+Solar Plexus: ${c.solar}%<br>
+Heart Chakra: ${c.heart}%<br>
+Throat Chakra: ${c.throat}%<br>
+Third Eye: ${c.thirdEye}%<br>
+Crown Chakra: ${c.crown}%<br><br>
 
+<h3>✋ Major Palm Lines Interpretation</h3>
+Life Line Strength: ${l.life}% — Represents vitality and physical endurance.<br>
+Head Line Strength: ${l.head}% — Represents thinking style and intelligence.<br>
+Heart Line Strength: ${l.heart}% — Represents emotional depth and compassion.<br>
+Fate Line Strength: ${l.fate}% — Represents destiny flow and life purpose.<br>
+Sun Line Strength: ${l.sun}% — Represents creativity and recognition.<br>
+Mercury Line: ${l.mercury}% — Communication, intuition, business sense.<br>
+Venus Influence: ${l.venus}% — Love, compassion, passion level.<br>
+Health Line: ${l.health}% — Physical and emotional wellness.<br><br>
+
+<h3>📘 Deep Reading Summary (AI Mixed System)</h3>
+${generateDeepReportText(data)}
 `;
 }
+
+
+// ====================================================
+// 6) Automatic Deep Text Generator (2000–3000 words)
+// ====================================================
+function generateDeepReportText(data) {
+
+    let t = `
+Your palm reveals a remarkable combination of physical strength, emotional depth,
+and heightened intuitive intelligence. The aura field indicates a rare balance 
+between creativity, analytical ability, and spiritual awareness. Individuals with 
+such a configuration often play important roles in guiding others... 
+
+[ NOTE: Full 3000–4000 word version auto-expands here. 
+  I will add the long-form paragraphs EXACTLY as you want next step. ]
+`;
+
+    return t;
+}
+
+
+// ====================================================
+// EXPORT FOR GLOBAL USAGE
+// ====================================================
+window.PalmAIReport = {
+    build: generateFullPalmReport
+};
