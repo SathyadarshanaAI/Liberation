@@ -1,3 +1,25 @@
+// === INIT LANGUAGE SELECT ===
+window.onload = () => {
+    const sel = document.getElementById("langSelect");
+    const langs = [
+        "Sinhala", "Tamil", "English",
+        "Hindi", "Japanese", "Chinese", "Thai",
+        "Spanish", "French", "Arabic", "Russian",
+        "German", "Korean", "Portuguese", "Indonesian",
+        "Malay", "Italian", "Bengali", "Turkish"
+    ];
+
+    langs.forEach(l => {
+        const opt = document.createElement("option");
+        opt.value = l;
+        opt.textContent = l;
+        sel.appendChild(opt);
+    });
+
+    sel.value = "Sinhala";
+};
+
+
 // === START CAMERA ===
 window.startCamera = async function () {
     const video = document.getElementById("video");
@@ -11,9 +33,7 @@ window.startCamera = async function () {
         video.play();
 
         document.getElementById("output").textContent =
-            "Camera started. Align your hand.";
-
-        console.log("📷 Camera ready.");
+            "Camera started. Align your palm with the guide.";
 
     } catch (err) {
         document.getElementById("output").textContent =
@@ -28,34 +48,18 @@ window.captureHand = function () {
     const video = document.getElementById("video");
     const canvas = document.getElementById("palmCanvas");
     const box = document.getElementById("palmPreviewBox");
-
     const ctx = canvas.getContext("2d");
 
-    // Set size
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // Draw camera frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Show preview
     box.style.display = "block";
 
-    // Draw simple guide lines
-    ctx.strokeStyle = "cyan";
-    ctx.lineWidth = 3;
-    ctx.shadowColor = "cyan";
-    ctx.shadowBlur = 15;
-
-    // Basic sample palm lines (placeholder)
-    ctx.beginPath();
-    ctx.moveTo(canvas.width * 0.2, canvas.height * 0.7);
-    ctx.lineTo(canvas.width * 0.5, canvas.height * 0.4);
-    ctx.lineTo(canvas.width * 0.8, canvas.height * 0.7);
-    ctx.stroke();
-
     document.getElementById("output").textContent =
-        "🧠 Palm captured.\nAnalyzing major lines... (demo)";
+        "🧠 Processing palm…";
 
-    console.log("🖐️ Palm captured.");
+    // Send to AI Processor
+    analyzePalm(canvas);
 };
