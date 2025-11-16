@@ -1,101 +1,93 @@
-// === CREATE REAL HAND DETECTOR ===
 window.HandDetector = function () {
     return new Promise(resolve => {
         const hands = new Hands({
-            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
         });
 
         hands.setOptions({
             maxNumHands: 1,
             modelComplexity: 1,
-            minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
         });
 
         resolve(hands);
     });
 };
 
-
-// === MAIN PALM ANALYSIS ===
 window.analyzePalm = async function (canvas) {
-    const ctx = canvas.getContext("2d");
+
     const hands = await window.HandDetector();
 
-    hands.onResults(results => {
-        if (!results.multiHandLandmarks?.length) {
-            document.getElementById("output").textContent = "Palm not detected.";
-            return;
-        }
+    // Convert canvas → real image for mobile
+    const img = new Image();
+    img.src = canvas.toDataURL("image/jpeg", 0.9);
 
-        const lm = results.multiHandLandmarks[0];
+    img.onload = async () => {
 
-        // Draw 3 glowing palm lines (simple)
-        drawGlowLine(ctx, lm[0], lm[5], lm[17], "cyan");     // Life
-        drawGlowLine(ctx, lm[12], lm[9], lm[5], "magenta"); // Head
-        drawGlowLine(ctx, lm[17], lm[13], lm[8], "yellow"); // Heart
+        hands.onResults(results => {
+            if (!results.multiHandLandmarks?.length) {
+                document.getElementById("output").textContent =
+                    "Palm not detected. Try again.";
+                return;
+            }
 
-        const reading = generateReading();
-        translateAndShow(reading);
-    });
+            const lm = results.multiHandLandmarks[0];
+            const ctx = canvas.getContext("2d");
 
-    await hands.send({ image: canvas });
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            drawGlowLine(ctx, lm[0], lm[5], lm[17], "cyan");
+            drawGlowLine(ctx, lm[12], lm[9], lm[5], "magenta");
+            drawGlowLine(ctx, lm[17], lm[13], lm[8], "yellow");
+
+            translateAndShow(generateReading());
+        });
+
+        await hands.send({ image: img });
+    };
 };
 
-
-// === DRAW GLOW LINE ===
-function drawGlowLine(ctx, p1, p2, p3, color) {
+function drawGlowLine(ctx, a, b, c, color) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 4;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 16;
+
+    const W = ctx.canvas.width, H = ctx.canvas.height;
 
     ctx.beginPath();
-    ctx.moveTo(p1.x * ctx.canvas.width, p1.y * ctx.canvas.height);
-    ctx.lineTo(p2.x * ctx.canvas.width, p2.y * ctx.canvas.height);
-    ctx.lineTo(p3.x * ctx.canvas.width, p3.y * ctx.canvas.height);
+    ctx.moveTo(a.x * W, a.y * H);
+    ctx.lineTo(b.x * W, b.y * H);
+    ctx.lineTo(c.x * W, c.y * H);
     ctx.stroke();
 }
 
-
-// === AI READING ===
 function generateReading() {
     return `
-🖐️ Palmistry AI V40 Analysis
-
-Life Line:
-Strong vital energy, long health span.
-
-Head Line:
-Clear thinking pattern, good focus.
-
-Heart Line:
-Balanced emotions, compassion.
-
-Destiny:
-Leadership, spiritual clarity, intuition.
+🖐️ Palmistry AI V41
+Life Line: Strong life-force energy.
+Head Line: Clarity & intelligence.
+Heart Line: Compassion & balance.
+Destiny: Spiritual leadership.
 `;
 }
 
-
-// === MULTILINGUAL OUTPUT ===
 function translateAndShow(text) {
     const lang = document.getElementById("langSelect").value;
 
     if (lang === "Sinhala") {
-        text = text
-            .replace("Life Line", "ජීවිත රේඛාව")
-            .replace("Head Line", "මානසික රේඛාව")
-            .replace("Heart Line", "හද රේඛාව")
-            .replace("Destiny", "විනිශ්චය");
+        text = text.replace("Life Line", "ජීවිත රේඛාව")
+                   .replace("Head Line", "මානසික රේඛාව")
+                   .replace("Heart Line", "හද රේඛාව")
+                   .replace("Destiny", "විනිශ්චය");
     }
 
     if (lang === "Tamil") {
-        text = text
-            .replace("Life Line", "உயிர் கோடு")
-            .replace("Head Line", "தலை கோடு")
-            .replace("Heart Line", "இதய கோடு")
-            .replace("Destiny", "விதி");
+        text = text.replace("Life Line", "உயிர் கோடு")
+                   .replace("Head Line", "தலை கோடு")
+                   .replace("Heart Line", "இதய கோடு")
+                   .replace("Destiny", "விதி");
     }
 
     document.getElementById("output").textContent = text;
