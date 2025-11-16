@@ -1,66 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>THE SEED · Palmistry AI · V41</title>
+<!-- ============================= -->
+<!-- 🟣 USER INFORMATION FORM -->
+<!-- ============================= -->
 
-<style>
-/* same styles as before — keep them */
-</style>
-</head>
+<div id="userForm" style="
+    width: 92%;
+    max-width: 450px;
+    margin: 20px auto;
+    padding: 15px;
+    border: 1px solid cyan;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: cyan;
+">
+    <h3 style="text-shadow:0 0 8px cyan;">User Information</h3>
 
-<body>
+    <input id="userName" type="text" placeholder="Full Name" 
+        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
+               border:1px solid cyan;border-radius:8px;">
 
-<h1>🕉️ THE SEED · Palmistry AI · V41</h1>
+    <select id="userGender" 
+        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
+               border:1px solid cyan;border-radius:8px;">
+        <option value="">Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+    </select>
 
-<select id="langSelect"></select>
+    <input id="userDOB" type="date" 
+        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
+               border:1px solid cyan;border-radius:8px;">
 
-<div id="camBox">
-    <video id="video" autoplay muted playsinline></video>
-    <img id="handOverlay" src="assets/palm-overlay.png">
+    <input id="userCountry" type="text" placeholder="Country" 
+        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
+               border:1px solid cyan;border-radius:8px;">
+
+    <select id="handPref" 
+        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
+               border:1px solid cyan;border-radius:8px;">
+        <option value="">Which hand do you want to scan?</option>
+        <option value="Left">Left Hand</option>
+        <option value="Right">Right Hand</option>
+        <option value="Both">Both Hands</option>
+    </select>
+
+    <textarea id="userNote" rows="3" placeholder="Any message or special request..."
+        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
+               border:1px solid cyan;border-radius:8px;"></textarea>
+
+    <button onclick="saveUserForm()" class="btn" 
+        style="background:linear-gradient(90deg,#00eaff,#0088cc);color:black;">
+        Save User Info
+    </button>
 </div>
-
-<button class="btn" onclick="startCamera()">Open Camera</button>
-<button class="btn" onclick="captureHand()">Scan Hand</button>
-
-<div id="palmPreviewBox">
-    <h3 style="color:cyan;">Palm Preview</h3>
-    <canvas id="palmCanvas"></canvas>
-</div>
-
-<div id="output">Awaiting scan...</div>
-
-<!-- LOAD MEDIAPIPE WITH FALLBACK -->
-<script>
-window.loadScript = function(src){
-    return new Promise((resolve,reject)=>{
-        const s = document.createElement("script");
-        s.src = src;
-        s.onload = resolve;
-        s.onerror = reject;
-        document.body.appendChild(s);
-    });
-};
-</script>
-
-<script>
-(async () => {
-    try {
-        await loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js");
-        await loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
-        await loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
-        console.log("MediaPipe loaded");
-    } catch(e){
-        document.getElementById("output").textContent =
-            "Failed to load AI modules. Check internet.";
-        console.error(e);
-    }
-
-    await loadScript("main.js");
-    await loadScript("ai-palm.js");
-})();
-</script>
-
-</body>
-</html>
