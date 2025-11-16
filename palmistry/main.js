@@ -1,39 +1,41 @@
-// === CAMERA START FUNCTION ===
-export async function startCamera() {
-  const video = document.getElementById("video");
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
-    });
-    video.srcObject = stream;
-    await video.play();
+// === START CAMERA ===
+window.startCamera = async function () {
+    const video = document.getElementById("video");
 
-    document.getElementById("handMsg").textContent = "Align your palm inside the frame.";
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
 
-    console.log("📷 Camera started");
-  } catch (err) {
-    console.error("Camera error:", err);
-    document.getElementById("handMsg").textContent = "Camera blocked. Allow permissions.";
-  }
-}
+        video.srcObject = stream;
+        video.play();
 
-// === HAND CAPTURE FUNCTION ===
-export function captureHand() {
-  const video = document.getElementById("video");
-  const canvas = document.getElementById("palmPreview");
-  const box = document.getElementById("palmPreviewBox");
-  const ctx = canvas.getContext("2d");
+        console.log("📷 Camera ready.");
+        document.getElementById("output").textContent =
+            "Camera started. Align your hand.";
+    } 
+    catch (err) {
+        console.error("Camera error:", err);
+        document.getElementById("output").textContent =
+            "Camera blocked or unavailable.";
+    }
+};
 
-  // Set canvas size = video size
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
 
-  // Draw single frame
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+// === CAPTURE HAND ===
+window.captureHand = function () {
+    const video = document.getElementById("video");
 
-  box.style.display = "block";
-  document.getElementById("output").textContent =
-    "🧠 Scan complete.\nInterpreting palm lines... (AI module loading...)";
+    // Create canvas
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-  console.log("🖐️ Hand captured");
-}
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    document.getElementById("output").textContent =
+        "🧠 Hand captured.\nAI interpretation module loading...";
+
+    console.log("🖐️ Palm captured.");
+};
