@@ -1,3 +1,4 @@
+// === LOAD MEDIAPIPE HAND DETECTOR ===
 window.HandDetector = function () {
     return new Promise(resolve => {
         const hands = new Hands({
@@ -15,44 +16,57 @@ window.HandDetector = function () {
     });
 };
 
+
+// === PALM ANALYSIS ===
 window.analyzePalm = async function (canvas) {
 
     const hands = await window.HandDetector();
+    const ctx = canvas.getContext("2d");
 
-    // Convert canvas → real image for mobile
+    // Convert canvas → real image
     const img = new Image();
-    img.src = canvas.toDataURL("image/jpeg", 0.9);
+    img.src = canvas.toDataURL("image/png");
 
     img.onload = async () => {
 
+        // VERY IMPORTANT — give real size to MediaPipe
+        img.width = canvas.width;
+        img.height = canvas.height;
+
         hands.onResults(results => {
-            if (!results.multiHandLandmarks?.length) {
+
+            if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
                 document.getElementById("output").textContent =
                     "Palm not detected. Try again.";
                 return;
             }
 
             const lm = results.multiHandLandmarks[0];
-            const ctx = canvas.getContext("2d");
 
+            // Redraw hand image first
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            drawGlowLine(ctx, lm[0], lm[5], lm[17], "cyan");
-            drawGlowLine(ctx, lm[12], lm[9], lm[5], "magenta");
-            drawGlowLine(ctx, lm[17], lm[13], lm[8], "yellow");
+            // Draw glowing palm lines
+            drawGlowLine(ctx, lm[0], lm[5], lm[17], "cyan");     // Life
+            drawGlowLine(ctx, lm[12], lm[9], lm[5], "magenta"); // Head
+            drawGlowLine(ctx, lm[17], lm[13], lm[8], "yellow"); // Heart
 
+            // Show reading
             translateAndShow(generateReading());
         });
 
+        // NOW detection will work 🟢
         await hands.send({ image: img });
     };
 };
 
+
+// === DRAW GLOW LINES ===
 function drawGlowLine(ctx, a, b, c, color) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 4;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 20;
 
     const W = ctx.canvas.width, H = ctx.canvas.height;
 
@@ -63,16 +77,21 @@ function drawGlowLine(ctx, a, b, c, color) {
     ctx.stroke();
 }
 
+
+// === AI PALM READING ===
 function generateReading() {
     return `
-🖐️ Palmistry AI V41
+🖐️ Palmistry AI V42
+
 Life Line: Strong life-force energy.
-Head Line: Clarity & intelligence.
-Heart Line: Compassion & balance.
-Destiny: Spiritual leadership.
+Head Line: Clear thinking, good focus.
+Heart Line: Balanced emotions and compassion.
+Destiny: Spiritual leadership and intuition.
 `;
 }
 
+
+// === MULTILINGUAL OUTPUT ===
 function translateAndShow(text) {
     const lang = document.getElementById("langSelect").value;
 
