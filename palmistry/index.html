@@ -1,55 +1,201 @@
-<!-- ============================= -->
-<!-- 🟣 USER INFORMATION FORM -->
-<!-- ============================= -->
+<!DOCTYPE html>
+<html lang="en">
 
-<div id="userForm" style="
-    width: 92%;
-    max-width: 450px;
-    margin: 20px auto;
-    padding: 15px;
-    border: 1px solid cyan;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.04);
-    color: cyan;
-">
-    <h3 style="text-shadow:0 0 8px cyan;">User Information</h3>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🕉️ THE SEED · Palmistry AI · V50</title>
 
-    <input id="userName" type="text" placeholder="Full Name" 
-        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
-               border:1px solid cyan;border-radius:8px;">
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: cyan;
+        font-family: Arial;
+        text-align: center;
+    }
 
-    <select id="userGender" 
-        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
-               border:1px solid cyan;border-radius:8px;">
-        <option value="">Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
+    h1 {
+        margin: 15px 0;
+        font-size: 1.7rem;
+        text-shadow: 0 0 12px cyan;
+    }
+
+    #langSelect {
+        width: 92%;
+        max-width: 420px;
+        padding: 10px;
+        margin: 10px auto;
+        border: 1px solid cyan;
+        border-radius: 10px;
+        background: #000;
+        color: cyan;
+    }
+
+    /* Camera box */
+    #camBox {
+        width: 100%;
+        height: 55vh;
+        background: #000;
+        position: relative;
+        overflow: hidden;
+        border-bottom: 1px solid #00c3ff;
+    }
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Overlay */
+    #handOverlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 60%;
+        transform: translate(-50%, -50%);
+        opacity: .25;
+        filter: drop-shadow(0 0 10px cyan);
+        pointer-events: none;
+    }
+
+    /* Buttons */
+    .btn {
+        width: 92%;
+        max-width: 420px;
+        padding: 14px;
+        margin: 10px auto;
+        border-radius: 30px;
+        border: none;
+        background: cyan;
+        color: black;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    /* User form */
+    #userForm {
+        width: 92%;
+        max-width: 480px;
+        margin: 20px auto;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid cyan;
+        border-radius: 12px;
+        text-align: left;
+    }
+
+    #userForm label {
+        font-weight: bold;
+        color: cyan;
+        display: block;
+        margin-top: 10px;
+    }
+
+    #userForm input,
+    #userForm select,
+    #userForm textarea {
+        width: 100%;
+        padding: 10px;
+        background: #000;
+        border: 1px solid cyan;
+        color: cyan;
+        border-radius: 8px;
+        margin-top: 4px;
+    }
+
+    /* Palm preview */
+    #palmPreviewBox {
+        width: 92%;
+        max-width: 480px;
+        margin: 15px auto;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid cyan;
+        display: none;
+    }
+
+    canvas {
+        width: 100%;
+        border-radius: 10px;
+    }
+
+    #output {
+        width: 92%;
+        max-width: 500px;
+        margin: 15px auto;
+        padding: 15px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid #00c3ff;
+        text-align: left;
+        white-space: pre-wrap;
+    }
+</style>
+
+</head>
+
+<body>
+
+<h1>🕉️ THE SEED · Palmistry AI · V50</h1>
+
+<select id="langSelect"></select>
+
+<!-- USER FORM -->
+<div id="userForm">
+    <h3 style="text-align:center;color:cyan;">User Information</h3>
+
+    <label>Full Name</label>
+    <input type="text" id="userName">
+
+    <label>Gender</label>
+    <select id="userGender">
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
     </select>
 
-    <input id="userDOB" type="date" 
-        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
-               border:1px solid cyan;border-radius:8px;">
+    <label>Date of Birth</label>
+    <input type="date" id="userDOB">
 
-    <input id="userCountry" type="text" placeholder="Country" 
-        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
-               border:1px solid cyan;border-radius:8px;">
+    <label>Country</label>
+    <input type="text" id="userCountry">
 
-    <select id="handPref" 
-        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
-               border:1px solid cyan;border-radius:8px;">
-        <option value="">Which hand do you want to scan?</option>
-        <option value="Left">Left Hand</option>
-        <option value="Right">Right Hand</option>
-        <option value="Both">Both Hands</option>
+    <label>Which hand do you want to scan?</label>
+    <select id="handPref">
+        <option>Right Hand</option>
+        <option>Left Hand</option>
     </select>
 
-    <textarea id="userNote" rows="3" placeholder="Any message or special request..."
-        style="width:100%;padding:10px;margin:7px 0;background:#000;color:cyan;
-               border:1px solid cyan;border-radius:8px;"></textarea>
+    <label>Any message or special request?</label>
+    <textarea id="userNote" rows="3"></textarea>
 
-    <button onclick="saveUserForm()" class="btn" 
-        style="background:linear-gradient(90deg,#00eaff,#0088cc);color:black;">
-        Save User Info
-    </button>
+    <button class="btn" onclick="saveUserForm()">Save User Info</button>
 </div>
+
+<!-- CAMERA -->
+<div id="camBox">
+    <video id="video" autoplay muted playsinline></video>
+    <img id="handOverlay" src="assets/palm-overlay.png">
+</div>
+
+<button class="btn" onclick="startCamera()">Open Camera</button>
+<button class="btn" onclick="captureHand()">Scan Hand</button>
+
+<!-- PREVIEW -->
+<div id="palmPreviewBox">
+    <h3 style="color:cyan;text-align:center;">Palm Preview</h3>
+    <canvas id="palmCanvas"></canvas>
+</div>
+
+<!-- REPORT OUTPUT -->
+<div id="output">Awaiting scan...</div>
+
+<script src="main.js"></script>
+<script type="module" src="report-engine.js"></script>
+
+</body>
+</html>
