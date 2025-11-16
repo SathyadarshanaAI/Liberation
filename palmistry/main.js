@@ -1,34 +1,25 @@
-// ======================================================
-// 🟣 THE SEED · PALMISTRY AI · V50
-// Full main.js with: Language System + Camera + Capture
-// User Form Save + AnalyzePalm Hook
-// ======================================================
-
-
-// === LANGUAGE LOADER ===
+// ===============================
+// LANGUAGE LOADER
+// ===============================
 window.onload = () => {
     const sel = document.getElementById("langSelect");
     const langs = [
-        "Sinhala", "Tamil", "English",
-        "Hindi", "Japanese", "Chinese", "Arabic",
-        "Spanish", "French", "Russian", "German",
-        "Korean", "Portuguese", "Indonesian", "Malay",
-        "Italian", "Turkish", "Dutch", "Thai"
+        "Sinhala","Tamil","English","Hindi","Japanese","Chinese","Arabic",
+        "Spanish","French","Russian","German","Korean","Portuguese",
+        "Indonesian","Malay","Italian","Turkish","Dutch","Thai"
     ];
-
     langs.forEach(l => {
-        const opt = document.createElement("option");
-        opt.value = l;
-        opt.textContent = l;
-        sel.appendChild(opt);
+        const op = document.createElement("option");
+        op.value = l; op.textContent = l;
+        sel.appendChild(op);
     });
-
-    sel.value = "English"; // default
+    sel.value = "English";
 };
 
 
-
-// === CAMERA START ===
+// ===============================
+// CAMERA START
+// ===============================
 window.startCamera = async function () {
     const video = document.getElementById("video");
 
@@ -36,7 +27,6 @@ window.startCamera = async function () {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" }
         });
-
         video.srcObject = stream;
         await video.play();
 
@@ -51,8 +41,9 @@ window.startCamera = async function () {
 };
 
 
-
-// === CAPTURE PALM ===
+// ===============================
+// CAPTURE PALM
+// ===============================
 window.captureHand = function () {
     const video = document.getElementById("video");
     const canvas = document.getElementById("palmCanvas");
@@ -66,15 +57,13 @@ window.captureHand = function () {
     document.getElementById("palmPreviewBox").style.display = "block";
     document.getElementById("output").textContent = "Analyzing palm...";
 
-    analyzePalm(canvas, userData);  // user data passed
+    generateFullPalmReport(canvas);   // FIXED
 };
 
 
-
-// ======================================================
-// USER FORM SAVE SYSTEM
-// ======================================================
-
+// ===============================
+// USER FORM SAVE
+// ===============================
 let userData = {};
 
 window.saveUserForm = function () {
