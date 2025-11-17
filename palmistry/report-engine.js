@@ -47,17 +47,16 @@ function randomStrength() {
 // ===============================
 function generateAuraField(l) {
     return {
-        vitality: (l.life + l.health) / 2 | 0,
-        intellect: (l.head + l.mercury) / 2 | 0,
-        emotion: (l.heart + l.venus) / 2 | 0,
-        destiny: (l.fate + l.sun) / 2 | 0,
+        vitality: Math.floor((l.life + l.health) / 2),
+        intellect: Math.floor((l.head + l.mercury) / 2),
+        emotion: Math.floor((l.heart + l.venus) / 2),
+        destiny: Math.floor((l.fate + l.sun) / 2),
         communication: l.mercury,
         creativity: l.sun,
-        intuition: (l.sun + l.venus) / 2 | 0,
-        spirituality: (l.life + l.fate) / 2 | 0
+        intuition: Math.floor((l.sun + l.venus) / 2),
+        spirituality: Math.floor((l.life + l.fate) / 2)
     };
 }
-
 
 // ===============================
 // CHAKRA MAP
