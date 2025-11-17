@@ -109,7 +109,7 @@ Mercury Line: ${l.mercury}%<br>
 Venus Influence: ${l.venus}%<br>
 Health Line: ${l.health}%<br><br>
 
-<h3>📘 Deep Reading Summary</h3
+<h3>📘 Deep Reading Summary</h3>
 ${generateDeepText()}
 // PLACEHOLDER — FULL 4000-WORD VERSION COMES NEX
 function generateDeepText() {
@@ -463,9 +463,7 @@ purpose.
     `;
 }
 
-`;// ===============================
 // 🔮 PART 5 — COSMIC PREDICTION MAP (Ultimate Future Engine)
-// ===============================
 function generateCosmicPredictionSection(d) {
 
     const a = d.aura;
@@ -557,9 +555,7 @@ You are not just living — **you are awakening**.
 Your presence changes people, even silently.
 
 This is the mark of an old soul with a powerful mission.
-// ===============================================
 // 🔮 PART 6 — LOVE & MARRIAGE DESTINY ENGINE V53
-// ======================================9=========
 function generatePart6_LoveMarriage(d) {
 
     const a = d.aura;
@@ -879,9 +875,7 @@ Your soul protects you.
 Your path leads upward — toward clarity, strength, and liberation.<br><br>
 
 This is the mark of a spiritually awakened soul.<br>
-// =============================================================
 // PART 10 — DARK ZONE & NEGATIVE ENERGY PROTECTION ENGINE V54
-// =============================================================
 function generatePart10_DarkZone(d) {
 
     const a = d.aura;
