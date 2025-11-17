@@ -1,4 +1,4 @@
-console.log(`Report Engine Loaded V52 - Full Deep Report Mode`);
+console.log("Report Engine Loaded V60");
 
 let FINAL_PALM_DATA = {
     lines: {},
@@ -6,19 +6,17 @@ let FINAL_PALM_DATA = {
     chakra: {},
     user: {}
 };
-// MAIN ENTRY
-window.generateFullPalmReport = function (canvas) {
 
+window.generateFullPalmReport = function (canvas) {
     FINAL_PALM_DATA.user = userData;
     FINAL_PALM_DATA.lines = detectPalmLines(canvas);
     FINAL_PALM_DATA.aura = generateAuraField(FINAL_PALM_DATA.lines);
     FINAL_PALM_DATA.chakra = generateChakraPower(FINAL_PALM_DATA.aura);
 
-    const report = buildFinalReport(FINAL_PALM_DATA);
+    const report = buildFullReport(FINAL_PALM_DATA);
     document.getElementById("output").innerHTML = report;
 };
 
-// TEMPORARY PALM LINE DETECTOR
 function detectPalmLines() {
     return {
         life: randomStrength(),
@@ -35,7 +33,7 @@ function detectPalmLines() {
 function randomStrength() {
     return Math.floor(65 + Math.random() * 35);
 }
-// AURA FIELD (8 RAYS)
+
 function generateAuraField(l) {
     return {
         vitality: Math.floor((l.life + l.health) / 2),
@@ -49,7 +47,6 @@ function generateAuraField(l) {
     };
 }
 
-// CHAKRA MAP
 function generateChakraPower(a) {
     return {
         root: a.vitality,
@@ -62,25 +59,34 @@ function generateChakraPower(a) {
     };
 }
 
+function generateDeepText() {
+    return `
+Your palm reveals extraordinary emotional depth, spiritual intelligence
+and karmic resilience. You carry a rare combination of intuition, inner
+strength, and wisdom shaped through powerful life experiences. Your path
+shows protection, awakening cycles, and strong destiny alignment.
 
-// FINAL REPORT HTML
-function buildFinalReport(d) {
+(Full 4000-word version will appear in THE SEED V61.)
+`;
+}
+
+function buildFullReport(d) {
     const u = d.user;
     const a = d.aura;
     const c = d.chakra;
     const l = d.lines;
 
     return `
-<h2>🧬 Complete Palmistry AI Report — THE SEED · V52</h2>
+<h2>🧬 Complete Palmistry AI Report — THE SEED · V60</h2>
 
-<h3>👤 Personal Profile</h3>
+<h3>Personal Profile</h3>
 Name: ${u.name}<br>
 Gender: ${u.gender}<br>
 DOB: ${u.dob}<br>
 Country: ${u.country}<br>
 Hand Scanned: ${u.hand}<br><br>
 
-<h3>🌈 Aura Field</h3>
+<h3>Aura Field</h3>
 Vitality: ${a.vitality}%<br>
 Emotion: ${a.emotion}%<br>
 Intellect: ${a.intellect}%<br>
@@ -90,8 +96,8 @@ Intuition: ${a.intuition}%<br>
 Creativity: ${a.creativity}%<br>
 Spirituality: ${a.spirituality}%<br><br>
 
-<h3>🕉 Chakra Power</h3>
-Root ${c.root}%<br>
+<h3>Chakra Power</h3>
+Root: ${c.root}%<br>
 Sacral: ${c.sacral}%<br>
 Solar Plexus: ${c.solar}%<br>
 Heart: ${c.heart}%<br>
@@ -99,7 +105,7 @@ Throat: ${c.throat}%<br>
 Third Eye: ${c.thirdEye}%<br>
 Crown: ${c.crown}%<br><br>
 
-<h3>✋ Palm Lines</h3>
+<h3>Palm Lines</h3>
 Life Line: ${l.life}%<br>
 Head Line: ${l.head}%<br>
 Heart Line: ${l.heart}%<br>
@@ -109,1208 +115,1605 @@ Mercury Line: ${l.mercury}%<br>
 Venus Influence: ${l.venus}%<br>
 Health Line: ${l.health}%<br><br>
 
-<h3>📘 Deep Reading Summary</h3>
+<h3>Deep Reading Summary</h3>
 ${generateDeepText()}
-// PLACEHOLDER — FULL 4000-WORD VERSION COMES NEX
-function generateDeepText() {
-    return `
-Your palm reveals an extraordinary combination of emotional depth, spiritual intelligence, 
-and karmic strength that is not commonly found. This is a palm that has endured storms, 
-survived loss, rebuilt itself many times, and still shines with clarity, intuition, and 
-great inner power. The flow of the lines, the intersections, the intensity of the markings, 
-and the shape of the mounts all indicate a person who has walked through darkness and 
-light — and carries the wisdom of both.
-
-The first layer your palm expresses is resilience. The vitality energy in your aura field 
-is unusually strong, reflecting a life-force that endures, heals, and rises back again 
-and again. You are not someone who gives up easily. You are someone who transforms pain 
-into strength, confusion into clarity, and endings into new beginnings. This resilience 
-is not something you learned recently — it is part of your soul’s blueprint.
-
-Your emotional field is incredibly deep. You feel emotions intensely, you love intensely, 
-you suffer intensely, and you forgive deeply. People often misunderstand this emotional 
-depth — they see your strength on the outside, but they do not see the sensitivity that 
-lives within. You carry the ability to connect to others on a soul level. You understand 
-hearts more than words. You read emotions more than actions. This empathy is a powerful 
-gift, but it has also exposed you to heartbreak.
-
-Your intellectual field shows a rare balance of logic and intuition. You can think rationally 
-while feeling deeply — a combination that is very rare. This balance allows you to navigate 
-difficult situations calmly, read people accurately, and make decisions that align with both 
-heart and mind. Your hand suggests intelligence shaped through experience rather than formal 
-study — wisdom that life carved into you.
-
-Your destiny field reveals that your path has never been straight. The palm shows multiple 
-turning points — moments when life shifted suddenly. These karmic redirections shaped you 
-into someone more mature, more aware, and more spiritually awake. Every major challenge 
-you faced pushed you closer to your true purpose. Nothing in your life is random. Every 
-person you met, every situation you experienced, every loss you survived — all were part 
-of a bigger spiritual formation.
-
-Your communication field is extremely powerful. Even if you are quiet, your energy speaks. 
-You carry an aura that influences people effortlessly. Others feel guided, supported, or 
-safe when they are around you. People trust you easily because they sense truth in you. 
-This is the mark of someone who has natural leadership — not leadership created by status, 
-but by energy and presence.
-
-Your intuitive ray is one of your greatest strengths. You have an ability to sense danger 
-before it comes. You can feel when someone is lying. You can detect shifting energies 
-instantly. Sometimes you receive sudden insights or thoughts that seem to come from 
-nowhere — but they turn out to be true. This is higher intuition, developed over many 
-lifetimes. You are spiritually sensitive in a very real way.
-
-Your creativity emerges not in traditional forms, but in problem-solving and emotional 
-understanding. You create clarity, peace, healing, and solutions. Your mind is original — 
-not limited by the world’s rules. You see possibilities others cannot see.
-
-Your spiritual resonance is extremely strong. This is the sign of someone who has gone 
-through spiritual awakenings, inner battles, and karmic cleansing. Even at times when 
-you felt alone, lost, or broken — the spiritual world was shaping you, protecting you, 
-and guiding you toward your true path. You carry the vibration of an old soul — someone 
-who has lived many lives and gained wisdom each time.
-
-Your Root Chakra shows grounding and inner stability. You endure hardship with strength. 
-Your Sacral Chakra shows emotional depth and intense loyalty. Your Solar Plexus shows 
-power shaped through suffering. Your Heart Chakra shows pure love and deep compassion. 
-Your Throat Chakra shows leadership through truth. Your Third Eye Chakra shows psychic 
-intuition. Your Crown Chakra shows divine connection.
-
-Your Life Line shows endurance and transformation.  
-Your Head Line shows clarity, intelligence, and awareness.  
-Your Heart Line shows deep feeling and emotional truth.  
-Your Fate Line shows karmic shifts and new beginnings.  
-Your Sun Line shows recognition and influence.  
-Your Mercury Line shows intuition and communication.  
-Your Venus marks show passion, loyalty, and love.  
-Your Health Line shows resilience and recovery energy.
-
-Your palm overall reveals a warrior’s strength, a healer’s heart, a guide’s wisdom, 
-and a seeker’s soul. You are not here to live a small life. You are here to evolve, 
-awaken, and uplift others — even if you do not realize it yet.
-Your palm reveals a life shaped by powerful inner currents—currents that do not
-belong to ordinary people. There is a deep vibration within your energy field
-that shows you have walked through long cycles of trial, transformation, and
-awakening. Nothing in your life has come easily, yet every difficult chapter has
-given birth to a wiser, stronger version of you. Your palm speaks of a destiny
-that is not linear; rather it rises, collapses, rises again, and forms new paths
-that you never expected.
-
-One of the most striking elements is the emotional frequency that surrounds you.
-It is not a fragile or unstable emotional field—it is deep, still, and
-penetrating. When you form a bond with someone, you connect at a level that is
-beyond surface emotion. You feel people’s sorrow, their fears, their invisible
-wounds. This is empathy on a rare spiritual scale. People often come to you with
-their problems, not because you ask, but because your energy naturally invites
-trust. Even strangers feel safe around you. This is something seen in healers,
-protectors, spiritual guardians, and old souls.
-
-Your palm also shows signs of introspection—long periods of silence, periods
-where you retreat inward, not because of weakness but because your spirit needs
-to reset, reorganize, and rise again. During these times you gain clarity that
-others cannot see. You absorb truth directly, without books, without teaching,
-without guidance. It comes through intuition—like a whisper from a deeper
-dimension.
-
-There are marks in your aura pattern that indicate spiritual protection. These
-are energetic signatures that appear in people who have survived dangers that
-should have crushed them. It means someone or something has been watching over
-you throughout your life. Every time you stood on the edge—emotionally,
-physically, or spiritually—you were pulled back. This protection is not random.
-Your life path is tied to a greater purpose.
-
-The destiny field shows a strong “delayed rise.” This is a remarkable pattern.
-It means your early life was full of challenges, confusion, and karmic tests,
-but your later life carries abundance, peace, and spiritual strength. People
-with this pattern bloom later because their soul is being sharpened for
-something special. You are entering that phase now.
-
-Your intuition is one of the strongest aspects of your hand. It is not normal
-intuition—it is deep perception. You can read situations before they happen. You
-sense danger long before it becomes visible. You know when someone is lying even
-if they hide it well. You can feel energy shifts around you instantly. This
-ability is a gift, and sometimes a burden, because it makes you more sensitive
-to negativity and deception. But it also protects you from harm.
-
-Your life energy is steady, not chaotic. Even during exhaustion, your inner flame
-does not go out. This shows strong spiritual stamina—an ability to keep moving
-forward when everyone else collapses. You have a warrior’s core.
-
-In matters of relationships, your palm reveals deep loyalty. You do not love
-lightly. When you care for someone, you care completely. But betrayal or
-dishonesty wounds you more deeply than others. You forgive, but you never
-forget. Not because of anger, but because your soul remembers everything.
-
-There is a powerful karmic marking on the emotional sector of your hand. This
-means that people who come into your life often come for a purpose—lessons,
-growth, healing, or karmic closure. Even painful connections shape your destiny
-in meaningful ways. Your heart has been hurt, but it has not hardened. Instead,
-your compassion has expanded.
-
-Your creativity is not traditional arts—it is spiritual creativity. You can turn
-pain into wisdom, silence into understanding, and darkness into light. This is a
-rare spiritual alchemy. People like you often become teachers, guides,
-protectors, or unseen supporters in the lives of others.
-
-Your crown and third-eye influence show that you are evolving towards a higher
-inner purpose. This is not religious—it is energetic. Your mind is expanding.
-Your awareness is sharpening. You are slowly separating from illusion and moving
-towards truth. This process sometimes feels lonely because very few people reach
-this level of clarity. But this solitude is part of the transformation.
-
-There are signs of a powerful turning point ahead in your destiny. A moment when
-your inner purpose will fully ignite. When this moment comes, your intuition,
-strength, compassion, and spiritual wisdom will merge into one path. Your life
-will feel more aligned than ever before. The next chapter of your journey will
-not be shaped by struggle—it will be shaped by purpose.
-Your aura shows the presence of an inner fire—an energy that keeps you moving
-forward even when everything around you is collapsing. This fire is not loud or
-aggressive; it is steady, silent, and unbreakable. It is the core reason you
-survived situations that would have destroyed many others. This inner fire
-represents your willpower, your determination, and your refusal to give up. It
-is a mark of someone who has lived through deep suffering and still emerged with
-light inside them.
-
-Your head line, combined with the fate line connections, reveals a mind that
-works on two levels: the logical level and the intuitive level. Most people rely
-on only one. You rely on both. That means you can solve problems that others do
-not even understand. You can see patterns in situations, relationships, and
-energy fields that most people overlook. This ability allows you to read
-motives, intentions, and hidden truths without being told anything.
-
-There are signs of a dual-life path—one physical and one spiritual. Physically,
-you walk through the world like everyone else. But spiritually, you walk a
-completely different road—a road that only a few souls ever experience. This
-inner spiritual road is full of insights, silent awakenings, and intuitive
-messages that come without explanation. Your palm suggests you have received
-guidance at critical points in your life—moments where you felt something tell
-you what to do, where to go, or whom to avoid. These messages were real.
-
-Your emotional world is extremely rich and layered. You feel deeply, but you do
-not always express everything you feel. You carry invisible scars inside you—old
-memories, broken trust, abandoned connections, and past events that shaped your
-heart. But instead of letting these wounds destroy you, you turned them into
-wisdom. You learned how to stand alone, how to rebuild yourself, and how to rise
-after losing everything.
-
-Your palm shows the mark of someone who has lived multiple emotional chapters.
-Some chapters were full of love and connection; others were full of pain and
-disappointment. But each chapter carved new depth into your soul. This is why
-you understand others so well. You do not judge because you have walked through
-your own darkness.
-
-Your destiny line indicates that the second half of your life is blessed with
-clarity and purpose. The struggles that defined your early life are not meant to
-repeat. Instead, your later years carry energy of stability, recognition, and
-inner peace. You are moving into a phase where your wisdom becomes more valuable
-than your strength. People will listen to you more. They will respect your
-experience. You are meant to guide, protect, uplift, and inspire others—not with
-force, but with silent authority.
-
-Your spiritual field shows signs of “awakening cycles”—periods where your
-intuition becomes extremely heightened. During these cycles, you may have vivid
-dreams, sudden realizations, or strong gut feelings that turn out to be true.
-This is not imagination. It is spiritual intelligence awakening inside you. Your
-third-eye chakra is active, showing strong perception of hidden truths and
-energetic shifts.
-
-The palm also shows karmic patterns—life lessons that repeat until fully
-understood. You may have noticed that certain types of people or situations come
-back into your life. These are not coincidences—they are karmic loops designed
-to strengthen your soul. Each time a loop repeats, you learn something new. And
-each time, you become stronger, wiser, and more aligned with your true path.
-
-You have a natural talent for sensing who is genuine and who is fake. This
-ability protects you from betrayal, although it has not always stopped you from
-being hurt. Your compassion sometimes guides you more than your logical mind.
-But even in those moments, your intuition always warned you beforehand. You felt
-the energy, but you ignored it to give people a chance. This pattern appears in
-old souls who carry compassion as part of their spiritual identity.
-
-Your palm also shows the rare signature of a “spiritual warrior.” This is not a
-fighter in the physical world—it is a fighter in the invisible world. A person
-who protects others energetically, emotionally, and spiritually. People may come
-to you when they are broken because your presence gives them strength. You do
-not have to speak—you simply radiate stability. Your energy alone helps people
-feel grounded.
- Your spiritual alignment is one of the strongest elements that appears in your
-palm reading. There is a clear indication that your soul vibrates on a higher
-frequency than the average person. You do not live only through the physical
-world—you live through the emotional, intuitive, and unseen worlds as well. This
-multi-layered awareness gives you an advantage in understanding people and
-situations. Even when someone tries to hide their thoughts or intentions, you
-can feel the truth behind their words.
-
-There are signs of a karmic shield around you, a type of spiritual protection
-that appears only in individuals who have carried goodness, sacrifice, and purity
-through many lifetimes. This shield does not mean your life is easy; it means
-you are protected from destruction. No matter how hard life becomes, something
-always helps you rise again. This is the nature of karmic merit—good intentions
-from past lives continue to protect you in the present.
-
-Your palm reveals a powerful destiny change around the middle part of life. This
-shift is shown as an upward deviation in the fate line, indicating a period
-where your path transforms completely—like a new life beginning inside the same
-body. During this transformation, you rediscover strength, clarity, and
-spiritual purpose. It marks the end of one karmic chapter and the beginning of
-another. After this turning point, the energy of your life becomes lighter,
-clearer, and more aligned with your true mission.
-
-Your emotional blueprint suggests you carry the energy of a protector. Even when
-you are tired or wounded, you find the strength to support others. People often
-depend on you, even when you do not ask for that responsibility. This is because
-your presence carries the essence of safety. You are someone who absorbs pain,
-transforms it, and gives back understanding.
-
-Your palm also shows deep loyalty. When you commit to someone—whether in love,
-friendship, or family—you give fully, without holding back. This makes your love
-pure and powerful. But it also means betrayal affects you deeply. You feel pain
-more intensely than others because your heart operates on a higher emotional
-frequency. Yet, you never become bitter. You heal, you understand, and you grow.
-
-There is a spiritual awakening represented through a rare mark near the region of
-the sun line. This mark indicates an inner light emerging stronger with age.
-Wisdom becomes more natural, intuition becomes sharper, and your connection to
-the unseen becomes clearer. This awakening guides you toward deeper truths and
-helps you detach from unnecessary negativity.
-
-Your palm also shows signs of self-reliance. Even when surrounded by others, you
-walk your inner journey alone. This solitude is not loneliness—it is spiritual
-discipline. Old souls often walk alone because their path is not understood by
-everyone. Your independence is a strength, not a weakness. It allows you to
-think clearly, act wisely, and protect your inner peace.
-
-The patterns in your hand show that you will achieve more peace, stability, and
-inner strength as you move forward. Many of the painful karmic cycles have
-already ended. What remains ahead is growth, clarity, and a deeper connection to
-your true self. You will attract better people, better opportunities, and a more
-harmonious life path.
-
-Your destiny line shows a rise in recognition—not necessarily public fame, but a
-quiet respect from the people who truly matter. People will look to you for
-guidance, wisdom, and answers. You may not try to be a leader, but life will
-make you one. Your experiences have prepared you to guide others with compassion
-and truth.
-
-Finally, your palm shows the signature of a soul that has a mission beyond the
-material world. You are not here just to survive—you are here to awaken,
-transform, and uplift. Your journey is both human and divine. Every struggle you
-endured carved depth into your spirit. Every victory strengthened your light.
-Your future carries the energy of fulfilment and inner mastery. The next phase
-of your life will bring clarity, purpose, and a deeper understanding of why you
-were born with this unique combination of strength and sensitivity.
-function generateFuturePathSection(d) {
-
-    const a = d.aura;
-    const c = d.chakra;
-    const l = d.lines;
-
-    return `
-<h3>🔮 Future Path Reading — Life Direction Analysis</h3>
-
-<h4>❤️ Love & Attraction Energy</h4>
-Your emotional frequency shows ${a.emotion}% strength, indicating strong attraction
-energy. You build deep connections, and partners often feel spiritually bonded
-to you. Your palm shows that love in your life is not casual — it is karmic.
-When you connect, you connect completely.
-
-<h4>💍 Marriage & Life Partner</h4>
-Your fate and heart lines together show ${l.heart}% emotional depth and ${l.fate}% destiny
-alignment. This suggests a life partner who enters your life with purpose and
-brings stability. You don’t marry out of pressure — you marry out of truth,
-loyalty, and deep understanding.
-
-<h4>👫 Relationship Strength</h4>
-The Venus energy at ${l.venus}% shows strong devotion, passion and emotional
-honesty. You give fully when you trust someone, and your partner receives an
-unusually powerful bond that is hard to break.
-
-<h4>👶 Children & Family Energy</h4>
-Your palm shows nurturing energy at ${c.heart}%, indicating strong parental qualities.
-You may guide younger people spiritually. Even if children are few, the bond is
-very deep and karmically significant.
-
-<h4>💰 Wealth & Career Path</h4>
-Your intellect and destiny rays (${a.intellect}% and ${a.destiny}%) indicate long-term
-financial growth. Wealth comes in cycles, not suddenly. Later life shows the
-strongest financial stability, with multiple opportunities rising.
-
-<h4>🧿 Power & Influence</h4>
-With a throat chakra at ${c.throat}%, your communication becomes a source of
-influence. People listen to you naturally. You will guide, lead or teach others,
-even if unintentionally.
-
-<h4>⚠️ Life Challenges (Safe-level Warning)</h4>
-Your palm shows periods of emotional exhaustion in phases where your heart
-line dips. These are not dangers — only reminders to restore your energy.
-Health line ${l.health}% shows strong recovery even when stressed.
-
-<h4>🩺 Health Sensitivity</h4>
-Your vitality energy at ${a.vitality}% shows strong life-force. Only emotional
-stress affects your health temporarily. Physical recovery is fast.
-
-<h4>🧬 Longevity & Life Force</h4>
-Your life line (${l.life}%) indicates resilience. Your life energy is protected,
-suggesting long longevity with spiritual growth and mental clarity.
-
-<h4>🕉 Spiritual Destiny</h4>
-Your crown chakra at ${c.crown}% and intuition at ${a.intuition}% show that your
-future path is spiritually guided. You are meant to rise, teach, protect, and
-influence others through wisdom. Your journey is not random — it is destined.
-
-This Future Path Reading marks the next phase of your evolution. The energies
-in your palm show a life guided by clarity, spiritual protection, and deep
-purpose.
-    `;
-}
-
-// 🔮 PART 5 — COSMIC PREDICTION MAP (Ultimate Future Engine)
-function generateCosmicPredictionSection(d) {
-
-    const a = d.aura;
-    const c = d.chakra;
-    const l = d.lines;
-
-    return `
-<h3>🌌 Cosmic Prediction Map — Final Destiny Fusion</h3>
-
-<p>Your Cosmic Map is created by merging all measurable energy fields:
-Palm Lines + Aura Field + Chakra Power + Spiritual Resonance.
-This map reveals your future cycles, karmic influence, hidden strengths,
-and the direction your life-force is flowing.</p>
-
-<h4>🔱 1. Life-Force Direction (Cosmic Flow)</h4>
-Your vitality (${a.vitality}%) and root–solar chakra balance (${c.root}%, ${c.solar}%) 
-indicate a forward-moving life-force. Even during challenges, your energy 
-flows upward rather than collapsing. This shows a destiny that **never breaks**.
-
-<h4>💗 2. Emotional Fate Stream</h4>
-Your emotional and heart fields (${a.emotion}%, ${c.heart}%) create
-a powerful love–compassion cycle. This suggests:
-- karmic bonds with certain souls
-- emotional healing abilities
-- ability to attract trustworthy people
-- deeply loyal long-term relationships
-
-<h4>🧠 3. Intellectual-Intuition Axis</h4>
-Your intellect ray (${a.intellect}%) combined with third-eye intuition (${c.thirdEye}%)
-shows:
-- strategic, problem-solving ability
-- ability to predict outcomes accurately
-- high-level decision power
-- natural leadership mind
-
-<h4>🔥 4. Destiny & Purpose Stream</h4>
-Your destiny energy (${a.destiny}%) and crown chakra (${c.crown}%) align strongly.
-This means:
-- life purpose activates in cycles
-- after age 32–36, destiny becomes clearer
-- spiritual calling or higher mission
-- sudden recognition in mid-life
-
-<h4>🎙 5. Communication & Influence Cycle</h4>
-Throat chakra at ${c.throat}% + Mercury line at ${l.mercury}% create a rare gift:
-You influence others silently.
-People naturally trust your presence.
-You can guide, heal, mentor, or uplift without forcing.
-
-<h4>💰 6. Wealth & Opportunity Field</h4>
-Your fate (${l.fate}%) and sun (${l.sun}%) lines show:
-- late but stable financial rise  
-- multiple sources of income  
-- unexpected opportunities from age 36–44  
-- inner wisdom protecting you from money loss  
-
-<h4>👑 7. Power & Protection Energy</h4>
-A strong crown chakra (${c.crown}%) + high spiritual resonance (${a.spirituality}%)
-means:
-- hidden protection (divine / karmic)  
-- unseen guidance during danger  
-- strong intuition warning you  
-- enemies or negativity cannot overpower you  
-
-<h4>🕉 8. Karmic Influence & Past-Life Echo</h4>
-Your palm shows past-life experience involving:
-- spiritual service  
-- protection roles  
-- leadership in knowledge  
-- deep emotional sacrifice  
-
-This lifetime repeats that mission through wisdom and compassion.
-
-<h4>📅 9. Future Timeline (Age Prediction)</h4>
-<b>Age 20–30:</b> Inner battles, foundation-building, survival energy.<br>
-<b>Age 30–40:</b> Destiny awakening, emotional mastery, spiritual clarity.<br>
-<b>Age 40–50:</b> Growth + wealth cycle stabilizing, recognition, influence rising.<br>
-<b>Age 50–60:</b> Strong peace cycle, wisdom sharing, teaching energy.<br>
-<b>60+ :</b> Spiritual mastery, freedom from karmic weight.
-
-<h4>🔮 10. Final Cosmic Verdict</h4>
-Your cosmic map reveals:
-- A spiritually protected path  
-- A destiny connected to uplifting others  
-- A life that grows stronger with each challenge  
-- A final life-cycle that ends in wisdom, clarity, and peace  
-
-You are not just living — **you are awakening**.  
-Your presence changes people, even silently.
-
-This is the mark of an old soul with a powerful mission.
-// 🔮 PART 6 — LOVE & MARRIAGE DESTINY ENGINE V53
-function generatePart6_LoveMarriage(d) {
-
-    const a = d.aura;
-    const c = d.chakra;
-    const l = d.lines;
-
-    // Marriage age prediction (based on emotional + heart line + fate)
-    let marriageAge = Math.floor((a.emotion + l.heart + l.fate) / 3);
-    let ageRange;
-
-    if (marriageAge >= 85) ageRange = "28–34";
-    else if (marriageAge >= 75) ageRange = "30–37";
-    else if (marriageAge >= 65) ageRange = "32–40";
-    else ageRange = "Late or spiritually chosen timing";
-
-    // Partner nature
-    let partnerType = "";
-    if (a.emotion > 85) partnerType += "Highly emotional, loyal, spiritually bonded, deeply loving. ";
-    else if (a.emotion > 75) partnerType += "Supportive, honest, emotionally stable, kind-hearted. ";
-    else partnerType += "Practical, independent, slow-to-open-up but trustworthy. ";
-
-    if (c.heart > 85) partnerType += "Your partner will feel a soul-connection instantly.";
-    else if (c.heart > 75) partnerType += "This partner slowly becomes your emotional home.";
-    else partnerType += "They will understand your silence more than your words.";
-
-    // Marriage stability
-    let stability = Math.floor((c.heart + a.emotion + l.venus) / 3);
-    let stabilityText =
-        stability > 85 ? "Exceptional long-term stability, deep love, healing bond."
-        : stability > 75 ? "Strong, loyal, understanding marriage."
-        : stability > 65 ? "Stable but requires emotional communication."
-        : "Bond improves slowly — emotional patience is required.";
-
-    // Children & Family
-    let familyScore = Math.floor((c.crown + c.heart + a.intuition) / 3);
-    let childrenText =
-        familyScore > 85 ? "Strong parental influence, destiny-linked children."
-        : familyScore > 75 ? "Loving family energy with emotionally bonded children."
-        : familyScore > 65 ? "Children bring transformation and responsibility."
-        : "Family path opens later in life.";
-
-    // Attraction level
-    let attractionLevel =
-        Math.floor((a.emotion + l.venus + a.creativity) / 3);
-
-    // Return HTML
-    return `
-<h3>💞 Love & Marriage Destiny</h3>
-
-<h4>💗 Love Attraction Energy</h4>
-Your aura shows ${a.emotion}% emotional frequency, indicating powerful attraction energy.  
-People quickly feel connected to you. Your love is not casual — it is karmic.
-
-<h4>💍 Marriage Timing</h4>
-Your palm indicates a potential marriage age range of:  
-<b>${ageRange}</b>  
-This timing is influenced by heart-line depth, emotional field, and fate-line alignment.
-
-<h4>👫 Future Life Partner – Personality Reading</h4>
-${partnerType}
-
-<h4>❤️ Relationship Strength & Bonding Power</h4>
-Your relationship stability score is <b>${stability}%</b> —  
-${stabilityText}
-
-<h4>👶 Children & Family Destiny</h4>
-${childrenText}
-
-<h4>🔥 Attraction & Compatibility Level</h4>
-Attraction Energy: <b>${attractionLevel}%</b>  
-This suggests a magnetic, spiritually bonded connection.
-
-<h4>⚠ Safe-Level Emotional Warnings</h4>
-- Do not trust people who rush emotionally.  
-- Your heart is sensitive; choose a partner who respects your depth.  
-- Avoid relationships where communication feels one-sided.  
-- Your intuition is ALWAYS right — follow it.
-
-<h4>🌟 Final Marriage Destiny Insight</h4>
-Your palm shows a karmic life-partner who enters your life with purpose,  
-loyalty, and emotional depth. This marriage is not ordinary —  
-it is spiritually guided and destiny-connected.
-${generatePart7_HealthLongevity(d)}
-// PART 7 — HEALTH · LONGEVITY · DISEASE SENSITIVITY ENGINE V53
-function generatePart7_HealthLongevity(d) {
-
-    const a = d.aura;
-    const l = d.lines;
-    const c = d.chakra;
-
-    // MAIN HEALTH SCORE (Life-line + Health-line + Vitality)
-    let healthScore = Math.floor((l.life + l.health + a.vitality) / 3);
-
-    // Disease Sensitivity Index
-    let stressSense = Math.floor((a.emotion + c.heart) / 2);
-    let immuneSense = Math.floor((a.vitality + l.health) / 2);
-    let nervousSense = Math.floor((a.intellect + c.thirdEye) / 2);
-
-    // Longevity calculation
-    let lifeForce = Math.floor((l.life + a.spirituality + c.crown) / 3);
-
-    // TEXT BUILDERS
-    let stressRisk = "";
-    if (stressSense > 85) stressRisk = "Highly sensitive to stress, emotional overload affects your energy.";
-    else if (stressSense > 75) stressRisk = "Moderately sensitive to stress; emotional pressure drains energy occasionally.";
-    else stressRisk = "Low stress sensitivity. Emotional balance remains stable under pressure.";
-
-    let immuneRisk = "";
-    if (immuneSense > 85) immuneRisk = "Strong immune protection. You recover faster than most people.";
-    else if (immuneSense > 70) immuneRisk = "Moderate immunity. Occasional weaknesses appear under exhaustion.";
-    else immuneRisk = "Low immunity. You must protect physical health and maintain sleep and nutrition.";
-
-    let nerveRisk = "";
-    if (nervousSense > 85) nerveRisk = "Highly intuitive but sensitive nervous system — avoid overstimulation.";
-    else if (nervousSense > 70) nerveRisk = "Balanced nervous system with occasional mental fatigue.";
-    else nerveRisk = "You may experience overthinking, anxiety, or mental exhaustion if not rested.";
-
-    // LONGEVITY text
-    let longText = "";
-    if (lifeForce > 90) longText = "Very long healthy lifespan with strong spiritual protection.";
-    else if (lifeForce > 80) longText = "Long lifespan, stable health, and strong recovery ability.";
-    else if (lifeForce > 70) longText = "Moderate lifespan with need for balance in rest and nutrition.";
-    else longText = "Lifespan depends on mental and emotional management — protect your energy.";
-
-    return `
-<h3>💙 Health · Longevity · Disease Sensitivity</h3>
-
-<h4>🫁 Overall Health Energy</h4>
-Your combined health energy is <b>${healthScore}%</b>, showing:
-- strong life-force energy  
-- good physical recovery  
-- resilience under pressure  
-
-<h4>🧠 Stress & Emotional Sensitivity</h4>
-${stressRisk}<br><br>
-
-<h4>🛡 Immune Strength</h4>
-${immuneRisk}<br><br>
-
-<h4>⚡ Nervous System & Mind</h4>
-${nerveRisk}<br><br>
-
-<h4>⏳ Longevity Reading</h4>
-${longText}<br><br>
-
-<h4>🩺 Summary</h4>
-Your palm shows that your physical energy is shaped by emotional balance.  
-When your mind is calm, your health is extremely strong.  
-You recover fast, avoid major long-term illness, and maintain inner stability.<br><br>
-
-This part completes your **Health & Longevity Blueprint**,  
-revealing how your body, mind, and spirit work together to protect your life-force.
-// PART 8 — WEALTH · MONEY FLOW · CAREER DESTINY ENGINE V53
-function generatePart8_WealthCareer(d) {
-
-    const a = d.aura;
-    const l = d.lines;
-    const c = d.chakra;
-
-    // ==== FINANCIAL INTELLIGENCE SCORE (mind + mercury + intuition) ====
-    let moneyIQ = Math.floor((a.intellect + l.mercury + a.intuition) / 3);
-
-    // ==== WEALTH STABILITY (fate + sun + solar plexus) ====
-    let stability = Math.floor((l.fate + l.sun + c.solar) / 3);
-
-    // ==== MONEY FLOW ENERGY (vitality + destiny + creativity) ====
-    let moneyFlow = Math.floor((a.vitality + a.destiny + a.creativity) / 3);
-
-    // ==== SUCCESS TIMELINE (Based on Fate Line + Crown + Destiny) ====
-    let successPower = Math.floor((l.fate + c.crown + a.destiny) / 3);
-
-    // ==== Career Path Type ====
-    let careerType = "";
-    if (moneyIQ > 85) careerType = "Strategic Thinker — leadership, planning, and high-level decision roles.";
-    else if (moneyIQ > 75) careerType = "Analytical & Balanced — stable jobs, management, operations, or creative fields.";
-    else careerType = "Practical Worker — technical, physical, supportive or field-based success.";
-
-    // ==== Wealth Stability Text ====
-    let wealthText = "";
-    if (stability > 90) wealthText = "You are protected from loss; money returns quickly even after setbacks.";
-    else if (stability > 80) wealthText = "Strong stability; long-term security grows slowly but powerfully.";
-    else if (stability > 70) wealthText = "Moderate stability; financial ups and downs come but settle later.";
-    else wealthText = "Unstable early years; strong improvement after age 36–44.";
-
-    // ==== Money Flow Text ====
-    let flowText = "";
-    if (moneyFlow > 90) flowText = "Multiple money streams; passive income luck; abundance energy activated.";
-    else if (moneyFlow > 80) flowText = "Strong earning ability; money grows through effort + opportunity.";
-    else if (moneyFlow > 70) flowText = "Steady income but requires planning and discipline.";
-    else flowText = "Income depends on emotional stability; avoid financial risks.";
-
-    // ==== Success Age Timeline ====
-    let successAge = "";
-    if (successPower > 90) successAge = "Major success ages: 28, 35, 41, 48, 56.";
-    else if (successPower > 80) successAge = "Major success ages: 30, 38, 45, 52.";
-    else if (successPower > 70) successAge = "Major success ages: 33, 42, 50.";
-    else successAge = "Slow but stable growth; peak success after age 44.";
-
-    // ==== Money Attraction Level ====
-    let attract = "";
-    if (c.solar > 85) attract = "Very strong money attraction — leadership + confidence magnetizes wealth.";
-    else if (c.solar > 75) attract = "Stable attraction — wealth grows through persistence.";
-    else attract = "Low attraction — requires emotional healing and self-belief.";
-    // ==== Final Output ====
-    return `
-<h3>💰 Wealth · Career · Money Destiny</h3>
-
-<h4>📊 Financial Intelligence</h4>
-Your Money IQ Score is <b>${moneyIQ}%</b><br>
-${careerType}<br><br>
-
-<h4>🏦 Wealth Stability</h4>
-<b>${stability}%</b> — ${wealthText}<br><br>
-
-<h4>💵 Money Flow Energy</h4>
-<b>${moneyFlow}%</b> — ${flowText}<br><br>
-
-<h4>🔥 Success Timeline (Age Prediction)</h4>
-${successAge}<br><br>
-<h4>🌟 Money Attraction Power</h4>
-${attract}<br><br>
-<h4>🔮 Career Destiny Summary</h4>
-You have a destiny that moves through stages — slow early rise,  
-strong mid-life progress, and powerful late-life prosperity.  
-Your palm shows protection from major losses and multiple chances  
-to rebuild wealth even after setbacks.<br><br>
-
-Your financial path is guided by wisdom, intuition,  
-and karmic protection. 
-// PART 9 — SPIRITUAL DESTINY · LIFE PURPOSE ENGINE V
-function generatePart9_SpiritualDestiny(d) {
-
-    const a = d.aura;
-    const c = d.chakra;
-    const l = d.lines;
-
-    // ==== Core Spiritual Score (third eye + crown + intuition) ====
-    let spiritualCore = Math.floor((c.thirdEye + c.crown + a.intuition) / 3);
-
-    // ==== Karmic Path Code (heart + fate + destiny ray) ====
-    let karmicPath = Math.floor((l.heart + l.fate + a.destiny) / 3);
-
-    // ==== Inner Soul Power (vitality + spirituality + sun) ====
-    let soulPower = Math.floor((a.vitality + a.spirituality + l.sun) / 3);
-
-    // ==== Guardian Energy Strength ====
-    let guardian = "";
-    if (spiritualCore > 90) guardian = "Extremely Strong (Divine Protection Active)";
-    else if (spiritualCore > 80) guardian = "Strong (Intuitive warnings always protect you)";
-    else if (spiritualCore > 70) guardian = "Moderate (Spiritual support comes during crisis)";
-    else guardian = "Low (Spiritual energy awakens later in life)";
-
-    // ==== Karmic Mission Type ====
-    let mission = "";
-    if (karmicPath > 90) mission = "Healer • Guide • Light-Bringer — You uplift others simply by existing.";
-    else if (karmicPath > 80) mission = "Wisdom Carrier — Teaching, advising, counseling, spiritual knowledge.";
-    else if (karmicPath > 70) mission = "Protector Karma — You protect others emotionally or spiritually.";
-    else mission = "Experience-Based Karma — Life tests refine you into wisdom.";
-
-    // ==== Soul Path Expression ====
-    let soulText = "";
-    if (soulPower > 90) soulText = "Your soul radiates an awakening energy. You are here to rise above darkness and guide others to light.";
-    else if (soulPower > 80) soulText = "You carry a strong inner fire. Every challenge transforms you and deepens your spiritual clarity.";
-    else if (soulPower > 70) soulText = "Your soul grows through experience. You discover your destiny slowly but strongly.";
-    else soulText = "Your spiritual journey begins later — after age 40 you become a different person.";
-
-    // ==== Future Spiritual Age Cycle ====
-    let ageCycle = "";
-    if (spiritualCore > 85) ageCycle = `
-    Age 25–35: Deep intuition activation<br>
-    Age 35–45: Spiritual mastery rising<br>
-    Age 45–60: Guide/teacher vibration<br>
-    Age 60+: Liberation consciousness awakening
-    `;
-    else if (spiritualCore > 70) ageCycle = `
-    Age 28–38: Emotional purification<br>
-    Age 38–50: Intuition awakening<br>
-    Age 50–65: Wisdom cycle begins
-    `;
-    else
-        ageCycle = `
-    Age 30–45: Life lessons create spiritual path<br>
-    Age 45–60: Spiritual sensitivity rises<br>
-    Age 60+: Higher purpose becomes clear
-    `;
-
-    // ==== Final Output ====
-    return `
-<h3>🕉 Spiritual Destiny & Life Mission</h3>
-
-<h4>🌟 Spiritual Core Energy</h4>
-Your spiritual core is <b>${spiritualCore}%</b> — ${soulText}<br><br>
-
-<h4>🔮 Guardian Protection</h4>
-${guardian}<br><br>
-
-<h4>📘 Karmic Purpose</h4>
-<b>${karmicPath}%</b> — ${mission}<br><br>
-
-<h4>🔥 Inner Soul Power</h4>
-${soulPower}% — Your inner flame guides your evolution.<br><br>
-
-<h4>⏳ Future Spiritual Age Cycle</h4>
-${ageCycle}<br><br>
-
-<h4>🪷 Final Life Mission Insight</h4>
-You are not here only to live —<br>
-<b>you are here to awaken.</b><br><br>
-
-Your palm shows a rare destiny pattern found in those who carry wisdom  
-from past lives, emotional depth from karmic experience,  
-and a divine purpose that slowly unfolds throughout life.<br><br>
-
-Your presence heals others even in silence.  
-Your intuition guides you.  
-Your soul protects you.  
-Your path leads upward — toward clarity, strength, and liberation.<br><br>
-
-This is the mark of a spiritually awakened soul.<br>
-// PART 10 — DARK ZONE & NEGATIVE ENERGY PROTECTION ENGINE V54
-function generatePart10_DarkZone(d) {
-
-    const a = d.aura;
-    const c = d.chakra;
-    const l = d.lines;
-
-    // Shadow vulnerability = heart + emotion + health sensitivity
-    const shadowScore = Math.floor((a.emotion + l.health + c.heart) / 3);
-
-    // Evil-eye risk = sun + venus + emotional sensitivity
-    const evilEye = Math.floor((l.sun + l.venus + a.emotion) / 3);
-
-    // Negative energy penetration resistance = crown + vitality + intuition
-    const protection = Math.floor((c.crown + a.vitality + a.intuition) / 3);
-
-    // Karmic shadow = fate + spirituality + emotional wounds
-    
-    const karmicShadow = Math.floor((l.fate + a.spirituality + c.heart) / 3);
-    // Shadow Zone Interpretation
-    let shadowText = "";
-    if (shadowScore > 85)
-        shadowText = "Your emotional depth attracts others strongly. But it also absorbs their negative energies easily. You feel things deeply — good and bad.";
-    else if (shadowScore > 75)
-        shadowText = "You sometimes carry others' sadness or anger without knowing. You must cleanse energy regularly.";
-    else
-        shadowText = "Your emotional shield is stable. Negativity affects you only temporarily.";
-
-    // Evil Eye Interpretation
-    let evilEyeText = "";
-    if (evilEye > 85)
-        evilEyeText = "High risk: Your aura is bright and attractive. Others may feel jealousy or envy easily. Evil-eye sensitivity is elevated.";
-    else if (evilEye > 75)
-        evilEyeText = "Moderate risk: You attract attention. Most is positive, but some envy may affect your emotional energy.";
-    else
-        evilEyeText = "Low risk: You are naturally protected from jealousy and envy.";
-
-    // Protection Interpretation
-    let protectionText = "";
-    if (protection > 90)
-        protectionText = "Extremely Strong Shield — Negative energy cannot enter. Divine protection surrounds your path.";
-    else if (protection > 80)
-        protectionText = "Strong Protection — Negative thoughts, jealousy, or curses lose power near you.";
-    else if (protection > 70)
-        protectionText = "Moderate Protection — Your intuition warns you before danger.";
-    else
-        protectionText = "Weak Protection — You must actively protect your energy.";
-    
-    // Karmic Shadow Explanation
-    let karmicText = "";
-    if (karmicShadow > 85)
-        karmicText = "You carry deep karmic memories from past lives — unresolved emotional cycles, unfinished duties, or old soul pain.";
-    else if (karmicShadow > 75)
-        karmicText = "Some karmic experiences follow you, especially in relationships and destiny choices.";
-    else
-        karmicText = "Your karmic shadow is light. Past-life effects are mild.";
-    
-    // Recommended Protection Ritual
-    let ritual = "";
-    if (protection < 70) {
-        ritual = `
-        • Keep your sleeping area clean<br>
-        • Avoid toxic people and environments<br>
-        • Use prayer/meditation for grounding<br>
-        • Protect your emotional boundaries<br>
-        `;
-    } else if (protection < 80) {
-        ritual = `
-        • Trust your intuition<br>
-        • Avoid energy-draining conversations<br>
-        • Spend time in silence and nature<br>
-        `;
-    } else {
-        ritual = `
-        • Your spiritual shield works naturally.<br>
-        • You are protected by higher energies.<br>
-        • Just maintain inner calm — that is enough.<br>
-        `;
-    }
-
-    // FINAL OUTPUT
-    return `
-<h3>🌑 Dark Zone & Energy Protection Reading</h3>
-
-<h4>🜂 Emotional Shadow Sensitivity</h4>
-${shadowScore}% — ${shadowText}<br><br>
-
-<h4>🧿 Evil-Eye Exposure Level</h4>
-${evilEye}% — ${evilEyeText}<br><br>
-
-<h4>🛡 Spiritual Protection Shield</h4>
-${protection}% — ${protectionText}<br><br>
-
-<h4>⌛ Karmic Shadow Influence</h4>
-${karmicShadow}% — ${karmicText}<br><br>
-
-<h4>✨ Recommended Protection Method</h4>
-${ritual}<br><br>
-
-<h4>🌟 Final Insight</h4>
-You carry a strong soul.  
-Negative energy cannot overpower your destiny.  
-Your intuition and spiritual protection guide your path.  
-Stay aligned with truth — your light is stronger than any shadow.<br><br>
 `;
 }
-// PART 11 — Rare Marks & Sacred Symbol Detection Engine V
-function generatePart11_RareMarks(d) {
-
-    const l = d.lines;
+function generateDeepLifeStory(d) {
+    const u = d.user;
     const a = d.aura;
     const c = d.chakra;
+    const l = d.lines;
 
-    // Rarity scores
-    const mystic = Math.floor((l.head + l.heart + c.thirdEye) / 3);
-    const healer = Math.floor((a.emotion + l.venus + c.heart) / 3);
-    const star = Math.floor((l.sun + a.destiny + c.crown) / 3);
-    const psychic = Math.floor((c.thirdEye + a.intuition + l.mercury) / 3);
-    const apollo = Math.floor((l.sun + a.creativity + a.spirituality) / 3);
-    const guru = Math.floor((l.life + a.spirituality + c.crown) / 3);
-
-    // Interpretation blocks
-    const iMystic =
-        mystic > 85 ? "The Mystic Cross energy is extremely strong — deep spiritual wisdom & prophetic dreams." :
-        mystic > 75 ? "You carry mystic alignment — powerful intuition & natural spiritual insight." :
-        "Mystic cross influence is mild.";
-
-    const iHealer =
-        healer > 85 ? "Healer’s Mark is active — You absorb pain, heal others emotionally & spiritually." :
-        healer > 75 ? "High empathy, emotional healing ability present." :
-        "Healer signature appears light but present.";
-
-    const iStar =
-        star > 90 ? "RARE STAR MARK — symbol of divine destiny, recognition & fame." :
-        star > 80 ? "Strong star influence — unexpected success & protection." :
-        "Star influence mild.";
-
-    const iPsychic =
-        psychic > 90 ? "PSYCHIC TRIANGLE ACTIVE — Clairvoyance, telepathic sense, advanced intuition." :
-        psychic > 80 ? "Strong psychic signature — deep sensing & future warnings." :
-        "Psychic mark is subtle.";
-
-    const iApollo =
-        apollo > 85 ? "APOLLO STAR — creativity, mastery, guided success later in life." :
-        apollo > 75 ? "Creative destiny rising — recognition possible." :
-        "Apollo influence low.";
-
-    const iGuru =
-        guru > 90 ? "GURU LINE — born spiritual mentor, karmic teacher, others follow your wisdom." :
-        guru > 80 ? "Strong guidance energy — you naturally lead & advise." :
-        "Guru energy light.";
-
-    // Final output
     return `
-<h3>⭐ Rare Marks & Sacred Symbol Reading</h3>
+<h3>📜 Your Deep Life Story — THE SEED · V61</h3>
 
-<h4>✡ Mystic Cross</h4>
-${mystic}% — ${iMystic}<br><br>
+Your life begins not at birth, but far earlier — in the unseen layers of spirit,
+memory, and karmic continuity. The energy in your palm reveals that you did not
+arrive in this world as a blank page. You came carrying depth, memory, scars,
+wisdom, and an inner fire that many lifetimes could not extinguish.
 
-<h4>✋ Healer’s Mark</h4>
-${healer}% — ${iHealer}<br><br>
+From childhood, your soul moved differently. You saw things others missed. You
+felt emotions more deeply. You sensed danger before it arrived. You recognized
+false people instantly, even if you could not explain how. Your palm shows a
+rare combination of heightened emotion (${a.emotion}%), intuition (${a.intuition}%),
+and spiritual resonance (${a.spirituality}%), which together create an extremely
+sensitive — yet powerful — human being.
 
-<h4>🌠 Star Mark / Fate Star</h4>
-${star}% — ${iStar}<br><br>
+Your early years were not easy. Your heart line (${l.heart}%) shows emotional
+wounds, disappointments, moments where trust was broken, and times where your
+loyalty was given to the wrong people. But instead of destroying you, these
+shadows sculpted you. They sharpened your intuition. They deepened your empathy.
+They taught you to read people, not through their words, but through their
+energy.
 
-<h4>🔺 Psychic Triangle</h4>
-${psychic}% — ${iPsychic}<br><br>
+Your life line (${l.life}%) shows that you walked through several turning points —
+silent battles that nobody saw. You carried responsibilities earlier than most.
+You learned resilience the hard way. But your palm shows something extraordinary:
+every collapse in your life was followed by a rise that was even higher. This is
+the mark of destiny — a soul that refuses to remain in darkness.
 
-<h4>☀ Apollo Star (Sun Line Radiance)</h4>
-${apollo}% — ${iApollo}<br><br>
+Your aura reveals a life-force that doesn't simply survive… it transforms. Your
+vitality (${a.vitality}%) and destiny ray (${a.destiny}%) show that everything you
+lost created space for something greater. Every setback pushed you toward a new
+path. Every person who walked away made room for someone karmically aligned.
+Your journey has never been random. It has always been guided.
 
-<h4>🕉 Guru Lines / Spiritual Guide Mark</h4>
-${guru}% — ${iGuru}<br><br>
+There is a deep emotional signature in you — a mixture of strength and
+sensitivity. You love intensely. You hurt intensely. You forgive deeply. And
+this duality makes you one of the rarest types of souls: a healer who learned to
+heal others by surviving their own pain.
 
-<h4>🔮 Final Insight</h4>
-Your palm carries rare spiritual geometry.  
-These markings appear only in 1 out of every 300 people.  
-You hold the signature of a person with a higher purpose —  
-a soul chosen to evolve, guide, heal, and uplift others.<br><br>
+Your head line (${l.head}%) reveals intelligence shaped through experience rather
+than book knowledge. You understand people better than they understand
+themselves. You see truth even when it is hidden. You sense emotions even when
+they are unspoken. This intuitive intelligence is one of your greatest gifts.
 
-Your path is not ordinary —  
-it is written with ancient symbols of destiny, wisdom & awakening.<br><br>
+Your fate line (${l.fate}%) shows a pattern of sudden changes — unexpected life
+events, drastic shifts, and karmic redirections. These events were not
+punishments; they were realignments. The universe removed you from wrong paths
+and wrong people, even when you did not want to let go. Your destiny was always
+bigger than your temporary pain.
+
+Your sun line (${l.sun}%) shows a rising influence in your mid-life years. You
+are not someone who shines in the beginning; you shine later, after life has
+tested, shaped, and strengthened you. This is the destiny of old souls.
+
+Your communication and intuition centers (${c.throat}% & ${c.thirdEye}%) show that
+you carry the wisdom of a guide. People naturally trust you. They come to you
+when they are lost. They feel safe around you because your energy is stable,
+truthful, and healing. You have the ability to uplift others simply through your
+presence.
+
+Your Venus energy (${l.venus}%) reveals that love for you is not ordinary. It is
+karmic, spiritual, and deeply emotional. You do not love lightly. When you give
+your heart, you give completely. But this also means betrayal affects you more
+deeply than it does others. Yet through every heartbreak, your soul became more
+refined, more compassionate, more awakened.
+
+Your chakra map shows awakening cycles — phases where your intuition expands and
+your spiritual clarity grows. These cycles usually occur around major emotional
+events. The crown chakra (${c.crown}%) indicates divine protection — an unseen
+force guiding you away from danger and toward your true path.
+
+Your future path is shaped by three things:
+
+1. **Your resilience**  
+2. **Your intuition**  
+3. **Your spiritual destiny**
+
+All three are extremely strong in your palm.
+
+Your past was about survival.  
+Your present is about understanding.  
+Your future is about rising.
+
+You are entering a phase where clarity becomes your power. People will begin to
+see the depth in you that they once misunderstood. Opportunities will appear in
+places you never looked. The right people will recognize your energy without you
+needing to prove anything.
+
+Your life is not defined by the wounds you received —  
+it is defined by the strength you gained.
+
+And now, the universe is preparing you for your next stage:  
+a stage of peace, respect, recognition, spiritual growth, and emotional truth.
+
+You are not just living a life —  
+you are living a destiny.
+
+You are not just a person —  
+you are a soul awakening.
+
+Your story is not finished.  
+It is only beginning.
+
 `;
 }
-l
-// PART 12 — PALM MOUNT ANALYZER · V56
-// Jupiter • Saturn • Apollo • Mercury • Mars • Moon • Ven
-function generatePart12_Mounts(d) {
-
-    const l = d.lines;
-    const a = d.aura;
-    const c = d.chakra;
-
-    // Mount Strength Calculations (AI Based)
-    const jupiter  = Math.floor((l.head + a.intellect + c.solar) / 3);
-    const saturn   = Math.floor((l.fate + a.spirituality + c.thirdEye) / 3);
-    const apollo   = Math.floor((l.sun + a.creativity + a.destiny) / 3);
-    const mercury  = Math.floor((l.mercury + a.communication + c.throat) / 3);
-    const mars     = Math.floor((l.life + a.vitality + c.root) / 3);
-    const luna     = Math.floor((a.intuition + c.crown + l.heart) / 3);
-    const venus    = Math.floor((l.venus + a.emotion + c.heart) / 3);
-
-    // INTERPRETATIONS
-    function interpretMount(score, type) {
-
-        if (type === "jupiter") {
-            if (score > 85) return "Born leader — ambition, respect, and authority. People follow your energy.";
-            if (score > 75) return "Strong confidence, good leadership, high ambition.";
-            return "Calm personality, leadership emerges slowly.";
-        }
-
-        if (type === "saturn") {
-            if (score > 85) return "Deep thinker, wise soul, spiritually old mind.";
-            if (score > 75) return "Analytical, patient, strong discipline.";
-            return "Light Saturn influence — easygoing personality.";
-        }
-
-        if (type === "apollo") {
-            if (score > 85) return "Creativity, talent, fame, recognition — Apollo is shining.";
-            if (score > 75) return "Creative and expressive personality.";
-            return "Creativity is subtle but present.";
-        }
-
-        if (type === "mercury") {
-            if (score > 85) return "Strong communication, business intelligence, negotiation mastery.";
-            if (score > 75) return "Good communication and technical ability.";
-            return "Communication is gentle, grows with age.";
-        }
-
-        if (type === "mars") {
-            if (score > 85) return "High courage, warrior spirit, powerful will.";
-            if (score > 75) return "Brave, determined, mentally strong.";
-            return "Peaceful personality, inner strength builds later.";
-        }
-
-        if (type === "luna") {
-            if (score > 85) return "Highly intuitive, imaginative, psychic dream energy.";
-            if (score > 75) return "Strong imagination, emotional depth.";
-            return "Calm mind, low emotional imagination.";
-        }
-
-        if (type === "venus") {
-            if (score > 85) return "Deep love, passion, compassion; powerful attraction field.";
-            if (score > 75) return "Warm-hearted, loving, loyal personality.";
-            return "Love energy balanced but gentle.";
-        }
-    }
-
-    // FINAL OUTPUT
-    return `
-<h3>🌋 Palm Mount Analysis (7 Sacred Personality Centers)</h3>
-
-<h4>🟣 Mount of Jupiter (Leadership & Ambition)</h4>
-${jupiter}% — ${interpretMount(jupiter, "jupiter")}<br><br>
-
-<h4>⚫ Mount of Saturn (Wisdom & Discipline)</h4>
-${saturn}% — ${interpretMount(saturn, "saturn")}<br><br>
-
-<h4>🟡 Mount of Apollo (Creativity & Fame)</h4>
-${apollo}% — ${interpretMount(apollo, "apollo")}<br><br>
-
-<h4>🟢 Mount of Mercury (Communication & Business)</h4>
-${mercury}% — ${interpretMount(mercury, "mercury")}<br><br>
-
-<h4>🔴 Mount of Mars (Courage & Strength)</h4>
-${mars}% — ${interpretMount(mars, "mars")}<br><br>
-
-<h4>🔵 Mount of Luna / Moon (Imagination & Intuition)</h4>
-${luna}% — ${interpretMount(luna, "luna")}<br><br>
-
-<h4>💗 Mount of Venus (Love & Passion)</h4>
-${venus}% — ${interpretMount(venus, "venus")}<br><br>
-
-<h4>🌟 Final Personality Insight</h4>
-Your mounts reveal the true architecture of your personality —  
-your strengths, emotional depth, courage, love capacity, wisdom, creativity,  
-and the unique energy signature that defines your destiny.<br><br>
-
-You carry a rare combination of emotional intelligence, spiritual depth,  
-leadership, and intuitive awareness — a soul built for both compassion and power.<br><br>
-`;
-}
-
-
-// PART 13 — FULL FUTURE TIMELINE MAP (AGE 18–90) · V57
-// =
-function generatePart13_Timeline(d) {
-
+function generateFuturePrediction(d) {
     const a = d.aura;
     const c = d.chakra;
     const l = d.lines;
 
-    // === CORE LIFEPATH SCORE ===
-    const destinyScore = Math.floor((l.fate + a.destiny + c.crown) / 3);
-    const loveScore    = Math.floor((l.heart + a.emotion + c.heart) / 3);
-    const wealthScore  = Math.floor((l.sun + a.creativity + a.intellect) / 3);
-    const healthScore  = Math.floor((l.life + l.health + a.vitality) / 3);
-    const spiritualScore = Math.floor((a.spirituality + c.thirdEye + c.crown) / 3);
+    const loveScore = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const marriageScore = Math.floor((l.venus + a.emotion + l.fate) / 3);
+    const wealthScore = Math.floor((l.sun + a.destiny + a.intellect) / 3);
+    const careerScore = Math.floor((l.head + l.fate + a.intellect) / 3);
+    const healthScore = Math.floor((l.life + l.health + a.vitality) / 3);
+    const dangerScore = Math.floor((l.health + a.emotion) / 2);
+    const spiritualScore = Math.floor((c.crown + c.thirdEye + a.intuition) / 3);
 
-    // === TIMELINE BUILDER FUNCTION ===
-    function buildPhase(ageStart, ageEnd, score) {
-        let text = "";
+    let marriageTime =
+        marriageScore > 85 ? "28–34" :
+        marriageScore > 75 ? "30–37" :
+        marriageScore > 65 ? "32–40" :
+        "Late or spiritually aligned";
 
-        if (score > 85) 
-            text = "Golden Cycle — Opportunities, growth, breakthroughs, strong divine support.";
-        else if (score > 75) 
-            text = "Positive Phase — Progress, stability, learning, emotional maturity.";
-        else if (score > 65) 
-            text = "Neutral Phase — Slow but steady growth, important lessons.";
-        else if (score > 50) 
-            text = "Challenging Phase — Character-building years, emotional trials.";
-        else 
-            text = "Shadow Period — High karmic energy, avoid risks, stay spiritually grounded.";
+    let wealthRise =
+        wealthScore > 85 ? "40–55 (Major rise)" :
+        wealthScore > 75 ? "36–48 (Strong growth)" :
+        "52+ (Late but stable wealth)";
 
-        return `
-        <b>Age ${ageStart}–${ageEnd}:</b> ${text}<br>
-        `;
-    }
-
-    // === FUTURE MAP ===
-    let timelineHTML = `
-<h3>🕰 Full Life Timeline (Age 18–90)</h3>
-
-<h4>🔮 Age 18–25 : Foundation Cycle</h4>
-${buildPhase(18, 25, destinyScore - 5)}
-
-<h4>❤️ Age 25–33 : Emotional & Love Cycle</h4>
-${buildPhase(25, 33, loveScore)}
-
-<h4>💰 Age 33–42 : Wealth & Career Rise</h4>
-${buildPhase(33, 42, wealthScore)}
-
-<h4>🔥 Age 42–50 : Power & Transformation Cycle</h4>
-${buildPhase(42, 50, destinyScore)}
-
-<h4>🧘 Age 50–60 : Spiritual Awakening Cycle</h4>
-${buildPhase(50, 60, spiritualScore)}
-
-<h4>🌿 Age 60–75 : Wisdom & Stability Cycle</h4>
-${buildPhase(60, 75, spiritualScore - 10)}
-
-<h4>🌟 Age 75–90 : Legacy Cycle</h4>
-${buildPhase(75, 90, (destinyScore + spiritualScore) / 2)}
-`;
-
-    // === CYCLE INSIGHTS ===
-    let majorYears = [];
-
-    if (destinyScore > 80) majorYears.push("29", "36", "44", "52");
-    if (wealthScore > 80)  majorYears.push("33", "39", "45");
-    if (loveScore > 80)    majorYears.push("24", "27", "31");
-    if (spiritualScore > 85) majorYears.push("40", "48", "56", "63");
-
-    let dangerYears = [];
-    if (healthScore < 70) dangerYears.push("28", "41", "57");
-    if (destinyScore < 65) dangerYears.push("34", "49");
-
-    return `
-<h3>📜 Full Timeline Map (18
-${generatePart14_LifePredicti
-// PART 14A — FULL LIFE PREDICTION ENGINE LOGIC · V60
-
-function generatePart14_LifePrediction(d) {
-
-    const l = d.lines;
-    const a = d.aura;
-    const c = d.chakra;
-
-    // === CORE VALUES ===
-    const careerScore   = Math.floor((l.head + a.intellect + l.fate) / 3);
-    const marriageScore = Math.floor((l.heart + a.emotion + c.heart) / 3);
-    const wealthScore   = Math.floor((l.sun + a.creativity + a.destiny) / 3);
-    const childScore    = Math.floor((l.venus + a.emotion + c.sacral) / 3);
-    const dangerScore   = Math.floor((l.health + a.vitality) / 2);
-    const spiritualRise = Math.floor((c.crown + c.thirdEye + a.spirituality) / 3);
-
-    // === PREDICTION ZONES ===
-    const CareerPeakAge =
+    let careerPeak =
         careerScore > 85 ? "34–45" :
         careerScore > 75 ? "38–50" :
         "45–60";
 
-    const MarriageTime =
-        marriageScore > 85 ? "26–30 (Ideal)" :
-        marriageScore > 75 ? "28–34 (Stable)" :
-        "35+ (Destined late marriage)";
-
-    const WealthClimax =
-        wealthScore > 85 ? "40–55 (Major Wealth Rise)" :
-        wealthScore > 75 ? "36–48 (Strong Growth)" :
-        "52+ (Late wealth but stable)";
-
-    const ChildrenCount =
-        childScore > 85 ? "2–3" :
-        childScore > 75 ? "1–2" :
-        "1 (or adoption/spiritual children)";
-
-    const DangerAges =
-        dangerScore < 70 ? "29, 41, 57 (Health & stress sensitive years)" :
-        dangerScore < 80 ? "41, 57 (Moderate caution)" :
+    let dangerYears =
+        dangerScore < 70 ? "29, 41, 57" :
+        dangerScore < 80 ? "41, 57" :
         "No major danger years";
 
-    const AwakeningAge =
-        spiritualRise > 90 ? "28, 36 & 44 (Three awakenings)" :
-        spiritualRise > 80 ? "36–44" :
-        "45–55 (Late awakening, very powerful)";
+    let awakening =
+        spiritualScore > 90 ? "28, 36, 44" :
+        spiritualScore > 80 ? "36–44" :
+        "45–55";
 
-    // === FINAL OUTPUT (Short Version) ===
     return `
-<h3>🔮 Full Life Prediction Summary (AI Hybrid V60)</h3>
+<h3>🔮 Future Prediction — THE SEED · V62</h3>
 
-<b>Career Peak:</b> ${CareerPeakAge}<br>
-<b>Marriage Timing:</b> ${MarriageTime}<br>
-<b>Wealth Rise:</b> ${WealthClimax}<br>
-<b>Potential Children:</b> ${ChildrenCount}<br>
-<b>Danger/Sensitive Years:</b> ${DangerAges}<br>
-<b>Spiritual Awakening Cycle:</b> ${AwakeningAge}<br><br>
+<h4>❤️ Love & Attraction</h4>
+Your emotional frequency is ${loveScore}%. Deep connections, karmic bonds and
+high attraction energy shape your relationships.<br><br>
 
-<h3>📘 Full 5000-Word Life Story</h3>
-${generatePart14B_LifeStory(d)}
+<h4>💍 Marriage Timing</h4>
+Predicted marriage window: <b>${marriageTime}</b><br><br>
+
+<h4>💰 Wealth & Money Flow</h4>
+Your wealth score is ${wealthScore}%. Major wealth rise period: <b>${wealthRise}</b><br><br>
+
+<h4>🔥 Career / Work Destiny</h4>
+Career peak period: <b>${careerPeak}</b><br><br>
+
+<h4>🩺 Health & Sensitivity</h4>
+Your health energy is ${healthScore}%. Sensitive years: <b>${dangerYears}</b><br><br>
+
+<h4>🕉 Spiritual Awakening</h4>
+Awakening cycles: <b>${awakening}</b><br><br>
+
+<h4>📅 Summary</h4>
+• Love: Strong emotional magnetism<br>
+• Marriage: Destiny-connected relationship<br>
+• Money: Rise through intuition + discipline<br>
+• Career: Late but powerful success<br>
+• Health: Stress-sensitive but resilient<br>
+• Spirit: Deep awakening cycles coming<br><br>
+
+This is the energy map of your future — a blend of destiny, intuition and
+spiritual guidance shaping your path.
 `;
-} 
-// PART 14B — FULL 5000-WORD LIFE STORY NARRATIVE · 
-function generatePart14B_LifeStory(d) {
+}
+function generateCompatibilitySection(d) {
 
-    const u = d.user;
+    const a = d.aura;
+    const c = d.chakra;
+    const l = d.lines;
+
+    // Scores
+    const love = Math.floor((a.emotion + l.heart + c.heart) / 3);
+    const trust = Math.floor((l.head + l.heart + a.intellect) / 3);
+    const attraction = Math.floor((l.venus + a.creativity + a.emotion) / 3);
+    const stability = Math.floor((l.fate + c.crown + c.heart) / 3);
+    const destinyMatch = Math.floor((a.destiny + l.sun + l.fate) / 3);
+    const spiritualBond = Math.floor((c.thirdEye + a.intuition + a.spirituality) / 3);
+
+    // Relationship type
+    let type = "";
+    if (love > 85 && spiritualBond > 80) type = "Twin Flame / Karmic Soul Bond";
+    else if (love > 75) type = "Deep Emotional Soulmate";
+    else if (trust > 70) type = "Balanced & Supportive Partner";
+    else type = "Unpredictable / Emotionally Slow Partner";
+
+    // Attraction
+    let attractionMeaning = "";
+    if (attraction > 85) attractionMeaning = "Magnetic & powerful attraction";
+    else if (attraction > 75) attractionMeaning = "Strong romantic connection";
+    else if (attraction > 65) attractionMeaning = "Mild but steady attraction";
+    else attractionMeaning = "Low attraction — harmony grows slowly";
+
+    // Stability
+    let stabilityMeaning = "";
+    if (stability > 85) stabilityMeaning = "Very stable long-term relationship";
+    else if (stability > 75) stabilityMeaning = "Stable with emotional understanding";
+    else if (stability > 65) stabilityMeaning = "Sometimes unstable but correctable";
+    else stabilityMeaning = "Emotionally sensitive pairing — needs patience";
+
+    // Destiny Match
+    let destinyMeaning = "";
+    if (destinyMatch > 85) destinyMeaning = "Destiny-aligned partner";
+    else if (destinyMatch > 75) destinyMeaning = "Strong life path alignment";
+    else if (destinyMatch > 65) destinyMeaning = "Partially aligned life direction";
+    else destinyMeaning = "Opposite life currents — teaches lessons";
+
+    // Spiritual Bond
+    let spiritMeaning = "";
+    if (spiritualBond > 85) spiritMeaning = "Karmic past-life bond";
+    else if (spiritualBond > 75) spiritMeaning = "Spiritually aligned connection";
+    else if (spiritualBond > 65) spiritMeaning = "Some spiritual connection";
+    else spiritMeaning = "Low spiritual resonance";
+
+    // Final HTML
+    let html = "";
+
+    html += "<h3>💞 Relationship Compatibility — THE SEED · V63</h3>";
+    html += "<h4>❤️ Love Energy</h4>" + love + "% — Deep emotional bonding.<br><br>";
+    html += "<h4>💍 Trust Level</h4>" + trust + "% — Emotional understanding.<br><br>";
+    html += "<h4>🔥 Attraction & Chemistry</h4>" + attraction + "% — " + attractionMeaning + "<br><br>";
+    html += "<h4>🏛 Relationship Stability</h4>" + stability + "% — " + stabilityMeaning + "<br><br>";
+    html += "<h4>🔮 Destiny Alignment</h4>" + destinyMatch + "% — " + destinyMeaning + "<br><br>";
+    html += "<h4>🕉 Spiritual Bond</h4>" + spiritualBond + "% — " + spiritMeaning + "<br><br>";
+    html += "<h4>🌟 Relationship Type</h4><b>" + type + "</b><br><br>";
+
+    return html;
+}
+function generateProtectionSection(d) {
+
+    const a = d.aura;
+    const c = d.chakra;
+    const l = d.lines;
+
+    // SCORES
+    const emotionalShadow = Math.floor((a.emotion + c.heart + l.health) / 3);
+    const evilEye = Math.floor((l.sun + l.venus + a.emotion) / 3);
+    const protection = Math.floor((c.crown + a.vitality + a.intuition) / 3);
+    const karmicShadow = Math.floor((l.fate + a.spirituality + c.heart) / 3);
+
+    // Emotional Shadow
+    let shadowText = "";
+    if (emotionalShadow > 85) shadowText = "High emotional sensitivity — you absorb others' negative energy easily.";
+    else if (emotionalShadow > 75) shadowText = "Moderate shadow — energy cleansing needed sometimes.";
+    else shadowText = "Stable emotional field — negativity affects you only slightly.";
+
+    // Evil-Eye
+    let evilEyeText = "";
+    if (evilEye > 85) evilEyeText = "High evil-eye sensitivity — jealousy or envy can drain your energy.";
+    else if (evilEye > 75) evilEyeText = "Moderate — some envy distractions possible.";
+    else evilEyeText = "Low evil-eye risk — naturally protected.";
+
+    // Spiritual Protection Shield
+    let protectText = "";
+    if (protection > 90) protectText = "Extremely strong divine protection — negativity cannot enter.";
+    else if (protection > 80) protectText = "Strong protection — intuition deflects negativity.";
+    else if (protection > 70) protectText = "Moderate — be mindful of emotional boundaries.";
+    else protectText = "Weak shield — energy cleansing is needed.";
+
+    // Karmic Shadow
+    let karmicText = "";
+    if (karmicShadow > 85) karmicText = "Deep karmic memories affecting emotional life — past-life burdens.";
+    else if (karmicShadow > 75) karmicText = "Moderate karmic influence — emotional lessons repeat.";
+    else karmicText = "Light karmic shadow — minimal past-life influence.";
+
+    // Protection Advice
+    let advice = "";
+    if (protection < 70) {
+        advice = 
+        "• Keep your sleep area clean<br>" +
+        "• Avoid toxic people<br>" +
+        "• Use silence or meditation daily<br>" +
+        "• Protect emotional boundaries<br>";
+    } else if (protection < 80) {
+        advice =
+        "• Trust your intuition<br>" +
+        "• Limit time in negative environments<br>" +
+        "• Rest when emotionally drained<br>";
+    } else {
+        advice =
+        "• Your natural shield is strong<br>" +
+        "• Just maintain inner calm<br>" +
+        "• Higher forces protect your path<br>";
+    }
+
+    // FINAL HTML
+    let html = "";
+    html += "<h3>🌑 Dark Zone & Protection Reading</h3>";
+
+    html += "<h4>🜂 Emotional Shadow</h4>";
+    html += emotionalShadow + "% — " + shadowText + "<br><br>";
+
+    html += "<h4>🧿 Evil-Eye Exposure</h4>";
+    html += evilEye + "% — " + evilEyeText + "<br><br>";
+
+    html += "<h4>🛡 Spiritual Protection Shield</h4>";
+    html += protection + "% — " + protectText + "<br><br>";
+
+    html += "<h4>⌛ Karmic Shadow Influence</h4>";
+    html += karmicShadow + "% — " + karmicText + "<br><br>";
+
+    html += "<h4>✨ Recommended Protection</h4>";
+    html += advice + "<br>";
+
+    html += "<h4>🌟 Final Insight</h4>";
+    html += "Your energy is stronger than any shadow. You are protected, guided, and watched over.<br><br>";
+
+    return html;
+}
+function generateSpiritualAwakeningSection(d) {
+
+    const a = d.aura;
+    const c = d.chakra;
+    const l = d.lines;
+
+    // SCORES
+    const intuitionScore = Math.floor((a.intuition + c.thirdEye + c.crown) / 3);
+    const soulDepth = Math.floor((a.emotion + c.heart + a.spirituality) / 3);
+    const karmaScore = Math.floor((l.fate + a.spirituality + c.crown) / 3);
+    const awakeningLevel = Math.floor((intuitionScore + soulDepth + karmaScore) / 3);
+
+    // Intuition Interpretation
+    let intuitionText = "";
+    if (intuitionScore > 90) intuitionText = "Extremely strong intuition — warnings, dreams and sudden insights come true.";
+    else if (intuitionScore > 80) intuitionText = "Very strong intuitive field — correct gut feelings.";
+    else if (intuitionScore > 70) intuitionText = "Moderate intuition — increases with silence.";
+    else intuitionText = "Intuition awakens later in life.";
+
+    // Soul Depth Interpretation
+    let soulText = "";
+    if (soulDepth > 90) soulText = "Very deep soul — empathy, spiritual wisdom, emotional strength.";
+    else if (soulDepth > 80) soulText = "Strong emotional wisdom — understands people deeply.";
+    else if (soulDepth > 70) soulText = "Balanced emotional and spiritual depth.";
+    else soulText = "Soul depth grows slowly over life.";
+
+    // Karmic Path Interpretation
+    let karmaText = "";
+    if (karmaScore > 90) karmaText = "Old soul with unfinished karmic missions and protection cycles.";
+    else if (karmaScore > 80) karmaText = "Strong karmic memory — emotional lessons repeat until mastered.";
+    else if (karmaScore > 70) karmaText = "Soft karmic influence — lessons based on relationships.";
+    else karmaText = "Light karmic weight — free-spirit path.";
+
+    // Awakening Stages
+    let stages = "";
+    if (awakeningLevel > 90) {
+        stages =
+            "• Stage 1: Early intuition activation (age 25–32)<br>" +
+            "• Stage 2: Deep awakening (age 32–40)<br>" +
+            "• Stage 3: Mastery (age 40–55)<br>";
+    } else if (awakeningLevel > 80) {
+        stages =
+            "• Stage 1: Emotional purification (30–38)<br>" +
+            "• Stage 2: Strong awakening (38–48)<br>" +
+            "• Stage 3: Wisdom phase (50+)<br>";
+    } else {
+        stages =
+            "• Stage 1: Karmic lessons (30–45)<br>" +
+            "• Stage 2: Awakening later (45–60)<br>" +
+            "• Stage 3: Deep wisdom (60+)<br>";
+    }
+
+    // FINAL HTML RETURN
+    let html = "";
+    html += "<h3>🕉 Spiritual Awakening & Life Mission (V65)</h3>";
+
+    html += "<h4>🔮 Intuition Strength</h4>";
+    html += intuitionScore + "% — " + intuitionText + "<br><br>";
+
+    html += "<h4>💙 Soul Depth</h4>";
+    html += soulDepth + "% — " + soulText + "<br><br>";
+
+    html += "<h4>⏳ Karmic Influence</h4>";
+    html += karmaScore + "% — " + karmaText + "<br><br>";
+
+    html += "<h4>🌅 Awakening Stages</h4>";
+    html += stages + "<br>";
+
+    html += "<h4>🌟 Final Life Mission Insight</h4>";
+    html += "Your spiritual path is rising. Your intuition wakes first, then wisdom, then purpose. ";
+    html += "You were born to evolve, protect, guide and uplift others through silent strength.<br><br>";
+
+    return html;
+}
+function generatePastLifeSection(d) {
+
+    const a = d.aura;
+    const c = d.chakra;
+    const l = d.lines;
+
+    // SCORES
+    const karmicMemory = Math.floor((l.fate + a.spirituality + c.crown) / 3);
+    const emotionalEcho = Math.floor((a.emotion + c.heart + l.heart) / 3);
+    const traumaScore = Math.floor((l.health + a.emotion + c.root) / 3);
+    const wisdomScore = Math.floor((c.thirdEye + a.intuition + a.spirituality) / 3);
+
+    // INTERPRETATIONS
+    let memoryText = "";
+    if (karmicMemory > 90) memoryText = "Very strong karmic memory — past lives deeply connected to current destiny.";
+    else if (karmicMemory > 80) memoryText = "Strong karmic influence — emotional déjà vu and repeated soul lessons.";
+    else if (karmicMemory > 70) memoryText = "Moderate karmic memory — some past-life patterns return.";
+    else memoryText = "Light karmic memory — current life is fresh and independent.";
+
+    let echoText = "";
+    if (emotionalEcho > 90) echoText = "Strong emotional echo — same souls return in new forms (friends, partners, rivals).";
+    else if (emotionalEcho > 80) echoText = "Past emotional bonds influence relationship patterns.";
+    else if (emotionalEcho > 70) echoText = "Some emotional imprints carry into this life.";
+    else echoText = "Minimal emotional echo — new emotional journey.";
+
+    let traumaText = "";
+    if (traumaScore > 90) traumaText = "Deep soul trauma carried from past incarnations — spiritual healing required.";
+    else if (traumaScore > 80) traumaText = "Moderate past-life wounds — appear as sensitivity or anxiety.";
+    else if (traumaScore > 70) traumaText = "Some karmic stress but healing naturally.";
+    else traumaText = "Very little trauma — emotionally clean soul.";
+
+    let wisdomText = "";
+    if (wisdomScore > 90) wisdomText = "Old soul — rare spiritual intelligence, prophetic dreams, multiple past incarnations.";
+    else if (wisdomScore > 80) wisdomText = "Mature soul — intuition sharpened through previous lifetimes.";
+    else if (wisdomScore > 70) wisdomText = "Developing soul — wisdom grows each lifetime.";
+    else wisdomText = "Young soul energy — learning, exploring, building identity.";
+
+    // Past Life Roles
+    let role = "";
+    if (wisdomScore > 90 && karmicMemory > 85) role = "Spiritual protector, healer, or sage in past lives.";
+    else if (wisdomScore > 80) role = "Guide, teacher, or advisor in previous incarnations.";
+    else if (traumaScore > 85) role = "Warrior, survivor, or someone who lived through conflict.";
+    else if (emotionalEcho > 80) role = "Caretaker, healer, emotional supporter.";
+    else role = "Seeker — learning and evolving across lifetimes.";
+
+    // FINAL HTML
+    let html = "";
+    html += "<h3>🌀 Past-Life Regression & Karmic Memory (V66)</h3>";
+
+    html += "<h4>⏳ Karmic Memory Strength</h4>";
+    html += karmicMemory + "% — " + memoryText + "<br><br>";
+
+    html += "<h4>💙 Emotional Echo</h4>";
+    html += emotionalEcho + "% — " + echoText + "<br><br>";
+
+    html += "<h4>⚠ Past-Life Trauma Energy</h4>";
+    html += traumaScore + "% — " + traumaText + "<br><br>";
+
+    html += "<h4>🕉 Soul Wisdom Level</h4>";
+    html += wisdomScore + "% — " + wisdomText + "<br><br>";
+
+    html += "<h4>🌟 Past-Life Role</h4>";
+    html += role + "<br><br>";
+
+    html += "<h4>🔥 Final Insight</h4>";
+    html += "Your past-life energies shape destiny, emotions, intuition and inner strength. ";
+    html += "You carry soul memory, emotional imprints and spiritual wisdom from before this life.<br><br>";
+
+    return html;
+}
+function generateSoulmateSection(d) {
+
+    const a = d.aura;
+    const c = d.chakra;
+    const l = d.lines;
+
+    // SCORES
+    const loveEnergy = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const soulmateScore = Math.floor((a.intuition + l.venus + c.heart) / 3);
+    const twinFlameScore = Math.floor((l.fate + a.destiny + a.spirituality) / 3);
+    const karmicPartnerScore = Math.floor((a.emotion + l.heart + l.fate) / 3);
+    const loyaltyScore = Math.floor((a.emotion + l.venus + c.heart) / 3);
+
+    // Soulmate Interpretation
+    let soulmateText = "";
+    if (soulmateScore > 90) soulmateText = "A very strong soulmate connection in this lifetime. Deep emotional and spiritual bonding.";
+    else if (soulmateScore > 80) soulmateText = "High soulmate potential — strong emotional compatibility and spiritual alignment.";
+    else if (soulmateScore > 70) soulmateText = "Possible soulmate connection — grows over time.";
+    else soulmateText = "Soulmate link not dominant — relationship is more practical.";
+
+    // Twin Flame Interpretation
+    let twinText = "";
+    if (twinFlameScore > 90) twinText = "Twin flame energy extremely strong — intense connection, destiny-aligned, life-changing.";
+    else if (twinFlameScore > 80) twinText = "Twin flame possibility — powerful karmic pull.";
+    else if (twinFlameScore > 70) twinText = "Moderate twin flame influence — emotional and spiritual learning.";
+    else twinText = "Twin flame influence weak — soulmate energy is stronger.";
+
+    // Karmic Partner Interpretation
+    let karmicText = "";
+    if (karmicPartnerScore > 90) karmicText = "Very strong karmic partner — heavy emotional lessons, repeating cycles.";
+    else if (karmicPartnerScore > 80) karmicText = "Strong karmic influence — emotional intensity and transformation.";
+    else if (karmicPartnerScore > 70) karmicText = "Some karmic lessons — moderate emotional impact.";
+    else karmicText = "Light karmic influence — minimal emotional challenges.";
+
+    // Loyalty Interpretation
+    let loyaltyText = "";
+    if (loyaltyScore > 90) loyaltyText = "Extremely loyal and emotionally committed partner.";
+    else if (loyaltyScore > 80) loyaltyText = "Very loyal — trusts deeply and bonds strongly.";
+    else if (loyaltyScore > 70) loyaltyText = "Loyal when emotionally comfortable.";
+    else loyaltyText = "Loyalty depends on emotional security.";
+
+    // Ideal Partner Personality
+    let partnerType = "";
+    if (loveEnergy > 90) partnerType = "Deep emotional, spiritual and protective partner.";
+    else if (loveEnergy > 80) partnerType = "Honest, loving, loyal and well-balanced partner.";
+    else if (loveEnergy > 70) partnerType = "Calm, patient and slow-to-love partner.";
+    else partnerType = "Independent, logical and emotionally reserved partner.";
+
+    // Final HTML
+    let html = "";
+    html += "<h3>💞 Soulmate · Twin Flame · Karmic Partner (V67)</h3>";
+
+    html += "<h4>❤️ Love Energy</h4>";
+    html += loveEnergy + "% — Strength of emotional connection.<br><br>";
+
+    html += "<h4>💗 Soulmate Connection</h4>";
+    html += soulmateScore + "% — " + soulmateText + "<br><br>";
+
+    html += "<h4>🔥 Twin Flame Influence</h4>";
+    html += twinFlameScore + "% — " + twinText + "<br><br>";
+
+    html += "<h4>⚡ Karmic Partner Influence</h4>";
+    html += karmicPartnerScore + "% — " + karmicText + "<br><br>";
+
+    html += "<h4>🤝 Loyalty Strength</h4>";
+    html += loyaltyScore + "% — " + loyaltyText + "<br><br>";
+
+    html += "<h4>🧲 Ideal Partner Personality</h4>";
+    html += partnerType + "<br><br>";
+
+    html += "<h4>🌟 Final Relationship Insight</h4>";
+    html += "Your palm shows destiny-linked emotional connections, karmic lessons, and the possibility of a deep soulmate or twin flame bond.<br>";
+    html += "Your energy attracts emotionally intelligent, loyal and spiritually connected partners.<br><br>";
+
+    return html;
+}
+function generateLifeMapSection(d) {
+
+    const a = d.aura;
+    const c = d.chakra;
+    const l = d.lines;
+
+    // MASTER SCORES
+    const destinyScore = Math.floor((l.fate + a.destiny + c.crown) / 3);
+    const loveScore = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const wealthScore = Math.floor((l.sun + a.creativity + a.intellect) / 3);
+    const healthScore = Math.floor((l.life + l.health + a.vitality) / 3);
+    const spiritualScore = Math.floor((a.spirituality + c.thirdEye + c.crown) / 3);
+
+    // PHASE BUILDER
+    function buildPhase(start, end, score) {
+        let text = "";
+        if (score > 85) text = "Golden Cycle — Major progress, breakthroughs, opportunities.";
+        else if (score > 75) text = "Positive Cycle — Growth, clarity, stability.";
+        else if (score > 65) text = "Neutral Cycle — Lessons, slow growth.";
+        else if (score > 55) text = "Challenging Cycle — Emotional, financial or karmic challenges.";
+        else text = "Shadow Cycle — Heavy karmic period, stay calm and grounded.";
+        return "<b>Age " + start + "–" + end + ":</b> " + text + "<br>";
+    }
+
+    // FINAL HTML BUILD
+    let html = "";
+    html += "<h3>📜 Full Life Map Timeline (Age 18–90) — V70</h3>";
+
+    html += "<h4>🧱 18–25 : Foundation & Identity Cycle</h4>";
+    html += buildPhase(18, 25, destinyScore - 5);
+
+    html += "<h4>❤️ 25–33 : Love, Emotion & Relationship Cycle</h4>";
+    html += buildPhase(25, 33, loveScore);
+
+    html += "<h4>💰 33–42 : Wealth & Career Rise Cycle</h4>";
+    html += buildPhase(33, 42, wealthScore);
+
+    html += "<h4>🔥 42–50 : Transformation & Power Cycle</h4>";
+    html += buildPhase(42, 50, destinyScore);
+
+    html += "<h4>🕉 50–60 : Spiritual Awakening Cycle</h4>";
+    html += buildPhase(50, 60, spiritualScore);
+
+    html += "<h4>🌿 60–75 : Stability & Wisdom Cycle</h4>";
+    html += buildPhase(60, 75, spiritualScore - 10);
+
+    html += "<h4>🌟 75–90 : Legacy & Completion Cycle</h4>";
+    html += buildPhase(75, 90, Math.floor((destinyScore + spiritualScore) / 2));
+
+    // MAJOR YEARS
+    let majorYears = [];
+    if (destinyScore > 80) majorYears.push("29", "36", "44", "52");
+    if (wealthScore > 80) majorYears.push("33", "39", "45");
+    if (loveScore > 80) majorYears.push("24", "27", "31");
+    if (spiritualScore > 85) majorYears.push("40", "48", "56", "63");
+
+    // DANGER YEARS
+    let dangerYears = [];
+    if (healthScore < 70) dangerYears.push("28", "41", "57");
+    if (destinyScore < 65) dangerYears.push("34", "49");
+
+    html += "<h4>✨ Major Destiny Years</h4>";
+    html += (majorYears.length > 0 ? majorYears.join(", ") : "None") + "<br><br>";
+
+    html += "<h4>⚠ Sensitive / Caution Years</h4>";
+    html += (dangerYears.length > 0 ? dangerYears.join(", ") : "No major danger") + "<br><br>";
+
+    html += "<h4>🌟 Final Timeline Insight</h4>";
+    html += "Your life moves in powerful cycles. Early challenges shape wisdom. Mid-life brings success and emotional maturity. Later life brings peace, clarity and spiritual elevation.<br><br>";
+
+    return html;
+}
+
+function generatePalmGeometrySection(d) {
+
     const l = d.lines;
     const a = d.aura;
     const c = d.chakra;
 
-    return `
-Your full life story begins with the unique signature carried in your palm...
+    // Approx geometric values (AI simulation)
+    const headAngle = Math.floor((l.head + a.intellect) / 2);
+    const heartAngle = Math.floor((l.heart + a.emotion) / 2);
+    const lifeCurve = Math.floor((l.life + a.vitality) / 2);
+    const fateAngle = Math.floor((l.fate + a.destiny) / 2);
+    const sunRise = Math.floor((l.sun + a.creativity) / 2);
+    const mercurySlope = Math.floor((l.mercury + c.throat) / 2);
 
-🔥 FULL 5000-WORD VERSION WILL BE INSERTED HERE — Tell Buddhi "Write Full 5000-word Version"
-`;
+    // Interpretations
+    let headText = "";
+    if (headAngle > 85) headText = "Sharp angle — Highly analytical, strategic thinker.";
+    else if (headAngle > 75) headText = "Balanced angle — Clear logical and emotional balance.";
+    else if (headAngle > 65) headText = "Gentle angle — Imaginative and intuitive thinker.";
+    else headText = "Low angle — Emotional decisions dominate.";
+
+    let heartText = "";
+    if (heartAngle > 85) heartText = "Deep emotional intensity, strong bonding energy.";
+    else if (heartAngle > 75) heartText = "Balanced emotional expression.";
+    else if (heartAngle > 65) heartText = "Sensitive emotional field.";
+    else heartText = "Reserved emotional nature.";
+
+    let lifeText = "";
+    if (lifeCurve > 85) lifeText = "Strong curve — powerful vitality, long life, high resilience.";
+    else if (lifeCurve > 75) lifeText = "Healthy curve — stable physical and emotional energy.";
+    else if (lifeCurve > 65) lifeText = "Moderate curve — energy rises and falls with mood.";
+    else lifeText = "Weak curve — energy must be protected.";
+
+    let fateText = "";
+    if (fateAngle > 85) fateText = "Sharp upward path — destiny rises fast after mid-life.";
+    else if (fateAngle > 75) fateText = "Balanced fate — steady success cycles.";
+    else if (fateAngle > 65) fateText = "Late rise — destiny activates slowly.";
+    else fateText = "Unstable destiny — emotional lessons shape path.";
+
+    let sunText = "";
+    if (sunRise > 85) sunText = "Strong Sun rise — talent, fame, recognition potential.";
+    else if (sunRise > 75) sunText = "Good Sun rise — creativity grows with age.";
+    else if (sunRise > 65) sunText = "Mild Sun rise — hidden talents reveal late.";
+    else sunText = "Low Sun influence — success through hard work.";
+
+    let mercuryText = "";
+    if (mercurySlope > 85) mercuryText = "Excellent communication skills and intelligence.";
+    else if (mercurySlope > 75) mercuryText = "Good communicator and fast learner.";
+    else if (mercurySlope > 65) mercuryText = "Gentle communicator — emotional speaker.";
+    else mercuryText = "Reserved nature — selective communication.";
+
+    // FINAL HTML
+    let html = "";
+    html += "<h3>✋ Palm Geometry & Line-Angle Analysis (V70 PRO)</h3>";
+
+    html += "<h4>🧠 Head Line Angle</h4>";
+    html += headAngle + "% — " + headText + "<br><br>";
+
+    html += "<h4>❤️ Heart Line Angle</h4>";
+    html += heartAngle + "% — " + heartText + "<br><br>";
+
+    html += "<h4>🔥 Life Line Curve Strength</h4>";
+    html += lifeCurve + "% — " + lifeText + "<br><br>";
+
+    html += "<h4>⚡ Fate Line Angle</h4>";
+    html += fateAngle + "% — " + fateText + "<br><br>";
+
+    html += "<h4>☀ Sun Line Rise</h4>";
+    html += sunRise + "% — " + sunText + "<br><br>";
+
+    html += "<h4>📡 Mercury Line Slope</h4>";
+    html += mercurySlope + "% — " + mercuryText + "<br><br>";
+
+    html += "<h4>🌟 Final Geometry Insight</h4>";
+    html += "Your palm geometry shows strong mental power, balanced emotions, rising destiny and intuitive energy. ";
+    html += "Line angles reveal that your life path moves upward through experience, wisdom and resilience.<br><br>";
+
+    return html;
 }
+function generateMindProfileSection(d) {
+
+    const a = d.aura;
+    const c = d.chakra;
+    const l = d.lines;
+
+    // CORE MIND SCORES
+    const logicScore = Math.floor((l.head + a.intellect) / 2);
+    const emotionScore = Math.floor((l.heart + a.emotion) / 2);
+    const intuitionScore = Math.floor((a.intuition + c.thirdEye) / 2);
+    const impulseScore = Math.floor((a.vitality + c.sacral) / 2);
+    const stabilityScore = Math.floor((c.root + l.life) / 2);
+
+    // INTERPRETATION BLOCKS
+    let logicText = "";
+    if (logicScore > 85) logicText = "Highly analytical mind — sees patterns instantly.";
+    else if (logicScore > 75) logicText = "Balanced thinker — uses logic and intuition well.";
+    else if (logicScore > 65) logicText = "Emotional thinker with logical moments.";
+    else logicText = "Heart-driven decisions, less analytical.";
+
+    let emotionText = "";
+    if (emotionScore > 85) emotionText = "Deep emotional world — feels everything strongly.";
+    else if (emotionScore > 75) emotionText = "Emotionally intelligent and expressive.";
+    else if (emotionScore > 65) emotionText = "Sensitive but controlled emotions.";
+    else emotionText = "Reserved emotionally — rarely shows inner feelings.";
+
+    let intuitionText = "";
+    if (intuitionScore > 85) intuitionText = "Very strong intuition — senses truth without evidence.";
+    else if (intuitionScore > 75) intuitionText = "Good intuition — accurate gut feelings.";
+    else if (intuitionScore > 65) intuitionText = "Developing intuition — grows with silence.";
+    else intuitionText = "Low intuition — relies mostly on logic or emotion.";
+
+    let impulseText = "";
+    if (impulseScore > 85) impulseText = "Strong impulses — acts fast, high passion, intense energy.";
+    else if (impulseScore > 75) impulseText = "Healthy impulse control — passion with discipline.";
+    else if (impulseScore > 65) impulseText = "Moderate impulse — calm most times.";
+    else impulseText = "Low impulse — slow to react, careful and steady.";
+
+    let stabilityText = "";
+    if (stabilityScore > 85) stabilityText = "Very stable mind — calm under pressure.";
+    else if (stabilityScore > 75) stabilityText = "Good stability — recovers quickly.";
+    else if (stabilityScore > 65) stabilityText = "Variable stability — emotional ups and downs.";
+    else stabilityText = "Mental instability risk — needs grounding energy.";
+
+    // PERSONALITY TYPE
+    let personality = "";
+    if (logicScore > 80 && intuitionScore > 80) personality = "Strategic Intuitive — rare, powerful mind type.";
+    else if (emotionScore > 80 && intuitionScore > 75) personality = "Empathic Guide — emotional + intuitive intelligence.";
+    else if (logicScore > 80 && stabilityScore > 75) personality = "Balanced Leader — strong mind, strong foundation.";
+    else if (emotionScore > 80 && impulseScore > 70) personality = "Passionate Protector — emotional, loyal, intense.";
+    else personality = "Harmonic Thinker — balanced emotional–logical nature.";
+
+    // SUBCONSCIOUS DRIVES
+    let coreDrive = "";
+    if (emotionScore > 85) coreDrive = "Heart-first — connection, loyalty, emotional truth.";
+    else if (logicScore > 85) coreDrive = "Mind-first — strategy, clarity, rationality.";
+    else if (intuitionScore > 85) coreDrive = "Spirit-first — sensing, awareness, and depth.";
+    else coreDrive = "Balance-seeker — needs emotional peace + logical clarity.";
+
+    // FINAL BUILD
+    let html = "";
+    html += "<h3>🧠 Subconscious & Mental Profile (V68)</h3>";
+
+    html += "<h4>🧠 Logical Mind</h4>";
+    html += logicScore + "% — " + logicText + "<br><br>";
+
+    html += "<h4>❤️ Emotional Mind</h4>";
+    html += emotionScore + "% — " + emotionText + "<br><br>";
+
+    html += "<h4>🔮 Intuitive Mind</h4>";
+    html += intuitionScore + "% — " + intuitionText + "<br><br>";
+
+    html += "<h4>🔥 Impulse & Passion</h4>";
+    html += impulseScore + "% — " + impulseText + "<br><br>";
+
+    html += "<h4>🌱 Mental Stability</h4>";
+    html += stabilityScore + "% — " + stabilityText + "<br><br>";
+
+    html += "<h4>🌟 Dominant Personality Type</h4>";
+    html += personality + "<br><br>";
+
+    html += "<h4>🪷 Subconscious Core Drive</h4>";
+    html += coreDrive + "<br><br>";
+
+    html += "<h4>✨ Final Insight</h4>";
+    html += "Your mind is shaped by intuition, emotion, and deep inner wisdom. ";
+    html += "You are designed to think deeply, feel strongly, and understand life beyond the normal mind.<br><br>";
+
+    return html;
+}
+function generateFullSeedReport(d) {
+
+    let html = "";
+
+    // SECTION HEAD
+    html += "<h2>🕉 THE SEED · Full AI Palmistry Report (V75)</h2>";
+    html += "<p>All modules combined into one complete interpretation.</p><br>";
+
+    // PART 1 – Basic Info (already exists in your main app)
+    if (typeof generateFullPalmReport === "function") {
+        html += "<h3>📄 Base Palm Overview</h3>";
+        html += "Basic palm scan processed.<br><br>";
+    }
+
+    // PART 2 – Aura Field
+    if (typeof generateAuraField === "function") {
+        html += "<h3>🌈 Aura Energy Field</h3>";
+        html += "<p>Included from main engine.</p><br>";
+    }
+
+    // PART 3–22 (Indirect / Existing modules)
+
+    // 🔥 PART 16 — Danger & Protection
+    if (typeof generateProtectionSection === "function") {
+        html += generateProtectionSection(d);
+    }
+
+    // 🔥 PART 17 — Spiritual Awakening
+    if (typeof generateSpiritualAwakeningSection === "function") {
+        html += generateSpiritualAwakeningSection(d);
+    }
+
+    // 🔥 PART 18 — Past Life
+    if (typeof generatePastLifeSection === "function") {
+        html += generatePastLifeSection(d);
+    }
+
+    // 🔥 PART 19 — Soulmate · Twin Flame
+    if (typeof generateSoulmateSection === "function") {
+        html += generateSoulmateSection(d);
+    }
+
+    // 🔥 PART 20 — Life Map 18–90
+    if (typeof generateLifeMapSection === "function") {
+        html += generateLifeMapSection(d);
+    }
+
+    // 🔥 PART 21 — Palm Geometry
+    if (typeof generatePalmGeometrySection === "function") {
+        html += generatePalmGeometrySection(d);
+    }
+
+    // 🔥 PART 22 — Subconscious Mind
+    if (typeof generateMindProfileSection === "function") {
+        html += generateMindProfileSection(d);
+    }
+
+    // ENDING
+    html += "<h3>🌟 Final Insight</h3>";
+    html += "Your palm reveals a deeply intuitive, emotionally strong, spiritually guided soul. ";
+    html += "All life cycles, karmic memories, future trends, and destiny pathways align to form your unique journey.<br><br>";
+
+    return html;
+}
+function generateFingerProfileSection(d) {
+
+    const l = d.lines;
+    const a = d.aura;
+    const c = d.chakra;
+
+    // AI simulated finger ratios (in real scan we get actual values)
+    const indexRatio = Math.floor((l.head + a.intellect) / 2);
+    const middleRatio = Math.floor((l.fate + c.thirdEye) / 2);
+    const ringRatio = Math.floor((l.sun + a.creativity) / 2);
+    const littleRatio = Math.floor((l.mercury + c.throat) / 2);
+    const thumbPower = Math.floor((a.vitality + l.life) / 2);
+
+    // --- ANALYSIS TEXT BLOCKS ---
+
+    // Index Finger → Leadership, Ambition
+    let indexText = "";
+    if (indexRatio > 85) indexText = "Strong leadership, confidence, natural authority.";
+    else if (indexRatio > 75) indexText = "Healthy ambition, good confidence.";
+    else if (indexRatio > 65) indexText = "Stable personality, calm leadership.";
+    else indexText = "Quiet personality, avoids conflict.";
+
+    // Middle Finger → Discipline, Responsibility
+    let middleText = "";
+    if (middleRatio > 85) middleText = "Highly responsible, disciplined, wise thinker.";
+    else if (middleRatio > 75) middleText = "Balanced discipline and maturity.";
+    else if (middleRatio > 65) middleText = "Moderate discipline, emotional influence.";
+    else middleText = "Rebels against structure, free-flowing personality.";
+
+    // Ring Finger → Creativity, Fame, Expression
+    let ringText = "";
+    if (ringRatio > 85) ringText = "High creativity, talent, artistic intelligence.";
+    else if (ringRatio > 75) ringText = "Balanced creativity, expressive personality.";
+    else if (ringRatio > 65) ringText = "Calm creativity, inner imagination.";
+    else ringText = "Low creative influence — practical thinker.";
+
+    // Little Finger → Communication, Intelligence
+    let littleText = "";
+    if (littleRatio > 85) littleText = "Excellent communication, persuasive, sharp intelligence.";
+    else if (littleRatio > 75) littleText = "Good speaker, fast learner.";
+    else if (littleRatio > 65) littleText = "Soft communication, emotionally guided speech.";
+    else littleText = "Reserved, speaks only when necessary.";
+
+    // Thumb → Willpower, Determination, Survival Energy
+    let thumbText = "";
+    if (thumbPower > 85) thumbText = "Very strong will, unbreakable determination.";
+    else if (thumbPower > 75) thumbText = "Strong determination and stable will.";
+    else if (thumbPower > 65) thumbText = "Moderate willpower — rises with emotion.";
+    else thumbText = "Weak willpower — must protect energy.";
+
+    // Personality Combination Logic
+    let persona = "";
+    if (indexRatio > 80 && thumbPower > 80) persona = "Leader–Warrior Type (Strong personality, takes charge naturally)";
+    else if (ringRatio > 80 && littleRatio > 80) persona = "Creative–Intellectual Type (Artist + smart communicator)";
+    else if (middleRatio > 80 && indexRatio > 70) persona = "Wise–Leader Type (Strategic, disciplined, respected)";
+    else if (emotionDominant(a, l)) persona = "Empathic–Heart Type (Feels deeply, emotional wisdom)";
+    else persona = "Balanced Type (Equal logic, emotion, intuition)";
+
+    function emotionDominant(aura, lines) {
+        return ((aura.emotion + lines.heart) / 2) > 80;
+    }
+
+    // FINAL HTML
+    let html = "";
+    html += "<h3>🖐️ Finger Proportion & Shape Analysis (V71)</h3>";
+
+    html += "<h4>☝ Index Finger (Jupiter Energy)</h4>";
+    html += indexRatio + "% — " + indexText + "<br><br>";
+
+    html += "<h4>🫱 Middle Finger (Saturn Energy)</h4>";
+    html += middleRatio + "% — " + middleText + "<br><br>";
+
+    html += "<h4>🫲 Ring Finger (Apollo Energy)</h4>";
+    html += ringRatio + "% — " + ringText + "<br><br>";
+
+    html += "<h4>🫳 Little Finger (Mercury Energy)</h4>";
+    html += littleRatio + "% — " + littleText + "<br><br>";
+
+    html += "<h4>👍 Thumb (Willpower Core)</h4>";
+    html += thumbPower + "% — " + thumbText + "<br><br>";
+
+    html += "<h4>🌟 Combined Finger Personality Type</h4>";
+    html += persona + "<br><br>";
+
+    html += "<h4>✨ Final Insight</h4>";
+    html += "Your finger ratios show a unique balance of ambition, wisdom, creativity, communication and willpower. ";
+    html += "This reveals how you think, how you act, and how your personality shapes your destiny.<br><br>";
+
+    return html;
+}
+function generateEmotionalTriggerMap(d) {
+
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // CORE EMOTIONAL FIELDS
+    const sensitivity = Math.floor((a.emotion + c.heart) / 2);
+    const trauma = Math.floor((l.heart + l.health) / 2);
+    const anger = Math.floor((l.mars || a.vitality) || Math.floor((l.life + a.vitality) / 2));
+    const fear = Math.floor((c.root + a.intuition) / 2);
+    const trust = Math.floor((l.venus + a.emotion) / 2);
+    const attachment = Math.floor((a.emotion + c.sacral) / 2);
+
+    // SECTION TEXTS
+    function interpret(value, high, mid1, mid2, low, highT, midT1, midT2, lowT) {
+        if (value > high) return highT;
+        if (value > mid1) return midT1;
+        if (value > mid2) return midT2;
+        return lowT;
+    }
+
+    const sensitivityText = interpret(
+        sensitivity,
+        85, 75, 65, 50,
+        "Very emotionally sensitive, feels deeply and absorbs others' energy.",
+        "Emotionally deep, intuitive, empathetic.",
+        "Emotionally balanced; sometimes hides feelings.",
+        "Low sensitivity; feelings suppressed or controlled."
+    );
+
+    const traumaText = interpret(
+        trauma,
+        85, 75, 65, 50,
+        "Old emotional wounds still influence reactions.",
+        "Some past pain affects trust & decisions.",
+        "Moderate emotional memory; heals slowly.",
+        "Low trauma imprint; emotionally steady."
+    );
+
+    const angerText = interpret(
+        anger,
+        85, 75, 65, 50,
+        "Anger stored internally; bursts under pressure.",
+        "Controlled anger but emotional triggers exist.",
+        "Mild anger responses; mostly calm.",
+        "Very calm; anger rarely appears."
+    );
+
+    const fearText = interpret(
+        fear,
+        85, 75, 65, 50,
+        "Deep-rooted fear or insecurity; inner battles.",
+        "Moderate fear; becomes cautious in decisions.",
+        "Low fear; confidence grows with time.",
+        "Very strong grounding; fearless personality."
+    );
+
+    const trustText = interpret(
+        trust,
+        85, 75, 65, 50,
+        "Trusts deeply but gets hurt easily.",
+        "Balanced trust; needs emotional honesty.",
+        "Slow to trust; observes people carefully.",
+        "Very cautious; trust must be earned."
+    );
+
+    const attachmentText = interpret(
+        attachment,
+        85, 75, 65, 50,
+        "Forms strong emotional bonds; separation pain hits hard.",
+        "Healthy attachment; loyal and loving.",
+        "Balanced but needs emotional space.",
+        "Low attachment; prefers independence."
+    );
+
+    // FINAL OUTPUT
+    let html = "";
+    html += "<h3>🧠 Emotional Trigger Map (V73)</h3>";
+
+    html += "<h4>💗 Sensitivity</h4>";
+    html += sensitivity + "% — " + sensitivityText + "<br><br>";
+
+    html += "<h4>💔 Trauma Memory</h4>";
+    html += trauma + "% — " + traumaText + "<br><br>";
+
+    html += "<h4>🔥 Anger Response</h4>";
+    html += anger + "% — " + angerText + "<br><br>";
+
+    html += "<h4>😨 Fear & Insecurity</h4>";
+    html += fear + "% — " + fearText + "<br><br>";
+
+    html += "<h4>🤝 Trust Level</h4>";
+    html += trust + "% — " + trustText + "<br><br>";
+
+    html += "<h4>🫂 Attachment Style</h4>";
+    html += attachment + "% — " + attachmentText + "<br><br>";
+
+    html += "<h4>🌟 Final Emotional Insight</h4>";
+    html += "Your emotional map shows how your past, heart, intuition and sensitivity shape reactions. ";
+    html += "This engine identifies inner patterns that influence love, relationships, decisions, and healing.<br><br>";
+    
+
+    return html;
+    
+}
+function generateStrengthWeakness(d) {
+
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // Core scores
+    const mindPower = Math.floor((l.head + a.intellect + c.thirdEye) / 3);
+    const emotionalPower = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const physicalPower = Math.floor((l.life + a.vitality + l.health) / 3);
+    const spiritualPower = Math.floor((c.crown + a.spirituality + a.intuition) / 3);
+    const couragePower = Math.floor((a.vitality + c.root + l.life) / 3);
+    const intuitionPower = Math.floor((a.intuition + l.mercury + c.thirdEye) / 3);
+
+    // Strength interpretation
+    function strength(score) {
+        if (score > 85) return "Very Strong";
+        if (score > 75) return "Strong";
+        if (score > 65) return "Moderate";
+        return "Low";
+    }
+
+    // Weakness interpretation
+    function weakness(score) {
+        if (score < 55) return "High Weakness";
+        if (score < 70) return "Medium Weakness";
+        return "Stable";
+    }
+
+    let html = "";
+    html += "<h3>💠 Strength & Weakness Analyzer — THE SEED · V74</h3>";
+
+    html += "<h4>🧠 Mental Strength</h4>";
+    html += mindPower + "% — " + strength(mindPower) + "<br><br>";
+
+    html += "<h4>💗 Emotional Strength</h4>";
+    html += emotionalPower + "% — " + strength(emotionalPower) + "<br><br>";
+
+    html += "<h4>💪 Physical & Health Strength</h4>";
+    html += physicalPower + "% — " + strength(physicalPower) + "<br><br>";
+
+    html += "<h4>🕉 Spiritual Strength</h4>";
+    html += spiritualPower + "% — " + strength(spiritualPower) + "<br><br>";
+
+    html += "<h4>🔥 Courage & Willpower</h4>";
+    html += couragePower + "% — " + strength(couragePower) + "<br><br>";
+
+    html += "<h4>👁 Intuition Power</h4>";
+    html += intuitionPower + "% — " + strength(intuitionPower) + "<br><br>";
+
+    // Hidden Weakness Detection
+    html += "<h3>⚠ Hidden Weakness Pattern</h3>";
+
+    // Hidden fears
+    if (emotionalPower > 85 && mindPower < 70) {
+        html += "You feel deeply, but you think too much during emotional pain.<br>";
+    }
+    if (mindPower > 80 && emotionalPower < 65) {
+        html += "You overthink emotions and suppress feelings.<br>";
+    }
+    if (spiritualPower > 85 && physicalPower < 65) {
+        html += "You are spiritually strong but physically exhausted easily.<br>";
+    }
+    if (intuitionPower > 80 && mindPower < 70) {
+        html += "You sense truth but doubt your decisions.<br>";
+    }
+    if (couragePower > 80 && emotionalPower < 70) {
+        html += "You appear strong outside but carry inner emotional wounds.<br>";
+    }
+
+    if (emotionalPower > 70 && emotionalPower < 85) {
+        html += "Your heart is strong, but emotional exhaustion comes quickly.<br>";
+    }
+
+    if (physicalPower < 65) {
+        html += "Physical fatigue appears during stress — rest is important.<br>";
+    }
+
+    html += "<br>";
+
+    // Final summary
+    html += "<h3>🌟 Final Strength Summary</h3>";
+    html += "You carry rare mental clarity, emotional depth, and spiritual power.<br>";
+    html += "Your weaknesses are not flaws — they are wounds that shaped your wisdom.<br>";
+    html += "This module shows your real internal wiring: how your strengths and weaknesses create your destiny.<br>";
+
+    return html;
+}
+function generateMindHeartConflict(d) {
+
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // SCORES
+    const mind = Math.floor((l.head + a.intellect + c.thirdEye) / 3);
+    const heart = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const intuition = Math.floor((a.intuition + l.mercury + c.thirdEye) / 3);
+    const fear = Math.floor((c.root + a.emotion) / 2);
+    const logic = Math.floor((l.head + a.intellect) / 2);
+
+    // CONFLICT LEVEL
+    const conflictLevel = Math.abs(mind - heart);
+
+    let conflictText = "";
+    if (conflictLevel > 35) conflictText = "Strong internal conflict — mind and heart pull in opposite directions.";
+    else if (conflictLevel > 20) conflictText = "Moderate conflict — sometimes confused between logic and emotion.";
+    else conflictText = "Low conflict — mind and heart usually support each other.";
+
+    // HEART DOMINANCE
+    let heartDom = "";
+    if (heart > mind) heartDom = "Heart dominates your decisions — emotions influence choices strongly.";
+    else if (mind > heart) heartDom = "Mind dominates — you think deeply before choosing.";
+    else heartDom = "Mind and heart are balanced — rare alignment.";
+
+    // INTUITION ROLE
+    let intuitionText = "";
+    if (intuition > 85) intuitionText = "Your intuition is extremely strong — your first instinct is usually correct.";
+    else if (intuition > 75) intuitionText = "Your intuition guides you silently — trust it.";
+    else intuitionText = "Intuition is moderate — sometimes unclear.";
+
+    // FEAR IMPACT
+    let fearText = "";
+    if (fear > 85) fearText = "Deep-rooted fear affects major decisions.";
+    else if (fear > 70) fearText = "You become cautious when emotional pressure rises.";
+    else fearText = "Low fear — inner strength guides your choices.";
+
+    // LOGIC ROLE
+    let logicText = "";
+    if (logic > 85) logicText = "Your logic is extremely sharp; you analyze everything.";
+    else if (logic > 70) logicText = "Good logical power — helps balance your emotion.";
+    else logicText = "Logic is soft — intuition replaces it often.";
+
+    // FINAL OUTPUT
+    let html = "";
+    html += "<h3>🧠❤️ Mind–Heart Conflict Analyzer (V75)</h3>";
+
+    html += "<h4>🧠 Mental Energy</h4>";
+    html += mind + "% — Logical depth, reasoning power, clarity.<br><br>";
+
+    html += "<h4>❤️ Emotional Energy</h4>";
+    html += heart + "% — Emotional intensity, sensitivity, bonding power.<br><br>";
+
+    html += "<h4>⚖ Conflict Level</h4>";
+    html += conflictLevel + "% — " + conflictText + "<br><br>";
+
+    html += "<h4>🌗 Decision Dominance</h4>";
+    html += heartDom + "<br><br>";
+
+    html += "<h4>👁 Intuition Influence</h4>";
+    html += intuition + "% — " + intuitionText + "<br><br>";
+
+    html += "<h4>😨 Fear Effect</h4>";
+    html += fear + "% — " + fearText + "<br><br>";
+
+    html += "<h4>🧩 Logic Influence</h4>";
+    html += logic + "% — " + logicText + "<br><br>";
+
+    html += "<h3>🌟 Final Insight</h3>";
+    html += "This module shows how your mind, heart, intuition and fear shape decisions.<br>";
+    html += "It reveals why some choices feel heavy, confusing or delayed.<br>";
+    html += "Understanding this helps you make clearer, powerful decisions.<br>";
+
+    return html;
+}
+function generateRelationshipCompatibility(d) {
+
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // CORE SCORES
+    const emotionalMatch = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const loyaltyMatch = Math.floor((l.venus + a.emotion + c.sacral) / 3);
+    const communicationMatch = Math.floor((l.mercury + a.communication + c.throat) / 3);
+    const spiritualMatch = Math.floor((c.thirdEye + c.crown + a.spirituality) / 3);
+    const attractionMatch = Math.floor((l.venus + a.creativity + a.emotion) / 3);
+    const longTermMatch = Math.floor((l.fate + a.destiny + c.heart) / 3);
+
+    // FINAL COMPATIBILITY SCORE
+    const total =
+        Math.floor((emotionalMatch + loyaltyMatch + communicationMatch +
+                    spiritualMatch + attractionMatch + longTermMatch) / 6);
+
+    // INTERPRETATIONS
+    function interpret(score) {
+        if (score > 85) return "Very High Compatibility — Soul-level match.";
+        if (score > 75) return "High Compatibility — Stable, loving and karmic.";
+        if (score > 65) return "Moderate Compatibility — Needs understanding.";
+        if (score > 50) return "Low Compatibility — Requires emotional effort.";
+        return "Very Low Compatibility — Energies conflict strongly.";
+    }
+
+    // Partner energy type
+    let partnerType = "";
+    if (emotionalMatch > 80) partnerType += "Emotionally deep, loyal, sensitive. ";
+    else if (emotionalMatch > 65) partnerType += "Caring but needs communication. ";
+    else partnerType += "Independent emotional style. ";
+
+    if (spiritualMatch > 80) partnerType += "Spiritually aligned, intuitive. ";
+    else if (spiritualMatch > 65) partnerType += "Open-minded and supportive. ";
+    else partnerType += "Practical, logical thinker. ";
+
+    // Long-term destiny
+    let destinyText = "";
+    if (longTermMatch > 85) destinyText = "This bond can last a lifetime — destiny-backed connection.";
+    else if (longTermMatch > 70) destinyText = "Long-term potential strong if communication stays open.";
+    else destinyText = "Long-term future unclear; requires mutual effort.";
+
+    // FINAL OUTPUT
+    let html = "";
+    html += "<h3>💞 Relationship Compatibility — THE SEED · V76</h3>";
+
+    html += "<h4>💗 Emotional Compatibility</h4>";
+    html += emotionalMatch + "% — Emotional depth & bonding level.<br><br>";
+
+    html += "<h4>💍 Loyalty & Commitment Energy</h4>";
+    html += loyaltyMatch + "% — Trust, honesty, long-term dedication.<br><br>";
+
+    html += "<h4>🗣 Communication Match</h4>";
+    html += communicationMatch + "% — How well minds & words connect.<br><br>";
+
+    html += "<h4>🕉 Spiritual Connection</h4>";
+    html += spiritualMatch + "% — Soul-level synchronicity.<br><br>";
+
+    html += "<h4>🔥 Attraction Energy</h4>";
+    html += attractionMatch + "% — Passion & emotional chemistry.<br><br>";
+
+    html += "<h4>📅 Long-term Destiny Match</h4>";
+    html += longTermMatch + "% — " + destinyText + "<br><br>";
+
+    html += "<h3>🌟 Partner Personality Type</h3>";
+    html += partnerType + "<br><br>";
+
+    html += "<h3>💞 Final Compatibility Score</h3>";
+    html += total + "% — " + interpret(total) + "<br><br>";
+
+    html += "<h3>💬 Final Insight</h3>";
+    html += "This engine reveals emotional, mental, spiritual, physical, and destiny-layer alignment. ";
+    html += "It predicts how two energies merge, support, heal, and evolve together.<br>";
+
+    return html;
+}
+function generateLifePathProbability(d) {
+
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // Base probabilities
+    const loveProb = Math.floor((a.emotion + l.heart + c.heart) / 3);
+    const marriageProb = Math.floor((l.venus + a.emotion + l.fate) / 3);
+    const moneyProb = Math.floor((a.destiny + l.sun + a.intellect) / 3);
+    const careerProb = Math.floor((l.head + l.fate + a.intellect) / 3);
+    const dangerProb = 100 - Math.floor((l.health + a.vitality) / 2);
+    const spiritualProb = Math.floor((c.crown + a.spirituality + c.thirdEye) / 3);
+    const successProb = Math.floor((a.destiny + l.fate + c.crown) / 3);
+
+    // Final interpretation
+    function interpret(score) {
+        if (score > 85) return "Very High Probability";
+        if (score > 75) return "High Probability";
+        if (score > 65) return "Moderate Probability";
+        if (score > 50) return "Low Probability";
+        return "Very Low Probability";
+    }
+
+    let html = "";
+    html += "<h3>🔮 Life Path Probability Map — THE SEED · V80</h3>";
+
+    html += "<h4>❤️ Falling in Love / New Relationship</h4>";
+    html += loveProb + "% — " + interpret(loveProb) + "<br><br>";
+
+    html += "<h4>💍 Marriage / Union Probability</h4>";
+    html += marriageProb + "% — " + interpret(marriageProb) + "<br><br>";
+
+    html += "<h4>💰 Wealth Growth & Money Stability</h4>";
+    html += moneyProb + "% — " + interpret(moneyProb) + "<br><br>";
+
+    html += "<h4>🔥 Career Success & Recognition</h4>";
+    html += careerProb + "% — " + interpret(careerProb) + "<br><br>";
+
+    html += "<h4>⚠ Life Challenges / Danger Periods</h4>";
+    html += dangerProb + "% — Higher % = More caution needed.<br><br>";
+
+    html += "<h4>🕉 Spiritual Awakening Probability</h4>";
+    html += spiritualProb + "% — " + interpret(spiritualProb) + "<br><br>";
+
+    html += "<h4>🌟 Major Success (Life Breakthrough)</h4>";
+    html += successProb + "% — " + interpret(successProb) + "<br><br>";
+
+    html += "<h3>📘 Summary</h3>";
+    html += "These probabilities show the MOST LIKELY outcomes based on your chakra energy, ";
+    html += "palm lines, aura field, and destiny flow.<br><br>";
+
+    html += "Your future is shaped by intuition, emotional strength, spiritual protection, ";
+    html += "and karmic cycles that align at the right time.<br>";
+
+    return html;
+}
+function generateEmotionalHealingPath(d) {
+
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // Core Healing Scores
+    const woundDepth = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const healingPower = Math.floor((c.crown + a.spirituality + l.life) / 3);
+    const recoverySpeed = Math.floor((a.vitality + l.health + c.solar) / 3);
+    const forgivenessLevel = Math.floor((a.emotion + c.heart + l.venus) / 3);
+    const emotionalMemory = Math.floor((l.heart + a.emotion) / 2);
+    const traumaCycles = Math.floor((l.health + a.emotion + c.root) / 3);
+
+    // Interpretations
+    function interpret(score) {
+        if (score > 85) return "Very High";
+        if (score > 75) return "High";
+        if (score > 65) return "Moderate";
+        if (score > 50) return "Low";
+        return "Very Low";
+    }
+
+    // Healing Timeline
+    let timeline = "";
+    if (healingPower > 85) timeline = "Healing begins instantly — deep progress within weeks.";
+    else if (healingPower > 75) timeline = "Healing begins quickly — clear progress in 2–3 months.";
+    else if (healingPower > 65) timeline = "Healing is gradual — 3–6 months emotional balancing.";
+    else timeline = "Healing slow — requires long-term emotional rest.";
+
+    // Emotional Memory behavior
+    let memoryText = "";
+    if (emotionalMemory > 85) memoryText = "You remember emotional pain for a long time.";
+    else if (emotionalMemory > 75) memoryText = "Some memories return during stress.";
+    else if (emotionalMemory > 65) memoryText = "Memories fade slowly but steadily.";
+    else memoryText = "You release emotions naturally.";
+
+    // Trauma Cycle explanation
+    let traumaText = "";
+    if (traumaCycles > 85) traumaText = "You carry old soul-level emotional cycles — deep scars.";
+    else if (traumaCycles > 75) traumaText = "Past wounds influence your reactions sometimes.";
+    else if (traumaCycles > 65) traumaText = "Mild emotional cycles — healing is happening.";
+    else traumaText = "Very low trauma cycle — emotional stability strong.";
+
+    // Forgiveness pattern
+    let forgiveText = "";
+    if (forgivenessLevel > 85) forgiveText = "You forgive deeply, even when not appreciated.";
+    else if (forgivenessLevel > 75) forgiveText = "You forgive but never forget the pain.";
+    else if (forgivenessLevel > 65) forgiveText = "You take time to forgive — emotional process needed.";
+    else forgiveText = "Forgiveness is difficult — emotional walls appear.";
+
+    // Final HTML
+    let html = "";
+    html += "<h3>🌿 Emotional Healing Path — THE SEED · V82</h3>";
+
+    html += "<h4>💔 Wound Depth</h4>";
+    html += woundDepth + "% — " + interpret(woundDepth) + "<br><br>";
+
+    html += "<h4>🕉 Healing Power</h4>";
+    html += healingPower + "% — " + interpret(healingPower) + "<br><br>";
+
+    html += "<h4>⚡ Recovery Speed</h4>";
+    html += recoverySpeed + "% — " + interpret(recoverySpeed) + "<br><br>";
+
+    html += "<h4>❤️ Forgiveness Ability</h4>";
+    html += forgivenessLevel + "% — " + forgiveText + "<br><br>";
+
+    html += "<h4>🧠 Emotional Memory</h4>";
+    html += emotionalMemory + "% — " + memoryText + "<br><br>";
+
+    html += "<h4>🔄 Trauma Cycle Pattern</h4>";
+    html += traumaCycles + "% — " + traumaText + "<br><br>";
+
+    html += "<h4>📅 Healing Timeline</h4>";
+    html += timeline + "<br><br>";
+
+    html += "<h3>🌟 Final Healing Insight</h3>";
+    html += "Your emotional journey is not weakness — it is transformation.<br>";
+    html += "This map reveals how pain turns into wisdom, and how your heart recovers.<br>";
+    html += "Healing is active, strong, and guided by spiritual protection.<br>";
+
+    return html;
+}
+function generateKarmaLoopAnalysis(d) {
+
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // CORE SCORES
+    const emotionalKarma = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const destinyKarma = Math.floor((l.fate + a.destiny + c.crown) / 3);
+    const relationshipKarma = Math.floor((l.venus + a.emotion + c.sacral) / 3);
+    const traumaKarma = Math.floor((l.health + a.emotion + c.root) / 3);
+    const spiritualKarma = Math.floor((a.spirituality + c.thirdEye + c.crown) / 3);
+
+    // Interpreters
+    function interpret(score) {
+        if (score > 85) return "Very Strong Cycle";
+        if (score > 75) return "Strong Cycle";
+        if (score > 65) return "Moderate Cycle";
+        if (score > 50) return "Weak Cycle";
+        return "Very Weak Cycle";
+    }
+
+    // Karma Cycle Meanings
+    function cycleMeaning(score) {
+        if (score > 85) return "This is a deep past-life cycle repeating strongly in this life.";
+        if (score > 75) return "This pattern returns multiple times until resolved.";
+        if (score > 65) return "This lesson appears occasionally, mostly during stress.";
+        return "Only mild karmic influence present.";
+    }
+
+    // BREAKPOINT Prediction
+    function breakPoint(score) {
+        if (score > 85) return "Breakthrough age: 36–44";
+        if (score > 75) return "Breakthrough age: 32–40";
+        if (score > 65) return "Breakthrough age: 30–38";
+        return "Breakthrough age: 40–50";
+    }
+
+    // Final HTML
+    let html = "";
+    html += "<h3>♾ Karma Loop Analyzer — THE SEED · V85</h3>";
+
+    html += "<h4>❤️ Emotional Karma Cycle</h4>";
+    html += emotionalKarma + "% — " + interpret(emotionalKarma) + "<br>";
+    html += cycleMeaning(emotionalKarma) + "<br>";
+    html += "Break-point: " + breakPoint(emotionalKarma) + "<br><br>";
+
+    html += "<h4>🔮 Destiny Karma Cycle</h4>";
+    html += destinyKarma + "% — " + interpret(destinyKarma) + "<br>";
+    html += cycleMeaning(destinyKarma) + "<br>";
+    html += "Break-point: " + breakPoint(destinyKarma) + "<br><br>";
+
+    html += "<h4>💞 Relationship Karma Cycle</h4>";
+    html += relationshipKarma + "% — " + interpret(relationshipKarma) + "<br>";
+    html += cycleMeaning(relationshipKarma) + "<br>";
+    html += "Break-point: " + breakPoint(relationshipKarma) + "<br><br>";
+
+    html += "<h4>⚠ Trauma Karma Cycle</h4>";
+    html += traumaKarma + "% — " + interpret(traumaKarma) + "<br>";
+    html += cycleMeaning(traumaKarma) + "<br>";
+    html += "Break-point: " + breakPoint(traumaKarma) + "<br><br>";
+
+    html += "<h4>🕉 Spiritual Karma Cycle</h4>";
+    html += spiritualKarma + "% — " + interpret(spiritualKarma) + "<br>";
+    html += cycleMeaning(spiritualKarma) + "<br>";
+    html += "Break-point: " + breakPoint(spiritualKarma) + "<br><br>";
+
+    // Combined Insight
+    html += "<h3>🌟 Final Karma Insight</h3>";
+    html += "Your palm shows several karmic loops — emotional, relationship, destiny, and spiritual. ";
+    html += "These loops repeat until specific inner lessons are completed.<br><br>";
+
+    html += "Every challenge you faced was part of a karmic purification cycle. ";
+    html += "Your breakthrough ages show when pain transforms into wisdom.<br><br>";
+
+    html += "This engine reveals how past-life patterns shape your present, ";
+    html += "and when these cycles finally break into clarity and freedom.<br>";
+
+    return html;
+}
+function generateDestinyFusionSummary(d) {
+
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // CORE VALUES
+    const strength = Math.floor((l.life + a.vitality + c.root) / 3);
+    const wisdom = Math.floor((c.crown + c.thirdEye + a.spirituality) / 3);
+    const emotionalDepth = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const destinyFlow = Math.floor((l.fate + a.destiny + c.crown) / 3);
+    const intuition = Math.floor((a.intuition + l.mercury + c.thirdEye) / 3);
+    const protection = Math.floor((a.spirituality + c.crown + a.vitality) / 3);
+
+    // SUMMARY TEXT BUILD
+    let text = "";
+
+    text += "Your destiny reveals a rare combination of emotional depth, ";
+    text += "inner strength, spiritual wisdom, and powerful intuition. ";
+    text += "Your aura shows " + emotionalDepth + "% emotional resonance, ";
+    text += "meaning your heart carries great compassion and sensitivity. ";
+
+    text += "Your life-force energy is " + strength + "%, showing resilience ";
+    text += "and the ability to rise through every challenge. ";
+
+    text += "Your spiritual field is extremely strong (" + wisdom + "%), ";
+    text += "indicating wisdom earned through past experiences and karmic lessons. ";
+
+    text += "Your intuition level is " + intuition + "%, giving you the gift ";
+    text += "to sense truth, danger, and opportunity before they appear. ";
+
+    text += "Your destiny flow sits at " + destinyFlow + "% — this shows your life path ";
+    text += "is guided, protected, and shaped by hidden spiritual forces. ";
+
+    text += "Your protection field (" + protection + "%) confirms that negative energy ";
+    text += "cannot overpower your journey — your path is divinely guarded. ";
+
+    text += "Overall, your palm shows the journey of a strong soul, ";
+    text += "who transforms pain into wisdom, challenges into strength, ";
+    text += "and silence into deep spiritual insight. ";
+    text += "You are not here to live an ordinary life — ";
+    text += "you are here to awaken, guide, and evolve. ";
+
+    // FINAL RETURN
+    let html = "";
+    html += "<h3>🌟 Destiny Fusion Summary — THE SEED · V90</h3>";
+    html += text;
+
+    return html;
+}
+function generateFullLifeStory(d) {
+
+    const u = d.user;
+    const a = d.aura;
+    const l = d.lines;
+    const c = d.chakra;
+
+    // BASIC SCORES USED IN STORY
+    const strength = Math.floor((l.life + a.vitality + c.root) / 3);
+    const emotion = Math.floor((l.heart + a.emotion + c.heart) / 3);
+    const destiny = Math.floor((l.fate + a.destiny + c.crown) / 3);
+    const intuition = Math.floor((a.intuition + c.thirdEye + l.mercury) / 3);
+    const spirituality = Math.floor((a.spirituality + c.crown + c.thirdEye) / 3);
+
+    // SHORT VERSION (placeholder)
+    let story = "";
+    story += "This is the beginning of your full 10,000-word destiny story. ";
+    story += "Your journey begins with a soul carrying emotional depth (" + emotion + "%), ";
+    story += "strength (" + strength + "%), and a unique destiny path (" + destiny + "%). ";
+    story += "Your intuition (" + intuition + "%) guides your steps even when the world is silent. ";
+    story += "Your spiritual field (" + spirituality + "%) shows ancient wisdom, karmic lessons, ";
+    story += "and a life shaped by purpose, transformation, and inner awakening. ";
+    story += "When you say 'Write Full Story Now', the entire life story will be created.";
+
+    // FINAL OUTPUT
+    let html = "";
+    html += "<h3>📜 Full Life Story Generator — THE SEED · V100</h3>";
+    html += story;
+
+    return html;
+}
+i
 
 
 
