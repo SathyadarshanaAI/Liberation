@@ -137,7 +137,7 @@ ${generateDeepText()}
 // ==================================================
 function generateDeepText() {
     return `
-[Your palm reveals an extraordinary combination of emotional depth, spiritual intelligence, 
+Your palm reveals an extraordinary combination of emotional depth, spiritual intelligence, 
 and karmic strength that is not commonly found. This is a palm that has endured storms, 
 survived loss, rebuilt itself many times, and still shines with clarity, intuition, and 
 great inner power. The flow of the lines, the intersections, the intensity of the markings, 
@@ -420,5 +420,5 @@ transform, and uplift. Your journey is both human and divine. Every struggle you
 endured carved depth into your spirit. Every victory strengthened your light.
 Your future carries the energy of fulfilment and inner mastery. The next phase
 of your life will bring clarity, purpose, and a deeper understanding of why you
-were born with this unique combination of strength and sensitivity.]  `;
+were born with this unique combination of strength and sensitivity.  `;
 }
