@@ -49,9 +49,7 @@ function generateAuraField(l) {
     };
 }
 
-// ===============================
 // CHAKRA MAP
-// ===============================
 function generateChakraPower(a) {
     return {
         root: a.vitality,
@@ -111,9 +109,8 @@ Mercury Line: ${l.mercury}%<br>
 Venus Influence: ${l.venus}%<br>
 Health Line: ${l.health}%<br><br>
 
-<h3>📘 Deep Reading Summary</h3>
-${generateDeepTex
-
+<h3>📘 Deep Reading Summary</h3
+${generateDeepText()}
 // PLACEHOLDER — FULL 4000-WORD VERSION COMES NEX
 function generateDeepText() {
     return `
@@ -715,9 +712,7 @@ You recover fast, avoid major long-term illness, and maintain inner stability.<b
 
 This part completes your **Health & Longevity Blueprint**,  
 revealing how your body, mind, and spirit work together to protect your life-force.
-// =============================================================
 // PART 8 — WEALTH · MONEY FLOW · CAREER DESTINY ENGINE V53
-// =============================================================
 function generatePart8_WealthCareer(d) {
 
     const a = d.aura;
@@ -768,7 +763,6 @@ function generatePart8_WealthCareer(d) {
     if (c.solar > 85) attract = "Very strong money attraction — leadership + confidence magnetizes wealth.";
     else if (c.solar > 75) attract = "Stable attraction — wealth grows through persistence.";
     else attract = "Low attraction — requires emotional healing and self-belief.";
-
     // ==== Final Output ====
     return `
 <h3>💰 Wealth · Career · Money Destiny</h3>
@@ -785,10 +779,8 @@ ${careerType}<br><br>
 
 <h4>🔥 Success Timeline (Age Prediction)</h4>
 ${successAge}<br><br>
-
 <h4>🌟 Money Attraction Power</h4>
 ${attract}<br><br>
-
 <h4>🔮 Career Destiny Summary</h4>
 You have a destiny that moves through stages — slow early rise,  
 strong mid-life progress, and powerful late-life prosperity.  
@@ -906,11 +898,9 @@ function generatePart10_DarkZone(d) {
     const protection = Math.floor((c.crown + a.vitality + a.intuition) / 3);
 
     // Karmic shadow = fate + spirituality + emotional wounds
+    
     const karmicShadow = Math.floor((l.fate + a.spirituality + c.heart) / 3);
-
-    // ============================
     // Shadow Zone Interpretation
-    // ============================
     let shadowText = "";
     if (shadowScore > 85)
         shadowText = "Your emotional depth attracts others strongly. But it also absorbs their negative energies easily. You feel things deeply — good and bad.";
