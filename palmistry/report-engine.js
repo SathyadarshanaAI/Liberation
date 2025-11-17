@@ -1,4 +1,4 @@
-console.log("⚡ Report Engine Loaded V52 — Full Deep Report Mode");
+console.log(`Report Engine Loaded V52 - Full Deep Report Mode`);
 
 let FINAL_PALM_DATA = {
     lines: {},
@@ -13,16 +13,13 @@ let FINAL_PALM_DATA = {
 window.generateFullPalmReport = function (canvas) {
 
     FINAL_PALM_DATA.user = userData;
-
-    FINAL_PALM_DATA.lines  = detectPalmLines(canvas);
-    FINAL_PALM_DATA.aura   = generateAuraField(FINAL_PALM_DATA.lines);
+    FINAL_PALM_DATA.lines = detectPalmLines(canvas);
+    FINAL_PALM_DATA.aura = generateAuraField(FINAL_PALM_DATA.lines);
     FINAL_PALM_DATA.chakra = generateChakraPower(FINAL_PALM_DATA.aura);
 
     const report = buildFinalReport(FINAL_PALM_DATA);
-
     document.getElementById("output").innerHTML = report;
 };
-
 
 // ===============================
 // TEMPORARY PALM LINE DETECTOR
