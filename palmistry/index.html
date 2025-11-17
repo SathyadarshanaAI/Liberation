@@ -166,4 +166,41 @@
     <label>Any message or special request?</label>
     <textarea id="userNote" rows="3"></textarea>
 
-    <button class="btn" onclick="save
+    <button class="btn" onclick="saveUserForm()">Save User Info</button>
+</div>
+
+<!-- CAMERA -->
+<div id="camBox">
+    <video id="video" autoplay muted playsinline></video>
+    <img id="handOverlay" src="assets/palm-overlay.png">
+</div>
+
+<button class="btn" onclick="startCamera()">Open Camera</button>
+<button class="btn" onclick="captureHand()">Scan Hand</button>
+
+<!-- PALM PREVIEW -->
+<div id="palmPreviewBox">
+    <h3 style="color:cyan;text-align:center;">Palm Preview</h3>
+    <canvas id="palmCanvas"></canvas>
+</div>
+
+<div id="output">Awaiting scan...</div>
+
+<!-- DEBUGGER -->
+<script>
+window.onerror = function(msg, url, line, col, error) {
+    console.log("🔥 JavaScript Error Detected");
+    console.log("Message:", msg);
+    console.log("File:", url);
+    console.log("Line:", line);
+    console.log("Column:", col);
+    console.log("Stack:", error?.stack);
+};
+</script>
+
+<!-- MAIN SCRIPT -->
+<script src="main.js"></script>
+<script src="report-engine.js"></script>
+
+</body>
+</html>
