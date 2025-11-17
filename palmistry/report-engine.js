@@ -1362,9 +1362,10 @@ function generatePart14B_LifeStory(d) {
 
     return `
 Your full life story begins with the unique signature carried in your palm...
-(🔥 FULL 5000-WORD VERSION WILL BE INSERTED HERE — Tell Buddhi “Write Full 5000-word Version”)
+
+🔥 FULL 5000-WORD VERSION WILL BE INSERTED HERE — Tell Buddhi "Write Full 5000-word Version"
 `;
-}    
+}
 
 
 
