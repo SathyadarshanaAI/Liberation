@@ -6,10 +6,7 @@ let FINAL_PALM_DATA = {
     chakra: {},
     user: {}
 };
-
-// ===============================
 // MAIN ENTRY
-// ===============================
 window.generateFullPalmReport = function (canvas) {
 
     FINAL_PALM_DATA.user = userData;
@@ -21,9 +18,7 @@ window.generateFullPalmReport = function (canvas) {
     document.getElementById("output").innerHTML = report;
 };
 
-// ===============================
 // TEMPORARY PALM LINE DETECTOR
-// ===============================
 function detectPalmLines() {
     return {
         life: randomStrength(),
@@ -40,11 +35,7 @@ function detectPalmLines() {
 function randomStrength() {
     return Math.floor(65 + Math.random() * 35);
 }
-
-
-// ===============================
 // AURA FIELD (8 RAYS)
-// ===============================
 function generateAuraField(l) {
     return {
         vitality: Math.floor((l.life + l.health) / 2),
@@ -74,9 +65,7 @@ function generateChakraPower(a) {
 }
 
 
-// ===============================
 // FINAL REPORT HTML
-// ===============================
 function buildFinalReport(d) {
     const u = d.user;
     const a = d.aura;
@@ -104,7 +93,7 @@ Creativity: ${a.creativity}%<br>
 Spirituality: ${a.spirituality}%<br><br>
 
 <h3>🕉 Chakra Power</h3>
-Root: ${c.root}%<br>
+Root ${c.root}%<br>
 Sacral: ${c.sacral}%<br>
 Solar Plexus: ${c.solar}%<br>
 Heart: ${c.heart}%<br>
@@ -123,14 +112,9 @@ Venus Influence: ${l.venus}%<br>
 Health Line: ${l.health}%<br><br>
 
 <h3>📘 Deep Reading Summary</h3>
-${generateDeepText()}
-`;
-}
+${generateDeepTex
 
-
-// ==================================================
-// PLACEHOLDER — FULL 4000-WORD VERSION COMES NEXT
-// ==================================================
+// PLACEHOLDER — FULL 4000-WORD VERSION COMES NEX
 function generateDeepText() {
     return `
 Your palm reveals an extraordinary combination of emotional depth, spiritual intelligence, 
@@ -662,9 +646,7 @@ Your palm shows a karmic life-partner who enters your life with purpose,
 loyalty, and emotional depth. This marriage is not ordinary —  
 it is spiritually guided and destiny-connected.
 ${generatePart7_HealthLongevity(d)}
-    // =============================================================
 // PART 7 — HEALTH · LONGEVITY · DISEASE SENSITIVITY ENGINE V53
-// =============================================================
 function generatePart7_HealthLongevity(d) {
 
     const a = d.aura;
@@ -814,10 +796,8 @@ Your palm shows protection from major losses and multiple chances
 to rebuild wealth even after setbacks.<br><br>
 
 Your financial path is guided by wisdom, intuition,  
-and karmic protection.  
-// =============================================================
-// PART 9 — SPIRITUAL DESTINY · LIFE PURPOSE ENGINE V53
-// =============================================================
+and karmic protection. 
+// PART 9 — SPIRITUAL DESTINY · LIFE PURPOSE ENGINE V
 function generatePart9_SpiritualDestiny(d) {
 
     const a = d.aura;
@@ -939,9 +919,7 @@ function generatePart10_DarkZone(d) {
     else
         shadowText = "Your emotional shield is stable. Negativity affects you only temporarily.";
 
-    // ============================
     // Evil Eye Interpretation
-    // ============================
     let evilEyeText = "";
     if (evilEye > 85)
         evilEyeText = "High risk: Your aura is bright and attractive. Others may feel jealousy or envy easily. Evil-eye sensitivity is elevated.";
@@ -950,9 +928,7 @@ function generatePart10_DarkZone(d) {
     else
         evilEyeText = "Low risk: You are naturally protected from jealousy and envy.";
 
-    // ============================
     // Protection Interpretation
-    // ============================
     let protectionText = "";
     if (protection > 90)
         protectionText = "Extremely Strong Shield — Negative energy cannot enter. Divine protection surrounds your path.";
@@ -962,10 +938,8 @@ function generatePart10_DarkZone(d) {
         protectionText = "Moderate Protection — Your intuition warns you before danger.";
     else
         protectionText = "Weak Protection — You must actively protect your energy.";
-
-    // ============================
+    
     // Karmic Shadow Explanation
-    // ============================
     let karmicText = "";
     if (karmicShadow > 85)
         karmicText = "You carry deep karmic memories from past lives — unresolved emotional cycles, unfinished duties, or old soul pain.";
@@ -973,10 +947,8 @@ function generatePart10_DarkZone(d) {
         karmicText = "Some karmic experiences follow you, especially in relationships and destiny choices.";
     else
         karmicText = "Your karmic shadow is light. Past-life effects are mild.";
-
-    // ============================
+    
     // Recommended Protection Ritual
-    // ============================
     let ritual = "";
     if (protection < 70) {
         ritual = `
@@ -999,9 +971,7 @@ function generatePart10_DarkZone(d) {
         `;
     }
 
-    // ============================
     // FINAL OUTPUT
-    // ============================
     return `
 <h3>🌑 Dark Zone & Energy Protection Reading</h3>
 
@@ -1027,9 +997,7 @@ Your intuition and spiritual protection guide your path.
 Stay aligned with truth — your light is stronger than any shadow.<br><br>
 `;
 }
-// =============================================================
-// PART 11 — Rare Marks & Sacred Symbol Detection Engine V55
-// =============================================================
+// PART 11 — Rare Marks & Sacred Symbol Detection Engine V
 function generatePart11_RareMarks(d) {
 
     const l = d.lines;
@@ -1107,10 +1075,9 @@ Your path is not ordinary —
 it is written with ancient symbols of destiny, wisdom & awakening.<br><br>
 `;
 }
-// =============================================================
+l
 // PART 12 — PALM MOUNT ANALYZER · V56
-// Jupiter • Saturn • Apollo • Mercury • Mars • Moon • Venus
-// =============================================================
+// Jupiter • Saturn • Apollo • Mercury • Mars • Moon • Ven
 function generatePart12_Mounts(d) {
 
     const l = d.lines;
@@ -1206,9 +1173,10 @@ You carry a rare combination of emotional intelligence, spiritual depth,
 leadership, and intuitive awareness — a soul built for both compassion and power.<br><br>
 `;
 }
-// =============================================================
+
+
 // PART 13 — FULL FUTURE TIMELINE MAP (AGE 18–90) · V57
-// =============================================================
+// =
 function generatePart13_Timeline(d) {
 
     const a = d.aura;
@@ -1282,10 +1250,9 @@ ${buildPhase(75, 90, (destinyScore + spiritualScore) / 2)}
 
     return `
 <h3>📜 Full Timeline Map (18
-${generatePart14_LifePrediction(d)}
-                         // =============================================================
+${generatePart14_LifePredicti
 // PART 14A — FULL LIFE PREDICTION ENGINE LOGIC · V60
-// =============================================================
+
 function generatePart14_LifePrediction(d) {
 
     const l = d.lines;
@@ -1346,9 +1313,7 @@ function generatePart14_LifePrediction(d) {
 ${generatePart14B_LifeStory(d)}
 `;
 } 
-// =============================================================
-// PART 14B — FULL 5000-WORD LIFE STORY NARRATIVE · V60
-// =============================================================
+// PART 14B — FULL 5000-WORD LIFE STORY NARRATIVE · 
 function generatePart14B_LifeStory(d) {
 
     const u = d.user;
