@@ -1,37 +1,35 @@
 /* =====================================================
-   THE SEED · True Palm AI · Stage 1 (Safe Module)
-   No dependency – Does NOT touch existing system.
+   THE SEED · True Palm AI · Stage 2
+   Full 8-Line Reading (Safe Placeholder Engine)
    ===================================================== */
 
 export async function detectTrueLines(imageData) {
-
     try {
-        // Convert to grayscale
         const gray = [];
-        for (let i = 0; i < imageData.data.length; i += 4) {
-            const r = imageData.data[i];
-            const g = imageData.data[i + 1];
-            const b = imageData.data[i + 2];
-            gray.push((r + g + b) / 3);
+        const d = imageData.data;
+
+        for (let i = 0; i < d.length; i += 4) {
+            gray.push((d[i] + d[i+1] + d[i+2]) / 3);
         }
 
-        // Basic intensity map
-        const avg = gray.reduce((a, b) => a + b, 0) / gray.length;
+        const avg = gray.reduce((a,b)=>a+b,0) / gray.length;
 
-        // Line detection sample (placeholder rules)
-        const lifeStrength  = clamp((avg % 0.91), 0.1, 0.9);
-        const headClarity  = clamp((avg % 0.73), 0.1, 0.9);
-        const heartDepth   = clamp((avg % 0.67), 0.1, 0.9);
-        const fatePower    = clamp((avg % 0.52), 0.1, 0.9);
+        function calc(seed, min, max) {
+            let v = (avg % seed) * 1.37;
+            return clamp(v, min, max).toFixed(3);
+        }
 
-        // Return structure
         return {
             ok: true,
             lines: {
-                life: lifeStrength,
-                head: headClarity,
-                heart: heartDepth,
-                fate: fatePower
+                life:     calc(0.91, 0.10, 0.90),
+                head:     calc(0.73, 0.10, 0.90),
+                heart:    calc(0.67, 0.10, 0.90),
+                fate:     calc(0.52, 0.10, 0.90),
+                sun:      calc(0.44, 0.05, 0.85),
+                mercury:  calc(0.39, 0.05, 0.85),
+                mars:     calc(0.33, 0.05, 0.85),
+                jupiter:  calc(0.28, 0.05, 0.85)
             }
         };
 
