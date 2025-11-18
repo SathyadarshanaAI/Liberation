@@ -1,23 +1,34 @@
 /* =====================================================
-   THE SEED · Palmistry AI · Report Engine · V70
+   THE SEED · Palmistry AI · Report Engine · V80 (Fix)
    ===================================================== */
 
-export function generateReport(palm, lines) {
+export function generateReport(data) {
+
+    const { user, palm, lines } = data;
 
     return `
-🔮 Palmistry AI Report — THE SEED · V70
+🔮 Palmistry AI Report — THE SEED · V80
 
-Life Line Strength: ${lines.life}
-Head Line Clarity: ${lines.head}
-Heart Line Depth : ${lines.heart}
-Fate Line Power  : ${lines.fate}
+📌 Life Line Strength: ${lines.life}
+📌 Head Line Clarity: ${lines.head}
+📌 Heart Line Depth : ${lines.heart}
+📌 Fate Line Power  : ${lines.fate}
+📌 Sun Line Glow    : ${lines.sun}
+📌 Mercury Line Flow: ${lines.mercury}
+📌 Mars Line Force  : ${lines.mars}
+📌 Jupiter Line Rise: ${lines.jupiter}
 
+👤 User: ${user.name || "N/A"}
+Gender: ${user.gender || "N/A"}
+Country: ${user.country || "N/A"}
+
+📝 Summary:
 Your palm lines show:
-• Strong leadership potential
-• Independent decision-making
-• Sharp understanding of people
-• Good long-term stability
+• Strong leadership potential  
+• Independent decision-making  
+• Sharp long-term thinking  
+• Stable emotional structure  
 
-(This is Base Version · Real Line AI Module Coming Next)
+(This is V80 Base Report · The full Real Palm AI Module comes next)
 `;
 }
