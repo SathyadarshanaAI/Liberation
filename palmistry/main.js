@@ -1,9 +1,9 @@
 /* ===============================
-   THE SEED · Palmistry AI · V71 DEBUG
-   (Debug Console + Error Logs ENABLED)
+   THE SEED · Palmistry AI · V100
+   Main Controller (REAL AI Version)
    =============================== */
 
-console.log("🌿 THE SEED Palmistry Engine Loaded");
+console.log("🌿 REAL Palmistry Engine Loaded · V100");
 
 const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
@@ -29,7 +29,7 @@ window.onerror = function (msg, url, line, col, error) {
     dbg("STACK: " + (error?.stack || "no stack"));
 };
 
-/* PROMISE REJECTION CATCHER */
+/* PROMISE CATCHER */
 window.onunhandledrejection = function (e) {
     dbg("🚫 PROMISE ERROR: " + JSON.stringify(e.reason));
 };
@@ -60,7 +60,7 @@ window.saveUserForm = function () {
         note: document.getElementById("userNote").value
     };
 
-    dbg("🧾 User profile saved");
+    dbg("User profile saved");
     dbg(JSON.stringify(userData));
 
     outputBox.textContent = "User profile saved. Scan your palm now.";
@@ -71,7 +71,6 @@ window.saveUserForm = function () {
 ------------------------------ */
 window.startCamera = async function () {
     try {
-        dbg("📷 Starting camera…");
         stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" }
         });
@@ -79,11 +78,12 @@ window.startCamera = async function () {
         video.srcObject = stream;
         await video.play();
 
-        dbg("📷 Camera active");
         outputBox.textContent = "Camera active. Position your hand.";
+        dbg("📷 Camera active");
+
     } catch (err) {
-        dbg("❌ Camera Error: " + err);
         outputBox.textContent = "Camera error!";
+        dbg("Camera Error: " + err);
     }
 };
 
@@ -93,12 +93,9 @@ window.startCamera = async function () {
 window.captureHand = function () {
 
     if (!video.srcObject) {
-        dbg("❌ Capture blocked — Camera not active!");
         outputBox.textContent = "Camera not active!";
         return;
     }
-
-    dbg("📸 Capturing hand…");
 
     const c = palmCanvas;
     const ctx = c.getContext("2d");
@@ -107,12 +104,12 @@ window.captureHand = function () {
     c.height = video.videoHeight;
 
     ctx.drawImage(video, 0, 0);
-    lastImageData = ctx.getImageData(0, 0, c.width, c.height);
 
-    dbg("📸 Hand image captured");
+    lastImageData = ctx.getImageData(0, 0, c.width, c.height);
 
     palmBox.style.display = "block";
     outputBox.textContent = "Palm captured ✔ Starting analysis…";
+    dbg("📸 Hand image captured");
 
     runPalmAnalysis(lastImageData);
 };
@@ -122,44 +119,33 @@ window.captureHand = function () {
 ------------------------------ */
 async function runPalmAnalysis(imageData) {
     try {
-        dbg("🔍 Starting palm analysis…");
+        dbg("🔍 Starting REAL palm analysis…");
 
-        /* --- 1. PALM DETECT --- */
-        dbg("📦 Loading palm-detect.js…");
-        const palmMod = await import("./analysis/palm-detect.js");
+        /* --- LOAD TRUE AI CORE --- */
+        dbg("📦 Loading true-palm-8lines.js…");
+        const trueMod = await import("./analysis/true-palm-8lines.js");
 
-        const palmData = await palmMod.detectPalm(imageData);
-        dbg("🟢 Palm detected");
-        dbg(JSON.stringify(palmData));
+        const result = await trueMod.runTruePalmAI(imageData);
+        dbg("🌿 Real Palm AI Extracted:");
+        dbg(JSON.stringify(result.lines));
 
-        outputBox.textContent = "Palm analyzed ✔ Extracting lines…";
+        outputBox.textContent = "Lines extracted ✔ Generating AI report…";
 
-        /* --- 2. LINE EXTRACT --- */
-        dbg("📦 Loading line-extract.js…");
-        const lineMod = await import("./analysis/line-extract.js");
+        /* --- LOAD TRUE REPORT --- */
+        dbg("📄 Loading true-report.js…");
+        const repMod = await import("./analysis/true-report.js");
 
-        const lines = await lineMod.extractLines(palmData);
-        dbg("🟢 Lines extracted");
-        dbg(JSON.stringify(lines));
-
-        outputBox.textContent = "Lines extracted ✔ Generating report…";
-
-        /* --- 3. REPORT ENGINE --- */
-        dbg("📦 Loading report-engine.js…");
-        const repMod = await import("./analysis/report-engine.js");
-
-        dbg("📝 Generating report…");
-        const report = repMod.generateReport({
+        const report = repMod.generateTrueReport({
             user: userData,
-            palm: palmData,
-            lines: lines
+            palm: result.palm,
+            lines: result.lines
         });
 
-        dbg("✅ REPORT READY");
+        dbg("✔ REPORT READY");
         outputBox.textContent = report;
 
     } catch (err) {
-        dbg("❌ FINAL ERROR: " + err);
+        dbg("FINAL ERROR: " + err);
         outputBox.textContent = "Error during analysis!";
     }
 }
