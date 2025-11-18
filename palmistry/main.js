@@ -1,139 +1,122 @@
-/* ============================================================
-   THE SEED · Palmistry AI · V70 — main.js
-   Mobile-Stable • Error-Free • Real Processing Pipeline
-   ============================================================ */
+/* ===============================
+   THE SEED · Palmistry AI · V70
+   Main Runtime Controller
+   =============================== */
+
+console.log("🌿 THE SEED Palmistry Engine Loaded");
 
 const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
 const palmBox = document.getElementById("palmPreviewBox");
 const palmCanvas = document.getElementById("palmCanvas");
 const langSelect = document.getElementById("langSelect");
-const dbg = document.getElementById("debugConsole");
 
 let stream = null;
+let userData = {};
+let lastImageData = null;
 
-/* -------------------------------
-   1. LANGUAGE PACK (19 Languages)
----------------------------------*/
-const LANG = {
-    en: "Place your hand in the camera.",
-    si: "ඔබේ අත කැමරාවට හොඳට දාන්න.",
-    ta: "உங்கள் கையை கேமராவில் வைக்கவும்.",
-    hi: "अपना हाथ कैमरा फ्रेम में रखें।",
-    bn: "আপনার হাত ক্যামেরার সামনে রাখুন।",
-    fr: "Placez votre main devant la caméra.",
-    de: "Legen Sie Ihre Hand vor die Kamera.",
-    it: "Metti la mano davanti alla fotocamera.",
-    es: "Coloca tu mano frente a la cámara.",
-    pt: "Coloque sua mão na câmera.",
-    ru: "Держите руку перед камерой.",
-    ro: "Pune mâna în fața camerei.",
-    pl: "Umieść dłoń przed kamerą.",
-    nl: "Plaats je hand voor de camera.",
-    sv: "Placera handen framför kameran.",
-    no: "Plasser hånden foran kameraet.",
-    he: "שים את היד מול המצלמה.",
-    jp: "手をカメラの前に置いてください。",
-    kr: "손을 카메라 앞에 두세요."
-};
-
-/* Load dropdown */
+/* -----------------------------
+   Language Pack Loader
+------------------------------ */
 (function loadLanguages() {
-    Object.keys(LANG).forEach(code => {
-        const opt = document.createElement("option");
-        opt.value = code;
-        opt.textContent = code.toUpperCase();
-        langSelect.appendChild(opt);
+    const langs = ["EN", "SI", "TA", "HI", "BN"];
+    langs.forEach(l => {
+        let o = document.createElement("option");
+        o.value = l.toLowerCase();
+        o.textContent = l;
+        langSelect.appendChild(o);
     });
 })();
 
-/* Apply language */
-langSelect.onchange = () => {
-    outputBox.textContent = LANG[langSelect.value] || "Ready.";
-};
-
-/* -------------------------------
-   2. SAVE USER FORM
----------------------------------*/
+/* -----------------------------
+   Save User Details
+------------------------------ */
 window.saveUserForm = function () {
-    outputBox.textContent = "User info saved ✔";
+    userData = {
+        name: document.getElementById("userName").value,
+        gender: document.getElementById("userGender").value,
+        dob: document.getElementById("userDOB").value,
+        country: document.getElementById("userCountry").value,
+        hand: document.getElementById("handPref").value,
+        note: document.getElementById("userNote").value
+    };
+
+    console.log("User profile saved:", userData);
+    outputBox.textContent = "User profile saved. Scan your palm now.";
 };
 
-/* -------------------------------
-   3. CAMERA START
----------------------------------*/
+/* -----------------------------
+   Open Camera
+------------------------------ */
 window.startCamera = async function () {
     try {
         stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" }
         });
-
         video.srcObject = stream;
         await video.play();
-        outputBox.textContent = "Camera ready. Show your palm.";
-
-    } catch (e) {
-        dbg.textContent += "Camera Error: " + e + "\n";
-        outputBox.textContent = "Camera unavailable!";
+        outputBox.textContent = "Camera active. Position your hand.";
+    } catch (err) {
+        outputBox.textContent = "Camera error!";
+        console.log("Camera Error:", err);
     }
 };
 
-/* -------------------------------
-   4. CAPTURE HAND → PREVIEW
----------------------------------*/
-window.captureHand = async function () {
+/* -----------------------------
+   Capture Hand
+------------------------------ */
+window.captureHand = function () {
     if (!video.srcObject) {
-        outputBox.textContent = "Start the camera first!";
+        outputBox.textContent = "Camera not active!";
         return;
     }
 
-    const ctx = palmCanvas.getContext("2d");
+    const c = palmCanvas;
+    const ctx = c.getContext("2d");
 
-    palmCanvas.width = video.videoWidth;
-    palmCanvas.height = video.videoHeight;
+    c.width = video.videoWidth;
+    c.height = video.videoHeight;
 
     ctx.drawImage(video, 0, 0);
+    lastImageData = ctx.getImageData(0, 0, c.width, c.height);
 
     palmBox.style.display = "block";
-    outputBox.textContent = "Palm captured. Analyzing…";
+    outputBox.textContent = "Palm captured ✔ Starting analysis…";
 
-    await analyzePalm(ctx);
+    runPalmAnalysis(lastImageData);
 };
 
-/* -------------------------------
-   5. ANALYSIS PIPELINE
----------------------------------*/
-async function analyzePalm(ctx) {
+/* -----------------------------
+   Palmistry AI — MASTER ENGINE
+------------------------------ */
+async function runPalmAnalysis(imageData) {
     try {
-        const frame = ctx.getImageData(0, 0, palmCanvas.width, palmCanvas.height);
+        outputBox.textContent = "Analyzing palm shape…";
 
-        // === STAGE 1 — Palm detection ===
-        outputBox.textContent = "Detecting palm shape…";
+        // 1 — Palm Detect
+        const palmMod = await import("./analysis/palm-detect.js");
+        const palmData = await palmMod.detectPalm(imageData);
 
-        const palm = await import("./vision/palm-detect.js")
-            .then(m => m.detectPalm(frame));
+        outputBox.textContent = "Palm analyzed ✔ Extracting main lines…";
 
-        if (!palm) {
-            outputBox.textContent = "Palm not detected. Increase light.";
-            return;
-        }
+        // 2 — Line Extraction
+        const lineMod = await import("./analysis/line-extract.js");
+        const lines = await lineMod.extractLines(palmData);
 
-        // === STAGE 2 — Line extraction ===
-        outputBox.textContent = "Extracting palm lines…";
+        outputBox.textContent = "Lines extracted ✔ Generating AI report…";
 
-        const lines = await import("./analysis/line-extract.js")
-            .then(m => m.extractLines(palm));
-
-        // === STAGE 3 — Generate Report ===
-        outputBox.textContent = "Generating AI reading…";
-
-        const report = await import("./analysis/report-engine.js")
-            .then(m => m.generateReport(palm, lines));
+        // 3 — Report Engine
+        const repMod = await import("./analysis/report-engine.js");
+        const report = await repMod.generateReport({
+            user: userData,
+            palm: palmData,
+            lines: lines
+        });
 
         outputBox.textContent = report;
 
     } catch (err) {
-        dbg.textContent += "Analysis Error: " + err + "\n";
         outputBox.textContent = "Error during analysis!";
+        console.log("Analysis Error:", err);
     }
 }
