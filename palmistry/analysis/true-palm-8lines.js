@@ -1,36 +1,15 @@
-/* =====================================================
-   THE SEED · REAL PALM ENGINE
-   8-Line + 3 Support Line Extractor · V71
-   ===================================================== */
+/* ============================================================
+   TRUE PALM 8-LINE CORE · V100
+   Wrapper for Main Controller
+   ============================================================ */
 
-export function getTruePalmLines(palmData) {
+import { detectTruePalm } from "./true-palm-ai.js";
+import { extractTrueLines } from "./true-lines-bridge.js";
 
-    // palmData.width, palmData.height, palmData.mask etc.
-    // Future: CNN model / ridge-map
-    // Now: Stable deterministic math (no random)
+export async function runTruePalmAI(imageData) {
 
-    const seed = palmData.width + palmData.height;
+    const palm = detectTruePalm(imageData);
+    const lines = extractTrueLines(palm);
 
-    function calc(str) {
-        let v = 0;
-        for (let i = 0; i < str.length; i++) v += str.charCodeAt(i);
-        return ((v + seed) % 100) / 100;
-    }
-
-    return {
-        // === MAIN 8 LINES ===
-        life:        calc("life"),
-        head:        calc("head"),
-        heart:       calc("heart"),
-        fate:        calc("fate"),
-        sun:         calc("sun"),
-        mercury:     calc("mercury"),
-        marriage:    calc("marriage"),
-        health:      calc("health"),
-
-        // === SUPPORT LINES ===
-        intuition:   calc("intuition"),
-        travel:      calc("travel"),
-        children:    calc("children")
-    };
+    return { palm, lines };
 }
