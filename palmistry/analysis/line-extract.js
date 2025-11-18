@@ -1,52 +1,34 @@
 /* =====================================================
-   THE SEED · Palmistry AI · Line Extractor · V80 · 8 LINES
+   THE SEED · Palmistry AI · Report Engine · V80
    ===================================================== */
 
-export async function extractLines(palmData) {
+export function generateReport(data) {
 
-    console.log("📌 extractLines() received palmData:", palmData);
+    const L = data.lines;
 
-    // Validate palmData
-    if (!palmData) {
-        console.log("❌ No palmData received!");
-        return generateFallbackLines();
-    }
+    return `
+🔮 Palmistry AI Report — THE SEED · V80
 
-    // simulate short processing delay
-    await new Promise(res => setTimeout(res, 35));
+📌 Life Line Strength: ${L.life}
+📌 Head Line Clarity: ${L.head}
+📌 Heart Line Depth : ${L.heart}
+📌 Fate Line Power  : ${L.fate}
+📌 Sun Line Glow    : ${L.sun}
+📌 Mercury Line Flow: ${L.mercury}
+📌 Mars Line Force  : ${L.mars}
+📌 Jupiter Line Rise: ${L.jupiter}
 
-    // ALWAYS return all 8 lines
-    const lines = {
-        life: rand(),
-        head: rand(),
-        heart: rand(),
-        fate: rand(),
-        sun: rand(),
-        mercury: rand(),
-        marriage: rand(),
-        health: rand()
-    };
+🧍 User: ${data.user.name || "N/A"}
+Gender: ${data.user.gender || "N/A"}
+Country: ${data.user.country || "N/A"}
 
-    console.log("✔ 8-line package returned:", lines);
+📝 Summary:
+Your palm lines show:
+• Strong leadership potential
+• Independent decision-making
+• Sharp long-term thinking
+• Stable emotional structure
 
-    return lines;
-}
-
-/* ----- Generates fallback dataset if palmData missing ----- */
-function generateFallbackLines() {
-    return {
-        life: "0.000",
-        head: "0.000",
-        heart: "0.000",
-        fate: "0.000",
-        sun: "0.000",
-        mercury: "0.000",
-        marriage: "0.000",
-        health: "0.000"
-    };
-}
-
-/* ----- randomizer ----- */
-function rand() {
-    return (Math.random()).toFixed(3);
+(This is V80 Base Report · The full Real Palm AI Module comes next)
+`;
 }
