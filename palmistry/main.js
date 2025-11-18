@@ -34,9 +34,7 @@ window.onunhandledrejection = function (e) {
     dbg("🚫 PROMISE ERROR: " + JSON.stringify(e.reason));
 };
 
-/* -----------------------------
-   Load languages
------------------------------- */
+/* Load languages */
 (function loadLanguages() {
     const langs = ["EN", "SI", "TA", "HI", "BN"];
     langs.forEach(l => {
@@ -47,9 +45,7 @@ window.onunhandledrejection = function (e) {
     });
 })();
 
-/* -----------------------------
-   Save User Data
------------------------------- */
+/* Save User Data */
 window.saveUserForm = function () {
     userData = {
         name: document.getElementById("userName").value,
@@ -67,7 +63,7 @@ window.saveUserForm = function () {
 };
 
 /* -----------------------------
-   Open Camera
+   Open Camera (Autoplay Fixed)
 ------------------------------ */
 window.startCamera = async function () {
     try {
@@ -76,7 +72,11 @@ window.startCamera = async function () {
         });
 
         video.srcObject = stream;
-        await video.play();
+
+        // ✅ autoplay fix
+        setTimeout(() => {
+            video.play().catch(e => dbg("PLAY ERROR: " + e));
+        }, 250);
 
         outputBox.textContent = "Camera active. Position your hand.";
         dbg("📷 Camera active");
@@ -87,9 +87,7 @@ window.startCamera = async function () {
     }
 };
 
-/* -----------------------------
-   Capture Hand
------------------------------- */
+/* Capture Hand */
 window.captureHand = function () {
 
     if (!video.srcObject) {
@@ -114,14 +112,11 @@ window.captureHand = function () {
     runPalmAnalysis(lastImageData);
 };
 
-/* -----------------------------
-   MASTER PALM ANALYSIS ENGINE
------------------------------- */
+/* MASTER REAL AI ANALYSIS ENGINE */
 async function runPalmAnalysis(imageData) {
     try {
         dbg("🔍 Starting REAL palm analysis…");
 
-        /* --- LOAD TRUE AI CORE --- */
         dbg("📦 Loading true-palm-8lines.js…");
         const trueMod = await import("./analysis/true-palm-8lines.js");
 
@@ -131,7 +126,6 @@ async function runPalmAnalysis(imageData) {
 
         outputBox.textContent = "Lines extracted ✔ Generating AI report…";
 
-        /* --- LOAD TRUE REPORT --- */
         dbg("📄 Loading true-report.js…");
         const repMod = await import("./analysis/true-report.js");
 
