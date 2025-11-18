@@ -1,16 +1,16 @@
 /* ===============================
-   THE SEED · Palmistry AI · V100
-   Main Controller (REAL AI Version)
+   THE SEED · Palmistry REAL AI · V100.1
+   Fully Stable Controller (DO NOT CHANGE STRUCTURE)
    =============================== */
 
-console.log("🌿 REAL Palmistry Engine Loaded · V100");
+console.log("🌿 REAL Palmistry Engine Loaded · V100.1");
 
 const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
 const palmBox = document.getElementById("palmPreviewBox");
 const palmCanvas = document.getElementById("palmCanvas");
-const langSelect = document.getElementById("langSelect");
 const debugConsole = document.getElementById("debugConsole");
+const langSelect = document.getElementById("langSelect");
 
 let stream = null;
 let userData = {};
@@ -29,15 +29,13 @@ window.onerror = function (msg, url, line, col, error) {
     dbg("STACK: " + (error?.stack || "no stack"));
 };
 
-/* PROMISE CATCHER */
 window.onunhandledrejection = function (e) {
     dbg("🚫 PROMISE ERROR: " + JSON.stringify(e.reason));
 };
 
 /* Load languages */
 (function loadLanguages() {
-    const langs = ["EN", "SI", "TA", "HI", "BN"];
-    langs.forEach(l => {
+    ["EN", "SI", "TA", "HI", "BN"].forEach(l => {
         let o = document.createElement("option");
         o.value = l.toLowerCase();
         o.textContent = l;
@@ -56,15 +54,12 @@ window.saveUserForm = function () {
         note: document.getElementById("userNote").value
     };
 
-    dbg("User profile saved");
+    dbg("📝 User profile saved");
     dbg(JSON.stringify(userData));
-
-    outputBox.textContent = "User profile saved. Scan your palm now.";
+    outputBox.textContent = "User profile saved ✔ Ready for scanning.";
 };
 
-/* -----------------------------
-   Open Camera (Autoplay Fixed)
------------------------------- */
+/* Start Camera */
 window.startCamera = async function () {
     try {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -72,13 +67,9 @@ window.startCamera = async function () {
         });
 
         video.srcObject = stream;
+        await video.play();
 
-        // ✅ autoplay fix
-        setTimeout(() => {
-            video.play().catch(e => dbg("PLAY ERROR: " + e));
-        }, 250);
-
-        outputBox.textContent = "Camera active. Position your hand.";
+        outputBox.textContent = "Camera active ✔ Position your hand.";
         dbg("📷 Camera active");
 
     } catch (err) {
@@ -106,17 +97,18 @@ window.captureHand = function () {
     lastImageData = ctx.getImageData(0, 0, c.width, c.height);
 
     palmBox.style.display = "block";
-    outputBox.textContent = "Palm captured ✔ Starting analysis…";
+    outputBox.textContent = "Hand captured ✔ Starting REAL analysis…";
     dbg("📸 Hand image captured");
 
     runPalmAnalysis(lastImageData);
 };
 
-/* MASTER REAL AI ANALYSIS ENGINE */
+/* MASTER REAL PALM AI ENGINE */
 async function runPalmAnalysis(imageData) {
     try {
         dbg("🔍 Starting REAL palm analysis…");
 
+        /* --- TRUE AI CORE --- */
         dbg("📦 Loading true-palm-8lines.js…");
         const trueMod = await import("./analysis/true-palm-8lines.js");
 
@@ -124,8 +116,9 @@ async function runPalmAnalysis(imageData) {
         dbg("🌿 Real Palm AI Extracted:");
         dbg(JSON.stringify(result.lines));
 
-        outputBox.textContent = "Lines extracted ✔ Generating AI report…";
+        outputBox.textContent = "Extracted ✔ Generating AI Report…";
 
+        /* --- TRUE REPORT ENGINE --- */
         dbg("📄 Loading true-report.js…");
         const repMod = await import("./analysis/true-report.js");
 
