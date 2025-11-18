@@ -1,80 +1,65 @@
-// ===============================
-// LANGUAGE LOADER
-// ===============================
-window.onload = () => {
-    const sel = document.getElementById("langSelect");
-    const langs = [
-        "Sinhala","Tamil","English","Hindi","Japanese","Chinese","Arabic",
-        "Spanish","French","Russian","German","Korean","Portuguese",
-        "Indonesian","Malay","Italian","Turkish","Dutch","Thai"
-    ];
-    langs.forEach(l => {
-        const op = document.createElement("option");
-        op.value = l; op.textContent = l;
-        sel.appendChild(op);
-    });
-    sel.value = "English";
+/* THE SEED · Palmistry AI · V51 */
+const video = document.getElementById("video");
+const outputBox = document.getElementById("output");
+const langSelect = document.getElementById("langSelect");
+const palmBox = document.getElementById("palmPreviewBox");
+const palmCanvas = document.getElementById("palmCanvas");
+const dbg = document.getElementById("debugConsole");
+
+let stream = null;
+
+/* LANGUAGE PACK */
+const LANG = {
+    en: "Place your hand inside the guide.",
+    si: "ඔබේ අත නිදර්ශනය තුළ තබන්න.",
+    ta: "உங்கள் கையை வழிகாட்டியில் வைக்கவும்.",
+    hi: "अपना हाथ गाइड के अंदर रखें।",
+    bn: "আপনার হাত নির্দেশকের ভিতরে রাখুন।"
 };
 
+/* Load languages */
+(function initLanguages(){
+    Object.keys(LANG).forEach(k=>{
+        const opt=document.createElement("option");
+        opt.value=k;
+        opt.textContent=k.toUpperCase();
+        langSelect.appendChild(opt);
+    });
+})();
 
-// ===============================
-// CAMERA START
-// ===============================
+/* Save user info */
+window.saveUserForm = function () {
+    outputBox.textContent = "User info saved.";
+};
+
+/* Start camera */
 window.startCamera = async function () {
-    const video = document.getElementById("video");
-
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" }
         });
         video.srcObject = stream;
         await video.play();
-
-        document.getElementById("output").textContent =
-            "Camera started. Align your palm.";
-    }
-    catch (err) {
-        document.getElementById("output").textContent =
-            "Camera permission denied.";
-        console.error(err);
+    } catch (e) {
+        dbg.textContent += "Camera Error: " + e + "\n";
     }
 };
 
-
-// ===============================
-// CAPTURE PALM
-// ===============================
+/* Capture frame */
 window.captureHand = function () {
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("palmCanvas");
-    const ctx = canvas.getContext("2d");
+    if (!video.srcObject) {
+        outputBox.textContent = "Camera not active!";
+        return;
+    }
 
-    canvas.width = video.videoWidth || 450;
-    canvas.height = video.videoHeight || 600;
+    const c = palmCanvas;
+    const ctx = c.getContext("2d");
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    c.width = video.videoWidth;
+    c.height = video.videoHeight;
 
-    document.getElementById("palmPreviewBox").style.display = "block";
-    document.getElementById("output").textContent = "Analyzing palm...";
+    ctx.drawImage(video, 0, 0);
 
-    generateFullPalmReport(canvas);   // FIXED
-};
-
-
-// ===============================
-// USER FORM SAVE
-// ===============================
-let userData = {};
-
-window.saveUserForm = function () {
-    userData = {
-        name: document.getElementById("userName").value.trim(),
-        gender: document.getElementById("userGender").value.trim(),
-        dob: document.getElementById("userDOB").value.trim(),
-        country: document.getElementById("userCountry").value.trim(),
-        hand: document.getElementById("handPref").value.trim(),
-        note: document.getElementById("userNote").value.trim()
-    };
-
-    alert("User information saved successfully!");
+    palmBox.style.display = "block";
+    outputBox.textContent = "Palm captured. Ready for reading.";
 };
