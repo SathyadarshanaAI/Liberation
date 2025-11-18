@@ -1,132 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>🕉️ THE SEED · Palmistry AI · V60</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🕉️ THE SEED · Palmistry AI · V70</title>
 
-<style>
-    body {
-        margin: 0;
-        background: #000;
-        color: cyan;
-        font-family: Arial, sans-serif;
-        text-align: center;
-    }
-    h1 {
-        margin: 15px 0;
-        font-size: 1.6rem;
-        text-shadow: 0 0 12px cyan;
-    }
-    #langSelect {
-        width: 92%;
-        max-width: 420px;
-        padding: 10px;
-        border: 1px solid cyan;
-        background: #000;
-        color: cyan;
-        border-radius: 10px;
-        margin-bottom: 12px;
-    }
-    #userForm {
-        width: 92%;
-        max-width: 480px;
-        margin: 10px auto;
-        padding: 15px;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid cyan;
-        border-radius: 12px;
-        text-align: left;
-    }
-    #userForm label {
-        color: cyan;
-        font-weight: bold;
-        margin-top: 10px;
-        display: block;
-    }
-    #userForm input, #userForm select, #userForm textarea {
-        width: 100%;
-        padding: 10px;
-        margin-top: 4px;
-        background: #000;
-        border: 1px solid cyan;
-        border-radius: 8px;
-        color: cyan;
-    }
-    .btn {
-        width: 92%;
-        max-width: 420px;
-        padding: 14px;
-        margin: 10px auto;
-        border-radius: 30px;
-        border: none;
-        background: cyan;
-        color: black;
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-    #camBox {
-        width: 100%;
-        height: 55vh;
-        background: #000;
-        position: relative;
-        overflow: hidden;
-    }
-    video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    #handOverlay {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 60%;
-        transform: translate(-50%, -50%);
-        opacity: 0.25;
-        pointer-events: none;
-        filter: drop-shadow(0 0 8px cyan);
-    }
-    #palmPreviewBox {
-        width: 92%;
-        max-width: 480px;
-        margin: 20px auto;
-        padding: 12px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 10px;
-        border: 1px solid cyan;
-        display: none;
-    }
-    canvas {
-        width: 100%;
-        border-radius: 10px;
-    }
-    #output {
-        width: 92%;
-        max-width: 500px;
-        margin: 15px auto;
-        padding: 15px;
-        text-align: left;
-        border: 1px solid cyan;
-        background: rgba(255,255,255,0.05);
-        border-radius: 10px;
-        white-space: pre-wrap;
-    }
-</style>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: cyan;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 15px 0;
+            font-size: 1.7rem;
+            text-shadow: 0 0 12px cyan;
+        }
+
+        #langSelect, .btn {
+            width: 92%;
+            max-width: 420px;
+            padding: 14px;
+            border-radius: 30px;
+            border: 1px solid cyan;
+            background: #000;
+            color: cyan;
+            margin: 10px auto;
+        }
+
+        .btn {
+            background: cyan;
+            color: black;
+            border: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        #userForm {
+            width: 92%;
+            max-width: 480px;
+            margin: 10px auto;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid cyan;
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        #userForm label {
+            margin-top: 10px;
+            display: block;
+            color: cyan;
+        }
+
+        #userForm input, #userForm select, #userForm textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 4px;
+            border: 1px solid cyan;
+            background: #000;
+            color: cyan;
+            border-radius: 8px;
+        }
+
+        #camBox {
+            width: 100%;
+            height: 55vh;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #palmPreviewBox {
+            width: 92%;
+            max-width: 480px;
+            margin: 15px auto;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            border: 1px solid cyan;
+            display: none;
+        }
+
+        canvas {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        #output {
+            width: 92%;
+            max-width: 500px;
+            margin: 15px auto;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid cyan;
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+
+        #debugConsole {
+            width: 92%;
+            max-width: 500px;
+            margin: 15px auto;
+            padding: 10px;
+            background: #020;
+            color: #0f0;
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre-wrap;
+            font-size: .85rem;
+        }
+    </style>
 </head>
-
 <body>
 
-<h1>🕉️ THE SEED · Palmistry AI · V60</h1>
+<h1>🕉️ THE SEED · Palmistry AI · V70</h1>
 
 <select id="langSelect"></select>
 
-<!-- USER FORM -->
 <div id="userForm">
-    <h3 style="color:cyan;text-align:center;">User Profile</h3>
+    <h3 style="text-align:center;">User Profile</h3>
 
     <label>Full Name</label>
-    <input id="userName" type="text">
+    <input id="userName">
 
     <label>Gender</label>
     <select id="userGender">
@@ -136,10 +142,10 @@
     </select>
 
     <label>Date of Birth</label>
-    <input id="userDOB" type="date">
+    <input type="date" id="userDOB">
 
     <label>Country</label>
-    <input id="userCountry" type="text">
+    <input id="userCountry">
 
     <label>Hand to Scan</label>
     <select id="handPref">
@@ -148,7 +154,7 @@
         <option>Left Hand</option>
     </select>
 
-    <label>Message / Request</label>
+    <label>Message</label>
     <textarea id="userNote" rows="3"></textarea>
 
     <button class="btn" onclick="saveUserForm()">Save</button>
@@ -156,28 +162,26 @@
 
 <div id="camBox">
     <video id="video" autoplay muted playsinline></video>
-    <img id="handOverlay" src="assets/palm-overlay.png" />
 </div>
 
 <button class="btn" onclick="startCamera()">Open Camera</button>
 <button class="btn" onclick="captureHand()">Scan Hand</button>
 
 <div id="palmPreviewBox">
-    <h3 style="color:cyan;text-align:center;">Palm Preview</h3>
+    <h3 style="text-align:center;">Palm Preview</h3>
     <canvas id="palmCanvas"></canvas>
 </div>
 
-<div id="output">Awaiting scan...</div>
+<div id="output">Awaiting scan…</div>
 
-<!-- ===== DEBUGGER ===== -->
+<div id="debugConsole">Debug console ready…</div>
+
+<!-- Debugger -->
 <script>
 window.onerror = function(msg, url, line, col, error) {
-    console.log("🔥 JavaScript Error");
-    console.log("Message:", msg);
-    console.log("File:", url);
-    console.log("Line:", line);
-    console.log("Column:", col);
-    console.log("Stack:", error?.stack);
+    document.getElementById("debugConsole").textContent +=
+        "🔥 ERROR: " + msg + "\nFILE: " + url +
+        "\nLINE: " + line + "\n\n";
 };
 </script>
 
