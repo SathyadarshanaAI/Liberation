@@ -1,4 +1,4 @@
-/* THE SEED · Palmistry AI · V51 */
+/* THE SEED · Palmistry AI · V60 */
 const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
 const langSelect = document.getElementById("langSelect");
@@ -45,7 +45,7 @@ window.startCamera = async function () {
     }
 };
 
-/* Capture frame */
+/* Capture frame + ANALYSIS START */
 window.captureHand = function () {
     if (!video.srcObject) {
         outputBox.textContent = "Camera not active!";
@@ -61,5 +61,19 @@ window.captureHand = function () {
     ctx.drawImage(video, 0, 0);
 
     palmBox.style.display = "block";
-    outputBox.textContent = "Palm captured. Ready for reading.";
+    outputBox.textContent = "Palm captured. Starting analysis...";
+
+    // ===== ANALYSIS START =====
+    import("./vision/palm-detect.js").then(mod => {
+
+        const frame = ctx.getImageData(0, 0, c.width, c.height);
+
+        mod.detectPalm(frame).then(palm => {
+            outputBox.textContent =
+                "Palm analyzed ✔ Preparing line detection...";
+        });
+
+    }).catch(err => {
+        dbg.textContent += "Palm-detect load error: " + err + "\n";
+    });
 };
