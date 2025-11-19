@@ -1,49 +1,36 @@
 /* ===============================
-   THE SEED · Palmistry Engine · V120.0
-   Final Stable Controller (No Legacy Files)
+   THE SEED · Palmistry Engine · V120
+   FINAL STABLE CONTROLLER (NO ERRORS)
    =============================== */
 
-console.log("🌿 THE SEED Palmistry Engine Loaded · V120.0");
+console.log("🌿 THE SEED Controller Loaded · V120");
 
 const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
 const palmBox = document.getElementById("palmPreviewBox");
 const palmCanvas = document.getElementById("palmCanvas");
 const debugConsole = document.getElementById("debugConsole");
-const langSelect = document.getElementById("langSelect");
 
 let stream = null;
 let userData = {};
 let lastImageData = null;
 
-/* Debug print */
+/* Debugging */
 function dbg(msg) {
     console.log(msg);
     if (debugConsole) debugConsole.textContent += msg + "\n";
 }
 
-/* GLOBAL ERROR CATCHER */
+/* Window Errors */
 window.onerror = function (msg, url, line, col, error) {
-    dbg("🔥 GLOBAL ERROR: " + msg);
-    dbg("FILE: " + url + " : " + line);
-    dbg("STACK: " + (error?.stack || "no stack"));
+    dbg(`🔥 ERROR: ${msg}\nFILE: ${url}\nLINE: ${line}\n`);
 };
 
 window.onunhandledrejection = function (e) {
     dbg("🚫 PROMISE ERROR: " + JSON.stringify(e.reason));
 };
 
-/* Load languages */
-(function loadLanguages() {
-    ["EN", "SI", "TA", "HI", "BN"].forEach(l => {
-        let o = document.createElement("option");
-        o.value = l.toLowerCase();
-        o.textContent = l;
-        langSelect.appendChild(o);
-    });
-})();
-
-/* Save User Data */
+/* Save User Profile */
 window.saveUserForm = function () {
     userData = {
         name: document.getElementById("userName").value,
@@ -54,9 +41,8 @@ window.saveUserForm = function () {
         note: document.getElementById("userNote").value
     };
 
+    outputBox.textContent = "User profile saved ✔ Ready to scan.";
     dbg("📝 User profile saved");
-    dbg(JSON.stringify(userData));
-    outputBox.textContent = "User profile saved ✔ Ready for scanning.";
 };
 
 /* Start Camera */
@@ -69,16 +55,16 @@ window.startCamera = async function () {
         video.srcObject = stream;
         await video.play();
 
-        outputBox.textContent = "Camera active ✔ Position your hand.";
+        outputBox.textContent = "Camera active ✔ Place your hand.";
         dbg("📷 Camera active");
 
-    } catch (err) {
+    } catch (e) {
         outputBox.textContent = "Camera error!";
-        dbg("Camera Error: " + err);
+        dbg("Camera Error: " + e);
     }
 };
 
-/* Capture Hand */
+/* Capture Hand Image */
 window.captureHand = function () {
 
     if (!video.srcObject) {
@@ -97,19 +83,20 @@ window.captureHand = function () {
     lastImageData = ctx.getImageData(0, 0, c.width, c.height);
 
     palmBox.style.display = "block";
-    outputBox.textContent = "Hand captured ✔ Starting REAL analysis…";
+    outputBox.textContent = "Hand captured ✔ Analyzing...";
     dbg("📸 Hand image captured");
 
     runPalmAnalysis(lastImageData);
 };
 
-/* === THE SEED MASTER ANALYSIS PIPELINE === */
+/* ==========================
+   THE SEED ANALYSIS PIPELINE
+   ========================== */
+
 async function runPalmAnalysis(imageData) {
     try {
-        dbg("🔍 Starting THE SEED AI Analysis…");
 
-        /* 1 — Load Engines (THE SEED) */
-        dbg("📦 Loading Engines…");
+        dbg("🔍 Loading THE SEED Engines…");
 
         const geoMod   = await import("./analysis/palm-geometry.js");
         const lineMod  = await import("./analysis/palm-lines.js");
@@ -117,12 +104,27 @@ async function runPalmAnalysis(imageData) {
         const auraMod  = await import("./analysis/palm-aura.js");
         const repMod   = await import("./analysis/palm-report.js");
 
-        /* 2 — Run Engines */
         const geometry = geoMod.detectPalmGeometry(video, palmCanvas);
         const lines    = lineMod.extractPalmLines(palmCanvas);
         const mounts   = mountMod.analyzeMounts(palmCanvas);
         const aura     = auraMod.scanAura(palmCanvas);
 
-        dbg("🌿 Extracted Lines: " + JSON.stringify(lines.lines));
-        dbg("🌄 Mounts: " + JSON.stringify(mounts.mounts));
-        dbg("✨ Aura: " + JSON.stringify(aura
+        dbg("Lines: " + JSON.stringify(lines.lines));
+        dbg("Mounts: " + JSON.stringify(mounts.mounts));
+        dbg("Aura: " + JSON.stringify(aura.aura));
+
+        const report = repMod.generatePalmReport(
+            lines.lines,
+            mounts.mounts,
+            aura.aura
+        );
+
+        dbg("✔ REPORT READY");
+        document.getElementById("output").textContent = 
+            JSON.stringify(report, null, 2);
+
+    } catch (err) {
+        dbg("FINAL ERROR: " + err);
+        outputBox.textContent = "Error during analysis!";
+    }
+}
