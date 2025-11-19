@@ -1,38 +1,33 @@
-/* ==============================================================
-   REAL PALM REPORT · V200
-   Generates full spiritual + personality analysis
-   ============================================================== */
+/* ======================================================
+   REAL Palmistry AI · TRUE REPORT ENGINE · V200
+   ====================================================== */
 
-export function generateTrueReportV200(data) {
+export function generateTrueReport({ user, palm, lines }) {
 
-    const L = data.lines;
+    return `
+🌿 REAL Palm AI Report — THE SEED · V200
 
-    function pct(v) {
-        return (v*100).toFixed(1) + "%";
-    }
+📌 Life Line Strength : ${lines.life.toFixed(3)}
+📌 Head Line Clarity : ${lines.head.toFixed(3)}
+📌 Heart Line Depth  : ${lines.heart.toFixed(3)}
+📌 Fate Line Power   : ${lines.fate.toFixed(3)}
+📌 Sun Line Glow     : ${lines.sun.toFixed(3)}
+📌 Mercury Flow      : ${lines.mercury.toFixed(3)}
+📌 Marriage Line     : ${lines.marriage.toFixed(3)}
+📌 Health Line       : ${lines.health.toFixed(3)}
 
-return `
-🔮 REAL Palm AI Report — THE SEED · V200
+👤 User: ${user.name || "N/A"}
+Gender: ${user.gender || "N/A"}
+Country: ${user.country || "N/A"}
 
-📌 Life Line: ${pct(L.life)}
-📌 Head Line: ${pct(L.head)}
-📌 Heart Line: ${pct(L.heart)}
-📌 Fate Line: ${pct(L.fate)}
-📌 Sun Line: ${pct(L.sun)}
-📌 Mercury Line: ${pct(L.mercury)}
-📌 Marriage Line: ${pct(L.marriage)}
-📌 Health Line: ${pct(L.health)}
+🧠 Summary:
+Your palm reveals:
+• Real mental mapping strength
+• Emotional balance patterns
+• Long-term reasoning structure
+• Character stability + inner discipline
+• Spiritual + creative depth
 
-👤 User: ${data.user.name || "N/A"}
-Gender: ${data.user.gender || "N/A"}
-Country: ${data.user.country || "N/A"}
-
-📄 Summary:
-• Life Energy: ${L.life>0.55?"Strong":"Moderate"}
-• Mind Clarity: ${L.head>0.5?"Sharp":"Balanced"}
-• Emotional Depth: ${L.heart>0.5?"Deep":"Stable"}
-• Destiny Direction: ${L.fate>0.45?"Focused":"Variable"}
-
-(This is REAL Palm AI · V200 — Ridge + Line Detection)
+(This is TRUE Palm AI · V200 — Full Real Detection Layer)
 `;
 }
