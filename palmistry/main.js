@@ -1,9 +1,9 @@
 /* ===============================
-   THE SEED · Palmistry REAL AI · V100.1
-   Fully Stable Controller (DO NOT CHANGE STRUCTURE)
+   THE SEED · Palmistry REAL AI · V100.2
+   Fully Stable Controller (Debug Console Included)
    =============================== */
 
-console.log("🌿 REAL Palmistry Engine Loaded · V100.1");
+console.log("🌿 REAL Palmistry Engine Loaded · V100.2");
 
 const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
@@ -118,9 +118,9 @@ async function runPalmAnalysis(imageData) {
 
         outputBox.textContent = "Extracted ✔ Generating AI Report…";
 
-        /* --- TRUE REPORT ENGINE --- */
-        dbg("📄 Loading true-report.js…");
-        const repMod = await import("./analysis/true-report.js");
+        /* --- TRUE REPORT ENGINE (correct file name) --- */
+        dbg("📄 Loading true-report_v200.js…");
+        const repMod = await import("./analysis/true-report_v200.js");
 
         const report = repMod.generateTrueReport({
             user: userData,
