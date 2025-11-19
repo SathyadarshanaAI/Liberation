@@ -1,9 +1,9 @@
 /* ===============================
-   THE SEED · Palmistry REAL AI · V100.2
-   Fully Stable Controller (Debug Console Included)
+   THE SEED · Palmistry Engine · V120.0
+   Final Stable Controller (No Legacy Files)
    =============================== */
 
-console.log("🌿 REAL Palmistry Engine Loaded · V100.2");
+console.log("🌿 THE SEED Palmistry Engine Loaded · V120.0");
 
 const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
@@ -103,36 +103,26 @@ window.captureHand = function () {
     runPalmAnalysis(lastImageData);
 };
 
-/* MASTER REAL PALM AI ENGINE */
+/* === THE SEED MASTER ANALYSIS PIPELINE === */
 async function runPalmAnalysis(imageData) {
     try {
-        dbg("🔍 Starting REAL palm analysis…");
+        dbg("🔍 Starting THE SEED AI Analysis…");
 
-        /* --- TRUE AI CORE --- */
-        dbg("📦 Loading true-palm-8lines.js…");
-        const trueMod = await import("./analysis/true-palm-8lines.js");
+        /* 1 — Load Engines (THE SEED) */
+        dbg("📦 Loading Engines…");
 
-        const result = await trueMod.runTruePalmAI(imageData);
-        dbg("🌿 Real Palm AI Extracted:");
-        dbg(JSON.stringify(result.lines));
+        const geoMod   = await import("./analysis/palm-geometry.js");
+        const lineMod  = await import("./analysis/palm-lines.js");
+        const mountMod = await import("./analysis/palm-mounts.js");
+        const auraMod  = await import("./analysis/palm-aura.js");
+        const repMod   = await import("./analysis/palm-report.js");
 
-        outputBox.textContent = "Extracted ✔ Generating AI Report…";
+        /* 2 — Run Engines */
+        const geometry = geoMod.detectPalmGeometry(video, palmCanvas);
+        const lines    = lineMod.extractPalmLines(palmCanvas);
+        const mounts   = mountMod.analyzeMounts(palmCanvas);
+        const aura     = auraMod.scanAura(palmCanvas);
 
-        /* --- TRUE REPORT ENGINE (correct file name) --- */
-        dbg("📄 Loading true-report_v200.js…");
-        const repMod = await import("./analysis/true-report_v200.js");
-
-        const report = repMod.generateTrueReport({
-            user: userData,
-            palm: result.palm,
-            lines: result.lines
-        });
-
-        dbg("✔ REPORT READY");
-        outputBox.textContent = report;
-
-    } catch (err) {
-        dbg("FINAL ERROR: " + err);
-        outputBox.textContent = "Error during analysis!";
-    }
-}
+        dbg("🌿 Extracted Lines: " + JSON.stringify(lines.lines));
+        dbg("🌄 Mounts: " + JSON.stringify(mounts.mounts));
+        dbg("✨ Aura: " + JSON.stringify(aura
