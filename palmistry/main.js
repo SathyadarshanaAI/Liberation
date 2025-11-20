@@ -1,4 +1,4 @@
-/* ========================================== 🕉️ THE SEED · Palmistry AI · V120 MAIN.JS — FULLY UPDATED ========================================== */
+/* ========================================== 🕉️ THE SEED · Palmistry AI · V120 MAIN.JS — CLEAN FIXED VERSION (NO SYNTAX ERRORS) ========================================== */
 
 let video = document.getElementById("video"); let palmCanvas = document.getElementById("palmCanvas"); let overlayCanvas = document.getElementById("overlayCanvas"); let output = document.getElementById("output"); let dbg = document.getElementById("debugConsole");
 
@@ -20,7 +20,7 @@ const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.ge
     error("Capture failed: " + e.message);
 }
 
-} }
+}
 
 /* ============================ RESIZING FOR PERFECT ALIGNMENT ============================ */ function resizePalmCanvas() { let box = document.getElementById("palmPreviewBox"); palmCanvas.width = box.offsetWidth; palmCanvas.height = box.offsetWidth * 1.333; }
 
@@ -28,7 +28,7 @@ function resizeOverlay() { overlayCanvas.width = palmCanvas.width; overlayCanvas
 
 window.addEventListener("resize", () => { if (document.getElementById("palmPreviewBox").style.display === "block") { resizePalmCanvas(); resizeOverlay(); } });
 
-/* ============================ DRAW PALM LINES (Mock Example) ============================ */ export function drawPalmLines(lines = []) { overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+/* ============================ DRAW PALM LINES (Placeholder) ============================ */ export function drawPalmLines(lines = []) { overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
 overlayCtx.strokeStyle = "cyan";
 overlayCtx.lineWidth = 3;
@@ -44,10 +44,10 @@ log("Palm lines drawn");
 
 }
 
-/* ============================ DEBUG HELPERS ============================ */ function log(msg) { dbg.textContent += "✔ " + msg + "\n"; }
+/* ============================ DEBUG HELPERS ============================ */ function log(msg) { dbg.textContent += "✔ " + msg + " "; }
 
-function error(msg) { dbg.textContent += "🔥 ERROR: " + msg + "\n"; }
+function error(msg) { dbg.textContent += "🔥 ERROR: " + msg + " "; }
 
 /* ============================ EXPORT DEFAULT ============================ */ export default { startCamera, captureHand, drawPalmLines };
 
-/* === Make functions available to HTML buttons === */ window.startCamera = startCamera; window.captureHand = captureHand;
+/* ============================ MAKE FUNCTIONS GLOBAL FOR HTML BUTTONS ============================ */ window.startCamera = startCamera; window.captureHand = captureHand;
