@@ -44,3 +44,5 @@ log("Palm lines drawn");
 function error(msg) { dbg.textContent += "🔥 ERROR: " + msg + "\n"; }
 
 /* ============================ EXPORT DEFAULT ============================ */ export default { startCamera, captureHand, drawPalmLines };
+
+/* === Make functions available to HTML buttons === */ window.startCamera = startCamera; window.captureHand = captureHand;
