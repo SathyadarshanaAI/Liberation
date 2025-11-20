@@ -1,44 +1,46 @@
-/* ============================
-   🌟 PALM PREVIEW + OVERLAY FIX
-   Works for all screen sizes
-   ============================ */
+/* ==========================================
+   🌟 PALM PREVIEW FIX (THE SEED V120)
+   PERFECT ALIGNMENT FOR palmCanvas + overlayCanvas
+   ========================================== */
 
-#previewBox {
-  position: relative;
-  width: 300px;
-  height: 400px;
-  margin: 0 auto;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
-  box-shadow: 0 0 15px rgba(0, 229, 255, 0.35);
+#palmPreviewBox {
+    width: 92%;
+    max-width: 480px;
+    margin: 15px auto;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    border: 1px solid cyan;
+    position: relative;        /* REQUIRED */
+    display: none;
+    text-align: center;
 }
 
-#palmPreview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-  display: block;
+/* Base palm image canvas */
+#palmCanvas {
+    width: 100%;
+    aspect-ratio: 3 / 4;       /* Maintain perfect hand ratio */
+    background: #000;
+    border-radius: 12px;
+    display: block;
 }
 
-/* 🔵 Palm-line drawing canvas */
+/* 🔥 Palm Lines Overlay Canvas (ALWAYS TOP) */
 #overlayCanvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 100% !important;
-  pointer-events: none;
-  background: transparent !important;
-  z-index: 999; /* ensures overlay ALWAYS above image */
+    position: absolute;
+    top: 58px;                 /* EXACT ALIGN UNDER <h3> Palm Preview */
+    left: 0;
+    width: 100% !important;
+    aspect-ratio: 3 / 4;
+    height: auto !important;
+    pointer-events: none;
+    background: transparent !important;
+    z-index: 9999;
 }
 
-/* 📱 Responsive support */
+/* Mobile friendly */
 @media (max-width: 700px) {
-  #previewBox {
-    width: 92vw;
-    height: auto;
-    aspect-ratio: 3 / 4;
-  }
+    #overlayCanvas {
+        top: 58px; /* Stays same because Palm Preview title height constant */
+    }
 }
