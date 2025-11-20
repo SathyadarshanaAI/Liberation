@@ -6,16 +6,21 @@ const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.ge
 
 /* ============================ CAMERA INITIALIZATION ============================ */ export async function startCamera() { try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); video.srcObject = stream; log("Camera started"); } catch (e) { error("Camera failed: " + e.message); } }
 
-/* ============================ CAPTURE HAND FRAME ============================ */ export function captureHand() { try { resizePalmCanvas(); palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+/* ============================ CAPTURE HAND FRAME ============================ */ export function captureHand() { try { // 1. SHOW PREVIEW FIRST document.getElementById("palmPreviewBox").style.display = "block";
 
-document.getElementById("palmPreviewBox").style.display = "block";
+// 2. Resize canvas AFTER becoming visible
+    resizePalmCanvas();
     resizeOverlay();
-    log("Hand captured successfully");
+
+    // 3. Draw video frame NOW (valid canvas size)
+    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+
+    log("Hand captured successfully (Visible Mode)");
 } catch (e) {
     error("Capture failed: " + e.message);
 }
 
-}
+} }
 
 /* ============================ RESIZING FOR PERFECT ALIGNMENT ============================ */ function resizePalmCanvas() { let box = document.getElementById("palmPreviewBox"); palmCanvas.width = box.offsetWidth; palmCanvas.height = box.offsetWidth * 1.333; }
 
