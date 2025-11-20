@@ -1,41 +1,32 @@
-// 🕉️ THE SEED • Geometry Engine V2.0
-// TrueTone Palm Color Preservation + Soft Light Enhancement
+// 🕉️ THE SEED • TrueTone Palm Engine V3.0
+// Ultra Natural Skin Capture + Instant Freeze
 
 export async function detectPalmGeometry(videoElement, canvasElement) {
   const ctx = canvasElement.getContext("2d");
 
-  // Draw video frame
+  // Draw raw frame instantly (no brightness, no filters, no washout)
   ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
 
   let frame = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
   let data = frame.data;
 
-  // 💡 NEW: Soft-Light Brightness (Protects natural skin tone)
-  let boost = 18;   // earlier was 35 (too high)
-  
+  // --- Minimal smart contrast (protect skin tone) ---
   for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
 
-    // Soft contrast curve (retain color)
-    data[i]     = data[i] + boost - (data[i] * 0.07);     // R
-    data[i + 1] = data[i + 1] + boost - (data[i+1] * 0.07); // G
-    data[i + 2] = data[i + 2] + boost - (data[i+2] * 0.07); // B
+    let avg = (r + g + b) / 3;
 
-    // Prevent white-out
-    data[i]     = Math.min(235, data[i]);
-    data[i + 1] = Math.min(235, data[i + 1]);
-    data[i + 2] = Math.min(235, data[i + 2]);
+    // Add very soft curve (line boost without losing color)
+    data[i]     = Math.min(255, r + (avg * 0.07));
+    data[i + 1] = Math.min(255, g + (avg * 0.07));
+    data[i + 2] = Math.min(255, b + (avg * 0.07));
   }
 
   ctx.putImageData(frame, 0, 0);
 
-  // Detection still works (outline removed)
   return {
-    palmDetected: true,
-    zones: {
-      lifeZone: "bottom-left quadrant",
-      headZone: "center of palm",
-      heartZone: "upper palm",
-      fateZone: "vertical midline"
-    }
+    palmDetected: true
   };
 }
