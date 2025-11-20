@@ -1,9 +1,9 @@
 /* ===============================
-   THE SEED · Palmistry Engine · V120
-   FINAL STABLE CONTROLLER (NO ERRORS)
+   THE SEED · Palmistry Engine · V130
+   FINAL CONTROLLER (FAST CAPTURE · NO DELAY)
    =============================== */
 
-console.log("🌿 THE SEED Controller Loaded · V120");
+console.log("🌿 THE SEED Controller Loaded · V130");
 
 const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
@@ -45,7 +45,21 @@ window.saveUserForm = function () {
     dbg("📝 User profile saved");
 };
 
-/* Start Camera */
+/* ============================
+   CAMERA START + VIDEO READY FIX
+   ============================ */
+
+async function waitForVideoReady() {
+    return new Promise(resolve => {
+        const check = setInterval(() => {
+            if (video.videoWidth > 50 && video.videoHeight > 50) {
+                clearInterval(check);
+                resolve();
+            }
+        }, 30);
+    });
+}
+
 window.startCamera = async function () {
     try {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -53,10 +67,12 @@ window.startCamera = async function () {
         });
 
         video.srcObject = stream;
-        await video.play();
+        video.play();
 
+        await waitForVideoReady();
+
+        dbg("📷 Camera active & READY");
         outputBox.textContent = "Camera active ✔ Place your hand.";
-        dbg("📷 Camera active");
 
     } catch (e) {
         outputBox.textContent = "Camera error!";
@@ -64,27 +80,34 @@ window.startCamera = async function () {
     }
 };
 
-/* Capture Hand Image */
-window.captureHand = function () {
+/* ============================
+   CAPTURE FIX (NO MORE PREVIEW DELAY)
+   ============================ */
+
+window.captureHand = async function () {
 
     if (!video.srcObject) {
         outputBox.textContent = "Camera not active!";
         return;
     }
 
+    await waitForVideoReady();
+
     const c = palmCanvas;
     const ctx = c.getContext("2d");
 
+    // Always sync canvas perfectly
     c.width = video.videoWidth;
     c.height = video.videoHeight;
 
-    ctx.drawImage(video, 0, 0);
+    // Capture EXACT frame (no blur, no lag)
+    ctx.drawImage(video, 0, 0, c.width, c.height);
 
     lastImageData = ctx.getImageData(0, 0, c.width, c.height);
 
     palmBox.style.display = "block";
     outputBox.textContent = "Hand captured ✔ Analyzing...";
-    dbg("📸 Hand image captured");
+    dbg("📸 Hand image captured instant-frame");
 
     runPalmAnalysis(lastImageData);
 };
@@ -95,7 +118,6 @@ window.captureHand = function () {
 
 async function runPalmAnalysis(imageData) {
     try {
-
         dbg("🔍 Loading THE SEED Engines…");
 
         const geoMod   = await import("./analysis/palm-geometry.js");
@@ -120,8 +142,7 @@ async function runPalmAnalysis(imageData) {
         );
 
         dbg("✔ REPORT READY");
-        document.getElementById("output").textContent = 
-            JSON.stringify(report, null, 2);
+        outputBox.textContent = JSON.stringify(report, null, 2);
 
     } catch (err) {
         dbg("FINAL ERROR: " + err);
