@@ -1,6 +1,6 @@
-6/* ===============================
+/* ===============================
    THE SEED · Palmistry Engine · V130
-   FINAL STABLE CONTROLLER (AUTO-FOCUS + COLOR FIX)
+   FINAL STABLE CONTROLLER (AUTO-FOCUS + COLOR FIX + LINE OVERLAY)
    =============================== */
 
 console.log("🌿 THE SEED Controller Loaded · V130");
@@ -9,6 +9,7 @@ const video = document.getElementById("video");
 const outputBox = document.getElementById("output");
 const palmBox = document.getElementById("palmPreviewBox");
 const palmCanvas = document.getElementById("palmCanvas");
+const overlayCanvas = document.getElementById("overlayCanvas");
 const debugConsole = document.getElementById("debugConsole");
 
 let stream = null;
@@ -21,7 +22,7 @@ function dbg(msg) {
     if (debugConsole) debugConsole.textContent += msg + "\n";
 }
 
-/* Error handlers */
+/* Error Handlers */
 window.onerror = function (msg, url, line, col, error) {
     dbg(`🔥 ERROR: ${msg}\nFILE: ${url}\nLINE: ${line}\n`);
 };
@@ -68,10 +69,7 @@ window.startCamera = async function () {
     }
 };
 
-/* ==========================
-   AUTO-FOCUS SAFE CAPTURE
-   ========================== */
-
+/* AUTO-FOCUS SAFE CAPTURE */
 window.captureHand = function () {
 
     if (!video.srcObject) {
@@ -82,7 +80,6 @@ window.captureHand = function () {
     outputBox.textContent = "Stabilizing camera… hold steady…";
     dbg("⏳ Waiting for auto-focus & exposure…");
 
-    // WAIT 250ms → camera stabilizes → then capture
     setTimeout(() => {
 
         const c = palmCanvas;
@@ -91,23 +88,25 @@ window.captureHand = function () {
         c.width = video.videoWidth;
         c.height = video.videoHeight;
 
-        // ************ Natural Colors — NO grayscale, NO brightness wash ************
+        // Natural colors (no brightness wash)
         ctx.drawImage(video, 0, 0, c.width, c.height);
 
-        // Freeze camera
+        // Stop camera → freeze frame
         video.pause();
         if (stream) stream.getTracks().forEach(t => t.stop());
 
         lastImageData = ctx.getImageData(0, 0, c.width, c.height);
 
         palmBox.style.display = "block";
+        overlayCanvas.width = c.width;
+        overlayCanvas.height = c.height;
 
         dbg("📸 Stable frame captured");
         outputBox.textContent = "Hand captured ✔ Analyzing...";
 
         runPalmAnalysis(lastImageData);
 
-    }, 250);  // ← Perfect focus/exposure stabilization delay
+    }, 250);
 };
 
 /* ==========================
@@ -124,6 +123,7 @@ async function runPalmAnalysis(imageData) {
         const mountMod = await import("./analysis/palm-mounts.js");
         const auraMod  = await import("./analysis/palm-aura.js");
         const repMod   = await import("./analysis/palm-report.js");
+        const drawMod  = await import("./analysis/palm-draw.js");  // NEW: color draw
 
         const geometry = geoMod.detectPalmGeometry(video, palmCanvas);
         const lines    = lineMod.extractPalmLines(palmCanvas);
@@ -134,6 +134,9 @@ async function runPalmAnalysis(imageData) {
         dbg("Mounts: " + JSON.stringify(mounts.mounts));
         dbg("Aura: " + JSON.stringify(aura.aura));
 
+        // 📌 DRAW COLORED LINES (8 colors)
+        drawMod.drawLines(overlayCanvas, lines.lines);
+
         const report = repMod.generatePalmReport(
             lines.lines,
             mounts.mounts,
@@ -141,8 +144,7 @@ async function runPalmAnalysis(imageData) {
         );
 
         dbg("✔ REPORT READY");
-        document.getElementById("output").textContent =
-            JSON.stringify(report, null, 2);
+        outputBox.textContent = JSON.stringify(report, null, 2);
 
     } catch (err) {
         dbg("FINAL ERROR: " + err);
