@@ -89,11 +89,22 @@
             border-radius: 10px;
             border: 1px solid cyan;
             display: none;
+            position: relative;
         }
 
         canvas {
             width: 100%;
             border-radius: 10px;
+        }
+
+        /* Overlay Canvas (Colored Lines Layer) */
+        #overlayCanvas {
+            position: absolute;
+            top: 48px; /* under the heading "Palm Preview" */
+            left: 0;
+            width: 100%;
+            height: auto;
+            pointer-events: none;
         }
 
         #output {
@@ -168,9 +179,15 @@
 <button class="btn" onclick="startCamera()">Open Camera</button>
 <button class="btn" onclick="captureHand()">Scan Hand</button>
 
+<!-- PALM PREVIEW WITH OVERLAY -->
 <div id="palmPreviewBox">
     <h3 style="text-align:center;">Palm Preview</h3>
+
+    <!-- Base Hand Image -->
     <canvas id="palmCanvas"></canvas>
+
+    <!-- Color Line Overlay -->
+    <canvas id="overlayCanvas"></canvas>
 </div>
 
 <div id="output">Awaiting scan…</div>
@@ -185,7 +202,6 @@ window.onerror = function(msg, url, line, col, error) {
 };
 </script>
 
-<!-- IMPORTANT: FINAL WORKING CONTROLLER LOAD -->
 <script type="module" src="main.js"></script>
 
 </body>
