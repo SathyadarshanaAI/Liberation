@@ -22,7 +22,7 @@ const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.ge
 
 }
 
-/* ============================ RESIZING FOR PERFECT ALIGNMENT ============================ */ function resizePalmCanvas() { let box = document.getElementById("palmPreviewBox"); palmCanvas.width = box.offsetWidth; palmCanvas.height = box.offsetWidth * 1.333; }
+/* ============================ RESIZING FOR PERFECT ALIGNMENT ============================ */ function resizePalmCanvas() { const w = palmCanvas.parentElement.clientWidth; palmCanvas.width = w; palmCanvas.height = w * 1.333; }
 
 function resizeOverlay() { overlayCanvas.width = palmCanvas.width; overlayCanvas.height = palmCanvas.height; }
 
