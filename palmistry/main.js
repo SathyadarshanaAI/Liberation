@@ -1,6 +1,6 @@
-/* ===============================
+6/* ===============================
    THE SEED · Palmistry Engine · V130
-   FINAL CONTROLLER (FAST CAPTURE · NO DELAY)
+   FINAL STABLE CONTROLLER (AUTO-FOCUS + COLOR FIX)
    =============================== */
 
 console.log("🌿 THE SEED Controller Loaded · V130");
@@ -21,7 +21,7 @@ function dbg(msg) {
     if (debugConsole) debugConsole.textContent += msg + "\n";
 }
 
-/* Window Errors */
+/* Error handlers */
 window.onerror = function (msg, url, line, col, error) {
     dbg(`🔥 ERROR: ${msg}\nFILE: ${url}\nLINE: ${line}\n`);
 };
@@ -45,34 +45,22 @@ window.saveUserForm = function () {
     dbg("📝 User profile saved");
 };
 
-/* ============================
-   CAMERA START + VIDEO READY FIX
-   ============================ */
-
-async function waitForVideoReady() {
-    return new Promise(resolve => {
-        const check = setInterval(() => {
-            if (video.videoWidth > 50 && video.videoHeight > 50) {
-                clearInterval(check);
-                resolve();
-            }
-        }, 30);
-    });
-}
-
+/* Start Camera */
 window.startCamera = async function () {
     try {
         stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" }
+            video: {
+                facingMode: "environment",
+                exposureMode: "continuous",
+                focusMode: "continuous"
+            }
         });
 
         video.srcObject = stream;
-        video.play();
+        await video.play();
 
-        await waitForVideoReady();
-
-        dbg("📷 Camera active & READY");
         outputBox.textContent = "Camera active ✔ Place your hand.";
+        dbg("📷 Camera active");
 
     } catch (e) {
         outputBox.textContent = "Camera error!";
@@ -80,36 +68,46 @@ window.startCamera = async function () {
     }
 };
 
-/* ============================
-   CAPTURE FIX (NO MORE PREVIEW DELAY)
-   ============================ */
+/* ==========================
+   AUTO-FOCUS SAFE CAPTURE
+   ========================== */
 
-window.captureHand = async function () {
+window.captureHand = function () {
 
     if (!video.srcObject) {
         outputBox.textContent = "Camera not active!";
         return;
     }
 
-    await waitForVideoReady();
+    outputBox.textContent = "Stabilizing camera… hold steady…";
+    dbg("⏳ Waiting for auto-focus & exposure…");
 
-    const c = palmCanvas;
-    const ctx = c.getContext("2d");
+    // WAIT 250ms → camera stabilizes → then capture
+    setTimeout(() => {
 
-    // Always sync canvas perfectly
-    c.width = video.videoWidth;
-    c.height = video.videoHeight;
+        const c = palmCanvas;
+        const ctx = c.getContext("2d");
 
-    // Capture EXACT frame (no blur, no lag)
-    ctx.drawImage(video, 0, 0, c.width, c.height);
+        c.width = video.videoWidth;
+        c.height = video.videoHeight;
 
-    lastImageData = ctx.getImageData(0, 0, c.width, c.height);
+        // ************ Natural Colors — NO grayscale, NO brightness wash ************
+        ctx.drawImage(video, 0, 0, c.width, c.height);
 
-    palmBox.style.display = "block";
-    outputBox.textContent = "Hand captured ✔ Analyzing...";
-    dbg("📸 Hand image captured instant-frame");
+        // Freeze camera
+        video.pause();
+        if (stream) stream.getTracks().forEach(t => t.stop());
 
-    runPalmAnalysis(lastImageData);
+        lastImageData = ctx.getImageData(0, 0, c.width, c.height);
+
+        palmBox.style.display = "block";
+
+        dbg("📸 Stable frame captured");
+        outputBox.textContent = "Hand captured ✔ Analyzing...";
+
+        runPalmAnalysis(lastImageData);
+
+    }, 250);  // ← Perfect focus/exposure stabilization delay
 };
 
 /* ==========================
@@ -118,6 +116,7 @@ window.captureHand = async function () {
 
 async function runPalmAnalysis(imageData) {
     try {
+
         dbg("🔍 Loading THE SEED Engines…");
 
         const geoMod   = await import("./analysis/palm-geometry.js");
@@ -142,7 +141,8 @@ async function runPalmAnalysis(imageData) {
         );
 
         dbg("✔ REPORT READY");
-        outputBox.textContent = JSON.stringify(report, null, 2);
+        document.getElementById("output").textContent =
+            JSON.stringify(report, null, 2);
 
     } catch (err) {
         dbg("FINAL ERROR: " + err);
