@@ -1,32 +1,39 @@
-// 🕉️ THE SEED • TrueTone Palm Engine V3.0
-// Ultra Natural Skin Capture + Instant Freeze
+// 🕉️ Sathyadarshana • THE SEED Geometry Engine V2.0
+// TRUE COLOR MODE – No image modification at all
 
 export async function detectPalmGeometry(videoElement, canvasElement) {
-  const ctx = canvasElement.getContext("2d");
+    const ctx = canvasElement.getContext("2d");
 
-  // Draw raw frame instantly (no brightness, no filters, no washout)
-  ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+    // 1. Draw RAW camera feed (NO brightness filter)
+    ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
 
-  let frame = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
-  let data = frame.data;
+    // 2. RAW frame (ONLY for analysis, not modifying original)
+    let frame = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
+    let data = frame.data;
 
-  // --- Minimal smart contrast (protect skin tone) ---
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
+    // 3. Create silhouette map WITHOUT modifying pixel color
+    let threshold = 130;
+    let outlineMap = [];
 
-    let avg = (r + g + b) / 3;
+    for (let y = 0; y < canvasElement.height; y++) {
+        for (let x = 0; x < canvasElement.width; x++) {
+            let idx = (y * canvasElement.width + x) * 4;
+            let brightness = (data[idx] + data[idx+1] + data[idx+2]) / 3;
 
-    // Add very soft curve (line boost without losing color)
-    data[i]     = Math.min(255, r + (avg * 0.07));
-    data[i + 1] = Math.min(255, g + (avg * 0.07));
-    data[i + 2] = Math.min(255, b + (avg * 0.07));
-  }
+            outlineMap.push(brightness < threshold ? 1 : 0);
+        }
+    }
 
-  ctx.putImageData(frame, 0, 0);
+    // 4. NOTHING drawn on screen (pure color retaining)
+    // No ctx.stroke(), no overlays, no glow.
 
-  return {
-    palmDetected: true
-  };
+    return {
+        palmDetected: true,
+        zones: {
+            lifeZone: "bottom-left quadrant",
+            headZone: "center of palm",
+            heartZone: "upper palm",
+            fateZone: "vertical midline"
+        }
+    };
 }
