@@ -1,104 +1,194 @@
-/* ========================================== 🕉️ THE SEED · Palmistry AI · V120 MAIN.JS — FIXED VERSION (TensorFlow FIX + saveUserForm FIX) ========================================== */
+/* =====================================================
+   🕉️ THE SEED · Palmistry AI · V220
+   MAIN.JS — MediaPipe Hands Engine + Freeze Fix
+   ===================================================== */
 
-let video = document.getElementById("video"); let palmCanvas = document.getElementById("palmCanvas"); let overlayCanvas = document.getElementById("overlayCanvas"); let output = document.getElementById("output"); let dbg = document.getElementById("debugConsole");
+let video = document.getElementById("video");
+let palmCanvas = document.getElementById("palmCanvas");
+let overlayCanvas = document.getElementById("overlayCanvas");
+let dbg = document.getElementById("debugConsole");
 
-const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.getContext("2d");
+const palmCtx = palmCanvas.getContext("2d");
+const overlayCtx = overlayCanvas.getContext("2d");
 
-let handModel = null;
+let mpHands = null;
+let hands = null;
+let running = false;
+let lastHand = null;
 
-/* ============================ LOAD AI HAND MODEL (100% MOBILE SAFE) ============================ */ async function loadHandModel() { try { log("Loading AI Hand Model...");
+/* =====================================================
+   LOAD MEDIAPIPE HANDS (GOOGLE OFFICIAL)
+   ===================================================== */
+async function loadHandModel() {
+    try {
+        log("Loading MediaPipe Hands...");
 
-// Mobile-safe TensorFlow
-    await import("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0");
-    await import("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@2.0.0");
-    await import("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@2.0.0");
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js");
 
-    const handposeModule = await import("https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose");
+        mpHands = window.Hands;
 
-    handModel = await handposeModule.load();
-    log("AI Model Loaded ✔");
+        hands = new mpHands({
+            locateFile: (file) =>
+                `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
 
-} catch (e) {
-    error("AI Model Load Failed: " + e.message);
-}
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
 
+        hands.onResults(onHandResults);
+
+        log("MediaPipe Hands Loaded ✔");
+
+    } catch (e) {
+        error("Model Load Failed: " + e.message);
+    }
 }
 
 loadHandModel();
 
-/* ============================ CAMERA INITIALIZATION ============================ */ export async function startCamera() { try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); video.srcObject = stream; log("Camera started"); } catch (e) { error("Camera failed: " + e.message); } }
+/* =====================================================
+   START CAMERA
+   ===================================================== */
+export async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
 
-/* ============================ AI HAND DETECTION ============================ */ async function detectHand() { if (!handModel) { log("Hand model not ready..."); return null; }
+        video.srcObject = stream;
 
-const predictions = await handModel.estimateHands(video);
+        running = true;
+        startFrameLoop();
 
-if (predictions.length === 0) {
-    log("No hand detected");
-    return null;
+        log("Camera started ✔");
+
+    } catch (e) {
+        error("Camera failed: " + e.message);
+    }
 }
 
-const hand = predictions[0];
-const keypoints = hand.landmarks;
+/* =====================================================
+   LIVE FRAME LOOP
+   ===================================================== */
+function startFrameLoop() {
+    const loop = async () => {
+        if (!running) return;
 
-const xs = keypoints.map(p => p[0]);
-const ys = keypoints.map(p => p[1]);
+        if (hands) await hands.send({ image: video });
 
-const minX = Math.min(...xs);
-const maxX = Math.max(...xs);
-const minY = Math.min(...ys);
-const maxY = Math.max(...ys);
-
-return { minX, maxX, minY, maxY, keypoints };
-
+        requestAnimationFrame(loop);
+    };
+    loop();
 }
 
-/* ============================ AI PALM BOX DRAWING ============================ */ async function autoPalmCapture() { const hand = await detectHand(); if (!hand) return;
+/* =====================================================
+   WHEN MEDIAPIPE DETECTS HAND
+   ===================================================== */
+function onHandResults(results) {
 
-overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-const scaleX = palmCanvas.width / video.videoWidth;
-const scaleY = palmCanvas.height / video.videoHeight;
+    if (!results.multiHandLandmarks ||
+        results.multiHandLandmarks.length === 0) {
+        lastHand = null;
+        return;
+    }
 
-const x = hand.minX * scaleX;
-const y = hand.minY * scaleY;
-const w = (hand.maxX - hand.minX) * scaleX;
-const h = (hand.maxY - hand.minY) * scaleY;
+    lastHand = results.multiHandLandmarks[0];
 
-overlayCtx.strokeStyle = "#00e5ff";
-overlayCtx.lineWidth = 3;
-overlayCtx.strokeRect(x, y, w, h);
-
-log("Palm outline drawn ✔");
-
+    drawHandOutline(lastHand);
 }
 
-/* ============================ CAPTURE HAND FRAME ============================ */ export async function captureHand() { try { document.getElementById("palmPreviewBox").style.display = "block";
+/* =====================================================
+   DRAW HAND BOX
+   ===================================================== */
+function drawHandOutline(points) {
+    const xs = points.map(p => p.x * overlayCanvas.width);
+    const ys = points.map(p => p.y * overlayCanvas.height);
 
-resizePalmCanvas();
-    resizeOverlay();
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
 
-    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+    overlayCtx.strokeStyle = "#00e5ff";
+    overlayCtx.lineWidth = 3;
+    overlayCtx.strokeRect(minX, minY, maxX - minX, maxY - minY);
 
-    await autoPalmCapture();
-
-    log("Palm captured successfully (AI Outline Mode)");
-
-} catch (e) {
-    error("Capture failed: " + e.message);
+    log("AI palm box drawn ✔");
 }
 
+/* =====================================================
+   CAPTURE HAND FREEZE (MAIN FIX)
+   ===================================================== */
+export async function captureHand() {
+    try {
+        document.getElementById("palmPreviewBox").style.display = "block";
+
+        resizePalmCanvas();
+        resizeOverlay();
+
+        // WAIT FOR A CLEAN FRAME
+        if (video.readyState < 2) {
+            log("Waiting for camera frame...");
+            await new Promise(res => setTimeout(res, 150));
+        }
+
+        // DRAW VIDEO → CANVAS
+        palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+
+        // DRAW HAND OUTLINE IF AVAILABLE
+        if (lastHand) drawHandOutline(lastHand);
+
+        log("Palm captured successfully ✔ (Freeze OK)");
+
+    } catch (e) {
+        error("Capture failed: " + e.message);
+    }
 }
 
-/* ============================ RESIZING ============================ */ function resizePalmCanvas() { const w = palmCanvas.parentElement.clientWidth; palmCanvas.width = w; palmCanvas.height = w * 1.333; }
+/* =====================================================
+   RESIZE CANVAS
+   ===================================================== */
+function resizePalmCanvas() {
+    const w = palmCanvas.parentElement.clientWidth;
+    palmCanvas.width = w;
+    palmCanvas.height = w * 1.333;
+}
 
-function resizeOverlay() { overlayCanvas.width = palmCanvas.width; overlayCanvas.height = palmCanvas.height; }
+function resizeOverlay() {
+    overlayCanvas.width = palmCanvas.width;
+    overlayCanvas.height = palmCanvas.height;
+}
 
-window.addEventListener("resize", () => { if (document.getElementById("palmPreviewBox").style.display === "block") { resizePalmCanvas(); resizeOverlay(); } });
+window.addEventListener("resize", () => {
+    if (document.getElementById("palmPreviewBox").style.display === "block") {
+        resizePalmCanvas();
+        resizeOverlay();
+    }
+});
 
-/* ============================ DEBUG HELPERS ============================ */ function log(msg) { dbg.textContent += "✔ " + msg + " "; }
+/* =====================================================
+   DEBUG HELPERS
+   ===================================================== */
+function log(msg) {
+    dbg.textContent += "✔ " + msg + "\n";
+}
 
-function error(msg) { dbg.textContent += "🔥 ERROR: " + msg + " "; }
+function error(msg) {
+    dbg.textContent += "🔥 ERROR: " + msg + "\n";
+}
 
-/* ============================ FIX — saveUserForm() MISSING ============================ */ function saveUserForm() { log("User form saved ✔ (placeholder)"); } window.saveUserForm = saveUserForm;
+/* =====================================================
+   EXPORT DEFAULT
+   ===================================================== */
+export default { startCamera, captureHand };
 
-/* ============================ EXPORTS ============================ */ export default { startCamera, captureHand }; window.startCamera = startCamera; window.captureHand = captureHand;
+window.startCamera = startCamera;
+window.captureHand = captureHand;
