@@ -1,6 +1,6 @@
 /* ==========================================
-   🌟 PALM PREVIEW FIX (THE SEED V120)
-   PERFECT ALIGNMENT FOR palmCanvas + overlayCanvas
+   🌟 PALM PREVIEW FIX (THE SEED V220)
+   Perfect alignment for palmCanvas + overlayCanvas
    ========================================== */
 
 #palmPreviewBox {
@@ -11,7 +11,7 @@
     background: rgba(255,255,255,0.05);
     border-radius: 12px;
     border: 1px solid cyan;
-    position: relative;        /* REQUIRED */
+    position: relative;  
     display: none;
     text-align: center;
 }
@@ -19,28 +19,27 @@
 /* Base palm image canvas */
 #palmCanvas {
     width: 100%;
-    aspect-ratio: 3 / 4;       /* Maintain perfect hand ratio */
+    aspect-ratio: 3 / 4;
     background: #000;
     border-radius: 12px;
     display: block;
 }
 
-/* 🔥 Palm Lines Overlay Canvas (ALWAYS TOP) */
+/* 🔥 Overlay canvas (AI Box + PNG Hand Outline) */
 #overlayCanvas {
     position: absolute;
-    top: 58px;                 /* EXACT ALIGN UNDER <h3> Palm Preview */
+    top: 58px;           /* Below Palm Preview title */
     left: 0;
-    width: 100% !important;
-    aspect-ratio: 3 / 4;
-    height: auto !important;
+    width: 100%;
+    height: 100%;        /* 🔥 MAIN FIX — makes PNG visible */
     pointer-events: none;
     background: transparent !important;
     z-index: 9999;
 }
 
-/* Mobile friendly */
+/* Mobile fix */
 @media (max-width: 700px) {
     #overlayCanvas {
-        top: 58px; /* Stays same because Palm Preview title height constant */
+        top: 58px;
     }
 }
