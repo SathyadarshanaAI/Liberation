@@ -1,53 +1,115 @@
-/* ========================================== 🕉️ THE SEED · Palmistry AI · V120 MAIN.JS — CLEAN FIXED VERSION (NO SYNTAX ERRORS) ========================================== */
+/* ========================================== 🕉️ THE SEED · Palmistry AI · V120 MAIN.JS — AI HAND DETECTOR + OUTLINE EDITION ========================================== */
+
+/* ====== IMPORT AI MODELS ====== */ import * as handpose from "https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"; import "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl";
 
 let video = document.getElementById("video"); let palmCanvas = document.getElementById("palmCanvas"); let overlayCanvas = document.getElementById("overlayCanvas"); let output = document.getElementById("output"); let dbg = document.getElementById("debugConsole");
 
 const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.getContext("2d");
 
+let handModel = null;
+
+/* ============================ LOAD AI HAND MODEL ============================ */ async function loadHandModel() { log("Loading AI Hand Model..."); handModel = await handpose.load(); log("Hand Model Loaded ✔"); }
+
+loadHandModel();
+
 /* ============================ CAMERA INITIALIZATION ============================ */ export async function startCamera() { try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); video.srcObject = stream; log("Camera started"); } catch (e) { error("Camera failed: " + e.message); } }
 
-/* ============================ CAPTURE HAND FRAME ============================ */ export function captureHand() { try { // 1. SHOW PREVIEW FIRST document.getElementById("palmPreviewBox").style.display = "block";
+/* ============================ AI HAND DETECTION ============================ */ async function detectHand() { if (!handModel) { log("Hand model not ready..."); return null; }
 
-// 2. Resize canvas AFTER becoming visible
-    resizePalmCanvas();
-    resizeOverlay();
+const predictions = await handModel.estimateHands(video);
 
-    // 3. Draw video frame NOW (valid canvas size)
-    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
-
-    log("Hand captured successfully (Visible Mode)");
-} catch (e) {
-    error("Capture failed: " + e.message);
+if (predictions.length === 0) {
+    log("No hand detected");
+    return null;
 }
 
+const hand = predictions[0];
+const keypoints = hand.landmarks;
+
+const xs = keypoints.map(p => p[0]);
+const ys = keypoints.map(p => p[1]);
+
+const minX = Math.min(...xs);
+const maxX = Math.max(...xs);
+const minY = Math.min(...ys);
+const maxY = Math.max(...ys);
+
+return { minX, maxX, minY, maxY, keypoints };
+
 }
 
-/* ============================ RESIZING FOR PERFECT ALIGNMENT ============================ */ function resizePalmCanvas() { const w = palmCanvas.parentElement.clientWidth; palmCanvas.width = w; palmCanvas.height = w * 1.333; }
+/* ============================ AI OUTLINE + PALM BOX DRAWING ============================ */ async function autoPalmCapture() { const hand = await detectHand(); if (!hand) return;
 
-function resizeOverlay() { overlayCanvas.width = palmCanvas.width; overlayCanvas.height = palmCanvas.height; }
+overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-window.addEventListener("resize", () => { if (document.getElementById("palmPreviewBox").style.display === "block") { resizePalmCanvas(); resizeOverlay(); } });
+const scaleX = palmCanvas.width / video.videoWidth;
+const scaleY = palmCanvas.height / video.videoHeight;
 
-/* ============================ DRAW PALM LINES (Placeholder) ============================ */ export function drawPalmLines(lines = []) { overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+const x = hand.minX * scaleX;
+const y = hand.minY * scaleY;
+const w = (hand.maxX - hand.minX) * scaleX;
+const h = (hand.maxY - hand.minY) * scaleY;
 
-overlayCtx.strokeStyle = "cyan";
+overlayCtx.strokeStyle = "#00e5ff";
 overlayCtx.lineWidth = 3;
+overlayCtx.strokeRect(x, y, w, h);
 
-for (let l of lines) {
-    overlayCtx.beginPath();
-    overlayCtx.moveTo(l.x1, l.y1);
-    overlayCtx.lineTo(l.x2, l.y2);
-    overlayCtx.stroke();
+log("Palm outline drawn/* ==========================================
+
+🕉️ THE SEED · Palmistry AI · V120 MAIN.JS — AI HAND DETECTOR + OUTLINE EDITION ========================================== */
+
+/* ====== IMPORT AI MODELS ====== */ import * as handpose from "https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"; import "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl";
+
+let video = document.getElementById("video"); let palmCanvas = document.getElementById("palmCanvas"); let overlayCanvas = document.getElementById("overlayCanvas"); let output = document.getElementById("output"); let dbg = document.getElementById("debugConsole");
+
+const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.getContext("2d");
+
+let handModel = null;
+
+/* ============================ LOAD AI HAND MODEL ============================ */ async function loadHandModel() { log("Loading AI Hand Model..."); handModel = await handpose.load(); log("Hand Model Loaded ✔"); }
+
+loadHandModel();
+
+/* ============================ CAMERA INITIALIZATION ============================ */ export async function startCamera() { try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); video.srcObject = stream; log("Camera started"); } catch (e) { error("Camera failed: " + e.message); } }
+
+/* ============================ AI HAND DETECTION ============================ */ async function detectHand() { if (!handModel) { log("Hand model not ready..."); return null; }
+
+const predictions = await handModel.estimateHands(video);
+
+if (predictions.length === 0) {
+    log("No hand detected");
+    return null;
 }
 
-log("Palm lines drawn");
+const hand = predictions[0];
+const keypoints = hand.landmarks;
+
+const xs = keypoints.map(p => p[0]);
+const ys = keypoints.map(p => p[1]);
+
+const minX = Math.min(...xs);
+const maxX = Math.max(...xs);
+const minY = Math.min(...ys);
+const maxY = Math.max(...ys);
+
+return { minX, maxX, minY, maxY, keypoints };
 
 }
 
-/* ============================ DEBUG HELPERS ============================ */ function log(msg) { dbg.textContent += "✔ " + msg + " "; }
+/* ============================ AI OUTLINE + PALM BOX DRAWING ============================ */ async function autoPalmCapture() { const hand = await detectHand(); if (!hand) return;
 
-function error(msg) { dbg.textContent += "🔥 ERROR: " + msg + " "; }
+overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-/* ============================ EXPORT DEFAULT ============================ */ export default { startCamera, captureHand, drawPalmLines };
+const scaleX = palmCanvas.width / video.videoWidth;
+const scaleY = palmCanvas.height / video.videoHeight;
 
-/* ============================ MAKE FUNCTIONS GLOBAL FOR HTML BUTTONS ============================ */ window.startCamera = startCamera; window.captureHand = captureHand;
+const x = hand.minX * scaleX;
+const y = hand.minY * scaleY;
+const w = (hand.maxX - hand.minX) * scaleX;
+const h = (hand.maxY - hand.minY) * scaleY;
+
+overlayCtx.strokeStyle = "#00e5ff";
+overlayCtx.lineWidth = 3;
+overlayCtx.strokeRect(x, y, w, h);
+
+log("Palm outline drawn
