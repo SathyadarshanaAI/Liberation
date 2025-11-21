@@ -1,6 +1,6 @@
 /* ==========================================
-   🕉️ THE SEED · Palmistry AI · V120
-   MAIN.JS — AI HAND DETECTOR + SAFE IMPORT FIX
+   THE SEED · Palmistry AI · V120
+   MAIN.JS — CLEAN VERSION (NO BACKTICKS)
 ========================================== */
 
 let video = document.getElementById("video");
@@ -15,8 +15,8 @@ const overlayCtx = overlayCanvas.getContext("2d");
 let handModel = null;
 
 /* ============================
-   LOAD AI HAND MODEL (SAFE)
-   ============================ */
+   LOAD AI HAND MODEL
+============================ */
 async function loadHandModel() {
     try {
         log("Loading AI Hand Model...");
@@ -25,6 +25,7 @@ async function loadHandModel() {
         await import("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl");
 
         handModel = await handposeModule.load();
+
         log("Hand Model Loaded ✔");
 
     } catch (e) {
@@ -35,15 +36,17 @@ async function loadHandModel() {
 loadHandModel();
 
 /* ============================
-   CAMERA INITIALIZATION
-   ============================ */
+   START CAMERA
+============================ */
 export async function startCamera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" }
         });
+
         video.srcObject = stream;
         log("Camera started");
+
     } catch (e) {
         error("Camera failed: " + e.message);
     }
@@ -51,7 +54,7 @@ export async function startCamera() {
 
 /* ============================
    AI HAND DETECTION
-   ============================ */
+============================ */
 async function detectHand() {
     if (!handModel) {
         log("Hand model not ready...");
@@ -80,8 +83,8 @@ async function detectHand() {
 }
 
 /* ============================
-   AI OUTLINE + PALM BOX
-   ============================ */
+   DRAW AI OUTLINE
+============================ */
 async function autoPalmCapture() {
     const hand = await detectHand();
     if (!hand) return;
@@ -104,8 +107,8 @@ async function autoPalmCapture() {
 }
 
 /* ============================
-   CAPTURE HAND
-   ============================ */
+   CAPTURE PALM
+============================ */
 export async function captureHand() {
     try {
         document.getElementById("palmPreviewBox").style.display = "block";
@@ -117,15 +120,16 @@ export async function captureHand() {
 
         await autoPalmCapture();
 
-        log("Palm captured successfully (AI Outline Mode)");
+        log("Palm captured successfully");
+
     } catch (e) {
         error("Capture failed: " + e.message);
     }
 }
 
 /* ============================
-   CANVAS RESIZING
-   ============================ */
+   RESIZE CANVAS
+============================ */
 function resizePalmCanvas() {
     const w = palmCanvas.parentElement.clientWidth;
     palmCanvas.width = w;
@@ -145,26 +149,20 @@ window.addEventListener("resize", () => {
 });
 
 /* ============================
-   DEBUG
-   ============================ */
+   LOGGING
+============================ */
 function log(msg) {
-    dbg.textContent += "✔ " + msg + "\\n";
+    dbg.textContent += "✔ " + msg + "\n";
 }
 
 function error(msg) {
-    dbg.textContent += "🔥 ERROR: " + msg + "\\n";
+    dbg.textContent += "🔥 ERROR: " + msg + "\n";
 }
 
 /* ============================
-   EXPORT DEFAULT
-   ============================ */
-export default {
-    startCamera,
-    captureHand
-};
+   EXPORT + GLOBAL
+============================ */
+export default { startCamera, captureHand };
 
-/* ============================
-   MAKE GLOBAL
-   ============================ */
 window.startCamera = startCamera;
 window.captureHand = captureHand;
