@@ -1,99 +1,170 @@
-/* ========================================== 🕉️ THE SEED · Palmistry AI · V120 MAIN.JS — AI HAND DETECTOR + SAFE IMPORT FIX ========================================== */
+/* ==========================================
+   🕉️ THE SEED · Palmistry AI · V120
+   MAIN.JS — AI HAND DETECTOR + SAFE IMPORT FIX
+========================================== */
 
-let video = document.getElementById("video"); let palmCanvas = document.getElementById("palmCanvas"); let overlayCanvas = document.getElementById("overlayCanvas"); let output = document.getElementById("output"); let dbg = document.getElementById("debugConsole");
+let video = document.getElementById("video");
+let palmCanvas = document.getElementById("palmCanvas");
+let overlayCanvas = document.getElementById("overlayCanvas");
+let output = document.getElementById("output");
+let dbg = document.getElementById("debugConsole");
 
-const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.getContext("2d");
+const palmCtx = palmCanvas.getContext("2d");
+const overlayCtx = overlayCanvas.getContext("2d");
 
 let handModel = null;
 
-/* ============================ LOAD AI HAND MODEL (Safe Import) ============================ */ async function loadHandModel() { try { log("Loading AI Hand Model...");
+/* ============================
+   LOAD AI HAND MODEL (SAFE)
+   ============================ */
+async function loadHandModel() {
+    try {
+        log("Loading AI Hand Model...");
 
-const handposeModule = await import("https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose");
-    await import("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl");
+        const handposeModule = await import("https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose");
+        await import("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl");
 
-    handModel = await handposeModule.load();
-    log("Hand Model Loaded ✔");
+        handModel = await handposeModule.load();
+        log("Hand Model Loaded ✔");
 
-} catch (e) {
-    error("AI Model Load Failed: " + e.message);
-}
-
+    } catch (e) {
+        error("AI Model Load Failed: " + e.message);
+    }
 }
 
 loadHandModel();
 
-/* ============================ CAMERA INITIALIZATION ============================ */ export async function startCamera() { try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); video.srcObject = stream; log("Camera started"); } catch (e) { error("Camera failed: " + e.message); } }
-
-/* ============================ AI HAND DETECTION ============================ */ async function detectHand() { if (!handModel) { log("Hand model not ready..."); return null; }
-
-const predictions = await handModel.estimateHands(video);
-
-if (predictions.length === 0) {
-    log("No hand detected");
-    return null;
+/* ============================
+   CAMERA INITIALIZATION
+   ============================ */
+export async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
+        video.srcObject = stream;
+        log("Camera started");
+    } catch (e) {
+        error("Camera failed: " + e.message);
+    }
 }
 
-const hand = predictions[0];
-const keypoints = hand.landmarks;
+/* ============================
+   AI HAND DETECTION
+   ============================ */
+async function detectHand() {
+    if (!handModel) {
+        log("Hand model not ready...");
+        return null;
+    }
 
-const xs = keypoints.map(p => p[0]);
-const ys = keypoints.map(p => p[1]);
+    const predictions = await handModel.estimateHands(video);
 
-const minX = Math.min(...xs);
-const maxX = Math.max(...xs);
-const minY = Math.min(...ys);
-const maxY = Math.max(...ys);
+    if (predictions.length === 0) {
+        log("No hand detected");
+        return null;
+    }
 
-return { minX, maxX, minY, maxY, keypoints };
+    const hand = predictions[0];
+    const keypoints = hand.landmarks;
 
+    const xs = keypoints.map(p => p[0]);
+    const ys = keypoints.map(p => p[1]);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    return { minX, maxX, minY, maxY, keypoints };
 }
 
-/* ============================ AI OUTLINE + PALM BOX DRAWING ============================ */ async function autoPalmCapture() { const hand = await detectHand(); if (!hand) return;
+/* ============================
+   AI OUTLINE + PALM BOX
+   ============================ */
+async function autoPalmCapture() {
+    const hand = await detectHand();
+    if (!hand) return;
 
-overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-const scaleX = palmCanvas.width / video.videoWidth;
-const scaleY = palmCanvas.height / video.videoHeight;
+    const scaleX = palmCanvas.width / video.videoWidth;
+    const scaleY = palmCanvas.height / video.videoHeight;
 
-const x = hand.minX * scaleX;
-const y = hand.minY * scaleY;
-const w = (hand.maxX - hand.minX) * scaleX;
-const h = (hand.maxY - hand.minY) * scaleY;
+    const x = hand.minX * scaleX;
+    const y = hand.minY * scaleY;
+    const w = (hand.maxX - hand.minX) * scaleX;
+    const h = (hand.maxY - hand.minY) * scaleY;
 
-overlayCtx.strokeStyle = "#00e5ff";
-overlayCtx.lineWidth = 3;
-overlayCtx.strokeRect(x, y, w, h);
+    overlayCtx.strokeStyle = "#00e5ff";
+    overlayCtx.lineWidth = 3;
+    overlayCtx.strokeRect(x, y, w, h);
 
-log("Palm outline drawn ✔");
-
+    log("Palm outline drawn ✔");
 }
 
-/* ============================ CAPTURE HAND FRAME ============================ */ export async function captureHand() { try { document.getElementById("palmPreviewBox").style.display = "block";
+/* ============================
+   CAPTURE HAND
+   ============================ */
+export async function captureHand() {
+    try {
+        document.getElementById("palmPreviewBox").style.display = "block";
 
-resizePalmCanvas();
-    resizeOverlay();
+        resizePalmCanvas();
+        resizeOverlay();
 
-    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+        palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
 
-    await autoPalmCapture();
+        await autoPalmCapture();
 
-    log("Palm captured successfully (AI Outline Mode)");
-} catch (e) {
-    error("Capture failed: " + e.message);
+        log("Palm captured successfully (AI Outline Mode)");
+    } catch (e) {
+        error("Capture failed: " + e.message);
+    }
 }
 
+/* ============================
+   CANVAS RESIZING
+   ============================ */
+function resizePalmCanvas() {
+    const w = palmCanvas.parentElement.clientWidth;
+    palmCanvas.width = w;
+    palmCanvas.height = w * 1.333;
 }
 
-/* ============================ RESIZING FOR PERFECT ALIGNMENT ============================ */ function resizePalmCanvas() { const w = palmCanvas.parentElement.clientWidth; palmCanvas.width = w; palmCanvas.height = w * 1.333; }
+function resizeOverlay() {
+    overlayCanvas.width = palmCanvas.width;
+    overlayCanvas.height = palmCanvas.height;
+}
 
-function resizeOverlay() { overlayCanvas.width = palmCanvas.width; overlayCanvas.height = palmCanvas.height; }
+window.addEventListener("resize", () => {
+    if (document.getElementById("palmPreviewBox").style.display === "block") {
+        resizePalmCanvas();
+        resizeOverlay();
+    }
+});
 
-window.addEventListener("resize", () => { if (document.getElementById("palmPreviewBox").style.display === "block") { resizePalmCanvas(); resizeOverlay(); } });
+/* ============================
+   DEBUG
+   ============================ */
+function log(msg) {
+    dbg.textContent += "✔ " + msg + "\\n";
+}
 
-/* ============================ DEBUG HELPERS ============================ */ function log(msg) { dbg.textContent += "✔ " + msg + " "; }
+function error(msg) {
+    dbg.textContent += "🔥 ERROR: " + msg + "\\n";
+}
 
-function error(msg) { dbg.textContent += "🔥 ERROR: " + msg + " "; }
+/* ============================
+   EXPORT DEFAULT
+   ============================ */
+export default {
+    startCamera,
+    captureHand
+};
 
-/* ============================ EXPORT DEFAULT ============================ */ export default { startCamera, captureHand };
-
-/* ============================ MAKE FUNCTIONS GLOBAL ============================ */ window.startCamera = startCamera; window.captureHand = captureHand;
+/* ============================
+   MAKE GLOBAL
+   ============================ */
+window.startCamera = startCamera;
+window.captureHand = captureHand;
