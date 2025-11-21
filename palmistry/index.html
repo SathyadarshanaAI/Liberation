@@ -1,175 +1,212 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🕉️ THE SEED · Palmistry AI · V120 (Fixed)</title>  <style>
-    body {
-      margin: 0;
-      background: #000;
-      color: cyan;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🕉️ THE SEED · Palmistry AI · V200</title>
 
-    h1 {
-      margin: 15px 0;
-      font-size: 1.7rem;
-      text-shadow: 0 0 12px cyan;
-    }
+<style>
+  body {
+    margin: 0;
+    background: #000;
+    color: cyan;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
 
-    #langSelect, .btn {
-      width: 92%;
-      max-width: 420px;
-      padding: 14px;
-      border-radius: 30px;
-      border: 1px solid cyan;
-      background: #000;
-      color: cyan;
-      margin: 10px auto;
-    }
+  h1 {
+    margin: 15px 0;
+    font-size: 1.7rem;
+    text-shadow: 0 0 12px cyan;
+  }
 
-    .btn {
-      background: cyan;
-      color: black;
-      border: none;
-      font-weight: bold;
-      font-size: 1.2rem;
-    }
+  .btn {
+    width: 92%;
+    max-width: 420px;
+    padding: 14px;
+    border-radius: 30px;
+    border: none;
+    background: cyan;
+    color: black;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 10px auto;
+  }
 
-    #userForm {
-      width: 92%;
-      max-width: 480px;
-      margin: 10px auto;
-      padding: 15px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid cyan;
-      border-radius: 12px;
-      text-align: left;
-    }
+  #userForm {
+    width: 92%;
+    max-width: 480px;
+    margin: 10px auto;
+    padding: 15px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid cyan;
+    border-radius: 12px;
+    text-align: left;
+  }
 
-    #userForm label {
-      margin-top: 10px;
-      display: block;
-      color: cyan;
-    }
+  #userForm label { margin-top: 10px; display: block; color: cyan; }
+  #userForm input, #userForm select, #userForm textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 4px;
+    border: 1px solid cyan;
+    background: #000;
+    color: cyan;
+    border-radius: 8px;
+  }
 
-    #userForm input, #userForm select, #userForm textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 4px;
-      border: 1px solid cyan;
-      background: #000;
-      color: cyan;
-      border-radius: 8px;
-    }
+  #camBox {
+    width: 100%;
+    height: 55vh;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+  }
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-    #camBox {
-      width: 100%;
-      height: 55vh;
-      overflow: hidden;
-      background: #000;
-      position: relative;
-    }
+  /* Palm freeze preview box */
+  #palmPreviewBox {
+    width: 92%;
+    max-width: 480px;
+    margin: 15px auto;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    border: 1px solid cyan;
+    position: relative;
+    display: none;
+    text-align: center;
+  }
 
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+  #palmCanvas {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: #000;
+    border-radius: 12px;
+  }
 
-    /* ===============================
-       PALM PREVIEW FIX BLOCK
-       =============================== */
-    #palmPreviewBox {
-      width: 92%;
-      max-width: 480px;
-      margin: 15px auto;
-      padding: 10px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      border: 1px solid cyan;
-      position: relative;
-      display: none;
-      text-align: center;
-    }
+  #overlayCanvas {
+    position: absolute;
+    top: 58px;
+    left: 0;
+    width: 100% !important;
+    aspect-ratio: 3 / 4;
+    pointer-events: none;
+    background: transparent;
+    z-index: 9999;
+  }
 
-    #palmCanvas {
-      width: 100%;
-      aspect-ratio: 3 / 4;
-      background: #000;
-      border-radius: 12px;
-      display: block;
-    }
+  #output, #debugConsole {
+    width: 92%;
+    max-width: 500px;
+    margin: 15px auto;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: left;
+    white-space: pre-wrap;
+  }
 
-    #overlayCanvas {
-      position: absolute;
-      top: 58px;
-      left: 0;
-      width: 100% !important;
-      aspect-ratio: 3 / 4;
-      pointer-events: none;
-      background: transparent !important;
-      z-index: 9999;
-    }
+  #output {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid cyan;
+  }
 
-    @media (max-width: 700px) {
-      #overlayCanvas {
-        top: 58px;
-      }
-    }
+  #debugConsole {
+    background: #012;
+    color: #0f0;
+    font-size: .85rem;
+  }
+</style>
+</head>
 
-    #output {
-      width: 92%;
-      max-width: 500px;
-      margin: 15px auto;
-      padding: 15px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid cyan;
-      border-radius: 10px;
-      text-align: left;
-      white-space: pre-wrap;
-    }
+<body>
+<h1>🕉️ THE SEED · Palmistry AI · V200</h1>
 
-    #debugConsole {
-      width: 92%;
-      max-width: 500px;
-      margin: 15px auto;
-      padding: 10px;
-      background: #012;
-      color: #0f0;
-      border-radius: 10px;
-      text-align: left;
-      white-space: pre-wrap;
-      font-size: .85rem;
-    }
-  </style></head><body><h1>🕉️ THE SEED · Palmistry AI · V120</h1><select id="langSelect"></select>
-
+<!-- USER FORM -->
 <div id="userForm">
-  <h3 style="text-align:center;">User Profile</h3><label>Full Name</label> <input id="userName">
+  <h3 style="text-align:center;">User Profile</h3>
 
-<label>Gender</label> <select id="userGender"> <option value="">Select</option> <option>Male</option> <option>Female</option> </select>
+  <label>Full Name</label>
+  <input id="userName">
 
-<label>Date of Birth</label> <input type="date" id="userDOB">
+  <label>Gender</label>
+  <select id="userGender">
+    <option value="">Select</option>
+    <option>Male</option>
+    <option>Female</option>
+  </select>
 
-<label>Country</label> <input id="userCountry">
+  <label>Date of Birth</label>
+  <input type="date" id="userDOB">
 
-<label>Hand to Scan</label> <select id="handPref"> <option value="">Select</option> <option>Right Hand</option> <option>Left Hand</option> </select>
+  <label>Country</label>
+  <input id="userCountry">
 
-<label>Message</label>
+  <label>Hand to Scan</label>
+  <select id="handPref">
+    <option value="">Select</option>
+    <option>Right Hand</option>
+    <option>Left Hand</option>
+  </select>
 
-  <textarea id="userNote" rows="3"></textarea><button class="btn" onclick="saveUserForm()">Save</button>
+  <label>Message</label>
+  <textarea id="userNote" rows="3"></textarea>
 
-</div><div id="camBox">
+  <button class="btn" onclick="saveUserForm()">Save</button>
+</div>
+
+<!-- CAMERA BOX -->
+<div id="camBox">
   <video id="video" autoplay muted playsinline></video>
-</div><button class="btn" onclick="startCamera()">Open Camera</button> <button class="btn" onclick="captureHand()">Scan Hand</button>
+</div>
 
-<!-- ============================= --><!--        PALM PREVIEW BOX       --><!-- ============================= --><div id="palmPreviewBox">
-  <h3>Palm Preview</h3><canvas id="palmCanvas"></canvas> <canvas id="overlayCanvas"></canvas>
+<button class="btn" onclick="startCamera()">Open Camera</button>
+<button class="btn" onclick="captureHand()">Scan Hand</button>
 
-</div><div id="output">Awaiting scan…</div><div id="debugConsole">Debug console ready…</div><script>
+<!-- PALM PREVIEW -->
+<div id="palmPreviewBox">
+  <h3>Palm Preview</h3>
+  <canvas id="palmCanvas"></canvas>
+  <canvas id="overlayCanvas"></canvas>
+</div>
+
+<div id="output">Awaiting scan…</div>
+<div id="debugConsole">Debug console ready…</div>
+
+<!-- SHOW ERRORS -->
+<script>
 window.onerror = function(msg, url, line, col, error) {
   document.getElementById("debugConsole").textContent +=
     "🔥 ERROR: " + msg + "\nFILE: " + url + "\nLINE: " + line + "\n\n";
 };
-</script><script type="module" src="main.js"></script></body>
+</script>
+
+<!-- SAVE FUNCTION -->
+<script>
+function saveUserForm() {
+  try {
+    const text =
+      "User Profile Saved:\n" +
+      "Name: " + userName.value + "\n" +
+      "Gender: " + userGender.value + "\n" +
+      "DOB: " + userDOB.value + "\n" +
+      "Country: " + userCountry.value + "\n" +
+      "Hand: " + handPref.value + "\n" +
+      "Message: " + userNote.value + "\n";
+
+    output.textContent = text;
+    debugConsole.textContent += "✔ User profile saved\n";
+
+  } catch(e) {
+    debugConsole.textContent += "🔥 ERROR saving form: " + e.message + "\n";
+  }
+}
+</script>
+
+<script type="module" src="main.js"></script>
+</body>
 </html>
