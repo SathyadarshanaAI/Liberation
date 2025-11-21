@@ -1,204 +1,135 @@
-/* =====================================================
-   🕉️ THE SEED · Palmistry AI · V230
-   MAIN.JS — MediaPipe Stable + Freeze Capture Fixed
-   ===================================================== */
+/* ===================================================== 🕉️ THE SEED · Palmistry AI · V300 MAIN.JS — Permanent AI BOX LOCK + SMOOTH + COLOR ===================================================== */
 
-let video = document.getElementById("video");
-let palmCanvas = document.getElementById("palmCanvas");
-let overlayCanvas = document.getElementById("overlayCanvas");
-let dbg = document.getElementById("debugConsole");
+let video = document.getElementById("video"); let palmCanvas = document.getElementById("palmCanvas"); let overlayCanvas = document.getElementById("overlayCanvas"); let dbg = document.getElementById("debugConsole");
 
-const palmCtx = palmCanvas.getContext("2d");
-const overlayCtx = overlayCanvas.getContext("2d");
+const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.getContext("2d");
 
-let mpHands = null;
-let hands = null;
-let running = false;
-let lastHand = null;
+let mpHands = null; let hands = null; let running = false; let lastHand = null; let boxMemory = []; let lastStableBox = null; // 🔥 NEW — AI BOX LOCK
 
-let boxMemory = [];      // ← NEW FIX
-let smoothBox = null;    // ← NEW FIX
+/* ===================================================== LOAD MEDIAPIPE HANDS ===================================================== */ async function loadHandModel() { try { log("Loading MediaPipe Hands...");
 
-/* =====================================================
-   LOAD MEDIAPIPE
-   ===================================================== */
-async function loadHandModel() {
-    try {
-        log("Loading MediaPipe Hands...");
+await import("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
+    await import("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
+    await import("https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js");
 
-        await import("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
-        await import("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
-        await import("https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js");
+    mpHands = window.Hands;
 
-        mpHands = window.Hands;
+    hands = new mpHands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
 
-        hands = new mpHands({
-            locateFile: file =>
-                `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+    });
 
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.7,
-            minTrackingConfidence: 0.7
-        });
+    hands.onResults(onHandResults);
 
-        hands.onResults(onHandResults);
+    log("MediaPipe Hands Loaded ✔");
+} catch (e) {
+    error("Model Load Failed: " + e.message);
+}
 
-        log("MediaPipe Hands Loaded ✔");
-    } catch (e) {
-        error("Model Load Failed: " + e.message);
-    }
 }
 
 loadHandModel();
 
-/* =====================================================
-   START CAMERA
-   ===================================================== */
-export async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" }
-        });
+/* ===================================================== START CAMERA ===================================================== */ export async function startCamera() { try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
 
-        video.srcObject = stream;
+video.srcObject = stream;
+    running = true;
+    startFrameLoop();
 
-        running = true;
-        startFrameLoop();
-
-        log("Camera started ✔");
-    } catch (e) {
-        error("Camera failed: " + e.message);
-    }
+    log("Camera started ✔");
+} catch (e) {
+    error("Camera failed: " + e.message);
 }
 
-/* =====================================================
-   FRAME LOOP
-   ===================================================== */
-function startFrameLoop() {
-    const loop = async () => {
-        if (!running) return;
-        if (hands) await hands.send({ image: video });
-        requestAnimationFrame(loop);
-    };
-    loop();
 }
 
-/* =====================================================
-   WHEN AI DETECTS HAND
-   ===================================================== */
-function onHandResults(results) {
-    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+/* ===================================================== MAIN LOOP ===================================================== */ function startFrameLoop() { const loop = async () => { if (!running) return; if (hands) await hands.send({ image: video }); requestAnimationFrame(loop); }; loop(); }
 
-    if (!results.multiHandLandmarks ||
-        results.multiHandLandmarks.length === 0) {
-        lastHand = null;
-        return;
-    }
+/* ===================================================== WHEN HAND DETECTED ===================================================== */ function onHandResults(results) { overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-    lastHand = results.multiHandLandmarks[0];
-
-    drawStabilizedBox(lastHand);
+if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+    return;
 }
 
-/* =====================================================
-   AI BOX — Smooth Stabilizer
-   ===================================================== */
-function drawStabilizedBox(points) {
+lastHand = results.multiHandLandmarks[0];
+drawAIBox(lastHand);
 
-    const xs = points.map(p => p.x * overlayCanvas.width);
-    const ys = points.map(p => p.y * overlayCanvas.height);
-
-    const box = {
-        x: Math.min(...xs),
-        y: Math.min(...ys),
-        w: Math.max(...xs) - Math.min(...xs),
-        h: Math.max(...ys) - Math.min(...ys)
-    };
-
-    boxMemory.push(box);
-    if (boxMemory.length > 5) boxMemory.shift(); // Keep last 5 frames
-
-    smoothBox = boxMemory.reduce((a, b) => ({
-        x: a.x + b.x,
-        y: a.y + b.y,
-        w: a.w + b.w,
-        h: a.h + b.h
-    }), { x: 0, y: 0, w: 0, h: 0 });
-
-    smoothBox.x /= boxMemory.length;
-    smoothBox.y /= boxMemory.length;
-    smoothBox.w /= boxMemory.length;
-    smoothBox.h /= boxMemory.length;
-
-    overlayCtx.strokeStyle = "#00e5ff";
-    overlayCtx.lineWidth = 3;
-    overlayCtx.strokeRect(smoothBox.x, smoothBox.y, smoothBox.w, smoothBox.h);
-
-    log("AI palm box drawn ✔");
 }
 
-/* =====================================================
-   CAPTURE HAND (FREEZE FRAME)
-   ===================================================== */
-export async function captureHand() {
-    try {
-        document.getElementById("palmPreviewBox").style.display = "block";
+/* ===================================================== DRAW AI BOX (LOCK + SMOOTH) ===================================================== */ function drawAIBox(points) { const xs = points.map(p => p.x * overlayCanvas.width); const ys = points.map(p => p.y * overlayCanvas.height);
 
-        resizePalmCanvas();
-        resizeOverlay();
+const box = {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys)
+};
 
-        if (video.readyState < 2) {
-            await new Promise(res => setTimeout(res, 150));
-        }
+// Save 10-frame history
+boxMemory.push(box);
+if (boxMemory.length > 10) boxMemory.shift();
 
-        palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
 
-        if (smoothBox) {
-            overlayCtx.strokeRect(smoothBox.x, smoothBox.y, smoothBox.w, smoothBox.h);
-        }
+const smooth = {
+    minX: avg(boxMemory.map(b => b.minX)),
+    maxX: avg(boxMemory.map(b => b.maxX)),
+    minY: avg(boxMemory.map(b => b.minY)),
+    maxY: avg(boxMemory.map(b => b.maxY))
+};
 
-        log("Palm captured successfully ✔ (Freeze OK)");
-    } catch (e) {
-        error("Capture failed: " + e.message);
-    }
+// LOCK BOX (Never loses hand)
+lastStableBox = smooth;
+
+drawBox(lastStableBox);
+log("AI palm box drawn ✔");
+
 }
 
-/* =====================================================
-   RESIZING
-   ===================================================== */
-function resizePalmCanvas() {
-    const w = palmCanvas.parentElement.clientWidth;
-    palmCanvas.width = w;
-    palmCanvas.height = w * 1.333;
+/* ===================================================== BOX RENDER FUNCTION ===================================================== */ function drawBox(b) { overlayCtx.strokeStyle = "#ffd700"; // Cyan Neon overlayCtx.lineWidth = 4;
+
+overlayCtx.strokeRect(
+    b.minX,
+    b.minY,
+    b.maxX - b.minX,
+    b.maxY - b.minY
+);
+
 }
 
-function resizeOverlay() {
-    overlayCanvas.width = palmCanvas.width;
-    overlayCanvas.height = palmCanvas.height;
+/* ===================================================== CAPTURE HAND (PERMANENT BOX) ===================================================== */ export async function captureHand() { try { document.getElementById("palmPreviewBox").style.display = "block";
+
+resizePalmCanvas();
+    resizeOverlay();
+
+    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+
+    if (lastStableBox) drawBox(lastStableBox);
+
+    log("Palm captured successfully ✔ (LOCK MODE)");
+
+} catch (e) {
+    error("Capture failed: " + e.message);
 }
 
-window.addEventListener("resize", () => {
-    if (document.getElementById("palmPreviewBox").style.display === "block") {
-        resizePalmCanvas();
-        resizeOverlay();
-    }
-});
-
-/* =====================================================
-   DEBUG
-   ===================================================== */
-function log(msg) {
-    dbg.textContent += "✔ " + msg + "\n";
 }
 
-function error(msg) {
-    dbg.textContent += "🔥 ERROR: " + msg + "\n";
-}
+/* ===================================================== RESIZE ===================================================== */ function resizePalmCanvas() { const w = palmCanvas.parentElement.clientWidth; palmCanvas.width = w; palmCanvas.height = w * 1.333; }
 
-export default { startCamera, captureHand };
+function resizeOverlay() { overlayCanvas.width = palmCanvas.width; overlayCanvas.height = palmCanvas.height; }
 
-window.startCamera = startCamera;
-window.captureHand = captureHand;
+window.addEventListener("resize", () => { if (document.getElementById("palmPreviewBox").style.display === "block") { resizePalmCanvas(); resizeOverlay(); } });
+
+/* ===================================================== DEBUG ===================================================== */ function log(msg) { dbg.textContent += "✔ " + msg + " "; }
+
+function error(msg) { dbg.textContent += "🔥 ERROR: " + msg + " "; }
+
+/* ===================================================== EXPORT ===================================================== */ export default { startCamera, captureHand };
+
+window.startCamera = startCamera; window.captureHand = captureHand;
