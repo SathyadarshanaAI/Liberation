@@ -1,179 +1,204 @@
-/* ===================================================== 🕉️ THE SEED · Palmistry AI · V300 ULTRA-STABLE MAIN.JS — MediaPipe Hands + Freeze Fix + Stabilized Box ===================================================== */
+/* =====================================================
+   🕉️ THE SEED · Palmistry AI · V230
+   MAIN.JS — MediaPipe Stable + Freeze Capture Fixed
+   ===================================================== */
 
-let video = document.getElementById("video"); let palmCanvas = document.getElementById("palmCanvas"); let overlayCanvas = document.getElementById("overlayCanvas"); let dbg = document.getElementById("debugConsole");
+let video = document.getElementById("video");
+let palmCanvas = document.getElementById("palmCanvas");
+let overlayCanvas = document.getElementById("overlayCanvas");
+let dbg = document.getElementById("debugConsole");
 
-const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.getContext("2d");
+const palmCtx = palmCanvas.getContext("2d");
+const overlayCtx = overlayCanvas.getContext("2d");
 
-let mpHands = null; let hands = null; let running = false; let lastHand = null; let boxMemory = []; // <-- FIX ADDED = null; let hands = null; let running = false; let lastHand = null;
+let mpHands = null;
+let hands = null;
+let running = false;
+let lastHand = null;
 
-// === Stabilizer Memory === let boxMemory = []; let memorySize = 10;  // Last 10 frames smoothing
+let boxMemory = [];      // ← NEW FIX
+let smoothBox = null;    // ← NEW FIX
 
-/* ===================================================== LOAD MEDIAPIPE HANDS ===================================================== */ async function loadHandModel() { try { log("Loading MediaPipe Hands...");
+/* =====================================================
+   LOAD MEDIAPIPE
+   ===================================================== */
+async function loadHandModel() {
+    try {
+        log("Loading MediaPipe Hands...");
 
-await import("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
-    await import("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
-    await import("https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js");
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js");
 
-    mpHands = window.Hands;
+        mpHands = window.Hands;
 
-    hands = new mpHands({
-        locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
+        hands = new mpHands({
+            locateFile: file =>
+                `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
 
-    hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.7,
-        minTrackingConfidence: 0.7
-    });
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
 
-    hands.onResults(onHandResults);
+        hands.onResults(onHandResults);
 
-    log("MediaPipe Hands Loaded ✔");
-
-} catch (e) {
-    error("Model Load Failed: " + e.message);
-}
-
+        log("MediaPipe Hands Loaded ✔");
+    } catch (e) {
+        error("Model Load Failed: " + e.message);
+    }
 }
 
 loadHandModel();
 
-/* ===================================================== START CAMERA ===================================================== */ export async function startCamera() { try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+/* =====================================================
+   START CAMERA
+   ===================================================== */
+export async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+        });
 
-video.srcObject = stream;
-    running = true;
-    startFrameLoop();
+        video.srcObject = stream;
 
-    log("Camera started ✔");
+        running = true;
+        startFrameLoop();
 
-} catch (e) {
-    error("Camera failed: " + e.message);
+        log("Camera started ✔");
+    } catch (e) {
+        error("Camera failed: " + e.message);
+    }
 }
 
+/* =====================================================
+   FRAME LOOP
+   ===================================================== */
+function startFrameLoop() {
+    const loop = async () => {
+        if (!running) return;
+        if (hands) await hands.send({ image: video });
+        requestAnimationFrame(loop);
+    };
+    loop();
 }
 
-/* ===================================================== LIVE FRAME LOOP ===================================================== */ function startFrameLoop() { const loop = async () => { if (!running) return;
+/* =====================================================
+   WHEN AI DETECTS HAND
+   ===================================================== */
+function onHandResults(results) {
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-if (hands) await hands.send({ image: video });
-
-    requestAnimationFrame(loop);
-};
-loop();
-
-}
-
-/* ===================================================== WHEN MEDIAPIPE DETECTS HAND ===================================================== */ function onHandResults(results) {
-
-overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-
-if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-    lastHand = null;
-    return;
-}
-
-// Confidence check — ignore low-quality frames
-if (results.multiHandedness && results.multiHandedness[0].score < 0.50) return;
-
-lastHand = results.multiHandLandmarks[0];
-
-drawHandOutline(lastHand);
-
-}
-
-/* ===================================================== STABILIZED HAND BOX ===================================================== */ function drawHandOutline(points) { // Stabilize using last 10 frames const xs = points.map(p => p.x * overlayCanvas.width); const ys = points.map(p => p.y * overlayCanvas.height);
-
-const box = {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minY: Math.min(...ys),
-    maxY: Math.max(...ys)
-};
-
-boxMemory.push(box);
-if (boxMemory.length > 10) boxMemory.shift();
-
-const avg = (arr) => arr.reduce((a,b)=>a+b,0) / arr.length;
-
-const smooth = {
-    minX: avg(boxMemory.map(b=>b.minX)),
-    maxX: avg(boxMemory.map(b=>b.maxX)),
-    minY: avg(boxMemory.map(b=>b.minY)),
-    maxY: avg(boxMemory.map(b=>b.maxY))
-};
-
-overlayCtx.strokeStyle = "#00e5ff";
-overlayCtx.lineWidth = 3;
-overlayCtx.strokeRect(smooth.minX, smooth.minY, smooth.maxX - smooth.minX, smooth.maxY - smooth.minY);
-
-log("AI palm box drawn ✔");
-
-}(points) { const xs = points.map(p => p.x * overlayCanvas.width); const ys = points.map(p => p.y * overlayCanvas.height);
-
-let box = {
-    minX: Math.min(...xs),
-    maxX: Math.max(...xs),
-    minY: Math.min(...ys),
-    maxY: Math.max(...ys)
-};
-
-// Save to memory
-boxMemory.push(box);
-if (boxMemory.length > memorySize) boxMemory.shift();
-
-// Smooth average
-let avg = {
-    minX: boxMemory.reduce((a,b)=>a+b.minX,0)/boxMemory.length,
-    maxX: boxMemory.reduce((a,b)=>a+b.maxX,0)/boxMemory.length,
-    minY: boxMemory.reduce((a,b)=>a+b.minY,0)/boxMemory.length,
-    maxY: boxMemory.reduce((a,b)=>a+b.maxY,0)/boxMemory.length
-};
-
-overlayCtx.strokeStyle = "#00e5ff";
-overlayCtx.lineWidth = 3;
-overlayCtx.strokeRect(
-    avg.minX,
-    avg.minY,
-    avg.maxX - avg.minX,
-    avg.maxY - avg.minY
-);
-
-log("AI palm box drawn ✔ (Stabilized)");
-
-}
-
-/* ===================================================== FREEZE HAND ===================================================== */ export async function captureHand() { try { document.getElementById("palmPreviewBox").style.display = "block";
-
-resizePalmCanvas();
-    resizeOverlay();
-
-    if (video.readyState < 2) {
-        log("Waiting for camera frame...");
-        await new Promise(res => setTimeout(res, 150));
+    if (!results.multiHandLandmarks ||
+        results.multiHandLandmarks.length === 0) {
+        lastHand = null;
+        return;
     }
 
-    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+    lastHand = results.multiHandLandmarks[0];
 
-    if (lastHand) drawHandOutline(lastHand);
-
-    log("Palm captured successfully ✔ (Freeze OK)");
-
-} catch (e) {
-    error("Capture failed: " + e.message);
+    drawStabilizedBox(lastHand);
 }
 
+/* =====================================================
+   AI BOX — Smooth Stabilizer
+   ===================================================== */
+function drawStabilizedBox(points) {
+
+    const xs = points.map(p => p.x * overlayCanvas.width);
+    const ys = points.map(p => p.y * overlayCanvas.height);
+
+    const box = {
+        x: Math.min(...xs),
+        y: Math.min(...ys),
+        w: Math.max(...xs) - Math.min(...xs),
+        h: Math.max(...ys) - Math.min(...ys)
+    };
+
+    boxMemory.push(box);
+    if (boxMemory.length > 5) boxMemory.shift(); // Keep last 5 frames
+
+    smoothBox = boxMemory.reduce((a, b) => ({
+        x: a.x + b.x,
+        y: a.y + b.y,
+        w: a.w + b.w,
+        h: a.h + b.h
+    }), { x: 0, y: 0, w: 0, h: 0 });
+
+    smoothBox.x /= boxMemory.length;
+    smoothBox.y /= boxMemory.length;
+    smoothBox.w /= boxMemory.length;
+    smoothBox.h /= boxMemory.length;
+
+    overlayCtx.strokeStyle = "#00e5ff";
+    overlayCtx.lineWidth = 3;
+    overlayCtx.strokeRect(smoothBox.x, smoothBox.y, smoothBox.w, smoothBox.h);
+
+    log("AI palm box drawn ✔");
 }
 
-/* ===================================================== RESIZE CANVAS ===================================================== */ function resizePalmCanvas() { const w = palmCanvas.parentElement.clientWidth; palmCanvas.width = w; palmCanvas.height = w * 1.333; }
+/* =====================================================
+   CAPTURE HAND (FREEZE FRAME)
+   ===================================================== */
+export async function captureHand() {
+    try {
+        document.getElementById("palmPreviewBox").style.display = "block";
 
-function resizeOverlay() { overlayCanvas.width = palmCanvas.width; overlayCanvas.height = palmCanvas.height; }
+        resizePalmCanvas();
+        resizeOverlay();
 
-window.addEventListener("resize", () => { if (document.getElementById("palmPreviewBox").style.display === "block") { resizePalmCanvas(); resizeOverlay(); } });
+        if (video.readyState < 2) {
+            await new Promise(res => setTimeout(res, 150));
+        }
 
-/* ===================================================== DEBUG ===================================================== */ function log(msg) { dbg.textContent += "✔ " + msg + " "; }
+        palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
 
-function error(msg) { dbg.textContent += "🔥 ERROR: " + msg + " "; }
+        if (smoothBox) {
+            overlayCtx.strokeRect(smoothBox.x, smoothBox.y, smoothBox.w, smoothBox.h);
+        }
 
-/* ===================================================== EXPORT ===================================================== */ export default { startCamera, captureHand };
+        log("Palm captured successfully ✔ (Freeze OK)");
+    } catch (e) {
+        error("Capture failed: " + e.message);
+    }
+}
 
-window.startCamera = startCamera; window.captureHand = captureHand;
+/* =====================================================
+   RESIZING
+   ===================================================== */
+function resizePalmCanvas() {
+    const w = palmCanvas.parentElement.clientWidth;
+    palmCanvas.width = w;
+    palmCanvas.height = w * 1.333;
+}
+
+function resizeOverlay() {
+    overlayCanvas.width = palmCanvas.width;
+    overlayCanvas.height = palmCanvas.height;
+}
+
+window.addEventListener("resize", () => {
+    if (document.getElementById("palmPreviewBox").style.display === "block") {
+        resizePalmCanvas();
+        resizeOverlay();
+    }
+});
+
+/* =====================================================
+   DEBUG
+   ===================================================== */
+function log(msg) {
+    dbg.textContent += "✔ " + msg + "\n";
+}
+
+function error(msg) {
+    dbg.textContent += "🔥 ERROR: " + msg + "\n";
+}
+
+export default { startCamera, captureHand };
+
+window.startCamera = startCamera;
+window.captureHand = captureHand;
