@@ -1,6 +1,6 @@
 /* =====================================================
-   🕉️ THE SEED · Palmistry AI · V300
-   MediaPipe + PNG Hand Overlay + Freeze Capture
+   🕉️ THE SEED · Palmistry AI · V230
+   PNG Guide + AI Box + Stable Freeze Mode
    ===================================================== */
 
 let video = document.getElementById("video");
@@ -16,23 +16,20 @@ let hands = null;
 let running = false;
 let lastHand = null;
 
-let currentMode = "LEFT";  // auto: LEFT → RIGHT
+let mode = "LEFT";   // LEFT → RIGHT flow
+let leftCaptured = false;
+let rightCaptured = false;
+
+// LOAD GUIDE PNG
+const guideImg = new Image();
+guideImg.src = "left-hand-outline.png"; // <-- CHANGE FILE NAME IF NEEDED
 
 /* =====================================================
-   LOAD PNG HAND GUIDES
-   ===================================================== */
-const leftHandImg = new Image();
-leftHandImg.src = "left-hand.png";
-
-const rightHandImg = new Image();
-rightHandImg.src = "right-hand.png";
-
-/* =====================================================
-   LOAD MEDIAPIPE HAND DETECTOR
+   LOAD MEDIAPIPE HANDS
    ===================================================== */
 async function loadHandModel() {
     try {
-        log("Loading MediaPipe Hands…");
+        log("Loading MediaPipe Hands...");
 
         await import("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
         await import("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
@@ -41,14 +38,15 @@ async function loadHandModel() {
         mpHands = window.Hands;
 
         hands = new mpHands({
-            locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+            locateFile: (file) =>
+                `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
         });
 
         hands.setOptions({
             maxNumHands: 1,
             modelComplexity: 1,
-            minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
         });
 
         hands.onResults(onHandResults);
@@ -56,7 +54,7 @@ async function loadHandModel() {
         log("MediaPipe Hands Loaded ✔");
 
     } catch (e) {
-        error("Model load failed: " + e.message);
+        error("Model Load Failed: " + e.message);
     }
 }
 
@@ -74,10 +72,14 @@ export async function startCamera() {
         video.srcObject = stream;
         running = true;
 
-        startFrameLoop();
+        mode = "LEFT";
+        leftCaptured = false;
+        rightCaptured = false;
 
         log("Camera started ✔");
-        log("Place your LEFT hand inside the guide 🫲");
+        log("📌 Place your LEFT hand inside the guide ✋");
+
+        startFrameLoop();
 
     } catch (e) {
         error("Camera failed: " + e.message);
@@ -85,7 +87,7 @@ export async function startCamera() {
 }
 
 /* =====================================================
-   LIVE FRAME LOOP → AI
+   LIVE FRAME LOOP
    ===================================================== */
 function startFrameLoop() {
     const loop = async () => {
@@ -93,17 +95,19 @@ function startFrameLoop() {
 
         if (hands) await hands.send({ image: video });
 
-        drawOverlayGuide();   // Always draw PNG guide
-
         requestAnimationFrame(loop);
     };
     loop();
 }
 
 /* =====================================================
-   WHEN HAND DETECTED
+   ON HAND DETECTION
    ===================================================== */
 function onHandResults(results) {
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    drawGuideOutline();
+
     if (!results.multiHandLandmarks ||
         results.multiHandLandmarks.length === 0) {
         lastHand = null;
@@ -111,29 +115,46 @@ function onHandResults(results) {
     }
 
     lastHand = results.multiHandLandmarks[0];
+
+    drawAIBox(lastHand);
 }
 
 /* =====================================================
-   DRAW PNG HAND GUIDE OVERLAY (MAIN FEATURE)
+   GUIDE PNG
    ===================================================== */
-function drawOverlayGuide() {
-    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-
-    let img = (currentMode === "LEFT") ? leftHandImg : rightHandImg;
-
-    const w = overlayCanvas.width * 0.80;
-    const h = overlayCanvas.height * 0.80;
-
-    const x = (overlayCanvas.width - w) / 2;
-    const y = (overlayCanvas.height - h) / 2;
-
-    overlayCtx.globalAlpha = 0.60;
-    overlayCtx.drawImage(img, x, y, w, h);
-    overlayCtx.globalAlpha = 1.0;
+function drawGuideOutline() {
+    try {
+        overlayCtx.drawImage(
+            guideImg,
+            overlayCanvas.width * 0.1,
+            overlayCanvas.height * 0.08,
+            overlayCanvas.width * 0.8,
+            overlayCanvas.height * 0.85
+        );
+    } catch {}
 }
 
 /* =====================================================
-   CAPTURE HAND IMAGE (FREEZE)
+   DRAW AI BOX
+   ===================================================== */
+function drawAIBox(points) {
+    const xs = points.map(p => p.x * overlayCanvas.width);
+    const ys = points.map(p => p.y * overlayCanvas.height);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    overlayCtx.strokeStyle = "gold";
+    overlayCtx.lineWidth = 3;
+    overlayCtx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+
+    log("✔ AI palm box drawn");
+}
+
+/* =====================================================
+   CAPTURE HAND
    ===================================================== */
 export async function captureHand() {
     if (!lastHand) {
@@ -148,23 +169,33 @@ export async function captureHand() {
 
     palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
 
-    log("Palm captured ✔");
+    if (lastHand) drawAIBox(lastHand);
 
-    if (currentMode === "LEFT") {
-        currentMode = "RIGHT";
-        log("Now place your RIGHT hand inside the guide 👉");
-    } else {
-        log("Both hands captured ✔ Completed!");
+    if (mode === "LEFT") {
+        leftCaptured = true;
+        log("✔ Left palm captured");
+        mode = "RIGHT";
+
+        guideImg.src = "right-hand-outline.png";
+        log("👉 Now place your RIGHT hand inside the guide");
+
+        return;
+    }
+
+    if (mode === "RIGHT") {
+        rightCaptured = true;
+        log("✔ Right palm captured");
+        log("🎉 Both hands captured ✔ All done!");
+        running = false;
     }
 }
 
 /* =====================================================
-   CANVAS RESIZE
+   RESIZE HANDLERS
    ===================================================== */
 function resizePalmCanvas() {
-    const w = palmCanvas.parentElement.clientWidth;
-    palmCanvas.width = w;
-    palmCanvas.height = w * 1.333;
+    palmCanvas.width = palmCanvas.parentElement.clientWidth;
+    palmCanvas.height = palmCanvas.width * 1.333;
 }
 
 function resizeOverlay() {
@@ -173,38 +204,22 @@ function resizeOverlay() {
 }
 
 window.addEventListener("resize", () => {
-    resizePalmCanvas();
-    resizeOverlay();
+    if (document.getElementById("palmPreviewBox").style.display === "block") {
+        resizePalmCanvas();
+        resizeOverlay();
+    }
 });
 
 /* =====================================================
-   DEBUG HELPERS (OPTIMIZED)
+   DEBUG FUNCTIONS
    ===================================================== */
 function log(msg) {
     dbg.textContent += "✔ " + msg + "\n";
-    dbg.scrollTop = dbg.scrollHeight;
-
-    if (dbg.textContent.length > 8000)
-        dbg.textContent = dbg.textContent.slice(-4000);
 }
 
 function error(msg) {
     dbg.textContent += "🔥 ERROR: " + msg + "\n";
-    dbg.scrollTop = dbg.scrollHeight;
-
-    if (dbg.textContent.length > 8000)
-        dbg.textContent = dbg.textContent.slice(-4000);
 }
 
-/* =====================================================
-   SAFE EXPORTS
-   ===================================================== */
-window.startCamera = () => {
-    try { startCamera(); }
-    catch (e) { error("startCamera failed: " + e.message); }
-};
-
-window.captureHand = () => {
-    try { captureHand(); }
-    catch (e) { error("captureHand failed: " + e.message); }
-};
+window.startCamera = startCamera;
+window.captureHand = captureHand;
