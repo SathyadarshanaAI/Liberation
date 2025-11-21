@@ -4,7 +4,7 @@ let video = document.getElementById("video"); let palmCanvas = document.getEleme
 
 const palmCtx = palmCanvas.getContext("2d"); const overlayCtx = overlayCanvas.getContext("2d");
 
-let mpHands = null; let hands = null; let running = false; let lastHand = null;
+let mpHands = null; let hands = null; let running = false; let lastHand = null; let boxMemory = []; // <-- FIX ADDED = null; let hands = null; let running = false; let lastHand = null;
 
 // === Stabilizer Memory === let boxMemory = []; let memorySize = 10;  // Last 10 frames smoothing
 
@@ -81,7 +81,34 @@ drawHandOutline(lastHand);
 
 }
 
-/* ===================================================== STABILIZED HAND BOX ===================================================== */ function drawHandOutline(points) { const xs = points.map(p => p.x * overlayCanvas.width); const ys = points.map(p => p.y * overlayCanvas.height);
+/* ===================================================== STABILIZED HAND BOX ===================================================== */ function drawHandOutline(points) { // Stabilize using last 10 frames const xs = points.map(p => p.x * overlayCanvas.width); const ys = points.map(p => p.y * overlayCanvas.height);
+
+const box = {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys)
+};
+
+boxMemory.push(box);
+if (boxMemory.length > 10) boxMemory.shift();
+
+const avg = (arr) => arr.reduce((a,b)=>a+b,0) / arr.length;
+
+const smooth = {
+    minX: avg(boxMemory.map(b=>b.minX)),
+    maxX: avg(boxMemory.map(b=>b.maxX)),
+    minY: avg(boxMemory.map(b=>b.minY)),
+    maxY: avg(boxMemory.map(b=>b.maxY))
+};
+
+overlayCtx.strokeStyle = "#00e5ff";
+overlayCtx.lineWidth = 3;
+overlayCtx.strokeRect(smooth.minX, smooth.minY, smooth.maxX - smooth.minX, smooth.maxY - smooth.minY);
+
+log("AI palm box drawn ✔");
+
+}(points) { const xs = points.map(p => p.x * overlayCanvas.width); const ys = points.map(p => p.y * overlayCanvas.height);
 
 let box = {
     minX: Math.min(...xs),
