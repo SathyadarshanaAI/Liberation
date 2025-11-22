@@ -1,15 +1,17 @@
 /* ================================================================
-   🕉️ THE SEED · Palmistry AI · V230-AI BOX (FINAL FIX)
-   MAIN.JS — Camera + MediaPipe AI + Freeze Capture + Analyzer
+   🕉️ THE SEED · Palmistry AI · V240-AI MASK
+   MAIN.JS — Camera + MediaPipe AI + Freeze Capture + Hand Mask
 ================================================================ */
 
 import { analyzePalm } from "./palm-engine-v230.js";
+import { drawHandMask } from "./hand-mask_engine.js";   // 👈 NEW MASK ENGINE
 
 let video, palmCanvas, overlayCanvas, outputBox, debugBox;
 let palmCtx, overlayCtx;
 
 let hands = null;
 let lastAIBox = null;
+let lastLandmarks = null;
 let running = false;
 
 /* ------------------------------------------------------------
@@ -27,17 +29,16 @@ function initRefs() {
 }
 
 /* ------------------------------------------------------------
-   OVERLAY CANVAS AUTO RESIZE (THE FIX)
+   OVERLAY RESIZE FIX
 ------------------------------------------------------------- */
 function syncOverlaySize() {
     const box = document.getElementById("palmPreviewBox");
-
     overlayCanvas.width = box.clientWidth;
-    overlayCanvas.height = box.clientWidth * 1.333; // same palm ratio
+    overlayCanvas.height = box.clientWidth * 1.333;
 }
 
 /* ------------------------------------------------------------
-   LOAD MEDIAPIPE HANDS
+   LOAD MEDIAPIPE AI
 ------------------------------------------------------------- */
 async function loadHands() {
     try {
@@ -56,8 +57,8 @@ async function loadHands() {
         hands.setOptions({
             maxNumHands: 1,
             modelComplexity: 1,
-            minDetectionConfidence: 0.65,
-            minTrackingConfidence: 0.65
+            minDetectionConfidence: 0.68,
+            minTrackingConfidence: 0.68
         });
 
         hands.onResults(onAIResults);
@@ -70,7 +71,7 @@ async function loadHands() {
 loadHands();
 
 /* ------------------------------------------------------------
-   START CAMERA + AI LOOP
+   START CAMERA
 ------------------------------------------------------------- */
 export async function startCamera() {
     initRefs();
@@ -79,8 +80,8 @@ export async function startCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" }
         });
-        video.srcObject = stream;
 
+        video.srcObject = stream;
         running = true;
         aiLoop();
 
@@ -91,15 +92,13 @@ export async function startCamera() {
 }
 
 /* ------------------------------------------------------------
-   AI DETECTION LOOP
+   AI LOOP
 ------------------------------------------------------------- */
 async function aiLoop() {
     if (!running) return;
-
     if (hands && video.videoWidth > 0) {
         await hands.send({ image: video });
     }
-
     requestAnimationFrame(aiLoop);
 }
 
@@ -108,18 +107,19 @@ async function aiLoop() {
 ------------------------------------------------------------- */
 function onAIResults(results) {
 
-    syncOverlaySize(); // ← AI BOX REAL FIX ✓
+    syncOverlaySize();
 
     overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
     if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
         lastAIBox = null;
+        lastLandmarks = null;
         return;
     }
 
     const pts = results.multiHandLandmarks[0];
+    lastLandmarks = pts;
 
-    // Convert 0–1 coords → pixels
     const xs = pts.map(p => p.x * overlayCanvas.width);
     const ys = pts.map(p => p.y * overlayCanvas.height);
 
@@ -135,11 +135,15 @@ function onAIResults(results) {
         height: maxY - minY
     };
 
-    overlayCtx.strokeStyle = "#ffd700";
+    // AI BOX
+    overlayCtx.strokeStyle = "#00eaff";
     overlayCtx.lineWidth = 3;
     overlayCtx.strokeRect(minX, minY, lastAIBox.width, lastAIBox.height);
 
-    log("AI box updated ✔");
+    // HAND MASK (LIVE)
+    drawHandMask(overlayCtx, pts, overlayCanvas.width, overlayCanvas.height);
+
+    log("AI tracking ✔");
 }
 
 /* ------------------------------------------------------------
@@ -150,21 +154,15 @@ export function captureHand() {
 
     document.getElementById("palmPreviewBox").style.display = "block";
 
-    // Resize for palmCanvas
     palmCanvas.width = overlayCanvas.width;
     palmCanvas.height = overlayCanvas.height;
 
-    // Draw video frame
-    palmCtx.drawImage(
-        video,
-        0, 0,
-        palmCanvas.width,
-        palmCanvas.height
-    );
+    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
 
-    // Draw AI box again
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    // DRAW AI BOX on frozen
     if (lastAIBox) {
-        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
         overlayCtx.strokeStyle = "#ffd700";
         overlayCtx.lineWidth = 3;
         overlayCtx.strokeRect(
@@ -175,28 +173,27 @@ export function captureHand() {
         );
     }
 
+    // DRAW HAND MASK (FROZEN)
+    if (lastLandmarks) {
+        drawHandMask(overlayCtx, lastLandmarks, overlayCanvas.width, overlayCanvas.height);
+    }
+
     log("Frame frozen ✔");
 
-    // Extract pixels
-    const pixels = palmCtx.getImageData(
-        0, 0,
-        palmCanvas.width,
-        palmCanvas.height
-    );
-
+    const pixels = palmCtx.getImageData(0, 0, palmCanvas.width, palmCanvas.height);
     const selectedHand = document.getElementById("handPref").value;
 
     const analysis = analyzePalm(pixels, selectedHand);
 
     outputBox.textContent =
-        "🧠 Sathyadarshana Mini Report – V230\n\n" +
+        "🧠 Sathyadarshana Mini Report – V240\n\n" +
         analysis.miniReport;
 
     log("AI analysis completed ✔");
 }
 
 /* ------------------------------------------------------------
-   DEBUG FUNCTIONS
+   DEBUG
 ------------------------------------------------------------- */
 function log(msg) {
     debugBox.textContent += "✔ " + msg + "\n";
