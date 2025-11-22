@@ -1,31 +1,31 @@
-/* ============================================================
-   THE SEED · Palmistry AI · V220
-   main.js — Camera + Hand Capture Controller
-   ============================================================ */
+/* ================================================================
+   🕉️ THE SEED · Palmistry AI · V230
+   MAIN.JS — Camera + Freeze + Analyzer Connection
+   ================================================================ */
 
-let video = null;
-let palmCanvas = null;
-let overlayCanvas = null;
-let output = null;
-let debugConsole = null;
-let ctxPalm = null;
-let ctxOverlay = null;
+import { analyzePalm } from "./palm-engine-v230.js";
 
-/* INIT DOM REFS */
+let video, palmCanvas, overlayCanvas, outputBox, debugBox;
+let palmCtx, overlayCtx;
+
+/* ------------------------------------------------------------
+   INITIALIZE DOM REFERENCES
+------------------------------------------------------------- */
 function initRefs() {
     video = document.getElementById("video");
     palmCanvas = document.getElementById("palmCanvas");
     overlayCanvas = document.getElementById("overlayCanvas");
-    output = document.getElementById("output");
-    debugConsole = document.getElementById("debugConsole");
 
-    ctxPalm = palmCanvas.getContext("2d");
-    ctxOverlay = overlayCanvas.getContext("2d");
+    outputBox = document.getElementById("output");
+    debugBox = document.getElementById("debugConsole");
+
+    palmCtx = palmCanvas.getContext("2d");
+    overlayCtx = overlayCanvas.getContext("2d");
 }
 
-/* ============================================================
+/* ------------------------------------------------------------
    START CAMERA
-   ============================================================ */
+------------------------------------------------------------- */
 export async function startCamera() {
     initRefs();
 
@@ -36,40 +36,84 @@ export async function startCamera() {
 
         video.srcObject = stream;
 
-        debugConsole.textContent += "✔ Camera started\n";
-    } 
-    catch (err) {
-        debugConsole.textContent += "🔥 Camera Error: " + err + "\n";
+        log("Camera started ✔");
+
+    } catch (err) {
+        error("Camera error: " + err);
     }
 }
 
-/* ============================================================
-   CAPTURE HAND FROM CAMERA
-   ============================================================ */
-export function captureHand() {
+/* ------------------------------------------------------------
+   CAPTURE HAND → FREEZE FRAME
+------------------------------------------------------------- */
+export async function captureHand() {
     initRefs();
 
-    // Show preview box
     document.getElementById("palmPreviewBox").style.display = "block";
 
-    // Resize canvas
+    // Resize canvas to match video frame
     palmCanvas.width = video.videoWidth;
     palmCanvas.height = video.videoHeight;
 
-    // Draw current video frame
-    ctxPalm.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+    overlayCanvas.width = video.videoWidth;
+    overlayCanvas.height = video.videoHeight;
 
-    output.textContent = "✔ Hand captured.\nProcessing…";
-    debugConsole.textContent += "✔ Frame captured into palmCanvas\n";
+    // Draw frame
+    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
 
-    // For now basic processing
-    basicLineScan();
+    log("Frame captured ✔");
+
+    // For future: overlay AI box or PNG
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    // Extract pixel data
+    const pixels = palmCtx.getImageData(
+        0,
+        0,
+        palmCanvas.width,
+        palmCanvas.height
+    );
+
+    // Identify selected hand
+    const selectedHand = document.getElementById("handPref").value || "Unknown";
+
+    // Build profile object
+    const profile = {
+        name: document.getElementById("userName").value,
+        dob: document.getElementById("userDOB").value,
+        gender: document.getElementById("userGender").value,
+        note: document.getElementById("userNote").value,
+        country: document.getElementById("userCountry").value,
+    };
+
+    log("Analyzing palm…");
+
+    // Call analyzer engine
+    const analysis = analyzePalm(pixels, selectedHand, profile);
+
+    // Display report
+    outputBox.textContent =
+        "🧠 Sathyadarshana Mini Report (V230)\n\n" +
+        analysis.miniReport;
+
+    log("Analysis complete ✔");
 }
 
-/* ============================================================
-   BASIC FAKE LINE SCAN (PLACEHOLDER)
-   ============================================================ */
-function basicLineScan() {
-    output.textContent += "\n✔ AI line scan ready (V220 placeholder)\n";
-    debugConsole.textContent += "✔ Placeholder line analysis executed\n";
+/* ------------------------------------------------------------
+   DEBUG HELPERS
+------------------------------------------------------------- */
+function log(msg) {
+    debugBox.textContent += "✔ " + msg + "\n";
 }
+
+function error(msg) {
+    debugBox.textContent += "🔥 " + msg + "\n";
+}
+
+/* ------------------------------------------------------------
+   EXPORT TO WINDOW (for index buttons)
+------------------------------------------------------------- */
+window.startCamera = startCamera;
+window.captureHand = captureHand;
+
+export default { startCamera, captureHand };
