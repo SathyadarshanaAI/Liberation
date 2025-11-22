@@ -1,6 +1,6 @@
 /* ================================================================
-   🕉️ THE SEED · Palmistry AI · V230.6
-   MAIN.JS — AI Box + Hand Mask + Freeze Capture
+   🕉️ THE SEED · Palmistry AI · V230.7 (STABLE)
+   MAIN.JS — AI Box + Hand Mask + Freeze Capture + Analyzer
 ================================================================ */
 
 import { applyHandMask } from "./hand-mask-engine.js";
@@ -28,11 +28,10 @@ function initRefs() {
 }
 
 /* ------------------------------------------------------------
-   AUTO RESIZE OVERLAY TO FIT PALM BOX
+   AUTO RESIZE OVERLAY
 ------------------------------------------------------------- */
 function syncOverlaySize() {
     const box = document.getElementById("palmPreviewBox");
-
     overlayCanvas.width = box.clientWidth;
     overlayCanvas.height = box.clientWidth * 1.333;
 }
@@ -64,6 +63,7 @@ async function loadHands() {
         hands.onResults(onAIResults);
 
         log("AI Model Ready ✔");
+
     } catch (e) {
         error("AI Load Failed: " + e);
     }
@@ -145,7 +145,7 @@ function onAIResults(results) {
 }
 
 /* ------------------------------------------------------------
-   CAPTURE HAND (FREEZE FRAME)
+   CAPTURE HAND
 ------------------------------------------------------------- */
 export function captureHand() {
     initRefs();
@@ -158,6 +158,7 @@ export function captureHand() {
 
     palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
 
+    // Redraw AI Box
     if (lastAIBox) {
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
         overlayCtx.strokeStyle = "#00eaff";
@@ -167,13 +168,18 @@ export function captureHand() {
 
     log("Frame frozen ✔");
 
+    // APPLY HAND MASK
     if (lastAIBox) {
-        applyHandMask(palmCtx, lastAIBox, document.getElementById("handMaskLeft"), document.getElementById("handMaskRight"));
+        const leftMask = document.getElementById("handMaskLeft");
+        const rightMask = document.getElementById("handMaskRight");
+        const selectedHand = document.getElementById("handPref").value;
+
+        applyHandMask(palmCtx, lastAIBox, leftMask, rightMask, selectedHand);
         log("Mask applied ✔");
     }
 
+    // ANALYZE PALM
     const pixels = palmCtx.getImageData(0, 0, palmCanvas.width, palmCanvas.height);
-
     const selectedHand = document.getElementById("handPref").value;
 
     const analysis = analyzePalm(pixels, selectedHand);
@@ -186,7 +192,7 @@ export function captureHand() {
 }
 
 /* ------------------------------------------------------------
-   LOGS
+   DEBUG
 ------------------------------------------------------------- */
 function log(msg) {
     debugBox.textContent += "✔ " + msg + "\n";
