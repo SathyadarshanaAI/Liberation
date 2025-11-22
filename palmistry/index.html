@@ -106,7 +106,7 @@
         top: 58px;
         left: 0;
         width: 100%;
-        height: calc(100% - 58px); /* FIXED: exact overlay match */
+        height: calc(100% - 58px);
         pointer-events: none;
         background: transparent !important;
         z-index: 9999;
@@ -216,6 +216,22 @@ function saveUserForm() {
 }
 </script>
 
+<!-- MAIN.JS MODULE -->
 <script type="module" src="main.js"></script>
+
+<!-- GLOBAL EXPORT LOADER FIX (REQUIRED) -->
+<script type="module">
+import "./main.js"
+    .then((mod) => {
+        window.startCamera = mod.startCamera;
+        window.captureHand = mod.captureHand;
+
+        debugConsole.textContent += "✔ main.js loaded + functions exported\n";
+    })
+    .catch((err) => {
+        debugConsole.textContent += "🔥 ERROR loading main.js: " + err + "\n";
+    });
+</script>
+
 </body>
 </html>
