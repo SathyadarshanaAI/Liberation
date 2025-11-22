@@ -1,7 +1,8 @@
-/* =====================================================
-   🕉️ THE SEED · Palmistry AI · V230
-   PNG Guide + AI Box + Stable Freeze Mode
-   ===================================================== */
+/* ============================================================
+   🕉️ THE SEED · Palmistry AI · V220
+   MAIN.JS — Dual Hand Capture + PNG Guide + AI Box
+   Compatible with palm-engine-v2.js
+   ============================================================ */
 
 let video = document.getElementById("video");
 let palmCanvas = document.getElementById("palmCanvas");
@@ -16,20 +17,29 @@ let hands = null;
 let running = false;
 let lastHand = null;
 
-let mode = "LEFT";   // LEFT → RIGHT flow
+// Capture flow
 let leftCaptured = false;
 let rightCaptured = false;
 
-// LOAD GUIDE PNG
-const guideImg = new Image();
-guideImg.src = "left-hand-outline.png"; // <-- CHANGE FILE NAME IF NEEDED
+let leftImage = null;
+let rightImage = null;
 
-/* =====================================================
-   LOAD MEDIAPIPE HANDS
-   ===================================================== */
+let leftLandmarks = null;
+let rightLandmarks = null;
+
+// PNG GUIDES
+const leftGuide = new Image();
+leftGuide.src = "assets/left.png";
+
+const rightGuide = new Image();
+rightGuide.src = "assets/right.png";
+
+/* ============================================================
+   LOAD MEDIAPIPE
+   ============================================================ */
 async function loadHandModel() {
     try {
-        log("Loading MediaPipe Hands...");
+        log("Loading MediaPipe Hands…");
 
         await import("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
         await import("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
@@ -60,10 +70,10 @@ async function loadHandModel() {
 
 loadHandModel();
 
-/* =====================================================
+/* ============================================================
    START CAMERA
-   ===================================================== */
-export async function startCamera() {
+   ============================================================ */
+async function startCamera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" }
@@ -71,25 +81,24 @@ export async function startCamera() {
 
         video.srcObject = stream;
         running = true;
-
-        mode = "LEFT";
-        leftCaptured = false;
-        rightCaptured = false;
+        startLoop();
 
         log("Camera started ✔");
-        log("📌 Place your LEFT hand inside the guide ✋");
 
-        startFrameLoop();
+        if (!leftCaptured)
+            log("📌 Place your LEFT hand inside the guide 🖐️");
+        else
+            log("👉 Now place your RIGHT hand inside the guide 🤚");
 
     } catch (e) {
         error("Camera failed: " + e.message);
     }
 }
 
-/* =====================================================
-   LIVE FRAME LOOP
-   ===================================================== */
-function startFrameLoop() {
+/* ============================================================
+   FRAME LOOP
+   ============================================================ */
+function startLoop() {
     const loop = async () => {
         if (!running) return;
 
@@ -100,13 +109,16 @@ function startFrameLoop() {
     loop();
 }
 
-/* =====================================================
-   ON HAND DETECTION
-   ===================================================== */
+/* ============================================================
+   WHEN HAND DETECTED
+   ============================================================ */
 function onHandResults(results) {
+
     overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-    drawGuideOutline();
+    // Draw PNG guide
+    let img = leftCaptured ? rightGuide : leftGuide;
+    overlayCtx.drawImage(img, 0, 0, overlayCanvas.width, overlayCanvas.height);
 
     if (!results.multiHandLandmarks ||
         results.multiHandLandmarks.length === 0) {
@@ -119,24 +131,9 @@ function onHandResults(results) {
     drawAIBox(lastHand);
 }
 
-/* =====================================================
-   GUIDE PNG
-   ===================================================== */
-function drawGuideOutline() {
-    try {
-        overlayCtx.drawImage(
-            guideImg,
-            overlayCanvas.width * 0.1,
-            overlayCanvas.height * 0.08,
-            overlayCanvas.width * 0.8,
-            overlayCanvas.height * 0.85
-        );
-    } catch {}
-}
-
-/* =====================================================
-   DRAW AI BOX
-   ===================================================== */
+/* ============================================================
+   DRAW AI BOX AROUND DETECTED HAND
+   ============================================================ */
 function drawAIBox(points) {
     const xs = points.map(p => p.x * overlayCanvas.width);
     const ys = points.map(p => p.y * overlayCanvas.height);
@@ -146,17 +143,18 @@ function drawAIBox(points) {
     const minY = Math.min(...ys);
     const maxY = Math.max(...ys);
 
-    overlayCtx.strokeStyle = "gold";
+    overlayCtx.strokeStyle = "#FFD700";
     overlayCtx.lineWidth = 3;
     overlayCtx.strokeRect(minX, minY, maxX - minX, maxY - minY);
 
     log("✔ AI palm box drawn");
 }
 
-/* =====================================================
+/* ============================================================
    CAPTURE HAND
-   ===================================================== */
-export async function captureHand() {
+   ============================================================ */
+async function captureHand() {
+
     if (!lastHand) {
         error("No hand detected! Keep hand inside guide.");
         return;
@@ -167,35 +165,46 @@ export async function captureHand() {
     resizePalmCanvas();
     resizeOverlay();
 
-    palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
+    palmCtx.drawImage(
+        video,
+        0,
+        0,
+        palmCanvas.width,
+        palmCanvas.height
+    );
 
-    if (lastHand) drawAIBox(lastHand);
+    drawAIBox(lastHand);
 
-    if (mode === "LEFT") {
+    let captured = palmCanvas.toDataURL("image/png");
+
+    if (!leftCaptured) {
         leftCaptured = true;
+        leftImage = captured;
+        leftLandmarks = structuredClone(lastHand);
+
         log("✔ Left palm captured");
-        mode = "RIGHT";
 
-        guideImg.src = "right-hand-outline.png";
-        log("👉 Now place your RIGHT hand inside the guide");
-
-        return;
+        log("👉 Now place your RIGHT hand inside the guide 🤚");
     }
 
-    if (mode === "RIGHT") {
+    else if (!rightCaptured) {
         rightCaptured = true;
+        rightImage = captured;
+        rightLandmarks = structuredClone(lastHand);
+
         log("✔ Right palm captured");
-        log("🎉 Both hands captured ✔ All done!");
-        running = false;
+
+        generateFinalReport();
     }
 }
 
-/* =====================================================
-   RESIZE HANDLERS
-   ===================================================== */
+/* ============================================================
+   RESIZE CANVAS
+   ============================================================ */
 function resizePalmCanvas() {
-    palmCanvas.width = palmCanvas.parentElement.clientWidth;
-    palmCanvas.height = palmCanvas.width * 1.333;
+    const w = palmCanvas.parentElement.clientWidth;
+    palmCanvas.width = w;
+    palmCanvas.height = w * (4 / 3);
 }
 
 function resizeOverlay() {
@@ -210,9 +219,29 @@ window.addEventListener("resize", () => {
     }
 });
 
-/* =====================================================
-   DEBUG FUNCTIONS
-   ===================================================== */
+/* ============================================================
+   FINAL REPORT GENERATION
+   ============================================================ */
+async function generateFinalReport() {
+
+    log("🔮 Generating Sathyadarshana Insight Report…");
+
+    const report = window.PalmEngineV2.generate({
+        leftPoints: leftLandmarks,
+        rightPoints: rightLandmarks,
+        leftImage,
+        rightImage
+    });
+
+    document.getElementById("output").textContent =
+        "=== SATHYADARSHANA PALM REPORT ===\n\n" +
+        report +
+        "\n\n✔ Both hands analyzed\n";
+}
+
+/* ============================================================
+   DEBUG HELPERS
+   ============================================================ */
 function log(msg) {
     dbg.textContent += "✔ " + msg + "\n";
 }
@@ -221,5 +250,6 @@ function error(msg) {
     dbg.textContent += "🔥 ERROR: " + msg + "\n";
 }
 
+/* EXPORT */
 window.startCamera = startCamera;
 window.captureHand = captureHand;
