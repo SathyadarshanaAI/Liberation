@@ -1,6 +1,6 @@
 /* ================================================================
-   🕉️ THE SEED · Palmistry AI · V230
-   MAIN.JS — Camera + Freeze + Analyzer Connection
+   🕉️ THE SEED · Palmistry AI · V230-AI BOX
+   MAIN.JS — Camera + MediaPipe AI + Freeze Capture + Analyzer
    ================================================================ */
 
 import { analyzePalm } from "./palm-engine-v230.js";
@@ -8,8 +8,12 @@ import { analyzePalm } from "./palm-engine-v230.js";
 let video, palmCanvas, overlayCanvas, outputBox, debugBox;
 let palmCtx, overlayCtx;
 
+let hands = null;           // MediaPipe Hands model
+let lastAIBox = null;       // Save AI box on freeze
+let running = false;
+
 /* ------------------------------------------------------------
-   INITIALIZE DOM REFERENCES
+   INIT DOM REFERENCES
 ------------------------------------------------------------- */
 function initRefs() {
     video = document.getElementById("video");
@@ -24,7 +28,41 @@ function initRefs() {
 }
 
 /* ------------------------------------------------------------
-   START CAMERA
+   LOAD MEDIAPIPE HANDS
+------------------------------------------------------------- */
+async function loadHands() {
+    try {
+        log("Loading MediaPipe AI…");
+
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js");
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
+        await import("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
+
+        const MPHands = window.Hands;
+
+        hands = new MPHands({
+            locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.65,
+            minTrackingConfidence: 0.65
+        });
+
+        hands.onResults(onAIResults);
+
+        log("AI Model Ready ✔");
+    } catch (e) {
+        error("AI Load Failed: " + e);
+    }
+}
+
+loadHands();
+
+/* ------------------------------------------------------------
+   START CAMERA + AI LOOP
 ------------------------------------------------------------- */
 export async function startCamera() {
     initRefs();
@@ -33,85 +71,123 @@ export async function startCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" }
         });
-
         video.srcObject = stream;
 
-        log("Camera started ✔");
+        running = true;
+        aiLoop();
 
-    } catch (err) {
-        error("Camera error: " + err);
+        log("Camera started ✔");
+    } catch (e) {
+        error("Camera error: " + e);
     }
 }
 
 /* ------------------------------------------------------------
-   CAPTURE HAND → FREEZE FRAME
+   AI DETECTION LOOP
 ------------------------------------------------------------- */
-export async function captureHand() {
+async function aiLoop() {
+    if (!running) return;
+
+    if (hands && video.videoWidth > 0) {
+        await hands.send({ image: video });
+    }
+
+    requestAnimationFrame(aiLoop);
+}
+
+/* ------------------------------------------------------------
+   WHEN AI DETECTS HAND
+------------------------------------------------------------- */
+function onAIResults(results) {
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+        lastAIBox = null;
+        return;
+    }
+
+    const pts = results.multiHandLandmarks[0];
+
+    // Convert 0–1 coords into pixels
+    const xs = pts.map(p => p.x * overlayCanvas.width);
+    const ys = pts.map(p => p.y * overlayCanvas.height);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    lastAIBox = { minX, minY, width: maxX - minX, height: maxY - minY };
+
+    // Draw AI box
+    overlayCtx.strokeStyle = "#ffd700";
+    overlayCtx.lineWidth = 3;
+    overlayCtx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+
+    log("AI box updated ✔");
+}
+
+/* ------------------------------------------------------------
+   CAPTURE HAND (FREEZE)
+------------------------------------------------------------- */
+export function captureHand() {
     initRefs();
 
+    // Show preview box
     document.getElementById("palmPreviewBox").style.display = "block";
 
-    // Resize canvas to match video frame
+    // Resize canvases
     palmCanvas.width = video.videoWidth;
     palmCanvas.height = video.videoHeight;
 
     overlayCanvas.width = video.videoWidth;
     overlayCanvas.height = video.videoHeight;
 
-    // Draw frame
+    // Draw current frame
     palmCtx.drawImage(video, 0, 0, palmCanvas.width, palmCanvas.height);
 
-    log("Frame captured ✔");
+    // Redraw last AI box on frozen image
+    if (lastAIBox) {
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        overlayCtx.strokeStyle = "#ffd700";
+        overlayCtx.lineWidth = 3;
+        overlayCtx.strokeRect(
+            lastAIBox.minX,
+            lastAIBox.minY,
+            lastAIBox.width,
+            lastAIBox.height
+        );
+    }
 
-    // For future: overlay AI box or PNG
-    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    log("Frame frozen ✔");
 
     // Extract pixel data
-    const pixels = palmCtx.getImageData(
-        0,
-        0,
-        palmCanvas.width,
-        palmCanvas.height
-    );
+    const pixels = palmCtx.getImageData(0, 0, palmCanvas.width, palmCanvas.height);
 
-    // Identify selected hand
-    const selectedHand = document.getElementById("handPref").value || "Unknown";
+    // Selected hand
+    const selectedHand = document.getElementById("handPref").value;
 
-    // Build profile object
-    const profile = {
-        name: document.getElementById("userName").value,
-        dob: document.getElementById("userDOB").value,
-        gender: document.getElementById("userGender").value,
-        note: document.getElementById("userNote").value,
-        country: document.getElementById("userCountry").value,
-    };
+    const analysis = analyzePalm(pixels, selectedHand);
 
-    log("Analyzing palm…");
-
-    // Call analyzer engine
-    const analysis = analyzePalm(pixels, selectedHand, profile);
-
-    // Display report
     outputBox.textContent =
-        "🧠 Sathyadarshana Mini Report (V230)\n\n" +
+        "🧠 Sathyadarshana Mini Report – V230\n\n" +
         analysis.miniReport;
 
-    log("Analysis complete ✔");
+    log("AI analysis completed ✔");
 }
 
 /* ------------------------------------------------------------
-   DEBUG HELPERS
+   DEBUG LOGS
 ------------------------------------------------------------- */
 function log(msg) {
     debugBox.textContent += "✔ " + msg + "\n";
 }
-
 function error(msg) {
     debugBox.textContent += "🔥 " + msg + "\n";
 }
 
 /* ------------------------------------------------------------
-   EXPORT TO WINDOW (for index buttons)
+   EXPORT TO WINDOW
 ------------------------------------------------------------- */
 window.startCamera = startCamera;
 window.captureHand = captureHand;
