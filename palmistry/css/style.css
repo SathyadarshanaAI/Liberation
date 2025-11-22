@@ -1,5 +1,5 @@
-/* ==========================================
-   🌟 PALM PREVIEW FIX (THE SEED V220.2)
+/* ==========================================  
+   🌟 PALM PREVIEW FIX (THE SEED V230-FINAL)  
    ========================================== */
 
 #palmPreviewBox {
@@ -13,34 +13,33 @@
     position: relative;
     display: none;
     text-align: center;
-    overflow: hidden;  /* 🔥 Required */
+    overflow: hidden;
 }
 
-/* Base palm image canvas */
+/* Base palm image */
 #palmCanvas {
     width: 100%;
-    aspect-ratio: 3/4;
+    aspect-ratio: 3/4;        /* Same ratio used in JS */
     background: #000;
     border-radius: 12px;
     display: block;
 }
 
-/* 🔥 Overlay for AI Box / Hand Outline PNG */
+/* Overlay (AI Box + PNG Hand Outline) */
 #overlayCanvas {
     position: absolute;
     top: 58px;
     left: 0;
-    width: 100%;
-    height: calc(100% - 58px); /* PERFECT overlay match */
+    width: 100%;              /* Width auto-sync */
+    height: auto;             /* JS controls height */
+    aspect-ratio: 3/4;        /* EXACT MATCH */
     pointer-events: none;
     background: transparent !important;
     z-index: 9999;
 }
 
-/* Mobile fix */
 @media (max-width: 700px) {
     #overlayCanvas {
         top: 58px;
-        height: calc(100% - 58px);
     }
 }
