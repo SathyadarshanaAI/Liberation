@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>🕉️ THE SEED · Palmistry AI · V240</title>
+<title>🕉️ THE SEED · Palmistry AI · V230.5</title>
 
 <style>
     body {
@@ -35,6 +34,9 @@
         display: block;
     }
 
+    /* =============================
+       USER FORM
+    ============================== */
     #userForm {
         width: 92%;
         max-width: 480px;
@@ -58,12 +60,15 @@
         margin-top: 5px;
     }
 
+    /* =============================
+       CAMERA
+    ============================== */
     #camBox {
         width: 100%;
         height: 55vh;
         background: #000;
-        overflow: hidden;
         position: relative;
+        overflow: hidden;
     }
 
     video {
@@ -72,13 +77,16 @@
         object-fit: cover;
     }
 
+    /* =============================
+       PALM PREVIEW
+    ============================== */
     #palmPreviewBox {
         width: 92%;
         max-width: 480px;
         margin: 15px auto;
         padding: 10px;
-        border: 1px solid cyan;
         background: rgba(255,255,255,0.05);
+        border: 1px solid cyan;
         border-radius: 12px;
         display: none;
         position: relative;
@@ -87,12 +95,13 @@
 
     #palmCanvas {
         width: 100%;
-        aspect-ratio: 3 / 4;
-        background: #000;
+        aspect-ratio: 3/4;
         border-radius: 12px;
+        background: #000;
         display: block;
     }
 
+    /* OVERLAY FOR AI BOX + MASK */
     #overlayCanvas {
         position: absolute;
         top: 58px;
@@ -100,12 +109,11 @@
         width: 100%;
         height: calc(100% - 58px);
         pointer-events: none;
-        background: transparent !important;
+        background: transparent;
         z-index: 9999;
     }
 
-    #output,
-    #debugConsole {
+    #output, #debugConsole {
         width: 92%;
         max-width: 500px;
         margin: 15px auto;
@@ -125,14 +133,15 @@
         color: #0f0;
         font-size: 14px;
     }
-</style>
 
+</style>
 </head>
+
 <body>
 
-<h1>🕉️ THE SEED · Palmistry AI · V240</h1>
+<h1>🕉️ THE SEED · Palmistry AI · V230.5</h1>
 
-<!-- USER PROFILE -->
+<!-- USER FORM -->
 <div id="userForm">
     <h3 style="text-align:center;">User Profile</h3>
 
@@ -155,8 +164,8 @@
     <label>Hand to Scan</label>
     <select id="handPref">
         <option value="">Select</option>
-        <option>Left Hand</option>
-        <option>Right Hand</option>
+        <option value="Left">Left Hand</option>
+        <option value="Right">Right Hand</option>
     </select>
 
     <label>Message</label>
@@ -180,34 +189,34 @@
     <canvas id="overlayCanvas"></canvas>
 </div>
 
-<!-- HIDDEN HAND MASK IMAGES -->
-<img id="handMaskLeft" src="assets/hand-left.png" style="display:none;">
-<img id="handMaskRight" src="assets/hand-right.png" style="display:none;">
-
+<!-- AI OUTPUT -->
 <div id="output">Awaiting scan…</div>
 <div id="debugConsole">Debug console ready…</div>
 
-<!-- ERROR LOGGER -->
+<!-- HIDDEN MASK FILES -->
+<img id="handMaskLeft" src="assets/left.png" style="display:none">
+<img id="handMaskRight" src="assets/right.png" style="display:none">
+
+<!-- GLOBAL ERROR LOGGER -->
 <script>
 window.addEventListener("error", (e) => {
     const dbg = document.getElementById("debugConsole");
-    if (dbg)
-        dbg.textContent += `🔥 ERROR: ${e.message}\nFILE: ${e.filename}\nLINE: ${e.lineno}\n\n`;
+    if (!dbg) return;
+    dbg.textContent += `🔥 ERROR: ${e.message}\nFILE: ${e.filename}\nLINE: ${e.lineno}\n\n`;
 });
 </script>
 
-<!-- SAVE USER FORM -->
+<!-- USER FORM SAVE -->
 <script>
 function saveUserForm() {
-    let txt =
+    const txt =
 `User Profile Saved:
 Name: ${userName.value}
 Gender: ${userGender.value}
 DOB: ${userDOB.value}
 Country: ${userCountry.value}
 Hand: ${handPref.value}
-Message: ${userNote.value}
-`;
+Message: ${userNote.value}`;
 
     document.getElementById("output").textContent = txt;
     document.getElementById("debugConsole").textContent += "✔ User profile saved\n";
@@ -221,10 +230,8 @@ import { startCamera, captureHand } from "./main.js";
 window.startCamera = startCamera;
 window.captureHand = captureHand;
 
-document.addEventListener("DOMContentLoaded", () => {
-    const dbg = document.getElementById("debugConsole");
-    if (dbg) dbg.textContent += "✔ main.js loaded & functions exported\n";
-});
+document.getElementById("debugConsole").textContent +=
+    "✔ main.js loaded & functions exported\n";
 </script>
 
 </body>
