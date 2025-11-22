@@ -1,44 +1,31 @@
 /* ============================================================
-   🖐️ HAND MASK ENGINE – V300
-   Converts MediaPipe landmarks → Shape Mask Outline
-   ============================================================ */
+   🖐️ HAND MASK ENGINE · THE SEED V240
+   AI Box → Mask Fit → Palm ROI Extract
+============================================================ */
 
-export function drawHandMask(overlayCtx, landmarks, W, H) {
-    if (!landmarks) return;
+export function applyHandMask(ctx, maskImg, box) {
 
-    overlayCtx.clearRect(0, 0, W, H);
+    const { minX, minY, width, height } = box;
 
-    overlayCtx.strokeStyle = "#00e5ff";
-    overlayCtx.lineWidth = 3;
-    overlayCtx.shadowColor = "#00ffff";
-    overlayCtx.shadowBlur = 15;
+    // Keep perfect proportions (avoid stretching)
+    const maskRatio = maskImg.height / maskImg.width;
+    const newH = width * maskRatio;
 
-    overlayCtx.beginPath();
+    ctx.globalAlpha = 0.75;      // slight transparency
+    ctx.drawImage(maskImg, minX, minY, width, newH);
+    ctx.globalAlpha = 1.0;
+}
 
-    // List landmark point order (outline)
-    const outlinePoints = [
-        0, 1, 2, 3, 4,     // Thumb
-        0, 5, 6, 7, 8,     // Index
-        9, 10, 11, 12,     // Middle
-        13, 14, 15, 16,    // Ring
-        17, 18, 19, 20,    // Little
-        0                  // Back to base
-    ];
+export function extractPalmROI(pixels, box) {
+    const { minX, minY, width, height } = box;
 
-    for (let i = 0; i < outlinePoints.length; i++) {
-        let lm = landmarks[outlinePoints[i]];
-        let x = lm.x * W;
-        let y = lm.y * H;
-        if (i === 0) overlayCtx.moveTo(x, y);
-        else overlayCtx.lineTo(x, y);
-    }
+    const cropCanvas = document.createElement("canvas");
+    cropCanvas.width = width;
+    cropCanvas.height = height;
 
-    overlayCtx.closePath();
-    overlayCtx.stroke();
+    const cropCtx = cropCanvas.getContext("2d");
 
-    // Optional fill
-    overlayCtx.globalAlpha = 0.12;
-    overlayCtx.fillStyle = "#00e5ff";
-    overlayCtx.fill();
-    overlayCtx.globalAlpha = 1;
+    cropCtx.putImageData(pixels, -minX, -minY);
+
+    return cropCanvas;
 }
