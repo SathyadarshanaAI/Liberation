@@ -1,42 +1,19 @@
 /* ================================================================
-   🖐️ THE SEED Palmistry AI · V230.6
-   HAND MASK ENGINE — Left/Right PNG Overlay + AI BOX Crop
+   HAND MASK ENGINE — V230.7 (Stable)
 ================================================================ */
 
-/**
- * Apply hand mask overlay inside AI box
- * @param {CanvasRenderingContext2D} ctx - palmCanvas context
- * @param {Object} box - AI bounding box {minX, minY, width, height}
- * @param {HTMLImageElement} leftMask
- * @param {HTMLImageElement} rightMask
- */
-export function applyHandMask(ctx, box, leftMask, rightMask) {
+export function applyHandMask(ctx, box, maskLeft, maskRight, selectedHand) {
 
-    if (!box || !ctx) return;
+    if (!box) return;
 
-    // Detect selected hand
-    const selected = document.getElementById("handPref")?.value || "Left Hand";
+    const { minX, minY, width, height } = box;
 
-    let maskImg =
-        selected.includes("Left") ? leftMask :
-        selected.includes("Right") ? rightMask : leftMask;
+    const mask = (selectedHand === "Left") ? maskLeft : maskRight;
 
-    if (!maskImg) return;
+    ctx.save();
+    ctx.globalAlpha = 0.55;
 
-    // Smooth edges
-    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(mask, minX, minY, width, height);
 
-    // DRAW the PNG mask INSIDE AI bounding box
-    ctx.drawImage(
-        maskImg,
-        box.minX,
-        box.minY,
-        box.width,
-        box.height
-    );
-
-    // Make box more visible
-    ctx.strokeStyle = "#ffd700";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(box.minX, box.minY, box.width, box.height);
+    ctx.restore();
 }
