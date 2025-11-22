@@ -31,14 +31,16 @@
         font-weight: bold;
         font-size: 1.2rem;
         margin: 10px auto;
+        display: block;
     }
 
+    /* USER FORM */
     #userForm {
         width: 92%;
         max-width: 480px;
         margin: 10px auto;
         padding: 15px;
-        background: rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.05);
         border: 1px solid cyan;
         border-radius: 12px;
         text-align: left;
@@ -62,6 +64,7 @@
         border-radius: 8px;
     }
 
+    /* CAMERA */
     #camBox {
         width: 100%;
         height: 55vh;
@@ -76,12 +79,13 @@
         object-fit: cover;
     }
 
+    /* PALM PREVIEW */
     #palmPreviewBox {
         width: 92%;
         max-width: 480px;
         margin: 15px auto;
         padding: 10px;
-        background: rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.05);
         border-radius: 12px;
         border: 1px solid cyan;
         position: relative;
@@ -97,6 +101,7 @@
         display: block;
     }
 
+    /* Overlay Canvas */
     #overlayCanvas {
         position: absolute;
         top: 58px;
@@ -108,6 +113,7 @@
         z-index: 9999;
     }
 
+    /* OUTPUT + DEBUG */
     #output,
     #debugConsole {
         width: 92%;
@@ -120,7 +126,7 @@
     }
 
     #output {
-        background: rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.05);
         border: 1px solid cyan;
     }
 
@@ -136,6 +142,7 @@
 
 <h1>🕉️ THE SEED · Palmistry AI · V220</h1>
 
+<!-- USER FORM -->
 <div id="userForm">
     <h3 style="text-align:center;">User Profile</h3>
 
@@ -168,6 +175,7 @@
     <button class="btn" onclick="saveUserForm()">Save</button>
 </div>
 
+<!-- CAMERA -->
 <div id="camBox">
     <video id="video" autoplay muted playsinline></video>
 </div>
@@ -175,6 +183,7 @@
 <button class="btn" onclick="startCamera()">Open Camera</button>
 <button class="btn" onclick="captureHand()">Scan Hand</button>
 
+<!-- PALM PREVIEW -->
 <div id="palmPreviewBox">
     <h3>Palm Preview</h3>
     <canvas id="palmCanvas"></canvas>
@@ -184,13 +193,18 @@
 <div id="output">Awaiting scan…</div>
 <div id="debugConsole">Debug console ready…</div>
 
+<!-- GLOBAL ERROR LOGGER -->
 <script>
 window.onerror = function(msg, url, line) {
-    debugConsole.textContent +=
-      "🔥 ERROR: " + msg + "\nFILE: " + url + "\nLINE: " + line + "\n\n";
+    const dbg = document.getElementById("debugConsole");
+    if (dbg) {
+        dbg.textContent +=
+        "🔥 ERROR: " + msg + "\nFILE: " + url + "\nLINE: " + line + "\n\n";
+    }
 };
 </script>
 
+<!-- USER FORM SAVE -->
 <script>
 function saveUserForm() {
     const text =
@@ -202,19 +216,24 @@ function saveUserForm() {
         "Hand: " + handPref.value + "\n" +
         "Message: " + userNote.value + "\n";
 
-    output.textContent = text;
-    debugConsole.textContent += "✔ User profile saved\n";
+    document.getElementById("output").textContent = text;
+
+    const dbg = document.getElementById("debugConsole");
+    if (dbg) dbg.textContent += "✔ User profile saved\n";
 }
 </script>
 
-<!-- LOAD main.js MODULE -->
+<!-- MAIN.JS MODULE LOADER -->
 <script type="module">
-import { startCamera, captureHand } from "./main.js";
+    import { startCamera, captureHand } from "./main.js";
 
-window.startCamera = startCamera;
-window.captureHand = captureHand;
+    window.startCamera = startCamera;
+    window.captureHand = captureHand;
 
-debugConsole.textContent += "✔ main.js loaded & functions exported\n";
+    window.addEventListener("DOMContentLoaded", () => {
+        const dbg = document.getElementById("debugConsole");
+        if (dbg) dbg.textContent += "✔ main.js loaded & functions exported\n";
+    });
 </script>
 
 </body>
