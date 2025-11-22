@@ -1,31 +1,42 @@
-/* ============================================================
-   🖐️ HAND MASK ENGINE · THE SEED V240
-   AI Box → Mask Fit → Palm ROI Extract
-============================================================ */
+/* ================================================================
+   🖐️ THE SEED Palmistry AI · V230.6
+   HAND MASK ENGINE — Left/Right PNG Overlay + AI BOX Crop
+================================================================ */
 
-export function applyHandMask(ctx, maskImg, box) {
+/**
+ * Apply hand mask overlay inside AI box
+ * @param {CanvasRenderingContext2D} ctx - palmCanvas context
+ * @param {Object} box - AI bounding box {minX, minY, width, height}
+ * @param {HTMLImageElement} leftMask
+ * @param {HTMLImageElement} rightMask
+ */
+export function applyHandMask(ctx, box, leftMask, rightMask) {
 
-    const { minX, minY, width, height } = box;
+    if (!box || !ctx) return;
 
-    // Keep perfect proportions (avoid stretching)
-    const maskRatio = maskImg.height / maskImg.width;
-    const newH = width * maskRatio;
+    // Detect selected hand
+    const selected = document.getElementById("handPref")?.value || "Left Hand";
 
-    ctx.globalAlpha = 0.75;      // slight transparency
-    ctx.drawImage(maskImg, minX, minY, width, newH);
-    ctx.globalAlpha = 1.0;
-}
+    let maskImg =
+        selected.includes("Left") ? leftMask :
+        selected.includes("Right") ? rightMask : leftMask;
 
-export function extractPalmROI(pixels, box) {
-    const { minX, minY, width, height } = box;
+    if (!maskImg) return;
 
-    const cropCanvas = document.createElement("canvas");
-    cropCanvas.width = width;
-    cropCanvas.height = height;
+    // Smooth edges
+    ctx.imageSmoothingEnabled = true;
 
-    const cropCtx = cropCanvas.getContext("2d");
+    // DRAW the PNG mask INSIDE AI bounding box
+    ctx.drawImage(
+        maskImg,
+        box.minX,
+        box.minY,
+        box.width,
+        box.height
+    );
 
-    cropCtx.putImageData(pixels, -minX, -minY);
-
-    return cropCanvas;
+    // Make box more visible
+    ctx.strokeStyle = "#ffd700";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(box.minX, box.minY, box.width, box.height);
 }
