@@ -33,7 +33,6 @@
         margin: 10px auto;
     }
 
-    /* USER FORM */
     #userForm {
         width: 92%;
         max-width: 480px;
@@ -63,7 +62,6 @@
         border-radius: 8px;
     }
 
-    /* CAMERA */
     #camBox {
         width: 100%;
         height: 55vh;
@@ -78,7 +76,6 @@
         object-fit: cover;
     }
 
-    /* PALM PREVIEW BOX */
     #palmPreviewBox {
         width: 92%;
         max-width: 480px;
@@ -100,7 +97,6 @@
         display: block;
     }
 
-    /* Overlay */
     #overlayCanvas {
         position: absolute;
         top: 58px;
@@ -108,11 +104,10 @@
         width: 100%;
         height: calc(100% - 58px);
         pointer-events: none;
-        background: transparent !important;
+        background: transparent;
         z-index: 9999;
     }
 
-    /* OUTPUT + DEBUG */
     #output,
     #debugConsole {
         width: 92%;
@@ -138,9 +133,9 @@
 </head>
 
 <body>
+
 <h1>🕉️ THE SEED · Palmistry AI · V220</h1>
 
-<!-- USER FORM -->
 <div id="userForm">
     <h3 style="text-align:center;">User Profile</h3>
 
@@ -173,7 +168,6 @@
     <button class="btn" onclick="saveUserForm()">Save</button>
 </div>
 
-<!-- CAMERA -->
 <div id="camBox">
     <video id="video" autoplay muted playsinline></video>
 </div>
@@ -181,7 +175,6 @@
 <button class="btn" onclick="startCamera()">Open Camera</button>
 <button class="btn" onclick="captureHand()">Scan Hand</button>
 
-<!-- PALM PREVIEW -->
 <div id="palmPreviewBox">
     <h3>Palm Preview</h3>
     <canvas id="palmCanvas"></canvas>
@@ -191,7 +184,6 @@
 <div id="output">Awaiting scan…</div>
 <div id="debugConsole">Debug console ready…</div>
 
-<!-- ERROR LOGGER -->
 <script>
 window.onerror = function(msg, url, line) {
     debugConsole.textContent +=
@@ -199,7 +191,6 @@ window.onerror = function(msg, url, line) {
 };
 </script>
 
-<!-- SAVE USER FORM -->
 <script>
 function saveUserForm() {
     const text =
@@ -216,21 +207,14 @@ function saveUserForm() {
 }
 </script>
 
-<!-- MAIN.JS MODULE -->
-<script type="module" src="main.js"></script>
-
-<!-- GLOBAL EXPORT LOADER FIX (REQUIRED) -->
+<!-- LOAD main.js MODULE -->
 <script type="module">
-import "./main.js"
-    .then((mod) => {
-        window.startCamera = mod.startCamera;
-        window.captureHand = mod.captureHand;
+import { startCamera, captureHand } from "./main.js";
 
-        debugConsole.textContent += "✔ main.js loaded + functions exported\n";
-    })
-    .catch((err) => {
-        debugConsole.textContent += "🔥 ERROR loading main.js: " + err + "\n";
-    });
+window.startCamera = startCamera;
+window.captureHand = captureHand;
+
+debugConsole.textContent += "✔ main.js loaded & functions exported\n";
 </script>
 
 </body>
